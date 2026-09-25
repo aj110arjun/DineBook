@@ -12,6 +12,11 @@ const stories = {
     title: 'Access the World’s Most Coveted Tables',
     body: 'Create your guest account to discover exceptional restaurants and make every reservation feel effortless.',
   },
+  verification: {
+    tag: 'ONE LAST STEP',
+    title: 'Make Your Account Yours',
+    body: 'Confirm your email to secure your profile and keep your dining plans connected to the right inbox.',
+  },
   recovery: {
     tag: 'HERE FOR YOU',
     title: 'A Better Evening Starts with Your Account',
