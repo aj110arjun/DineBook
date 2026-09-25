@@ -50,7 +50,7 @@ export default function CustomerLoginPage() {
       <p className="mb-7 mt-2 text-sm leading-6 text-stone-500">Please enter your credentials to access your DineBook account.</p>
       <form onSubmit={handleSubmit} noValidate>
         <FormField id="email" label="Email Address" type="email" placeholder="alex@example.com" autoComplete="email" icon={Mail} />
-        <PasswordField id="password" label="Password" placeholder="Enter your password" autoComplete="current-password" minLength={10} />
+        <PasswordField id="password" label="Password" placeholder="Enter your password" autoComplete="current-password" minLength={8} />
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3 text-xs">
           <label className="flex items-center gap-2 text-stone-600"><input className="accent-wine" type="checkbox" name="remember" /> Remember me</label>
           <span className="flex flex-wrap gap-x-4 gap-y-2">
