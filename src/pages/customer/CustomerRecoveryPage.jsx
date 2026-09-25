@@ -15,15 +15,15 @@ export default function CustomerRecoveryPage() {
 
   return (
     <AuthLayout view="recovery">
-      <h2>Forgot Password?</h2>
-      <p className="lead">Enter the email address registered with your DineBook account.</p>
-      <div className="recovery-copy">Password recovery will be available once secure email recovery is connected to your account.</div>
+      <h2 className="font-display text-3xl font-semibold text-ink">Forgot Password?</h2>
+      <p className="mb-7 mt-2 text-sm leading-6 text-stone-500">Enter the email address registered with your DineBook account.</p>
+      <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">Password recovery will be available once secure email recovery is connected to your account.</div>
       <form onSubmit={handleSubmit}>
         <FormField id="recoveryEmail" label="Registered Email" type="email" placeholder="alex@example.com" autoComplete="email" icon={Mail} />
         <Notice message={notice} type="success" />
-        <button className="button-primary" type="submit">Request Recovery Link <ArrowRight size={16} /></button>
+        <button className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-wine px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-ink focus:outline-none focus:ring-4 focus:ring-wine/20" type="submit">Request Recovery Link <ArrowRight size={16} /></button>
       </form>
-      <Link className="back-link" to="/customer/login"><ArrowLeft size={14} /> Back to Sign In</Link>
+      <Link className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-wine hover:underline" to="/customer/login"><ArrowLeft size={14} /> Back to Sign In</Link>
     </AuthLayout>
   );
 }
