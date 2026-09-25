@@ -1,14 +1,14 @@
 <div align="center">
 
-# 🍷 DineBook · Customer Authentication
+# 🍷 DineBook · Customer Discovery & Authentication
 
-**A polished React authentication experience for the DineBook dining platform.**
+**A polished React customer experience for discovering exceptional dining.**
 
-Sign in, create an account, manage your password, and get ready for your next reservation.
+Discover restaurants, browse cuisines, find nearby tables, and manage your customer account.
 
 ![React](https://img.shields.io/badge/React-18-149eca?logo=react&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-6-646cff?logo=vite&logoColor=white)
-![Status](https://img.shields.io/badge/Status-Frontend%20Prototype-c6a35e)
+![Status](https://img.shields.io/badge/Status-Customer%20Frontend-c6a35e)
 
 </div>
 
@@ -16,7 +16,7 @@ Sign in, create an account, manage your password, and get ready for your next re
 
 ## ✨ The experience
 
-DineBook’s customer authentication uses a refined split-screen layout inspired by the supplied restaurant design: a full-height dining image and brand story alongside a calm, accessible form panel.
+DineBook’s customer experience pairs a burgundy navigation bar and restaurant hero with curated food discovery, venue cards, signature dishes, member offers, and guest stories. Customer authentication uses a matching split-screen restaurant layout.
 
 | Screen | What it does |
 | --- | --- |
@@ -24,6 +24,7 @@ DineBook’s customer authentication uses a refined split-screen layout inspired
 | **Create account** | Name, email, password, and confirmation with client-side validation |
 | **Forgot password** | Email-only recovery screen; clearly marked as unavailable until the secure recovery service exists |
 | **Change password** | Requires an active customer session; validates the new password and shows strength guidance |
+| **Customer home** | Restaurant discovery, cuisine filters, featured and nearby venues, trending dishes, offers, and guest reviews |
 
 The credential model is **email and password**. There are no phone fields, OTP flows, social sign-in, or email verification screens.
 
@@ -35,15 +36,15 @@ The credential model is **email and password**. There are no phone fields, OTP f
 | `/customer/register` | Create account |
 | `/customer/recovery` | Recovery placeholder |
 | `/customer/change-password` | Protected password change |
+| `/customer` | Protected customer discovery home |
 
-`/` redirects to `/customer/login`.
+`/` redirects to `/customer`, which checks the customer session and sends signed-out visitors to sign in.
 
 ## 🚀 Run locally
 
 Requires Node.js 18 or newer.
 
 ```bash
-cd Frontend
 npm install
 npm run dev
 ```
@@ -57,7 +58,7 @@ npm run preview
 
 ## 🔌 API connection
 
-The frontend defaults to `http://localhost:8000`. Set another API origin in `Frontend/.env.local`:
+The frontend defaults to `http://localhost:8000`. Set another API origin in `.env.local`:
 
 ```env
 VITE_API_URL=http://localhost:8000
@@ -70,31 +71,23 @@ Customer sign-in and registration send credentialed requests to:
 
 They expect a backend that sets an HttpOnly session cookie and allows credentialed CORS requests from the frontend origin. Change-password checks `GET /api/customer/me` before opening, then submits to `POST /api/auth/customer/change-password`.
 
+The customer home validates the same session with `GET /api/customer/me`; signing out calls `POST /api/auth/logout`.
+
 **Backend note:** this workspace contains the React frontend. The API must be running separately for sign-in, registration, and password changes to complete. Password recovery is presentation-only and does not send an email.
 
 ## 🧩 Frontend structure
 
 ```text
-Frontend/
-├── index.html
-├── package.json
-└── src/
-    ├── App.jsx                         # Customer routes
-    ├── main.jsx                        # React entry point
-    ├── styles.css                      # Shared responsive design system
-    ├── components/
-    │   └── auth/
-    │       ├── AuthLayout.jsx           # Split image and form shell
-    │       ├── FormField.jsx            # Text and password fields
-    │       └── Notice.jsx               # Form feedback
-    ├── lib/
-    │   └── authApi.js                   # Credentialed API helper
-    └── pages/
-        └── customer/
-            ├── CustomerLoginPage.jsx
-            ├── CustomerRegisterPage.jsx
-            ├── CustomerRecoveryPage.jsx
-            └── CustomerChangePasswordPage.jsx
+src/
+├── App.jsx                              # Customer routes
+├── main.jsx                             # React entry point
+├── styles.css                           # Shared auth and landing styles
+├── components/
+│   ├── auth/                             # Shared auth layout, fields, notices
+│   └── landing/                          # Header, hero, cards, page sections
+├── data/landingData.js                   # Curated sample content
+├── lib/authApi.js                        # Credentialed API helper
+└── pages/customer/                       # Customer home and auth screens
 ```
 
 ## 🎨 Design notes
@@ -104,3 +97,7 @@ Frontend/
 - Responsive layout that stacks on small screens
 - Shared auth layout, form fields, password visibility controls, and feedback notices
 - Native email and password validation with clear inline messages
+
+## 🧪 Local demo customer
+
+When running `npm run dev`, the sign-in page includes **Continue as Demo Customer**. It opens the landing page as **Mia Sharma** (`mia.sharma@demo.dinebook.local`) using a session-only frontend preview identity. It does not create a database account or authenticate with the API. This preview control is excluded from production builds; production access still requires a valid backend customer session.

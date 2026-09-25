@@ -122,8 +122,8 @@ export default function CustomerRegisterPage() {
           "We couldn’t create the account. Please check your details.",
       });
       formElement.reset();
-      setSuccess("Your DineBook account is ready. You can now sign in.");
-      window.setTimeout(() => navigate("/customer/login"), 1100);
+      sessionStorage.setItem('dinebook-verification-email', email.toLowerCase());
+      navigate('/customer/verify-email', { state: { email: email.toLowerCase() } });
     } catch (reason) {
       setError(reason.message);
     } finally {
