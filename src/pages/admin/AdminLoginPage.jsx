@@ -46,9 +46,7 @@ export default function AdminLoginPage() {
 
   return (
     <AdminAuthLayout view="login">
-      <h2 className="font-display text-3xl font-semibold text-ink">
-        Portal Admin Sign In
-      </h2>
+      <h2 className="font-display text-3xl font-semibold text-ink">Sign In</h2>
 
       <p className="mb-7 mt-2 text-sm leading-6 text-stone-500">
         Sign in to access the DineBook administration portal.
@@ -73,7 +71,22 @@ export default function AdminLoginPage() {
           minLength={8}
           required
         />
+        <div className="admin-login-options">
+          <label className="admin-remember">
+            <input type="checkbox" name="remember" />
+            <span>Remember me</span>
+          </label>
 
+          <button
+            type="button"
+            className="admin-forgot"
+            onClick={() => {
+              alert("Password recovery will be available soon.");
+            }}
+          >
+            Forgot password?
+          </button>
+        </div>
         <Notice message={error} />
         <Notice message={success} type="success" />
 
@@ -82,7 +95,7 @@ export default function AdminLoginPage() {
           type="submit"
           disabled={busy}
         >
-          {busy ? "Signing in…" : "Sign in as Admin"}
+          {busy ? "Signing in…" : "Access Administrator Console"}
           {!busy && <ArrowRight size={16} />}
         </button>
       </form>
