@@ -1876,3 +1876,39 @@ a:focus-visible,
     width: 170px;
   }
 }
+.admin-login-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: -2px 0 20px;
+  font-size: 10px;
+}
+
+.admin-remember {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #777;
+  cursor: pointer;
+}
+
+.admin-remember input {
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  accent-color: #551321;
+}
+
+.admin-forgot {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #551321;
+  font-family: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.admin-forgot:hover {
+  text-decoration: underline;
+}
