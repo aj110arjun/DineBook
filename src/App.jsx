@@ -11,6 +11,7 @@ import AdminProtectedRoute from "./components/auth/AdminProtectedRoute.jsx";
 import AdminLoginPage from "./pages/admin/AdminLoginPage.jsx";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
 import AdminRestaurantsPage from "./pages/admin/AdminRestaurantsPage.jsx";
+import AdminRequestsPage from "./pages/admin/AdminRequestsPage.jsx";
 
 export default function App() {
   return (
@@ -65,6 +66,14 @@ export default function App() {
         element={
           <AdminProtectedRoute>
             <AdminRestaurantsPage />
+          </AdminProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/requests"
+        element={
+          <AdminProtectedRoute>
+            <AdminRequestsPage />
           </AdminProtectedRoute>
         }
       />
