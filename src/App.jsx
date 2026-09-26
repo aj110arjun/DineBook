@@ -7,6 +7,9 @@ import CustomerLandingPage from "./pages/customer/CustomerLandingPage.jsx";
 import CustomerEmailVerificationPage from "./pages/customer/CustomerEmailVerificationPage.jsx";
 import GuestOnlyRoute from "./components/auth/GuestOnlyRoute.jsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
+import AdminProtectedRoute from "./components/auth/AdminProtectedRoute.jsx";
+import AdminLoginPage from "./pages/admin/AdminLoginPage.jsx";
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
 
 export default function App() {
   return (
@@ -39,6 +42,23 @@ export default function App() {
         element={<CustomerChangePasswordPage />}
       />
       <Route path="*" element={<Navigate to="/customer/login" replace />} />
+
+      <Route
+        path="/admin/login"
+        element={
+          <GuestOnlyRoute>
+            <AdminLoginPage />
+          </GuestOnlyRoute>
+        }
+      />
+      <Route
+        path="/admin/dashboard"
+        element={
+          <AdminProtectedRoute>
+            <AdminDashboardPage />
+          </AdminProtectedRoute>
+        }
+      />
     </Routes>
   );
 }
