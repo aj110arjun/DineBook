@@ -10,6 +10,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 import AdminProtectedRoute from "./components/auth/AdminProtectedRoute.jsx";
 import AdminLoginPage from "./pages/admin/AdminLoginPage.jsx";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
+import AdminRestaurantsPage from "./pages/admin/AdminRestaurantsPage.jsx";
 
 export default function App() {
   return (
@@ -56,6 +57,14 @@ export default function App() {
         element={
           <AdminProtectedRoute>
             <AdminDashboardPage />
+          </AdminProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/restaurants"
+        element={
+          <AdminProtectedRoute>
+            <AdminRestaurantsPage />
           </AdminProtectedRoute>
         }
       />
