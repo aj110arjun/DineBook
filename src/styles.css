@@ -1912,3 +1912,155 @@ a:focus-visible,
 .admin-forgot:hover {
   text-decoration: underline;
 }
+/* Admin Restaurants */
+
+.admin-page-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+
+.admin-page-heading h2 {
+  margin: 0;
+  color: #172335;
+  font-size: 24px;
+  font-weight: 500;
+}
+
+.admin-page-heading p {
+  margin: 5px 0 0;
+  color: #748399;
+  font-size: 12px;
+}
+
+.admin-page-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-primary-button {
+  height: 37px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 15px;
+  border: 0;
+  border-radius: 9px;
+  background: #0fa99d;
+  color: #fff;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.admin-primary-button:hover {
+  background: #0c948a;
+}
+
+.admin-table-card {
+  overflow: hidden;
+  border: 1px solid #e4e9ec;
+  border-radius: 13px;
+  background: #fff;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th {
+  height: 46px;
+  padding: 0 18px;
+  border-bottom: 1px solid #e8ecef;
+  background: #f8fafb;
+  color: #7a8796;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.admin-table td {
+  height: 61px;
+  padding: 0 18px;
+  border-bottom: 1px solid #edf0f2;
+  color: #68778a;
+  font-size: 11px;
+}
+
+.admin-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-table td strong {
+  color: #263346;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.restaurant-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.restaurant-status.active {
+  background: #e8f8f4;
+  color: #14916e;
+}
+
+.restaurant-status.pending {
+  background: #fff5df;
+  color: #b77a17;
+}
+
+.admin-table-action {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #8290a0;
+  cursor: pointer;
+}
+
+.admin-table-action:hover {
+  background: #f1f4f6;
+  color: #263346;
+}
+
+@media (max-width: 800px) {
+  .admin-page-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-page-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-page-actions .admin-search {
+    width: 100%;
+  }
+
+  .admin-table-card {
+    overflow-x: auto;
+  }
+
+  .admin-table {
+    min-width: 760px;
+  }
+}

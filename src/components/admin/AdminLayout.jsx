@@ -3,16 +3,10 @@ import { requestJson } from "../../lib/authApi.js";
 import {
   Activity,
   Bell,
-  CalendarDays,
   ChartNoAxesCombined,
-  ChevronDown,
-  CircleDollarSign,
   FileText,
   LayoutDashboard,
   LogOut,
-  MapPin,
-  Menu,
-  MessageSquare,
   Settings,
   ShieldCheck,
   SlidersHorizontal,
@@ -25,10 +19,13 @@ const navigation = [
   {
     label: "Dashboard",
     icon: LayoutDashboard,
-    active: true,
     path: "/admin/dashboard",
   },
-  { label: "Restaurants", icon: Store, path: "/admin/restaurants" },
+  {
+    label: "Restaurants",
+    icon: Store,
+    path: "/admin/restaurants",
+  },
   { label: "Users", icon: Users },
   { label: "Payments", icon: WalletCards },
   { label: "Offers", icon: ShieldCheck },
@@ -41,7 +38,11 @@ const navigation = [
   { label: "Profile", icon: Users },
 ];
 
-export default function AdminDashboardPage() {
+export default function AdminLayout({
+  children,
+  title = "Dashboard",
+  activePath,
+}) {
   const navigate = useNavigate();
 
   async function handleLogout() {
@@ -70,11 +71,13 @@ export default function AdminDashboardPage() {
         </div>
 
         <nav className="admin-nav">
-          {navigation.map(({ label, icon: Icon, active, path }) => (
+          {navigation.map(({ label, icon: Icon, path }) => (
             <button
               key={label}
               type="button"
-              className={`admin-nav-item ${active ? "active" : ""}`}
+              className={`admin-nav-item ${
+                activePath === path ? "active" : ""
+              }`}
               onClick={() => path && navigate(path)}
             >
               <Icon size={16} />
@@ -104,11 +107,11 @@ export default function AdminDashboardPage() {
 
       <section className="admin-dashboard-main">
         <header className="admin-topbar">
-          <h1>Dashboard</h1>
+          <h1>{title}</h1>
 
           <div className="admin-topbar-actions">
             <div className="admin-search">
-              <MapPin size={15} />
+              <span>⌕</span>
               <input
                 type="search"
                 placeholder="Search platform..."
@@ -126,16 +129,7 @@ export default function AdminDashboardPage() {
           </div>
         </header>
 
-        <div className="admin-dashboard-content">
-          <div className="admin-dashboard-heading">
-            <div>
-              <h2>Good morning, Maya</h2>
-              <p>Here’s what’s happening across DineBook today.</p>
-            </div>
-
-            <span className="admin-status">Live platform status</span>
-          </div>
-        </div>
+        {children}
       </section>
     </main>
   );
