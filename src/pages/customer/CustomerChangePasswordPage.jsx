@@ -69,27 +69,27 @@ export default function CustomerChangePasswordPage() {
     }
   }
 
-  if (checking) return <div className="account-check">Verifying your customer session…</div>;
+  if (checking) return <div className="grid min-h-screen place-items-center bg-cream px-6 font-sans text-sm text-stone-500">Verifying your customer session…</div>;
 
   return (
     <AuthLayout view="password">
-      <h2>Change Password</h2>
-      <p className="lead">Please verify your current credentials and choose a strong new password.</p>
+      <h2 className="font-display text-3xl font-semibold text-ink">Change Password</h2>
+      <p className="mb-7 mt-2 text-sm leading-6 text-stone-500">Please verify your current credentials and choose a strong new password.</p>
       <form onSubmit={handleSubmit}>
         <PasswordField id="currentPassword" label="Current Password" placeholder="Enter current password" autoComplete="current-password" minLength={10} />
         <PasswordField id="newPassword" label="New Password" placeholder="At least 10 characters" autoComplete="new-password" minLength={10} value={newPassword} onChange={event => setNewPassword(event.target.value)} />
-        <div className="strength" data-level={strength} aria-label={`Password strength ${strength} of 3`}><i /><i /><i /></div>
-        <ul className="password-hints">
-          <li className={hasLength ? 'met' : ''}>At least 10 characters long</li>
-          <li className={hasMix ? 'met' : ''}>Includes letters and a number or symbol</li>
+        <div className="mb-2 flex gap-1.5" data-level={strength} aria-label={`Password strength ${strength} of 3`}>{[0, 1, 2].map(level => <i key={level} className={`h-1.5 flex-1 rounded-full ${strength > level ? 'bg-emerald-500' : 'bg-stone-200'}`} />)}</div>
+        <ul className="mb-5 space-y-1 text-xs text-stone-500">
+          <li className={hasLength ? 'text-emerald-700' : ''}>At least 10 characters long</li>
+          <li className={hasMix ? 'text-emerald-700' : ''}>Includes letters and a number or symbol</li>
         </ul>
         <PasswordField id="confirmPassword" label="Confirm New Password" placeholder="Enter your new password again" autoComplete="new-password" minLength={10} />
         <Notice message={error} />
         <Notice message={success} type="success" />
-        <button className="button-primary" type="submit" disabled={busy}>
+        <button className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-wine px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-ink focus:outline-none focus:ring-4 focus:ring-wine/20 disabled:cursor-wait disabled:opacity-60" type="submit" disabled={busy}>
           {busy ? 'Saving password…' : 'Save New Password'}{!busy && <Check size={16} />}
         </button>
-        <Link className="back-link" to="/customer/login">Cancel and Return</Link>
+        <Link className="mt-5 block text-center text-sm font-semibold text-wine hover:underline" to="/customer/login">Cancel and Return</Link>
       </form>
     </AuthLayout>
   );
