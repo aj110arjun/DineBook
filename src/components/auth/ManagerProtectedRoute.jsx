@@ -1,42 +1,52 @@
-import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { requestJson } from "../../lib/authApi.js";
 
 export default function ManagerProtectedRoute({ children }) {
-  const [state, setState] = useState("loading");
+  const [checking, setChecking] = useState(true);
+  const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
+    let active = true;
 
-    async function checkManagerSession() {
+    async function checkManager() {
       try {
         await requestJson("/api/auth/manager/me", {
           method: "GET",
-          fallbackMessage: "Manager session expired.",
+          fallbackMessage: "Manager authentication required.",
         });
 
-        if (mounted) {
-          setState("authenticated");
+        if (active) {
+          setAuthenticated(true);
         }
       } catch {
-        if (mounted) {
-          setState("unauthenticated");
+        if (active) {
+          setAuthenticated(false);
+        }
+      } finally {
+        if (active) {
+          setChecking(false);
         }
       }
     }
 
-    checkManagerSession();
+    checkManager();
 
     return () => {
-      mounted = false;
+      active = false;
     };
   }, []);
 
-  if (state === "loading") {
-    return <div className="auth-loading">Checking manager session…</div>;
+  if (checking) {
+    return (
+      <main className="landing-loading" aria-live="polite">
+        <span className="loading-mark">D</span>
+        <p>Checking manager account…</p>
+      </main>
+    );
   }
 
-  if (state === "unauthenticated") {
+  if (!authenticated) {
     return <Navigate to="/manager/login" replace />;
   }
 

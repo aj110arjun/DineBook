@@ -58,6 +58,10 @@ export default function App() {
         }
       />
       <Route
+        path="/admin"
+        element={<Navigate to="/admin/dashboard" replace />}
+      />
+      <Route
         path="/admin/dashboard"
         element={
           <AdminProtectedRoute>
@@ -81,21 +85,11 @@ export default function App() {
           </AdminProtectedRoute>
         }
       />
+      <Route path="/manager/register" element={<ManagerRegisterPage />} />
+      <Route path="/manager/login" element={<ManagerLoginPage />} />
       <Route
-        path="/manager/register"
-        element={
-          <GuestOnlyRoute>
-            <ManagerRegisterPage />
-          </GuestOnlyRoute>
-        }
-      />
-      <Route
-        path="/manager/login"
-        element={
-          <GuestOnlyRoute>
-            <ManagerLoginPage />
-          </GuestOnlyRoute>
-        }
+        path="/manager"
+        element={<Navigate to="/manager/dashboard" replace />}
       />
       <Route
         path="/manager/dashboard"
