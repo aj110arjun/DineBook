@@ -2245,3 +2245,45 @@ a:focus-visible,
     flex: 1;
   }
 }
+/* Manager Authentication */
+
+.manager-auth-shell {
+  background: var(--paper);
+}
+
+.manager-story {
+  position: relative;
+  overflow: hidden;
+}
+
+.manager-story-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(58, 11, 21, 0.88),
+    rgba(85, 19, 33, 0.72)
+  );
+}
+
+.manager-brand {
+  position: relative;
+  z-index: 1;
+}
+
+.manager-story .story-copy {
+  position: relative;
+  z-index: 1;
+}
+
+.manager-eyebrow {
+  color: #d8bc7a;
+}
+
+.manager-form-side {
+  background: #fff;
+}
+
+.manager-form-wrap {
+  max-width: 470px;
+}
