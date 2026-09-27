@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_BASE } from "../../lib/authApi.js";
 import {
   ArrowRight,
   FileText,
@@ -11,7 +12,7 @@ import {
   User,
   X,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import ManagerAuthLayout from "../../components/auth/ManagerAuthLayout.jsx";
 import { FormField, PasswordField } from "../../components/auth/FormField.jsx";
@@ -191,7 +192,9 @@ function ReviewDocument({ label, file, required = false }) {
 
 export default function ManagerRegisterPage() {
   const [step, setStep] = useState(1);
+  const navigate = useNavigate();
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const [application, setApplication] = useState(initialApplication);
   const [documents, setDocuments] = useState({
@@ -218,7 +221,17 @@ export default function ManagerRegisterPage() {
       open: "17:00",
       close: "22:00",
     },
+    thursday: {
+      enabled: false,
+      open: "17:00",
+      close: "22:00",
+    },
     friday: {
+      enabled: false,
+      open: "17:00",
+      close: "23:30",
+    },
+    saturday: {
       enabled: false,
       open: "17:00",
       close: "23:30",
@@ -392,23 +405,103 @@ export default function ManagerRegisterPage() {
     setError("");
     setStep((current) => Math.max(1, current - 1));
   }
-  function handleFinalSubmit(event) {
+  async function handleFinalSubmit(event) {
     event.preventDefault();
 
     setError("");
+    setSubmitting(true);
 
-    console.log("Complete manager application:", {
-      application,
-      documents,
-      hours,
-      capacity,
-      tables,
-      interiorMedia,
-    });
+    try {
+      const formData = new FormData();
 
-    // Backend submission will be connected here next.
-    console.log("Manager application submitted for admin review.");
+      // Manager account
+      formData.append("name", application.name);
+      formData.append("email", application.email);
+      formData.append("password", application.password);
+
+      // Restaurant information
+      formData.append("restaurant_name", application.restaurantName);
+      formData.append(
+        "restaurant_description",
+        application.restaurantDescription,
+      );
+      formData.append("cuisine_type", application.cuisineType);
+      formData.append("restaurant_contact", application.restaurantContact);
+      formData.append("restaurant_email", application.restaurantEmail);
+
+      // Address
+      formData.append("address", application.address);
+      formData.append("city", application.city);
+      formData.append("state", application.state);
+      formData.append("pin_code", application.pinCode);
+
+      // Restaurant capacity
+      formData.append("capacity", capacity);
+      formData.append("tables", tables);
+
+      // Operating hours
+      Object.entries(hours).forEach(([day, schedule]) => {
+        formData.append(`${day}_enabled`, String(schedule.enabled));
+        formData.append(`${day}_open`, schedule.open);
+        formData.append(`${day}_close`, schedule.close);
+      });
+
+      // Required documents
+      if (documents.fssaiLicense) {
+        formData.append("fssai_license", documents.fssaiLicense);
+      }
+
+      if (documents.businessRegistration) {
+        formData.append(
+          "business_registration",
+          documents.businessRegistration,
+        );
+      }
+
+      if (documents.ownerIdentity) {
+        formData.append("owner_identity", documents.ownerIdentity);
+      }
+
+      // Optional documents
+      if (documents.gstCertificate) {
+        formData.append("gst_certificate", documents.gstCertificate);
+      }
+
+      if (documents.brandingImages) {
+        formData.append("branding_images", documents.brandingImages);
+      }
+
+      if (interiorMedia) {
+        formData.append("interior_media", interiorMedia);
+      }
+
+      const response = await fetch(`${API_BASE}/api/auth/manager/register`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.detail || "Unable to submit manager registration.",
+        );
+      }
+
+      console.log("Manager application submitted:", data);
+
+      // Go to waiting for admin approval page
+      navigate("/manager/pending");
+    } catch (err) {
+      console.error("Manager registration failed:", err);
+
+      setError(err.message || "Unable to submit manager registration.");
+    } finally {
+      setSubmitting(false);
+    }
   }
+
   return (
     <ManagerAuthLayout>
       <div className="w-full">
@@ -1061,7 +1154,7 @@ export default function ManagerRegisterPage() {
                   type="submit"
                   className="flex h-12 items-center justify-center gap-2 rounded-lg bg-wine px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-ink focus:outline-none focus:ring-4 focus:ring-wine/20"
                 >
-                  Submit For Admin Review
+                  Continue to Review
                   <ArrowRight size={16} />
                 </button>
               </div>
@@ -1334,10 +1427,12 @@ export default function ManagerRegisterPage() {
 
                 <button
                   type="submit"
-                  className="flex h-12 items-center justify-center gap-2 rounded-lg bg-wine px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-ink focus:outline-none focus:ring-4 focus:ring-wine/20"
+                  disabled={submitting}
+                  className="flex h-12 items-center justify-center gap-2 rounded-lg bg-wine px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-ink focus:outline-none focus:ring-4 focus:ring-wine/20 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Submit Application
-                  <ArrowRight size={16} />
+                  {submitting ? "Submitting..." : "Submit Application"}
+
+                  {!submitting && <ArrowRight size={16} />}
                 </button>
               </div>
             </form>
