@@ -34,7 +34,7 @@ const navigation = [
   { label: "Notifications", icon: Bell },
   { label: "Activity Logs", icon: Activity },
   { label: "Settings", icon: Settings },
-  { label: "Requests", icon: SlidersHorizontal },
+  { label: "Requests", icon: SlidersHorizontal, path: "/admin/requests" },
   { label: "Profile", icon: Users },
 ];
 
