@@ -12,6 +12,10 @@ import AdminLoginPage from "./pages/admin/AdminLoginPage.jsx";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
 import AdminRestaurantsPage from "./pages/admin/AdminRestaurantsPage.jsx";
 import AdminRequestsPage from "./pages/admin/AdminRequestsPage.jsx";
+import ManagerRegisterPage from "./pages/manager/ManagerRegisterPage.jsx";
+import ManagerLoginPage from "./pages/manager/ManagerLoginPage.jsx";
+import ManagerDashboardPage from "./pages/manager/ManagerDashboardPage.jsx";
+import ManagerProtectedRoute from "./components/auth/ManagerProtectedRoute.jsx";
 
 export default function App() {
   return (
@@ -75,6 +79,30 @@ export default function App() {
           <AdminProtectedRoute>
             <AdminRequestsPage />
           </AdminProtectedRoute>
+        }
+      />
+      <Route
+        path="/manager/register"
+        element={
+          <GuestOnlyRoute>
+            <ManagerRegisterPage />
+          </GuestOnlyRoute>
+        }
+      />
+      <Route
+        path="/manager/login"
+        element={
+          <GuestOnlyRoute>
+            <ManagerLoginPage />
+          </GuestOnlyRoute>
+        }
+      />
+      <Route
+        path="/manager/dashboard"
+        element={
+          <ManagerProtectedRoute>
+            <ManagerDashboardPage />
+          </ManagerProtectedRoute>
         }
       />
     </Routes>
