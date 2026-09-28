@@ -18,6 +18,7 @@ import ManagerDashboardPage from "./pages/manager/ManagerDashboardPage.jsx";
 import ManagerProtectedRoute from "./components/auth/ManagerProtectedRoute.jsx";
 import ManagerPendingPage from "./pages/manager/ManagerPendingPage.jsx";
 
+
 export default function App() {
   return (
     <Routes>
@@ -101,6 +102,7 @@ export default function App() {
         }
       />
       <Route path="/manager/pending" element={<ManagerPendingPage />} />
+
     </Routes>
   );
 }
