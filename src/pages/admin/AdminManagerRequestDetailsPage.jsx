@@ -152,7 +152,7 @@ export default function AdminManagerRequestDetailsPage() {
   const documents = request?.documents || [];
   const hours = request?.hours || [];
 
-  const status = String(request?.status || "PENDING").toUpperCase();
+  const status = String(restaurant.status || request?.status || "PENDING").toUpperCase();
 
   const statusStyles = {
     PENDING: "border-amber-200 bg-amber-50 text-amber-700",
@@ -267,9 +267,9 @@ export default function AdminManagerRequestDetailsPage() {
                   value={request?.email}
                 />
 
-                <InfoItem
-                  icon={ShieldCheck}
-                  label="Account Status"
+                  <InfoItem
+                    icon={ShieldCheck}
+                  label="Manager Account Status"
                   value={request?.status}
                 />
 
@@ -304,6 +304,12 @@ export default function AdminManagerRequestDetailsPage() {
                   icon={Store}
                   label="Cuisine"
                   value={restaurant.cuisine_type}
+                />
+
+                <InfoItem
+                  icon={ShieldCheck}
+                  label="Restaurant Status"
+                  value={restaurant.status}
                 />
 
                 <InfoItem

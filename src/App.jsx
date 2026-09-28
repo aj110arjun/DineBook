@@ -5,12 +5,15 @@ import CustomerRecoveryPage from "./pages/customer/CustomerRecoveryPage.jsx";
 import CustomerRegisterPage from "./pages/customer/CustomerRegisterPage.jsx";
 import CustomerLandingPage from "./pages/customer/CustomerLandingPage.jsx";
 import CustomerEmailVerificationPage from "./pages/customer/CustomerEmailVerificationPage.jsx";
+import CustomerRestaurantDetailsPage from "./pages/customer/CustomerRestaurantDetailsPage.jsx";
+import CustomerRestaurantListingPage from "./pages/customer/CustomerRestaurantListingPage.jsx";
 import GuestOnlyRoute from "./components/auth/GuestOnlyRoute.jsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 import AdminProtectedRoute from "./components/auth/AdminProtectedRoute.jsx";
 import AdminLoginPage from "./pages/admin/AdminLoginPage.jsx";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
 import AdminRestaurantsPage from "./pages/admin/AdminRestaurantsPage.jsx";
+import AdminRestaurantDetailsPage from "./pages/admin/AdminRestaurantDetailsPage.jsx";
 import AdminRequestsPage from "./pages/admin/AdminRequestsPage.jsx";
 import AdminManagerRequestDetailsPage from "./pages/admin/AdminManagerRequestDetailsPage.jsx";
 import ManagerRegisterPage from "./pages/manager/ManagerRegisterPage.jsx";
@@ -28,6 +31,8 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Navigate to="/customer" replace />} />
       <Route path="/customer" element={<CustomerLandingPage />} />
+      <Route path="/customer/restaurants" element={<CustomerRestaurantListingPage />} />
+      <Route path="/customer/restaurants/:restaurantId/:section?" element={<CustomerRestaurantDetailsPage />} />
       <Route
         path="/customer/login"
         element={
@@ -80,6 +85,14 @@ export default function App() {
         element={
           <AdminProtectedRoute>
             <AdminRestaurantsPage />
+          </AdminProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/restaurants/:restaurantId"
+        element={
+          <AdminProtectedRoute>
+            <AdminRestaurantDetailsPage />
           </AdminProtectedRoute>
         }
       />

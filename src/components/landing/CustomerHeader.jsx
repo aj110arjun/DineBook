@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { ChevronDown, MapPin, Menu, Utensils, X } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { API_BASE } from "../../lib/authApi.js";
 import { demoSessionKey } from "../../data/demoCustomer.js";
 
 export default function CustomerHeader({ user, onLogout }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   async function signOut() {
     try {
@@ -79,21 +80,21 @@ export default function CustomerHeader({ user, onLogout }) {
 
           {/* Navigation links */}
           <div className="nav-links">
-            <a href="#discover" onClick={closeMenu}>
+            <Link className={location.pathname === "/customer" ? "active" : ""} to="/customer" onClick={closeMenu}>
               Discover
-            </a>
+            </Link>
 
-            <a href="#featured" onClick={closeMenu}>
+            <Link className={location.pathname.startsWith("/customer/restaurants") ? "active" : ""} to="/customer/restaurants" onClick={closeMenu}>
               Restaurants
-            </a>
+            </Link>
 
-            <a href="#offers" onClick={closeMenu}>
+            <Link to="/customer#offers" onClick={closeMenu}>
               Offers
-            </a>
+            </Link>
 
-            <a href="#how-it-works" onClick={closeMenu}>
+            <Link to="/customer#how-it-works" onClick={closeMenu}>
               Wallet
-            </a>
+            </Link>
           </div>
 
           {/* Account */}

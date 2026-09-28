@@ -42,8 +42,8 @@ function validateEmail(email) {
 }
 
 function validatePassword(password) {
-  if (password.length < 8)
-    return "Use at least 8 characters for your password.";
+  if (password.length < 10)
+    return "Use at least 10 characters for your password.";
   if (!/\p{Lu}/u.test(password))
     return "Add at least one uppercase letter to your password.";
   if (!/\p{Ll}/u.test(password))
@@ -161,14 +161,14 @@ export default function CustomerRegisterPage() {
         <PasswordField
           id="password"
           label="Create Password"
-          placeholder="At least 8 characters"
+          placeholder="At least 10 characters"
           autoComplete="new-password"
-          minLength={8}
+          minLength={10}
           error={fieldErrors.password}
           onChange={() => clearFieldError("password")}
         />
         <p className="-mt-2 mb-4 text-xs leading-5 text-stone-500">
-          Use 8 or more characters with uppercase and lowercase letters, a
+          Use 10 or more characters with uppercase and lowercase letters, a
           number, and a special symbol. Avoid common passwords.
         </p>
         <PasswordField
@@ -176,7 +176,7 @@ export default function CustomerRegisterPage() {
           label="Confirm Password"
           placeholder="Enter your password again"
           autoComplete="new-password"
-          minLength={8}
+          minLength={10}
           error={fieldErrors.confirmPassword}
           onChange={() => clearFieldError("confirmPassword")}
         />
