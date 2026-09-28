@@ -110,6 +110,7 @@ export default function App() {
         }
       />
       <Route path="/manager/pending" element={<ManagerPendingPage />} />
+
       <Route
         path="/manager/staff"
         element={
