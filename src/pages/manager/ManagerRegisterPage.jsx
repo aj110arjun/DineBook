@@ -52,11 +52,12 @@ function DocumentCard({
   onRemove,
   accept = ".pdf,.png,.jpg,.jpeg",
   image = false,
+  error,
 }) {
   const inputId = `document-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
 
   return (
-    <div className="mb-4 rounded-xl border border-stone-200 bg-white p-4">
+    <div className={`mb-4 rounded-xl border bg-white p-4 ${error ? "border-red-300" : "border-stone-200"}`}>
       <div className="flex items-center gap-4">
         <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-stone-100 text-wine">
           {image ? <ImageIcon size={19} /> : <FileText size={19} />}
@@ -133,6 +134,7 @@ function DocumentCard({
           />
         </div>
       </div>
+      {error && <p className="mt-2 text-xs font-medium text-red-600" role="alert">{error}</p>}
     </div>
   );
 }
@@ -194,6 +196,7 @@ export default function ManagerRegisterPage() {
   const [step, setStep] = useState(1);
   const navigate = useNavigate();
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
   const [application, setApplication] = useState(initialApplication);
@@ -248,6 +251,7 @@ export default function ManagerRegisterPage() {
   const [tables, setTables] = useState("");
   const [interiorMedia, setInteriorMedia] = useState(null);
   function updateField(field, value) {
+    setFieldErrors((current) => ({ ...current, [field]: "" }));
     setApplication((current) => ({
       ...current,
       [field]: value,
@@ -263,16 +267,17 @@ export default function ManagerRegisterPage() {
 
   function handleDocumentChange(field, file) {
     setError("");
+    setFieldErrors((current) => ({ ...current, [field]: "" }));
 
     if (!file) return;
 
     if (!ACCEPTED_DOCUMENT_TYPES.includes(file.type)) {
-      setError("Only PDF, PNG, and JPG files are accepted.");
+      setFieldErrors((current) => ({ ...current, [field]: "Choose a PDF, PNG, or JPG file." }));
       return;
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      setError("Each file must be 5 MB or smaller.");
+      setFieldErrors((current) => ({ ...current, [field]: "File must be 5 MB or smaller." }));
       return;
     }
 
@@ -283,6 +288,7 @@ export default function ManagerRegisterPage() {
   }
 
   function removeDocument(field) {
+    setFieldErrors((current) => ({ ...current, [field]: "" }));
     setDocuments((current) => ({
       ...current,
       [field]: null,
@@ -334,17 +340,17 @@ export default function ManagerRegisterPage() {
 
   function validateDocuments() {
     if (!documents.fssaiLicense) {
-      setError("Please upload your FSSAI License / Food Safety document.");
+      setFieldErrors((current) => ({ ...current, fssaiLicense: "Upload your FSSAI or food safety document." }));
       return false;
     }
 
     if (!documents.businessRegistration) {
-      setError("Please upload your Business Registration Certificate.");
+      setFieldErrors((current) => ({ ...current, businessRegistration: "Upload your business registration certificate." }));
       return false;
     }
 
     if (!documents.ownerIdentity) {
-      setError("Please upload your Owner Identity Proof.");
+      setFieldErrors((current) => ({ ...current, ownerIdentity: "Upload your owner identity proof." }));
       return false;
     }
 
@@ -369,9 +375,10 @@ export default function ManagerRegisterPage() {
     if (!event.currentTarget.reportValidity()) return;
 
     setError("");
+    setFieldErrors({});
 
     if (application.password !== application.confirmPassword) {
-      setError("Passwords do not match.");
+      setFieldErrors({ confirmPassword: "Passwords do not match." });
       return;
     }
 
@@ -588,6 +595,7 @@ export default function ManagerRegisterPage() {
                 minLength={2}
                 required
                 value={application.name}
+                error={fieldErrors.name}
                 onChange={(event) => updateField("name", event.target.value)}
               />
 
@@ -600,6 +608,7 @@ export default function ManagerRegisterPage() {
                 icon={Mail}
                 required
                 value={application.email}
+                error={fieldErrors.email}
                 onChange={(event) => updateField("email", event.target.value)}
               />
 
@@ -611,6 +620,7 @@ export default function ManagerRegisterPage() {
                 minLength={8}
                 required
                 value={application.password}
+                error={fieldErrors.password}
                 onChange={(event) =>
                   updateField("password", event.target.value)
                 }
@@ -624,6 +634,7 @@ export default function ManagerRegisterPage() {
                 minLength={8}
                 required
                 value={application.confirmPassword}
+                error={fieldErrors.confirmPassword}
                 onChange={(event) =>
                   updateField("confirmPassword", event.target.value)
                 }
@@ -692,11 +703,14 @@ export default function ManagerRegisterPage() {
                   placeholder="Describe your restaurant, cuisine, atmosphere, and dining experience."
                   required
                   value={application.restaurantDescription}
+                  aria-invalid={Boolean(fieldErrors.restaurantDescription)}
+                  onInvalid={(event) => { event.preventDefault(); setFieldErrors((current) => ({ ...current, restaurantDescription: "Enter a restaurant description." })); }}
                   onChange={(event) =>
                     updateField("restaurantDescription", event.target.value)
                   }
                   className="block w-full resize-none rounded-lg border border-stone-200 bg-white px-3.5 py-3 text-sm text-ink outline-none placeholder:text-stone-400 transition focus:border-wine focus:ring-2 focus:ring-wine/10"
                 />
+                {fieldErrors.restaurantDescription && <p className="-mt-3 mb-4 text-xs font-medium text-red-600" role="alert">{fieldErrors.restaurantDescription}</p>}
               </label>
 
               {/* Cuisine */}
@@ -710,6 +724,8 @@ export default function ManagerRegisterPage() {
                   name="cuisineType"
                   required
                   value={application.cuisineType}
+                  aria-invalid={Boolean(fieldErrors.cuisineType)}
+                  onInvalid={(event) => { event.preventDefault(); setFieldErrors((current) => ({ ...current, cuisineType: "Choose a cuisine type." })); }}
                   onChange={(event) =>
                     updateField("cuisineType", event.target.value)
                   }
@@ -729,6 +745,7 @@ export default function ManagerRegisterPage() {
                   <option value="Thai">Thai</option>
                   <option value="Other">Other</option>
                 </select>
+                {fieldErrors.cuisineType && <p className="-mt-3 mb-4 text-xs font-medium text-red-600" role="alert">{fieldErrors.cuisineType}</p>}
               </label>
 
               {/* Contact + Email */}
@@ -740,6 +757,8 @@ export default function ManagerRegisterPage() {
                   placeholder="+91 98765 43210"
                   autoComplete="tel"
                   required
+                  pattern="[+]?[0-9][0-9 ()-]{5,18}[0-9]"
+                  patternMessage="Enter a valid phone number."
                   value={application.restaurantContact}
                   onChange={(event) =>
                     updateField("restaurantContact", event.target.value)
@@ -887,6 +906,7 @@ export default function ManagerRegisterPage() {
                 description="Upload your food safety or FSSAI license."
                 required
                 file={documents.fssaiLicense}
+                error={fieldErrors.fssaiLicense}
                 onUpload={(file) => handleDocumentChange("fssaiLicense", file)}
                 onRemove={() => removeDocument("fssaiLicense")}
               />
@@ -896,6 +916,7 @@ export default function ManagerRegisterPage() {
                 description="No document uploaded yet"
                 required
                 file={documents.businessRegistration}
+                error={fieldErrors.businessRegistration}
                 onUpload={(file) =>
                   handleDocumentChange("businessRegistration", file)
                 }
@@ -906,6 +927,7 @@ export default function ManagerRegisterPage() {
                 title="GST / Tax Certificate"
                 description="Supports VAT / Local sales taxes"
                 file={documents.gstCertificate}
+                error={fieldErrors.gstCertificate}
                 onUpload={(file) =>
                   handleDocumentChange("gstCertificate", file)
                 }
@@ -917,6 +939,7 @@ export default function ManagerRegisterPage() {
                 description="Upload a government-issued identity document."
                 required
                 file={documents.ownerIdentity}
+                error={fieldErrors.ownerIdentity}
                 onUpload={(file) => handleDocumentChange("ownerIdentity", file)}
                 onRemove={() => removeDocument("ownerIdentity")}
               />
@@ -925,6 +948,7 @@ export default function ManagerRegisterPage() {
                 title="Restaurant Branding & Images"
                 description="Include logos or high-resolution hall captures"
                 file={documents.brandingImages}
+                error={fieldErrors.brandingImages}
                 onUpload={(file) =>
                   handleDocumentChange("brandingImages", file)
                 }
@@ -982,16 +1006,17 @@ export default function ManagerRegisterPage() {
                 event.preventDefault();
 
                 if (!capacity.trim()) {
-                  setError("Please enter the total seating capacity.");
+                  setFieldErrors((current) => ({ ...current, capacity: "Enter the total seating capacity." }));
                   return;
                 }
 
                 if (!tables.trim()) {
-                  setError("Please enter the number of dining tables.");
+                  setFieldErrors((current) => ({ ...current, tables: "Enter the number of dining tables." }));
                   return;
                 }
 
                 setError("");
+                setFieldErrors((current) => ({ ...current, capacity: "", tables: "" }));
 
                 console.log("Operating hours:", {
                   hours,
@@ -1078,8 +1103,10 @@ export default function ManagerRegisterPage() {
                     type="number"
                     placeholder="45"
                     required
+                    min={1}
                     value={capacity}
-                    onChange={(event) => setCapacity(event.target.value)}
+                    error={fieldErrors.capacity}
+                    onChange={(event) => { setCapacity(event.target.value); setFieldErrors((current) => ({ ...current, capacity: "" })); }}
                   />
 
                   <FormField
@@ -1088,8 +1115,10 @@ export default function ManagerRegisterPage() {
                     type="number"
                     placeholder="12"
                     required
+                    min={1}
                     value={tables}
-                    onChange={(event) => setTables(event.target.value)}
+                    error={fieldErrors.tables}
+                    onChange={(event) => { setTables(event.target.value); setFieldErrors((current) => ({ ...current, tables: "" })); }}
                   />
                 </div>
               </div>

@@ -234,7 +234,11 @@ export default function AdminRequestsPage() {
           ) : (
             <div className="admin-request-list">
               {managerRequests.map((manager) => (
-                <article key={manager.id} className="admin-request-card">
+                <article
+                  key={manager.id}
+                  className="admin-request-card cursor-pointer"
+                  onClick={() => navigate(`/admin/requests/${manager.id}`)}
+                >
                   <div className="admin-request-avatar">
                     {manager.name?.charAt(0)?.toUpperCase() || "M"}
                   </div>
@@ -261,7 +265,10 @@ export default function AdminRequestsPage() {
                     <button
                       type="button"
                       className="admin-request-reject"
-                      onClick={() => handleReject(manager.id)}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleReject(manager.id);
+                      }}
                       disabled={processingId === manager.id}
                     >
                       <X size={15} />
@@ -271,7 +278,10 @@ export default function AdminRequestsPage() {
                     <button
                       type="button"
                       className="admin-request-approve"
-                      onClick={() => handleApprove(manager.id)}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleApprove(manager.id);
+                      }}
                       disabled={processingId === manager.id}
                     >
                       <Check size={15} />
