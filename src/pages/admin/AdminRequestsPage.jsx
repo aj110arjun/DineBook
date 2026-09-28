@@ -228,8 +228,8 @@ export default function AdminRequestsPage() {
           ) : managerRequests.length === 0 ? (
             <div className="admin-request-empty">
               <UserCheck size={28} />
-              <strong>No pending manager requests</strong>
-              <span>New manager registrations will appear here.</span>
+              <strong>No pending restaurant applications</strong>
+              <span>New restaurant applications will appear here.</span>
             </div>
           ) : (
             <div className="admin-request-list">
@@ -245,13 +245,14 @@ export default function AdminRequestsPage() {
 
                   <div className="admin-request-details">
                     <div className="admin-request-title">
-                      <h3>{manager.name}</h3>
+                      <h3>{manager.restaurant?.name || manager.name}</h3>
                       <span className="admin-request-status">
-                        {manager.status}
+                        {manager.restaurant?.status || manager.status}
                       </span>
                     </div>
 
-                    <p>{manager.email}</p>
+                    <p>{manager.restaurant?.cuisine_type || "Restaurant application"} · {manager.restaurant?.city || "Location not provided"}</p>
+                    <small>Manager: {manager.name} · {manager.email}</small>
 
                     <small>
                       Registered{" "}
