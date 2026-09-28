@@ -12,12 +12,16 @@ import AdminLoginPage from "./pages/admin/AdminLoginPage.jsx";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
 import AdminRestaurantsPage from "./pages/admin/AdminRestaurantsPage.jsx";
 import AdminRequestsPage from "./pages/admin/AdminRequestsPage.jsx";
+import AdminManagerRequestDetailsPage from "./pages/admin/AdminManagerRequestDetailsPage.jsx";
 import ManagerRegisterPage from "./pages/manager/ManagerRegisterPage.jsx";
 import ManagerLoginPage from "./pages/manager/ManagerLoginPage.jsx";
 import ManagerDashboardPage from "./pages/manager/ManagerDashboardPage.jsx";
 import ManagerProtectedRoute from "./components/auth/ManagerProtectedRoute.jsx";
 import ManagerPendingPage from "./pages/manager/ManagerPendingPage.jsx";
-
+import ManagerStaffPage from "./pages/manager/ManagerStaffPage.jsx";
+import ChefLoginPage from "./pages/chef/ChefLoginPage.jsx";
+import ChefDashboardPage from "./pages/chef/ChefDashboardPage.jsx";
+import ChefProtectedRoute from "./components/auth/ChefProtectedRoute.jsx";
 
 export default function App() {
   return (
@@ -87,6 +91,10 @@ export default function App() {
           </AdminProtectedRoute>
         }
       />
+      <Route
+        path="/admin/requests/:requestId"
+        element={<AdminManagerRequestDetailsPage />}
+      />
       <Route path="/manager/register" element={<ManagerRegisterPage />} />
       <Route path="/manager/login" element={<ManagerLoginPage />} />
       <Route
@@ -103,6 +111,24 @@ export default function App() {
       />
       <Route path="/manager/pending" element={<ManagerPendingPage />} />
 
+      <Route
+        path="/manager/staff"
+        element={
+          <ManagerProtectedRoute>
+            <ManagerStaffPage />
+          </ManagerProtectedRoute>
+        }
+      />
+      <Route path="/chef" element={<Navigate to="/chef/dashboard" replace />} />
+      <Route path="/chef/login" element={<ChefLoginPage />} />
+      <Route
+        path="/chef/dashboard"
+        element={
+          <ChefProtectedRoute>
+            <ChefDashboardPage />
+          </ChefProtectedRoute>
+        }
+      />
     </Routes>
   );
 }

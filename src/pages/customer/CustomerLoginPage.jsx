@@ -71,6 +71,7 @@ export default function CustomerLoginPage() {
         )}
       </form>
       <p className="mt-7 border-t border-stone-100 pt-5 text-center text-sm text-stone-500">New to DineBook? <Link className="font-semibold text-wine hover:underline" to="/customer/register">Create an Account</Link></p>
+      <p className="mt-3 text-center text-xs text-stone-500">Working in a kitchen? <Link className="font-semibold text-wine hover:underline" to="/chef/login">Chef sign in</Link></p>
     </AuthLayout>
   );
 }

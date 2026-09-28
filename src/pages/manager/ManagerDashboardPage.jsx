@@ -1,44 +1,5 @@
-import {
-  Bell,
-  CalendarDays,
-  ChevronDown,
-  CircleDollarSign,
-  ClipboardList,
-  Grid2X2,
-  LogOut,
-  Menu,
-  MessageCircle,
-  Plus,
-  Search,
-  Settings,
-  ShoppingBasket,
-  Star,
-  Store,
-  Table2,
-  Tag,
-  Users,
-  Utensils,
-  X,
-} from "lucide-react";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { requestJson } from "../../lib/authApi.js";
-
-const navigation = [
-  { label: "Dashboard", icon: Grid2X2, active: true },
-  { label: "Restaurant", icon: Store },
-  { label: "Tables", icon: Table2 },
-  { label: "Reservations", icon: CalendarDays },
-  { label: "Menu", icon: Utensils },
-  { label: "Orders", icon: ShoppingBasket },
-  { label: "Staff", icon: Users },
-  { label: "Offers", icon: Tag },
-  { label: "Reviews", icon: MessageCircle },
-  { label: "Analytics", icon: CircleDollarSign },
-  { label: "Payments", icon: ClipboardList },
-  { label: "Notifications", icon: Bell },
-  { label: "Settings", icon: Settings },
-];
+import { CalendarDays, CircleDollarSign, Plus, ShoppingBasket, Star, Table2, Tag } from "lucide-react";
+import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 
 const revenueData = [
   { day: "Mon", value: 32 },
@@ -96,127 +57,9 @@ const popularItems = [
 ];
 
 export default function ManagerDashboardPage() {
-  const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  async function handleLogout() {
-    try {
-      await requestJson("/api/auth/manager/logout", {
-        method: "POST",
-      });
-    } catch {
-      // Even if the API request fails, return to login.
-    } finally {
-      navigate("/manager/login", { replace: true });
-    }
-  }
-
   return (
-    <main className="manager-dashboard">
-      {/* Mobile overlay */}
-      {sidebarOpen && (
-        <button
-          className="manager-sidebar-overlay"
-          onClick={() => setSidebarOpen(false)}
-          aria-label="Close navigation"
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside className={`manager-sidebar ${sidebarOpen ? "open" : ""}`}>
-        <div className="manager-sidebar-brand">
-          <div className="manager-brand-mark">
-            <Utensils size={16} />
-          </div>
-
-          <span>DineBook</span>
-
-          <button
-            className="manager-mobile-close"
-            onClick={() => setSidebarOpen(false)}
-            aria-label="Close menu"
-          >
-            <X size={19} />
-          </button>
-        </div>
-
-        <div className="manager-restaurant-card">
-          <strong>Trattoria Bella</strong>
-          <span>Owner Console</span>
-        </div>
-
-        <nav className="manager-nav">
-          {navigation.map((item) => {
-            const Icon = item.icon;
-
-            return (
-              <button
-                key={item.label}
-                className={`manager-nav-item ${item.active ? "active" : ""}`}
-                onClick={() => setSidebarOpen(false)}
-              >
-                <Icon size={16} />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-
-        <div className="manager-sidebar-bottom">
-          <button className="manager-nav-item" onClick={handleLogout}>
-            <LogOut size={16} />
-            <span>Logout</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* Main area */}
-      <section className="manager-dashboard-main">
-        {/* Topbar */}
-        <header className="manager-topbar">
-          <div className="manager-topbar-left">
-            <button
-              className="manager-menu-button"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Open menu"
-            >
-              <Menu size={21} />
-            </button>
-
-            <h1>Dashboard</h1>
-
-            <span className="manager-order-status-badge">
-              <span />
-              Accepting Orders
-            </span>
-          </div>
-
-          <div className="manager-topbar-right">
-            <div className="manager-search">
-              <Search size={15} />
-              <input type="text" placeholder="Search transactions, tables..." />
-            </div>
-
-            <button className="manager-notification-button">
-              <Bell size={18} />
-              <span>3</span>
-            </button>
-
-            <button className="manager-profile">
-              <div className="manager-profile-avatar">MB</div>
-
-              <div>
-                <strong>Marco B.</strong>
-                <span>Owner Partner</span>
-              </div>
-
-              <ChevronDown size={15} />
-            </button>
-          </div>
-        </header>
-
-        {/* Content */}
-        <div className="manager-dashboard-content">
+    <ManagerLayout title="Dashboard">
+      <div className="manager-dashboard-content">
           <div className="manager-breadcrumb">
             <span>Home</span>
             <span>/</span>
@@ -468,9 +311,8 @@ export default function ManagerDashboardPage() {
               </div>
             </section>
           </div>
-        </div>
-      </section>
-    </main>
+      </div>
+    </ManagerLayout>
   );
 }
 
