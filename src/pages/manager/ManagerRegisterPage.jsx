@@ -207,14 +207,16 @@ export default function ManagerRegisterPage() {
 
   const [application, setApplication] = useState(initialApplication);
   const [mapQuery, setMapQuery] = useState("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      setMapQuery([application.address, application.city, application.state, application.pinCode]
-        .filter(Boolean)
-        .join(", "));
+      setMapQuery(latitude !== "" && longitude !== ""
+        ? `${latitude},${longitude}`
+        : [application.address, application.city, application.state, application.pinCode].filter(Boolean).join(", "));
     }, 500);
     return () => window.clearTimeout(timeoutId);
-  }, [application.address, application.city, application.state, application.pinCode]);
+  }, [application.address, application.city, application.state, application.pinCode, latitude, longitude]);
   const [documents, setDocuments] = useState({
     fssaiLicense: null,
     businessRegistration: null,
@@ -543,6 +545,10 @@ export default function ManagerRegisterPage() {
       // Restaurant capacity
       formData.append("capacity", capacity);
       formData.append("tables", tables);
+      if (latitude !== "" && longitude !== "") {
+        formData.append("latitude", latitude);
+        formData.append("longitude", longitude);
+      }
 
       // Operating hours
       Object.entries(hours).forEach(([day, schedule]) => {
@@ -977,8 +983,16 @@ export default function ManagerRegisterPage() {
                 </div>
 
                 <p className="mt-2 text-xs leading-5 text-stone-400">
-                  The map preview updates as you enter the restaurant address. Verify the pin location in Google Maps before continuing.
+                  The map follows your address. Enter the exact coordinates to place the restaurant pin precisely; those coordinates are saved with the restaurant.
                 </p>
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <FormField id="latitude" label="Latitude" type="number" step="any" min="-90" max="90" required
+                    placeholder="e.g. 19.0760" value={latitude}
+                    onChange={(event) => setLatitude(event.target.value)} />
+                  <FormField id="longitude" label="Longitude" type="number" step="any" min="-180" max="180" required
+                    placeholder="e.g. 72.8777" value={longitude}
+                    onChange={(event) => setLongitude(event.target.value)} />
+                </div>
               </div>
 
               <Notice message={error} />
