@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ChefHat, Plus, Trash2, Users } from "lucide-react";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
-import { FormField, PasswordField } from "../../components/auth/FormField.jsx";
+import { FormField } from "../../components/auth/FormField.jsx";
 import Notice from "../../components/auth/Notice.jsx";
 import { requestJson } from "../../lib/authApi.js";
 
@@ -44,12 +44,11 @@ export default function ManagerStaffPage() {
         body: JSON.stringify({
           name: form.get("name").trim(),
           email: form.get("email").trim().toLowerCase(),
-          password: form.get("password"),
         }),
         fallbackMessage: "Unable to add chef.",
       });
       formElement.reset();
-      setSuccess("Chef added. They can now sign in at /chef/login.");
+      setSuccess("Chef added. Their sign-in email and temporary password have been sent.");
       await loadStaff();
     } catch (reason) {
       setError(reason.message);
@@ -78,12 +77,11 @@ export default function ManagerStaffPage() {
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
           <section className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
-            <div className="mb-5 flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-lg bg-wine/10 text-wine"><ChefHat size={19} /></span><div><h3 className="font-semibold text-ink">Add a Chef</h3><p className="mt-1 text-xs text-stone-500">Chef can use these credentials to sign in.</p></div></div>
+            <div className="mb-5 flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-lg bg-wine/10 text-wine"><ChefHat size={19} /></span><div><h3 className="font-semibold text-ink">Add a Chef</h3><p className="mt-1 text-xs text-stone-500">Sign-in credentials will be emailed to the chef.</p></div></div>
             <form onSubmit={handleAddChef} noValidate>
               <FormField id="name" label="Chef Full Name" placeholder="Enter the chef’s name" autoComplete="name" minLength={2} required />
               <FormField id="email" label="Chef Email Address" type="email" placeholder="chef@restaurant.com" autoComplete="email" required />
-              <PasswordField id="password" label="Temporary Password" placeholder="At least 8 characters" autoComplete="new-password" minLength={8} maxLength={128} required />
-              <p className="-mt-2 mb-4 text-xs leading-5 text-stone-500">Share this password securely. The chef can sign in from the Chef Sign In page.</p>
+              <p className="mb-4 text-xs leading-5 text-stone-500">We’ll email a temporary password to this address. The chef must change it at first sign-in.</p>
               <Notice message={error} />
               <Notice message={success} type="success" />
               <button type="submit" disabled={saving} className="mt-2 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-wine px-4 text-sm font-semibold text-white transition hover:bg-ink disabled:opacity-60"><Plus size={16} />{saving ? "Adding chef…" : "Add Chef"}</button>

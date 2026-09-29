@@ -24,6 +24,7 @@ import ManagerPendingPage from "./pages/manager/ManagerPendingPage.jsx";
 import ManagerStaffPage from "./pages/manager/ManagerStaffPage.jsx";
 import ChefLoginPage from "./pages/chef/ChefLoginPage.jsx";
 import ChefDashboardPage from "./pages/chef/ChefDashboardPage.jsx";
+import ChefChangePasswordPage from "./pages/chef/ChefChangePasswordPage.jsx";
 import ChefProtectedRoute from "./components/auth/ChefProtectedRoute.jsx";
 import PortalGuestOnlyRoute from "./components/auth/PortalGuestOnlyRoute.jsx";
 import ThemeToggle from "./components/ThemeToggle.jsx";
@@ -160,6 +161,14 @@ export default function App() {
         element={
           <ChefProtectedRoute>
             <ChefDashboardPage />
+          </ChefProtectedRoute>
+        }
+      />
+      <Route
+        path="/chef/change-password"
+        element={
+          <ChefProtectedRoute>
+            <ChefChangePasswordPage />
           </ChefProtectedRoute>
         }
       />
