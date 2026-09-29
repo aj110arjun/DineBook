@@ -1,10 +1,14 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from "vite";
 
-// Use Vite's automatic JSX transform directly. This avoids injecting a Fast
-// Refresh runtime into the customer auth entry while keeping React support.
+// Use Vite's automatic JSX transform directly.
 export default defineConfig({
   esbuild: {
-    jsx: 'automatic',
-    jsxImportSource: 'react',
+    jsx: "automatic",
+    jsxImportSource: "react",
+  },
+
+  server: {
+    host: "0.0.0.0",
+    allowedHosts: ["kinetic-cling-grunt.ngrok-free.dev"],
   },
 });
