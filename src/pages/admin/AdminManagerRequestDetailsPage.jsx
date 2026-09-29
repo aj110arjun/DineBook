@@ -19,6 +19,7 @@ import {
 import { requestJson } from "../../lib/authApi.js";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
 import AdminActionConfirmModal from "../../components/admin/AdminActionConfirmModal.jsx";
+import AdminDocumentPreviewModal from "../../components/admin/AdminDocumentPreviewModal.jsx";
 
 export default function AdminManagerRequestDetailsPage() {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ export default function AdminManagerRequestDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [confirmationAction, setConfirmationAction] = useState(null);
+  const [previewDocument, setPreviewDocument] = useState(null);
   const [error, setError] = useState("");
 
   async function loadRequest() {
@@ -459,12 +461,11 @@ export default function AdminManagerRequestDetailsPage() {
                 </div>
               ) : (
                 documents.map((document) => (
-                  <a
+                  <button
                     key={document.id}
-                    href={document.file_url || document.file_path}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="group flex min-w-0 items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 transition hover:border-[#0fa99d] hover:bg-gray-50"
+                    type="button"
+                    onClick={() => setPreviewDocument(document)}
+                    className="admin-document-preview-trigger group flex min-w-0 items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 text-left transition hover:border-[#0fa99d] hover:bg-gray-50"
                   >
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#0fa99d]/10 text-[#0fa99d] transition group-hover:bg-[#0fa99d] group-hover:text-white">
                       <FileText size={19} />
@@ -483,7 +484,7 @@ export default function AdminManagerRequestDetailsPage() {
                         Open Document
                       </p>
                     </div>
-                  </a>
+                  </button>
                 ))
               )}
             </div>
@@ -530,6 +531,13 @@ export default function AdminManagerRequestDetailsPage() {
         onCancel={() => setConfirmationAction(null)}
         onConfirm={confirmationAction === "approve" ? handleApprove : handleReject}
       />
+      {previewDocument && (
+        <AdminDocumentPreviewModal
+          managerId={requestId}
+          document={previewDocument}
+          onClose={() => setPreviewDocument(null)}
+        />
+      )}
     </AdminLayout>
   );
 }
