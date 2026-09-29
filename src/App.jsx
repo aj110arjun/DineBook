@@ -25,9 +25,12 @@ import ManagerStaffPage from "./pages/manager/ManagerStaffPage.jsx";
 import ChefLoginPage from "./pages/chef/ChefLoginPage.jsx";
 import ChefDashboardPage from "./pages/chef/ChefDashboardPage.jsx";
 import ChefProtectedRoute from "./components/auth/ChefProtectedRoute.jsx";
+import PortalGuestOnlyRoute from "./components/auth/PortalGuestOnlyRoute.jsx";
+import ThemeToggle from "./components/ThemeToggle.jsx";
 
 export default function App() {
   return (
+    <>
     <Routes>
       <Route path="/" element={<Navigate to="/customer" replace />} />
       <Route path="/customer" element={<CustomerLandingPage />} />
@@ -63,9 +66,9 @@ export default function App() {
       <Route
         path="/admin/login"
         element={
-          <GuestOnlyRoute>
+          <PortalGuestOnlyRoute sessionPath="/api/auth/admin/me" redirectTo="/admin/dashboard" portalName="administrator">
             <AdminLoginPage />
-          </GuestOnlyRoute>
+          </PortalGuestOnlyRoute>
         }
       />
       <Route
@@ -106,10 +109,21 @@ export default function App() {
       />
       <Route
         path="/admin/requests/:requestId"
-        element={<AdminManagerRequestDetailsPage />}
+        element={
+          <AdminProtectedRoute>
+            <AdminManagerRequestDetailsPage />
+          </AdminProtectedRoute>
+        }
       />
       <Route path="/manager/register" element={<ManagerRegisterPage />} />
-      <Route path="/manager/login" element={<ManagerLoginPage />} />
+      <Route
+        path="/manager/login"
+        element={
+          <PortalGuestOnlyRoute sessionPath="/api/auth/manager/me" redirectTo="/manager/dashboard" portalName="manager">
+            <ManagerLoginPage />
+          </PortalGuestOnlyRoute>
+        }
+      />
       <Route
         path="/manager"
         element={<Navigate to="/manager/dashboard" replace />}
@@ -133,7 +147,14 @@ export default function App() {
         }
       />
       <Route path="/chef" element={<Navigate to="/chef/dashboard" replace />} />
-      <Route path="/chef/login" element={<ChefLoginPage />} />
+      <Route
+        path="/chef/login"
+        element={
+          <PortalGuestOnlyRoute sessionPath="/api/chef/me" redirectTo="/chef/dashboard" portalName="chef">
+            <ChefLoginPage />
+          </PortalGuestOnlyRoute>
+        }
+      />
       <Route
         path="/chef/dashboard"
         element={
@@ -143,5 +164,7 @@ export default function App() {
         }
       />
     </Routes>
+    <ThemeToggle />
+    </>
   );
 }
