@@ -17,6 +17,28 @@
 * {
   box-sizing: border-box;
 }
+.theme-toggle {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 13px;
+  border: 1px solid #e5d8d3;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--wine);
+  box-shadow: 0 5px 18px #1b10151f;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.theme-toggle:hover {
+  background: #fbf6f0;
+}
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 90px;
@@ -2951,6 +2973,74 @@ a:focus-visible,
   }
 }
 
+.admin-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(15 23 35 / 58%);
+}
+.admin-confirm-modal {
+  position: relative;
+  width: min(100%, 440px);
+  padding: 1.75rem;
+  border: 1px solid #e2e7eb;
+  border-radius: 1rem;
+  background: #fff;
+  color: #172335;
+  box-shadow: 0 24px 70px rgb(0 0 0 / 25%);
+}
+.admin-confirm-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border: 0;
+  border-radius: .5rem;
+  background: transparent;
+  color: #687587;
+  cursor: pointer;
+}
+.admin-confirm-close:hover { background: #f1f4f6; }
+.admin-confirm-icon {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  margin-bottom: 1rem;
+  border-radius: .8rem;
+}
+.admin-confirm-icon.approve { background: #e8f6f5; color: #0b8279; }
+.admin-confirm-icon.reject { background: #fff0f1; color: #b42334; }
+.admin-confirm-modal h2 { margin: 0; font-size: 1.2rem; font-weight: 700; color: #172335; }
+.admin-confirm-modal p { margin: .55rem 0 1.5rem; color: #667386; font-size: .9rem; line-height: 1.55; }
+.admin-confirm-actions { display: flex; justify-content: flex-end; gap: .65rem; }
+.admin-confirm-cancel,
+.admin-confirm-submit { min-height: 2.65rem; padding: 0 1rem; border: 1px solid transparent; border-radius: .6rem; font-size: .85rem; font-weight: 650; cursor: pointer; }
+.admin-confirm-cancel { border-color: #dce2e7; background: #fff; color: #435064; }
+.admin-confirm-cancel:hover { background: #f6f8f9; }
+.admin-confirm-submit.approve { background: #0fa99d; color: #fff; }
+.admin-confirm-submit.approve:hover { background: #0c948a; }
+.admin-confirm-submit.reject { background: #b42334; color: #fff; }
+.admin-confirm-submit.reject:hover { background: #941b2a; }
+.admin-confirm-actions button:disabled,
+.admin-confirm-close:disabled { cursor: wait; opacity: .6; }
+:root[data-theme="dark"] .admin-confirm-modal { border-color: #514447; background: #211c1e; color: #f4eeee; }
+:root[data-theme="dark"] .admin-confirm-modal h2 { color: #f4eeee; }
+:root[data-theme="dark"] .admin-confirm-modal p { color: #c4b8b9; }
+:root[data-theme="dark"] .admin-confirm-cancel { border-color: #514447; background: #302a2d; color: #f4eeee; }
+:root[data-theme="dark"] .admin-confirm-close { color: #d0c7c7; }
+:root[data-theme="dark"] .admin-confirm-close:hover { background: #302a2d; }
+:root[data-theme="dark"] .admin-request-status-tab { border-color: #514447; background: #211c1e; color: #d0c7c7; }
+:root[data-theme="dark"] .admin-request-status-tab span { background: #302a2d; color: #d0c7c7; }
+:root[data-theme="dark"] .admin-request-status-tab.active { border-color: #0fa99d; background: #183532; color: #8be0d7; }
+:root[data-theme="dark"] .admin-request-status-tab.active span { background: #23514c; color: #b8f0e9; }
+
 /* Admin Manager Requests */
 
 .admin-request-error {
@@ -2998,6 +3088,45 @@ a:focus-visible,
   display: grid;
   gap: 13px;
 }
+
+.admin-request-status-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 22px 0 18px;
+}
+.admin-request-status-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid #dfe5e8;
+  border-radius: 9px;
+  background: #fff;
+  color: #536275;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.admin-request-status-tab span {
+  display: grid;
+  min-width: 20px;
+  height: 20px;
+  place-items: center;
+  border-radius: 999px;
+  background: #f1f4f6;
+  color: #536275;
+  font-size: 9px;
+}
+.admin-request-status-tab:hover { border-color: #b9c7ce; }
+.admin-request-status-tab.active {
+  border-color: #0fa99d;
+  background: #e8f6f5;
+  color: #0b8279;
+}
+.admin-request-status-tab.active span { background: #d3efed; color: #0b8279; }
 
 .admin-request-card {
   display: flex;
@@ -5387,4 +5516,422 @@ a:focus-visible,
   .chef-online-badge i { width: 9px; height: 9px; }
   .chef-icon-button { width: 32px; height: 32px; }
   .chef-stat-top { font-size: 10px; }
+}
+
+/* Persisted application-wide dark theme */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #171516;
+  --surface: #211d1f;
+  --surface-raised: #292426;
+  --dark-text: #f1e9e8;
+  --dark-muted: #b0a5a5;
+  --dark-line: #40383a;
+  background: var(--paper);
+  color: var(--dark-text);
+}
+:root[data-theme="dark"] body {
+  background: var(--paper);
+  color: var(--dark-text);
+}
+:root[data-theme="dark"] .theme-toggle {
+  border-color: #675057;
+  background: #282124;
+  color: #e5c77e;
+}
+:root[data-theme="dark"] .theme-toggle:hover {
+  background: #39272d;
+}
+:root[data-theme="dark"] .site-header .location-select select {
+  background: transparent;
+  color: #fff;
+}
+:root[data-theme="dark"] .customer-home,
+:root[data-theme="dark"] .customer-restaurant-detail,
+:root[data-theme="dark"] .restaurant-details-page,
+:root[data-theme="dark"] .restaurant-listing-page,
+:root[data-theme="dark"] .landing-loading {
+  background: var(--paper);
+  color: var(--dark-text);
+}
+:root[data-theme="dark"] .content-section,
+:root[data-theme="dark"] .restaurant-detail-section,
+:root[data-theme="dark"] .restaurant-listing-toolbar h2,
+:root[data-theme="dark"] .restaurant-detail-title,
+:root[data-theme="dark"] .restaurant-detail-section h2 {
+  color: var(--dark-text);
+}
+:root[data-theme="dark"] .restaurant-card,
+:root[data-theme="dark"] .dish-card,
+:root[data-theme="dark"] .step-card,
+:root[data-theme="dark"] .testimonial-card,
+:root[data-theme="dark"] .restaurant-detail-panel,
+:root[data-theme="dark"] .restaurant-booking-card,
+:root[data-theme="dark"] .restaurant-filter-panel,
+:root[data-theme="dark"] .restaurant-listing-toolbar select,
+:root[data-theme="dark"] .restaurant-search-bar,
+:root[data-theme="dark"] .booking-input-wrap,
+:root[data-theme="dark"] .booking-time-options button,
+:root[data-theme="dark"] .restaurant-pagination button {
+  border-color: var(--dark-line);
+  background-color: var(--surface);
+  color: var(--dark-text);
+}
+:root[data-theme="dark"] .step-icon {
+  background: #34282b;
+  color: #e5c77e;
+}
+:root[data-theme="dark"] .step-number {
+  color: #e5c77e;
+}
+:root[data-theme="dark"] .restaurant-search-bar > input,
+:root[data-theme="dark"] .restaurant-guest-select select,
+:root[data-theme="dark"] .booking-input-wrap input,
+:root[data-theme="dark"] .booking-input-wrap select {
+  background: transparent;
+  color: var(--dark-text);
+}
+:root[data-theme="dark"] .restaurant-info,
+:root[data-theme="dark"] .restaurant-detail-panel h2,
+:root[data-theme="dark"] .restaurant-filter-title h2,
+:root[data-theme="dark"] .restaurant-filter-group h3,
+:root[data-theme="dark"] .restaurant-name-link,
+:root[data-theme="dark"] .restaurant-booking-card h2 {
+  color: var(--dark-text);
+}
+:root[data-theme="dark"] .restaurant-title p,
+:root[data-theme="dark"] .restaurant-location,
+:root[data-theme="dark"] .restaurant-detail-meta,
+:root[data-theme="dark"] .restaurant-contact-row,
+:root[data-theme="dark"] .restaurant-detail-panel p,
+:root[data-theme="dark"] .restaurant-detail-section > p,
+:root[data-theme="dark"] .restaurant-filter-group label,
+:root[data-theme="dark"] .restaurant-listing-toolbar label,
+:root[data-theme="dark"] .restaurant-detail-message,
+:root[data-theme="dark"] .restaurant-filter-group p {
+  color: var(--dark-muted);
+}
+:root[data-theme="dark"] .restaurant-detail-tabs,
+:root[data-theme="dark"] .restaurant-detail-hours-block,
+:root[data-theme="dark"] .restaurant-hour-row,
+:root[data-theme="dark"] .restaurant-detail-tabs a {
+  border-color: var(--dark-line);
+}
+:root[data-theme="dark"] .restaurant-breadcrumbs,
+:root[data-theme="dark"] .restaurant-listing-breadcrumb {
+  color: #bdb3b3;
+}
+:root[data-theme="dark"] .restaurant-listing-breadcrumb strong,
+:root[data-theme="dark"] .restaurant-breadcrumbs strong {
+  color: #f1e9e8;
+}
+:root[data-theme="dark"] .restaurant-detail-tags span {
+  border-color: var(--dark-line);
+  background: var(--surface-raised);
+  color: #e7c978;
+}
+:root[data-theme="dark"] .restaurant-detail-tabs a.active,
+:root[data-theme="dark"] .restaurant-detail-tabs a:hover {
+  color: #e7c978;
+}
+:root[data-theme="dark"] .restaurant-pagination button.selected,
+:root[data-theme="dark"] .booking-time-options button.selected {
+  border-color: var(--wine);
+  background: var(--wine);
+  color: #f0d88f;
+}
+:root[data-theme="dark"] .empty-state,
+:root[data-theme="dark"] .restaurant-detail-message {
+  border-color: var(--dark-line);
+  background: var(--surface);
+  color: var(--dark-muted);
+}
+:root[data-theme="dark"] .auth-shell,
+:root[data-theme="dark"] .form-side,
+:root[data-theme="dark"] .admin-form-side,
+:root[data-theme="dark"] .manager-form-side,
+:root[data-theme="dark"] .chef-form-side {
+  background: #201c1e;
+  color: var(--dark-text);
+}
+:root[data-theme="dark"] .auth-shell .bg-white,
+:root[data-theme="dark"] .admin-dashboard .bg-white,
+:root[data-theme="dark"] .manager-dashboard .bg-white,
+:root[data-theme="dark"] .chef-dashboard-shell .bg-white {
+  background-color: var(--surface) !important;
+}
+:root[data-theme="dark"] .auth-shell .bg-stone-50,
+:root[data-theme="dark"] .admin-dashboard .bg-gray-50,
+:root[data-theme="dark"] .manager-dashboard .bg-gray-50 {
+  background-color: var(--surface-raised) !important;
+}
+:root[data-theme="dark"] .auth-shell .text-ink,
+:root[data-theme="dark"] .auth-shell .text-stone-500,
+:root[data-theme="dark"] .admin-dashboard .text-gray-500,
+:root[data-theme="dark"] .admin-dashboard .text-gray-600,
+:root[data-theme="dark"] .manager-dashboard .text-gray-500,
+:root[data-theme="dark"] .manager-dashboard .text-gray-600 {
+  color: var(--dark-muted) !important;
+}
+:root[data-theme="dark"] .auth-shell .border-stone-100,
+:root[data-theme="dark"] .auth-shell .border-stone-200,
+:root[data-theme="dark"] .admin-dashboard .border-gray-100,
+:root[data-theme="dark"] .admin-dashboard .border-gray-200,
+:root[data-theme="dark"] .manager-dashboard .border-gray-100,
+:root[data-theme="dark"] .manager-dashboard .border-gray-200 {
+  border-color: var(--dark-line) !important;
+}
+:root[data-theme="dark"] .form-side h1,
+:root[data-theme="dark"] .form-side h2,
+:root[data-theme="dark"] .form-side h3,
+:root[data-theme="dark"] .admin-form-side h1,
+:root[data-theme="dark"] .admin-form-side h2,
+:root[data-theme="dark"] .manager-form-side h1,
+:root[data-theme="dark"] .manager-form-side h2,
+:root[data-theme="dark"] .chef-form-side h1,
+:root[data-theme="dark"] .chef-form-side h2 {
+  color: var(--dark-text);
+}
+:root[data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]),
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] select {
+  border-color: var(--dark-line);
+  background-color: #292426;
+  color: var(--dark-text);
+}
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder {
+  color: #93898b;
+}
+:root[data-theme="dark"] .admin-dashboard,
+:root[data-theme="dark"] .admin-dashboard-main,
+:root[data-theme="dark"] .manager-dashboard,
+:root[data-theme="dark"] .manager-dashboard-main,
+:root[data-theme="dark"] .chef-dashboard-shell,
+:root[data-theme="dark"] .chef-dashboard-main {
+  background: #171516;
+  color: var(--dark-text);
+}
+:root[data-theme="dark"] .admin-topbar,
+:root[data-theme="dark"] .admin-table-card,
+:root[data-theme="dark"] .admin-request-empty,
+:root[data-theme="dark"] .admin-restaurant-detail-heading,
+:root[data-theme="dark"] .admin-restaurant-detail-card,
+:root[data-theme="dark"] .admin-request-card,
+:root[data-theme="dark"] .manager-topbar,
+:root[data-theme="dark"] .manager-summary-card,
+:root[data-theme="dark"] .manager-panel,
+:root[data-theme="dark"] .manager-card,
+:root[data-theme="dark"] .manager-orders-panel,
+:root[data-theme="dark"] .manager-popular-panel,
+:root[data-theme="dark"] .manager-revenue-panel,
+:root[data-theme="dark"] .manager-list-row,
+:root[data-theme="dark"] .chef-topbar,
+:root[data-theme="dark"] .chef-stat-card,
+:root[data-theme="dark"] .chef-panel,
+:root[data-theme="dark"] .chef-dish-card,
+:root[data-theme="dark"] .chef-icon-button,
+:root[data-theme="dark"] .chef-view-order {
+  border-color: var(--dark-line);
+  background-color: var(--surface);
+  color: var(--dark-text);
+}
+:root[data-theme="dark"] .admin-dashboard-heading h2,
+:root[data-theme="dark"] .admin-page-heading h2,
+:root[data-theme="dark"] .admin-restaurant-detail-heading h2,
+:root[data-theme="dark"] .admin-restaurant-detail-card h3,
+:root[data-theme="dark"] .admin-table td strong,
+:root[data-theme="dark"] .manager-dashboard h1,
+:root[data-theme="dark"] .manager-dashboard h2,
+:root[data-theme="dark"] .manager-dashboard h3,
+:root[data-theme="dark"] .chef-dashboard-shell h1,
+:root[data-theme="dark"] .chef-dashboard-shell h2,
+:root[data-theme="dark"] .chef-dashboard-shell h3,
+:root[data-theme="dark"] .chef-dashboard-shell h4 {
+  color: var(--dark-text);
+}
+:root[data-theme="dark"] .admin-table th,
+:root[data-theme="dark"] .chef-orders-table th,
+:root[data-theme="dark"] .chef-pipeline-item {
+  border-color: var(--dark-line);
+  background: var(--surface-raised);
+  color: var(--dark-muted);
+}
+:root[data-theme="dark"] .admin-table td,
+:root[data-theme="dark"] .admin-table th,
+:root[data-theme="dark"] .chef-orders-table td,
+:root[data-theme="dark"] .chef-orders-table th,
+:root[data-theme="dark"] .admin-restaurant-hours > div,
+:root[data-theme="dark"] .admin-restaurant-description,
+:root[data-theme="dark"] .admin-restaurant-documents a,
+:root[data-theme="dark"] .chef-orders-table td {
+  border-color: var(--dark-line);
+}
+:root[data-theme="dark"] .admin-table td,
+:root[data-theme="dark"] .admin-page-heading p,
+:root[data-theme="dark"] .admin-dashboard-heading p,
+:root[data-theme="dark"] .admin-restaurant-description p,
+:root[data-theme="dark"] .admin-restaurant-empty,
+:root[data-theme="dark"] .admin-restaurant-hours > div,
+:root[data-theme="dark"] .manager-dashboard p,
+:root[data-theme="dark"] .chef-dashboard-shell p,
+:root[data-theme="dark"] .chef-breadcrumb {
+  color: var(--dark-muted);
+}
+:root[data-theme="dark"] .manager-list-row,
+:root[data-theme="dark"] .manager-panel,
+:root[data-theme="dark"] .manager-dashboard-content {
+  border-color: var(--dark-line);
+}
+:root[data-theme="dark"] .admin-dashboard input,
+:root[data-theme="dark"] .admin-refresh-button,
+:root[data-theme="dark"] .admin-table-action,
+:root[data-theme="dark"] .chef-view-order {
+  border-color: var(--dark-line);
+  background-color: var(--surface-raised);
+  color: var(--dark-text);
+}
+:root[data-theme="dark"] .manager-dashboard input,
+:root[data-theme="dark"] .manager-dashboard textarea,
+:root[data-theme="dark"] .manager-dashboard select,
+:root[data-theme="dark"] .chef-dashboard-shell input,
+:root[data-theme="dark"] .chef-dashboard-shell textarea,
+:root[data-theme="dark"] .chef-dashboard-shell select {
+  border-color: var(--dark-line);
+  background-color: var(--surface-raised);
+  color: var(--dark-text);
+}
+:root[data-theme="dark"] .chef-dashboard-shell {
+  --chef-paper: #171516;
+  --chef-ink: #f1e9e8;
+  --chef-muted: #b0a5a5;
+}
+:root[data-theme="dark"] .chef-orders-table th,
+:root[data-theme="dark"] .chef-pipeline-item,
+:root[data-theme="dark"] .chef-view-order:hover {
+  background: #302a2d;
+}
+:root[data-theme="dark"] body :is(h1, h2, h3, h4, h5, h6, strong, th) {
+  color: #f4eeee;
+}
+:root[data-theme="dark"] body :is(p, label, td, small, li) {
+  color: #d0c7c7;
+}
+:root[data-theme="dark"] body span:not(.restaurant-status):not(.admin-status):not(.chef-order-status):not(.manager-order-status):not(.brand-mark):not(.admin-brand-mark):not(.manager-brand-mark):not(.chef-brand-mark):not(.restaurant-badge):not(.rating):not(.demo-tag) {
+  color: #d0c7c7;
+}
+:root[data-theme="dark"] body a:not(.site-brand):not(.brand):not(.restaurant-name-link) {
+  color: #e4c57d;
+}
+:root[data-theme="dark"] .restaurant-status.pending {
+  color: #f4c96f;
+}
+:root[data-theme="dark"] .restaurant-status.approved,
+:root[data-theme="dark"] .restaurant-status.active {
+  color: #72d6b4;
+}
+:root[data-theme="dark"] .restaurant-status.rejected {
+  color: #ff9ca8;
+}
+:root[data-theme="dark"] .restaurant-status.inactive {
+  color: #c3ccd7;
+}
+:root[data-theme="dark"] .admin-status,
+:root[data-theme="dark"] .chef-order-status,
+:root[data-theme="dark"] .manager-order-status {
+  color: #f4eeee;
+}
+:root[data-theme="dark"] .restaurant-listing-search h1,
+:root[data-theme="dark"] .restaurant-detail-hero h1,
+:root[data-theme="dark"] .story h1,
+:root[data-theme="dark"] .site-header a,
+:root[data-theme="dark"] .site-footer a,
+:root[data-theme="dark"] .admin-sidebar,
+:root[data-theme="dark"] .manager-sidebar,
+:root[data-theme="dark"] .chef-sidebar {
+  color: #fff;
+}
+
+.image-crop-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(20 10 12 / 72%);
+}
+.image-crop-dialog {
+  width: min(100%, 680px);
+  padding: 1.5rem;
+  border: 1px solid #eadfdd;
+  border-radius: 1rem;
+  background: #fffdfa;
+  color: #271b1d;
+  box-shadow: 0 24px 80px rgb(0 0 0 / 28%);
+}
+.image-crop-header,
+.image-crop-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.image-crop-header h2 { margin: 0; font-size: 1.25rem; font-weight: 700; }
+.image-crop-header p { margin: .35rem 0 0; color: #776d6e; font-size: .875rem; }
+.image-crop-close {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #eadfdd;
+  border-radius: .65rem;
+  background: transparent;
+  color: #54202a;
+}
+.image-crop-preview {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin-top: 1.25rem;
+  overflow: hidden;
+  border-radius: .75rem;
+  background: #211a1b;
+  touch-action: none;
+  user-select: none;
+}
+.image-crop-preview::after {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgb(255 255 255 / 35%);
+  border-radius: inherit;
+  content: "";
+  pointer-events: none;
+}
+.image-crop-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform-origin: center;
+  pointer-events: none;
+  user-select: none;
+}
+.image-crop-zoom { display: flex; align-items: center; gap: 1rem; margin: 1.25rem 0; font-size: .875rem; font-weight: 600; }
+.image-crop-zoom input { flex: 1; accent-color: #54202a; }
+.image-crop-actions { justify-content: flex-end; }
+.image-crop-cancel,
+.image-crop-confirm { min-height: 2.75rem; padding: 0 1.1rem; border-radius: .65rem; font-size: .875rem; font-weight: 600; }
+.image-crop-cancel { border: 1px solid #d9cecc; background: #fff; color: #392d2f; }
+.image-crop-confirm { border: 1px solid #54202a; background: #54202a; color: #fff; }
+.image-crop-confirm:disabled { cursor: wait; opacity: .6; }
+.image-crop-error { margin: -.5rem 0 1rem; color: #b42334; font-size: .8rem; }
+:root[data-theme="dark"] .image-crop-dialog { border-color: #514447; background: #211c1e; color: #f4eeee; }
+:root[data-theme="dark"] .image-crop-header p { color: #c4b8b9; }
+:root[data-theme="dark"] .image-crop-close,
+:root[data-theme="dark"] .image-crop-cancel { border-color: #514447; background: #302a2d; color: #f4eeee; }
+@media (max-width: 520px) {
+  .image-crop-dialog { padding: 1rem; }
+  .image-crop-header h2 { font-size: 1.05rem; }
+  .image-crop-header p { font-size: .75rem; }
 }

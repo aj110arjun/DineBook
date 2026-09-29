@@ -18,6 +18,7 @@ import {
 
 import { requestJson } from "../../lib/authApi.js";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
+import AdminActionConfirmModal from "../../components/admin/AdminActionConfirmModal.jsx";
 
 export default function AdminManagerRequestDetailsPage() {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ export default function AdminManagerRequestDetailsPage() {
   const [request, setRequest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [confirmationAction, setConfirmationAction] = useState(null);
   const [error, setError] = useState("");
 
   async function loadRequest() {
@@ -226,10 +228,10 @@ export default function AdminManagerRequestDetailsPage() {
           </div>
 
           {/* Action Buttons */}
-          <div className="mb-7 flex flex-col gap-3 sm:flex-row sm:justify-end">
+          {status === "PENDING" && <div className="mb-7 flex flex-col gap-3 sm:flex-row sm:justify-end">
             <button
               type="button"
-              onClick={handleReject}
+              onClick={() => setConfirmationAction("reject")}
               disabled={processing}
               className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-5 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
@@ -239,14 +241,19 @@ export default function AdminManagerRequestDetailsPage() {
 
             <button
               type="button"
-              onClick={handleApprove}
+              onClick={() => setConfirmationAction("approve")}
               disabled={processing}
               className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#0fa99d] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#172335] disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Check size={16} />
               {processing ? "Processing..." : "Approve Application"}
             </button>
-          </div>
+          </div>}
+          {status !== "PENDING" && (
+            <div className="mb-7 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
+              This application is {status.toLowerCase()}. Approval and rejection actions are available for pending applications.
+            </div>
+          )}
 
           {/* Main Information */}
           <div className="grid gap-6 xl:grid-cols-2">
@@ -493,10 +500,10 @@ export default function AdminManagerRequestDetailsPage() {
               Back to Requests
             </button>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
+            {status === "PENDING" && <div className="flex flex-col gap-3 sm:flex-row">
               <button
                 type="button"
-                onClick={handleReject}
+                onClick={() => setConfirmationAction("reject")}
                 disabled={processing}
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-6 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
               >
@@ -506,16 +513,23 @@ export default function AdminManagerRequestDetailsPage() {
 
               <button
                 type="button"
-                onClick={handleApprove}
+                onClick={() => setConfirmationAction("approve")}
                 disabled={processing}
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#0fa99d] px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-[#172335] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Check size={16} />
                 Approve
               </button>
-            </div>
+            </div>}
           </div>
       </div>
+      <AdminActionConfirmModal
+        action={confirmationAction}
+        subject={restaurant.name || request?.name || "this manager application"}
+        busy={processing}
+        onCancel={() => setConfirmationAction(null)}
+        onConfirm={confirmationAction === "approve" ? handleApprove : handleReject}
+      />
     </AdminLayout>
   );
 }

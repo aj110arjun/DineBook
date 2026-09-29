@@ -15,6 +15,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 
 import ManagerAuthLayout from "../../components/auth/ManagerAuthLayout.jsx";
+import ImageCropDialog from "../../components/manager/ImageCropDialog.jsx";
 import { FormField, PasswordField } from "../../components/auth/FormField.jsx";
 import Notice from "../../components/auth/Notice.jsx";
 
@@ -198,6 +199,7 @@ export default function ManagerRegisterPage() {
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [pendingBanner, setPendingBanner] = useState(null);
 
   const [application, setApplication] = useState(initialApplication);
   const [documents, setDocuments] = useState({
@@ -287,6 +289,30 @@ export default function ManagerRegisterPage() {
     }));
   }
 
+  function handleBannerSelection(file) {
+    setError("");
+    setFieldErrors((current) => ({ ...current, brandingImages: "" }));
+    if (!file) return;
+
+    if (!["image/png", "image/jpeg"].includes(file.type)) {
+      setFieldErrors((current) => ({ ...current, brandingImages: "Choose a PNG or JPG image." }));
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setFieldErrors((current) => ({ ...current, brandingImages: "Image must be 10 MB or smaller." }));
+      return;
+    }
+
+    setPendingBanner(file);
+  }
+
+  function saveCroppedBanner(file) {
+    setDocuments((current) => ({ ...current, brandingImages: file }));
+    setFieldErrors((current) => ({ ...current, brandingImages: "" }));
+    setPendingBanner(null);
+  }
+
   function removeDocument(field) {
     setFieldErrors((current) => ({ ...current, [field]: "" }));
     setDocuments((current) => ({
@@ -339,6 +365,11 @@ export default function ManagerRegisterPage() {
   }
 
   function validateDocuments() {
+    if (!documents.brandingImages) {
+      setFieldErrors((current) => ({ ...current, brandingImages: "Upload and crop a restaurant banner image." }));
+      return false;
+    }
+
     if (!documents.fssaiLicense) {
       setFieldErrors((current) => ({ ...current, fssaiLicense: "Upload your FSSAI or food safety document." }));
       return false;
@@ -382,6 +413,10 @@ export default function ManagerRegisterPage() {
       return;
     }
 
+    setApplication((current) => ({
+      ...current,
+      restaurantEmail: current.restaurantEmail || current.email,
+    }));
     setStep(2);
   }
 
@@ -474,9 +509,7 @@ export default function ManagerRegisterPage() {
         formData.append("gst_certificate", documents.gstCertificate);
       }
 
-      if (documents.brandingImages) {
-        formData.append("branding_images", documents.brandingImages);
-      }
+      formData.append("branding_images", documents.brandingImages);
 
       if (interiorMedia) {
         formData.append("interior_media", interiorMedia);
@@ -945,13 +978,12 @@ export default function ManagerRegisterPage() {
               />
 
               <DocumentCard
-                title="Restaurant Branding & Images"
-                description="Include logos or high-resolution hall captures"
+                title="Restaurant Banner Image"
+                description="Upload a PNG or JPG banner image (16:9 crop, up to 10 MB)."
+                required
                 file={documents.brandingImages}
                 error={fieldErrors.brandingImages}
-                onUpload={(file) =>
-                  handleDocumentChange("brandingImages", file)
-                }
+                onUpload={handleBannerSelection}
                 onRemove={() => removeDocument("brandingImages")}
                 accept=".png,.jpg,.jpeg"
                 image
@@ -1340,8 +1372,9 @@ export default function ManagerRegisterPage() {
                   />
 
                   <ReviewDocument
-                    label="Restaurant Branding & Images"
+                    label="Restaurant Banner Image"
                     file={documents.brandingImages}
+                    required
                   />
                 </div>
               </section>
@@ -1468,6 +1501,11 @@ export default function ManagerRegisterPage() {
           </>
         )}
       </div>
+      <ImageCropDialog
+        file={pendingBanner}
+        onCancel={() => setPendingBanner(null)}
+        onCropped={saveCroppedBanner}
+      />
     </ManagerAuthLayout>
   );
 }

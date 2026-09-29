@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 
 import { requestJson } from "../../lib/authApi.js";
+import AdminActionConfirmModal from "../../components/admin/AdminActionConfirmModal.jsx";
 
 const navigation = [
   {
@@ -46,12 +47,16 @@ const navigation = [
   { label: "Profile", icon: Users },
 ];
 
+const requestStatuses = ["ALL", "PENDING", "APPROVED", "REJECTED"];
+
 export default function AdminRequestsPage() {
   const navigate = useNavigate();
 
   const [managerRequests, setManagerRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
+  const [confirmation, setConfirmation] = useState(null);
+  const [activeStatus, setActiveStatus] = useState("ALL");
   const [error, setError] = useState("");
 
   async function loadManagerRequests() {
@@ -86,9 +91,10 @@ export default function AdminRequestsPage() {
         fallbackMessage: "Unable to approve manager.",
       });
 
-      setManagerRequests((current) =>
-        current.filter((manager) => manager.id !== managerId),
-      );
+      setManagerRequests((current) => current.map((manager) => manager.id === managerId
+        ? { ...manager, status: "ACTIVE", restaurant: { ...manager.restaurant, status: "APPROVED" } }
+        : manager));
+      setConfirmation(null);
     } catch (err) {
       setError(err.message || "Unable to approve manager.");
     } finally {
@@ -106,9 +112,10 @@ export default function AdminRequestsPage() {
         fallbackMessage: "Unable to reject manager.",
       });
 
-      setManagerRequests((current) =>
-        current.filter((manager) => manager.id !== managerId),
-      );
+      setManagerRequests((current) => current.map((manager) => manager.id === managerId
+        ? { ...manager, status: "REJECTED", restaurant: { ...manager.restaurant, status: "REJECTED" } }
+        : manager));
+      setConfirmation(null);
     } catch (err) {
       setError(err.message || "Unable to reject manager.");
     } finally {
@@ -126,6 +133,16 @@ export default function AdminRequestsPage() {
       navigate("/admin/login", { replace: true });
     }
   }
+
+  const statusCounts = {
+    ALL: managerRequests.length,
+    PENDING: managerRequests.filter((manager) => (manager.restaurant?.status || manager.status) === "PENDING").length,
+    APPROVED: managerRequests.filter((manager) => (manager.restaurant?.status || manager.status) === "APPROVED").length,
+    REJECTED: managerRequests.filter((manager) => (manager.restaurant?.status || manager.status) === "REJECTED").length,
+  };
+  const visibleRequests = activeStatus === "ALL"
+    ? managerRequests
+    : managerRequests.filter((manager) => (manager.restaurant?.status || manager.status) === activeStatus);
 
   return (
     <main className="admin-dashboard">
@@ -203,8 +220,7 @@ export default function AdminRequestsPage() {
             <div>
               <h2>Manager Requests</h2>
               <p>
-                Review restaurant manager registration requests waiting for
-                approval.
+                Review manager applications and track their current status.
               </p>
             </div>
 
@@ -219,21 +235,36 @@ export default function AdminRequestsPage() {
             </button>
           </div>
 
+          <div className="admin-request-status-tabs" role="group" aria-label="Filter manager requests by status">
+            {requestStatuses.map((status) => (
+              <button
+                key={status}
+                type="button"
+                aria-pressed={activeStatus === status}
+                className={`admin-request-status-tab ${activeStatus === status ? "active" : ""}`}
+                onClick={() => setActiveStatus(status)}
+              >
+                {status === "ALL" ? "All Requests" : status.charAt(0) + status.slice(1).toLowerCase()}
+                <span>{statusCounts[status]}</span>
+              </button>
+            ))}
+          </div>
+
           {error && <div className="admin-request-error">{error}</div>}
 
           {loading ? (
             <div className="admin-request-empty">
               Loading manager requests...
             </div>
-          ) : managerRequests.length === 0 ? (
+          ) : visibleRequests.length === 0 ? (
             <div className="admin-request-empty">
               <UserCheck size={28} />
-              <strong>No pending restaurant applications</strong>
-              <span>New restaurant applications will appear here.</span>
+              <strong>{activeStatus === "ALL" ? "No manager applications" : `No ${activeStatus.toLowerCase()} applications`}</strong>
+              <span>{activeStatus === "ALL" ? "New restaurant applications will appear here." : "Choose another status to see other applications."}</span>
             </div>
           ) : (
             <div className="admin-request-list">
-              {managerRequests.map((manager) => (
+              {visibleRequests.map((manager) => (
                 <article
                   key={manager.id}
                   className="admin-request-card cursor-pointer"
@@ -262,13 +293,13 @@ export default function AdminRequestsPage() {
                     </small>
                   </div>
 
-                  <div className="admin-request-actions">
+                  {(manager.restaurant?.status || manager.status) === "PENDING" && <div className="admin-request-actions">
                     <button
                       type="button"
                       className="admin-request-reject"
                       onClick={(event) => {
                         event.stopPropagation();
-                        handleReject(manager.id);
+                        setConfirmation({ manager, action: "reject" });
                       }}
                       disabled={processingId === manager.id}
                     >
@@ -281,20 +312,29 @@ export default function AdminRequestsPage() {
                       className="admin-request-approve"
                       onClick={(event) => {
                         event.stopPropagation();
-                        handleApprove(manager.id);
+                        setConfirmation({ manager, action: "approve" });
                       }}
                       disabled={processingId === manager.id}
                     >
                       <Check size={15} />
                       Approve
                     </button>
-                  </div>
+                  </div>}
                 </article>
               ))}
             </div>
           )}
         </div>
       </section>
+      <AdminActionConfirmModal
+        action={confirmation?.action}
+        subject={confirmation?.manager?.restaurant?.name || confirmation?.manager?.name || "this manager application"}
+        busy={confirmation && processingId === confirmation.manager.id}
+        onCancel={() => setConfirmation(null)}
+        onConfirm={() => confirmation?.action === "approve"
+          ? handleApprove(confirmation.manager.id)
+          : handleReject(confirmation.manager.id)}
+      />
     </main>
   );
 }
