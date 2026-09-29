@@ -3041,6 +3041,402 @@ a:focus-visible,
 :root[data-theme="dark"] .admin-request-status-tab.active { border-color: #0fa99d; background: #183532; color: #8be0d7; }
 :root[data-theme="dark"] .admin-request-status-tab.active span { background: #23514c; color: #b8f0e9; }
 
+.admin-document-preview-trigger { width: 100%; font-family: inherit; cursor: pointer; }
+.admin-document-preview-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1250;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(15 23 35 / 68%);
+}
+.admin-document-preview-modal {
+  display: flex;
+  width: min(100%, 1000px);
+  height: min(88vh, 820px);
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #dfe5e8;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgb(0 0 0 / 30%);
+}
+.admin-document-preview-header {
+  display: flex;
+  min-height: 66px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .75rem 1rem .75rem 1.25rem;
+  border-bottom: 1px solid #e6eaed;
+}
+.admin-document-preview-header h2 {
+  margin: 0;
+  overflow: hidden;
+  color: #172335;
+  font-size: .95rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+.admin-document-preview-header p {
+  margin: .25rem 0 0;
+  overflow: hidden;
+  color: #748399;
+  font-size: .75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-document-preview-close {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #dfe5e8;
+  border-radius: 9px;
+  background: #fff;
+  color: #536275;
+  cursor: pointer;
+}
+.admin-document-preview-content {
+  display: grid;
+  min-height: 0;
+  flex: 1;
+  place-items: center;
+  overflow: auto;
+  background: #f1f3f5;
+  color: #536275;
+}
+.admin-document-preview-content iframe { width: 100%; height: 100%; border: 0; background: #fff; }
+.admin-document-preview-content img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.admin-document-preview-error { padding: 1rem; color: #b42334; }
+:root[data-theme="dark"] .admin-document-preview-modal { border-color: #514447; background: #211c1e; }
+:root[data-theme="dark"] .admin-document-preview-header { border-color: #514447; }
+:root[data-theme="dark"] .admin-document-preview-header h2 { color: #f4eeee; }
+:root[data-theme="dark"] .admin-document-preview-header p { color: #c4b8b9; }
+:root[data-theme="dark"] .admin-document-preview-close { border-color: #514447; background: #302a2d; color: #f4eeee; }
+:root[data-theme="dark"] .admin-document-preview-content { background: #171516; color: #d0c7c7; }
+@media (max-width: 600px) {
+  .admin-document-preview-backdrop { padding: .5rem; }
+  .admin-document-preview-modal { height: 92vh; }
+}
+
+/* Shared dark palette for utility classes used across every route. */
+:root[data-theme="dark"] {
+  --paper: #171516;
+  --surface: #211d1f;
+  --surface-raised: #2c2629;
+  --dark-text: #f1e9e8;
+  --dark-muted: #bdb2b3;
+  --dark-line: #494044;
+  --wine: #6a2939;
+  --wine-dark: #46131f;
+  --gold: #e1c477;
+  --line: #494044;
+}
+:root[data-theme="dark"] body {
+  background-color: var(--paper);
+  color: var(--dark-text);
+}
+:root[data-theme="dark"] body [class~="bg-white"],
+:root[data-theme="dark"] body [class~="bg-cream"],
+:root[data-theme="dark"] body [class~="bg-stone-50"],
+:root[data-theme="dark"] body [class~="bg-gray-50"],
+:root[data-theme="dark"] body [class~="bg-slate-50"],
+:root[data-theme="dark"] body [class~="bg-neutral-50"] {
+  background-color: var(--surface) !important;
+}
+:root[data-theme="dark"] body [class~="bg-stone-100"],
+:root[data-theme="dark"] body [class~="bg-stone-200"],
+:root[data-theme="dark"] body [class~="bg-gray-100"],
+:root[data-theme="dark"] body [class~="bg-gray-200"],
+:root[data-theme="dark"] body [class~="bg-slate-100"],
+:root[data-theme="dark"] body [class~="bg-slate-200"],
+:root[data-theme="dark"] body [class~="bg-neutral-100"],
+:root[data-theme="dark"] body [class~="bg-neutral-200"] {
+  background-color: var(--surface-raised) !important;
+}
+:root[data-theme="dark"] body [class~="text-ink"],
+:root[data-theme="dark"] body [class~="text-gray-900"],
+:root[data-theme="dark"] body [class~="text-gray-800"],
+:root[data-theme="dark"] body [class~="text-gray-700"],
+:root[data-theme="dark"] body [class~="text-stone-900"],
+:root[data-theme="dark"] body [class~="text-stone-800"],
+:root[data-theme="dark"] body [class~="text-stone-700"],
+:root[data-theme="dark"] body [class~="text-slate-900"],
+:root[data-theme="dark"] body [class~="text-slate-800"],
+:root[data-theme="dark"] body [class~="text-slate-700"] {
+  color: var(--dark-text) !important;
+}
+:root[data-theme="dark"] body [class~="text-[#172335]"],
+:root[data-theme="dark"] body [class~="text-[#182335]"],
+:root[data-theme="dark"] body [class~="text-[#263346]"],
+:root[data-theme="dark"] body [class~="text-[#241719]"] {
+  color: var(--dark-text) !important;
+}
+:root[data-theme="dark"] body [class~="text-gray-600"],
+:root[data-theme="dark"] body [class~="text-gray-500"],
+:root[data-theme="dark"] body [class~="text-gray-400"],
+:root[data-theme="dark"] body [class~="text-stone-600"],
+:root[data-theme="dark"] body [class~="text-stone-500"],
+:root[data-theme="dark"] body [class~="text-stone-400"],
+:root[data-theme="dark"] body [class~="text-slate-600"],
+:root[data-theme="dark"] body [class~="text-slate-500"],
+:root[data-theme="dark"] body [class~="text-slate-400"] {
+  color: var(--dark-muted) !important;
+}
+:root[data-theme="dark"] body [class~="text-wine"] {
+  color: var(--gold) !important;
+}
+:root[data-theme="dark"] body [class~="border-stone-100"],
+:root[data-theme="dark"] body [class~="border-stone-200"],
+:root[data-theme="dark"] body [class~="border-stone-300"],
+:root[data-theme="dark"] body [class~="border-gray-100"],
+:root[data-theme="dark"] body [class~="border-gray-200"],
+:root[data-theme="dark"] body [class~="border-gray-300"],
+:root[data-theme="dark"] body [class~="border-slate-100"],
+:root[data-theme="dark"] body [class~="border-slate-200"],
+:root[data-theme="dark"] body [class~="border-slate-300"] {
+  border-color: var(--dark-line) !important;
+}
+:root[data-theme="dark"] .auth-shell,
+:root[data-theme="dark"] .form-side,
+:root[data-theme="dark"] .admin-form-side,
+:root[data-theme="dark"] .manager-form-side,
+:root[data-theme="dark"] .chef-form-side,
+:root[data-theme="dark"] .customer-home,
+:root[data-theme="dark"] .customer-restaurant-detail,
+:root[data-theme="dark"] .restaurant-details-page,
+:root[data-theme="dark"] .restaurant-listing-page {
+  background-color: var(--paper);
+  color: var(--dark-text);
+}
+:root[data-theme="dark"] :is(
+  .admin-panel, .admin-stat-card, .admin-activity-item, .admin-alert-item,
+  .admin-table-empty, .admin-restaurant-row, .manager-table-card,
+  .manager-restaurant-card, .manager-quick-actions, .manager-popular-item,
+  .manager-order-row-right, .chef-identity-card, .chef-activity-item,
+  .chef-orders-panel, .restaurant-capacity-facts, .restaurant-detail-facts,
+  .restaurant-detail-hours, .restaurant-gallery, .dish-card, .step-card,
+  .testimonial-card
+) {
+  border-color: var(--dark-line);
+  background-color: var(--surface);
+  color: var(--dark-text);
+}
+:root[data-theme="dark"] :is(.admin-panel, .admin-stat-card, .manager-heading, .manager-breadcrumb, .chef-page-heading, .chef-topbar-title) :is(h1, h2, h3, p, span) {
+  color: var(--dark-text);
+}
+:root[data-theme="dark"] :is(.manager-sidebar, .chef-sidebar, .admin-sidebar) {
+  color: var(--dark-text);
+}
+:root[data-theme="dark"] .manager-sidebar-overlay,
+:root[data-theme="dark"] .chef-sidebar-scrim {
+  background-color: rgb(0 0 0 / 72%);
+}
+:root[data-theme="dark"] body :is(input, textarea, select) {
+  border-color: var(--dark-line);
+  background-color: var(--surface-raised);
+  color: var(--dark-text);
+}
+:root[data-theme="dark"] body :is(input, textarea)::placeholder {
+  color: #a89d9f;
+}
+:root[data-theme="dark"] body :is(button, a):focus-visible,
+:root[data-theme="dark"] body :is(input, textarea, select):focus-visible {
+  outline-color: var(--gold);
+}
+:root[data-theme="dark"] .admin-dashboard .text-red-600,
+:root[data-theme="dark"] .manager-dashboard .text-red-600,
+:root[data-theme="dark"] .auth-shell .text-red-600,
+:root[data-theme="dark"] .admin-dashboard .text-rose-600,
+:root[data-theme="dark"] .manager-dashboard .text-rose-600 {
+  color: #ff9ca8 !important;
+}
+:root[data-theme="dark"] .admin-dashboard .text-emerald-600,
+:root[data-theme="dark"] .manager-dashboard .text-emerald-600,
+:root[data-theme="dark"] .chef-dashboard-shell .text-emerald-600 {
+  color: #72d6b4 !important;
+}
+
+/* Chef dashboard contrast fixes. Keep these after the shared typography rules. */
+:root[data-theme="dark"] .chef-dashboard-shell {
+  --chef-paper: #171516;
+  --chef-ink: #f1e9e8;
+  --chef-muted: #bdb2b3;
+  --chef-sidebar: #10090b;
+  background: var(--chef-paper);
+  color: var(--chef-ink);
+}
+:root[data-theme="dark"] .chef-topbar,
+:root[data-theme="dark"] .chef-stat-card,
+:root[data-theme="dark"] .chef-panel,
+:root[data-theme="dark"] .chef-dish-card {
+  border-color: #494044;
+  background: #211d1f;
+  color: #f1e9e8;
+}
+:root[data-theme="dark"] .chef-topbar-title h1,
+:root[data-theme="dark"] .chef-page-heading h2,
+:root[data-theme="dark"] .chef-panel h3,
+:root[data-theme="dark"] .chef-dishes-section h3,
+:root[data-theme="dark"] .chef-dish-title h4,
+:root[data-theme="dark"] .chef-stat-value {
+  color: #f4eeee;
+}
+:root[data-theme="dark"] .chef-topbar-title p,
+:root[data-theme="dark"] .chef-page-heading p,
+:root[data-theme="dark"] .chef-breadcrumb,
+:root[data-theme="dark"] .chef-stat-top,
+:root[data-theme="dark"] .chef-stat-card p,
+:root[data-theme="dark"] .chef-activity-item p,
+:root[data-theme="dark"] .chef-activity-item span,
+:root[data-theme="dark"] .chef-dish-meta,
+:root[data-theme="dark"] .chef-muted-cell,
+:root[data-theme="dark"] .chef-dashboard-footer,
+:root[data-theme="dark"] .chef-dashboard-footer button {
+  color: #bdb2b3;
+}
+:root[data-theme="dark"] .chef-breadcrumb strong,
+:root[data-theme="dark"] .chef-orders-table .chef-order-id,
+:root[data-theme="dark"] .chef-account-button,
+:root[data-theme="dark"] .chef-menu-toggle {
+  color: #f1e9e8;
+}
+:root[data-theme="dark"] .chef-identity-card {
+  background: #211719;
+}
+:root[data-theme="dark"] .chef-identity-copy strong {
+  color: #f4eeee;
+}
+:root[data-theme="dark"] .chef-identity-copy span {
+  color: #bdb2b3;
+}
+:root[data-theme="dark"] .chef-nav-item {
+  color: #c7bfc0;
+}
+:root[data-theme="dark"] .chef-nav-item:hover {
+  background: #302326;
+  color: #fff;
+}
+:root[data-theme="dark"] .chef-nav-item.active,
+:root[data-theme="dark"] .chef-nav-item.active span {
+  color: #fff !important;
+}
+:root[data-theme="dark"] .chef-nav-item.active {
+  background: #742238;
+}
+:root[data-theme="dark"] .chef-nav-item.active span {
+  background: transparent;
+}
+:root[data-theme="dark"] .chef-online-badge {
+  background: #18382d;
+  color: #8be0b7 !important;
+}
+:root[data-theme="dark"] .chef-online-badge i {
+  background: #57c98e;
+}
+:root[data-theme="dark"] .chef-icon-button,
+:root[data-theme="dark"] .chef-view-order {
+  border-color: #494044;
+  background: #2c2629;
+  color: #f1e9e8;
+}
+:root[data-theme="dark"] .chef-view-order:hover {
+  border-color: #73545e;
+  background: #392a30;
+}
+:root[data-theme="dark"] .chef-pipeline-item {
+  border-color: #494044;
+  background: #2c2629;
+}
+:root[data-theme="dark"] .chef-pipeline-item span {
+  color: #c7bfc0 !important;
+}
+:root[data-theme="dark"] .chef-stat-icon.wine {
+  background: #482630;
+  color: #f09aac;
+}
+:root[data-theme="dark"] .chef-stat-icon.amber {
+  background: #49391d;
+  color: #f4c96f;
+}
+:root[data-theme="dark"] .chef-stat-icon.green {
+  background: #1b3b30;
+  color: #8be0b7;
+}
+:root[data-theme="dark"] .chef-stat-card p b {
+  color: #8be0b7;
+}
+:root[data-theme="dark"] .chef-panel-heading button {
+  color: #e4a0b0;
+}
+:root[data-theme="dark"] .chef-orders-table th {
+  border-color: #494044;
+  background: #302a2d;
+  color: #c7bfc0;
+}
+:root[data-theme="dark"] .chef-orders-table td {
+  border-color: #40383a;
+  color: #e6dfe0;
+}
+:root[data-theme="dark"] .chef-order-status.new {
+  background: #482630;
+  color: #ffadba;
+}
+:root[data-theme="dark"] .chef-order-status.preparing {
+  background: #49391d;
+  color: #f4c96f;
+}
+:root[data-theme="dark"] .chef-order-status.ready,
+:root[data-theme="dark"] .chef-order-status.completed,
+:root[data-theme="dark"] .chef-dish-meta b.available {
+  background: #1b3b30;
+  color: #8be0b7;
+}
+:root[data-theme="dark"] .chef-order-status.cancelled {
+  background: #482630;
+  color: #ffadba;
+}
+:root[data-theme="dark"] .chef-dish-meta b.out-of-stock {
+  background: #393336;
+  color: #c7bfc0;
+}
+:root[data-theme="dark"] .chef-dashboard-footer {
+  border-color: #494044;
+}
+:root[data-theme="dark"] .chef-dashboard-footer span {
+  color: #bdb2b3 !important;
+}
+:root[data-theme="dark"] .chef-dashboard-footer button:hover {
+  color: #e4c57d;
+}
+
+/* Native select menus stay readable in customer, manager, and admin forms. */
+:root[data-theme="dark"] select {
+  color-scheme: dark;
+  border-color: var(--dark-line) !important;
+  background-color: var(--surface-raised) !important;
+  color: var(--dark-text) !important;
+}
+:root[data-theme="dark"] select option,
+:root[data-theme="dark"] select optgroup {
+  background-color: #292426;
+  color: #f1e9e8;
+}
+:root[data-theme="dark"] select option:checked {
+  background-color: #49313a;
+  color: #f4eeee;
+}
+:root[data-theme="dark"] .site-header .location-select select {
+  border-color: #675057 !important;
+  background-color: transparent !important;
+  color: #fff !important;
+}
+
 /* Admin Manager Requests */
 
 .admin-request-error {

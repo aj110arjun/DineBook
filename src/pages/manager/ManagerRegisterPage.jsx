@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { API_BASE } from "../../lib/authApi.js";
 import {
   ArrowRight,
@@ -51,7 +51,7 @@ function DocumentCard({
   file,
   onUpload,
   onRemove,
-  accept = ".pdf,.png,.jpg,.jpeg",
+  accept = ".pdf",
   image = false,
   error,
 }) {
@@ -199,9 +199,22 @@ export default function ManagerRegisterPage() {
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [emailCode, setEmailCode] = useState("");
+  const [emailCodeSent, setEmailCodeSent] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [emailBusy, setEmailBusy] = useState(false);
   const [pendingBanner, setPendingBanner] = useState(null);
 
   const [application, setApplication] = useState(initialApplication);
+  const [mapQuery, setMapQuery] = useState("");
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setMapQuery([application.address, application.city, application.state, application.pinCode]
+        .filter(Boolean)
+        .join(", "));
+    }, 500);
+    return () => window.clearTimeout(timeoutId);
+  }, [application.address, application.city, application.state, application.pinCode]);
   const [documents, setDocuments] = useState({
     fssaiLicense: null,
     businessRegistration: null,
@@ -254,6 +267,12 @@ export default function ManagerRegisterPage() {
   const [interiorMedia, setInteriorMedia] = useState(null);
   function updateField(field, value) {
     setFieldErrors((current) => ({ ...current, [field]: "" }));
+    if (field === "email") {
+      setEmailCode("");
+      setEmailCodeSent(false);
+      setEmailVerified(false);
+      setError("");
+    }
     setApplication((current) => ({
       ...current,
       [field]: value,
@@ -261,11 +280,7 @@ export default function ManagerRegisterPage() {
   }
   const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
-  const ACCEPTED_DOCUMENT_TYPES = [
-    "application/pdf",
-    "image/png",
-    "image/jpeg",
-  ];
+  const ACCEPTED_DOCUMENT_TYPES = ["application/pdf"];
 
   function handleDocumentChange(field, file) {
     setError("");
@@ -274,7 +289,7 @@ export default function ManagerRegisterPage() {
     if (!file) return;
 
     if (!ACCEPTED_DOCUMENT_TYPES.includes(file.type)) {
-      setFieldErrors((current) => ({ ...current, [field]: "Choose a PDF, PNG, or JPG file." }));
+      setFieldErrors((current) => ({ ...current, [field]: "Official documents must be uploaded as PDF files." }));
       return;
     }
 
@@ -400,6 +415,49 @@ export default function ManagerRegisterPage() {
     setStep(4);
   }
 
+  async function requestEmailCode() {
+    const email = application.email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      setFieldErrors((current) => ({ ...current, email: "Enter a valid email address." }));
+      return;
+    }
+    setEmailBusy(true);
+    setError("");
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/manager/send-verification`, {
+        method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.detail || "Unable to send a confirmation code.");
+      setEmailCodeSent(true);
+      setEmailVerified(false);
+    } catch (reason) {
+      setError(reason.message);
+    } finally {
+      setEmailBusy(false);
+    }
+  }
+
+  async function verifyEmailCode() {
+    setEmailBusy(true);
+    setError("");
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/manager/verify-email`, {
+        method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: application.email.trim().toLowerCase(), code: emailCode }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.detail || "Unable to verify this email.");
+      setEmailVerified(true);
+      setError("");
+    } catch (reason) {
+      setError(reason.message);
+    } finally {
+      setEmailBusy(false);
+    }
+  }
+
   function handlePersonalContinue(event) {
     event.preventDefault();
 
@@ -410,6 +468,11 @@ export default function ManagerRegisterPage() {
 
     if (application.password !== application.confirmPassword) {
       setFieldErrors({ confirmPassword: "Passwords do not match." });
+      return;
+    }
+
+    if (!emailVerified) {
+      setError("Verify your email address with the confirmation code before continuing.");
       return;
     }
 
@@ -645,6 +708,32 @@ export default function ManagerRegisterPage() {
                 onChange={(event) => updateField("email", event.target.value)}
               />
 
+              <div className="-mt-2 mb-5">
+                {!emailCodeSent ? (
+                  <button type="button" onClick={requestEmailCode} disabled={emailBusy || emailVerified}
+                    className="text-sm font-semibold text-wine hover:text-ink disabled:opacity-60">
+                    {emailBusy ? "Sending code…" : "Send email confirmation code"}
+                  </button>
+                ) : emailVerified ? (
+                  <p className="text-sm font-medium text-emerald-700">Email confirmed</p>
+                ) : (
+                  <div className="flex flex-wrap items-end gap-2">
+                    <label className="block flex-1 text-sm font-medium text-ink" htmlFor="managerEmailCode">
+                      Confirmation code
+                      <input id="managerEmailCode" inputMode="numeric" autoComplete="one-time-code" maxLength={6}
+                        value={emailCode} onChange={(event) => setEmailCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                        className="mt-2 h-11 w-full rounded-lg border border-stone-200 px-3 text-sm outline-none focus:border-wine" />
+                    </label>
+                    <button type="button" onClick={verifyEmailCode} disabled={emailBusy || emailCode.length !== 6}
+                      className="h-11 rounded-lg bg-wine px-4 text-sm font-semibold text-white disabled:opacity-60">
+                      {emailBusy ? "Checking…" : "Verify"}
+                    </button>
+                    <button type="button" onClick={requestEmailCode} disabled={emailBusy}
+                      className="h-11 rounded-lg border border-stone-200 px-3 text-sm font-semibold text-ink disabled:opacity-60">Resend</button>
+                  </div>
+                )}
+              </div>
+
               <PasswordField
                 id="password"
                 label="Password"
@@ -863,11 +952,11 @@ export default function ManagerRegisterPage() {
                 />
               </div>
 
-              {/* Google Maps Preview */}
+              {/* Live Google Maps location preview */}
               <div className="mb-6">
                 <div className="mb-2 flex items-center justify-between">
                   <span className="text-sm font-medium text-ink">
-                    Google Maps Location Preview
+                    Live Google Maps Location
                   </span>
 
                   <span className="text-xs font-medium text-wine">
@@ -875,25 +964,20 @@ export default function ManagerRegisterPage() {
                   </span>
                 </div>
 
-                <div className="relative h-32 overflow-hidden rounded-lg border border-stone-200 bg-slate-200">
-                  {/* Road layout */}
-                  <div className="absolute left-0 right-0 top-1/2 h-5 -translate-y-1/2 bg-white/90" />
-                  <div className="absolute bottom-0 left-1/2 top-0 w-5 -translate-x-1/2 bg-white/90" />
-
-                  {/* Location marker */}
-                  <div className="absolute left-1/2 top-1/2 grid h-5 w-5 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-wine shadow-md">
-                    <span className="h-2 w-2 rounded-full bg-white" />
-                  </div>
-
-                  {/* Address label */}
-                  <div className="absolute bottom-3 left-3 rounded-md bg-ink px-3 py-1.5 text-[10px] font-medium text-white shadow-sm">
-                    {application.address || "Restaurant Location"}
-                  </div>
+                <div className="relative h-64 overflow-hidden rounded-lg border border-stone-200 bg-stone-100">
+                  <iframe
+                    key={mapQuery || "restaurant-location"}
+                    title="Google Maps restaurant location preview"
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery || "India")}&output=embed`}
+                    className="h-full w-full border-0"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    allowFullScreen
+                  />
                 </div>
 
                 <p className="mt-2 text-xs leading-5 text-stone-400">
-                  Your restaurant location will be displayed here after the
-                  address is entered.
+                  The map preview updates as you enter the restaurant address. Verify the pin location in Google Maps before continuing.
                 </p>
               </div>
 
@@ -929,14 +1013,13 @@ export default function ManagerRegisterPage() {
             </h2>
 
             <p className="mb-7 mt-2 text-sm leading-6 text-stone-500">
-              Upload scan copies of official merchant permits. PDF, PNG, JPG
-              accepted (Max 5MB).
+              Upload official merchant documents as PDF files only (Max 5MB).
             </p>
 
             <form onSubmit={handleDocumentsContinue} noValidate>
               <DocumentCard
                 title="FSSAI License / Food Safety"
-                description="Upload your food safety or FSSAI license."
+                description="Upload your food safety or FSSAI license as a PDF."
                 required
                 file={documents.fssaiLicense}
                 error={fieldErrors.fssaiLicense}
@@ -946,7 +1029,7 @@ export default function ManagerRegisterPage() {
 
               <DocumentCard
                 title="Business Registration Cert."
-                description="No document uploaded yet"
+                description="Upload your business registration certificate as a PDF."
                 required
                 file={documents.businessRegistration}
                 error={fieldErrors.businessRegistration}
@@ -958,7 +1041,7 @@ export default function ManagerRegisterPage() {
 
               <DocumentCard
                 title="GST / Tax Certificate"
-                description="Supports VAT / Local sales taxes"
+                description="Upload your GST or tax certificate as a PDF."
                 file={documents.gstCertificate}
                 error={fieldErrors.gstCertificate}
                 onUpload={(file) =>
@@ -969,7 +1052,7 @@ export default function ManagerRegisterPage() {
 
               <DocumentCard
                 title="Owner Identity Proof (ID)"
-                description="Upload a government-issued identity document."
+                description="Upload a government-issued identity document as a PDF."
                 required
                 file={documents.ownerIdentity}
                 error={fieldErrors.ownerIdentity}
