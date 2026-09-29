@@ -1,15 +1,19 @@
 import { useState } from 'react';
 import { ArrowRight, Mail } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout.jsx';
 import { FormField, PasswordField } from '../../components/auth/FormField.jsx';
 import Notice from '../../components/auth/Notice.jsx';
-import { requestJson } from '../../lib/authApi.js';
+import { API_BASE, requestJson } from '../../lib/authApi.js';
 import { demoSessionKey } from '../../data/demoCustomer.js';
 
 export default function CustomerLoginPage() {
   const navigate = useNavigate();
-  const [error, setError] = useState('');
+  const [searchParams] = useSearchParams();
+  const [error, setError] = useState(() => searchParams.get('google') === 'failed'
+    ? 'Google sign-in could not be completed. Please try again.'
+    : searchParams.get('google') === 'unavailable'
+      ? 'This Google account cannot sign in as a customer.' : '');
   const [success, setSuccess] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -63,6 +67,10 @@ export default function CustomerLoginPage() {
         <button className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-wine px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-ink focus:outline-none focus:ring-4 focus:ring-wine/20 disabled:cursor-wait disabled:opacity-60" type="submit" disabled={busy}>
           {busy ? 'Signing in…' : 'Sign in as Customer'}{!busy && <ArrowRight size={16} />}
         </button>
+        <div className="my-5 flex items-center gap-3 text-xs text-stone-400"><span className="h-px flex-1 bg-stone-200" />OR<span className="h-px flex-1 bg-stone-200" /></div>
+        <a className="flex h-12 w-full items-center justify-center gap-3 rounded-lg border border-stone-200 bg-white text-sm font-semibold text-ink shadow-sm transition hover:bg-stone-50 focus:outline-none focus:ring-4 focus:ring-wine/10" href={`${API_BASE}/api/auth/customer/google/login`}>
+          <span className="font-bold text-base" aria-hidden="true">G</span>Continue with Google
+        </a>
         {import.meta.env.DEV && (
           <button className="demo-login-button" type="button" onClick={enterDemoCustomer}>
             <span className="demo-tag">DEV PREVIEW</span>
