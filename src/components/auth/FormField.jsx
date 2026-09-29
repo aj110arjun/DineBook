@@ -12,6 +12,7 @@ export function FormField({
   maxLength,
   min,
   max,
+  step,
   pattern,
   patternMessage,
   required = true,
@@ -72,6 +73,7 @@ export function FormField({
           maxLength={maxLength}
           min={min}
           max={max}
+          step={step}
           pattern={pattern}
           required={required}
           value={value}
