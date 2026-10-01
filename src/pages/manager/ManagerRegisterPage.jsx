@@ -207,16 +207,50 @@ export default function ManagerRegisterPage() {
 
   const [application, setApplication] = useState(initialApplication);
   const [mapQuery, setMapQuery] = useState("");
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
+  const [addressLookupQuery, setAddressLookupQuery] = useState("");
+  const [addressSuggestions, setAddressSuggestions] = useState([]);
+  const [addressLookupBusy, setAddressLookupBusy] = useState(false);
+  const [addressLookupError, setAddressLookupError] = useState("");
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      setMapQuery(latitude !== "" && longitude !== ""
-        ? `${latitude},${longitude}`
-        : [application.address, application.city, application.state, application.pinCode].filter(Boolean).join(", "));
+      setMapQuery([application.address, application.city, application.state, application.pinCode].filter(Boolean).join(", "));
     }, 500);
     return () => window.clearTimeout(timeoutId);
-  }, [application.address, application.city, application.state, application.pinCode, latitude, longitude]);
+  }, [application.address, application.city, application.state, application.pinCode]);
+
+  useEffect(() => {
+    const query = addressLookupQuery.trim();
+    if (query.length < 5) {
+      setAddressSuggestions([]);
+      setAddressLookupError("");
+      setAddressLookupBusy(false);
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(async () => {
+      setAddressLookupBusy(true);
+      setAddressLookupError("");
+      try {
+        const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lang=en`, { signal: controller.signal });
+        if (!response.ok) throw new Error("Address search is temporarily unavailable.");
+        const result = await response.json();
+        setAddressSuggestions(result.features || []);
+      } catch (reason) {
+        if (reason.name !== "AbortError") {
+          setAddressSuggestions([]);
+          setAddressLookupError("Couldn’t look up addresses right now. You can still enter the coordinates manually.");
+        }
+      } finally {
+        if (!controller.signal.aborted) setAddressLookupBusy(false);
+      }
+    }, 700);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [addressLookupQuery]);
   const [documents, setDocuments] = useState({
     fssaiLicense: null,
     businessRegistration: null,
@@ -279,6 +313,31 @@ export default function ManagerRegisterPage() {
       ...current,
       [field]: value,
     }));
+    if (["address", "city", "state", "pinCode"].includes(field)) {
+      setAddressSuggestions([]);
+      setAddressLookupQuery([
+        field === "address" ? value : application.address,
+        field === "city" ? value : application.city,
+        field === "state" ? value : application.state,
+        field === "pinCode" ? value : application.pinCode,
+      ].filter(Boolean).join(", "));
+    }
+  }
+
+  function selectRestaurantAddress(feature) {
+    const properties = feature.properties || {};
+    const streetAddress = [properties.housenumber, properties.street].filter(Boolean).join(" ");
+    const address = streetAddress || properties.name || properties.street || properties.city || "";
+    setApplication((current) => ({
+      ...current,
+      address,
+      city: properties.city || properties.district || properties.county || current.city,
+      state: properties.state || current.state,
+      pinCode: properties.postcode || current.pinCode,
+    }));
+    setAddressSuggestions([]);
+    setAddressLookupQuery("");
+    setAddressLookupError("");
   }
   const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
@@ -545,11 +604,6 @@ export default function ManagerRegisterPage() {
       // Restaurant capacity
       formData.append("capacity", capacity);
       formData.append("tables", tables);
-      if (latitude !== "" && longitude !== "") {
-        formData.append("latitude", latitude);
-        formData.append("longitude", longitude);
-      }
-
       // Operating hours
       Object.entries(hours).forEach(([day, schedule]) => {
         formData.append(`${day}_enabled`, String(schedule.enabled));
@@ -908,17 +962,44 @@ export default function ManagerRegisterPage() {
               </div>
 
               {/* Address */}
-              <FormField
-                id="address"
-                label="Full Restaurant Address"
-                type="text"
-                placeholder="Enter your complete restaurant address"
-                autoComplete="street-address"
-                icon={MapPin}
-                required
-                value={application.address}
-                onChange={(event) => updateField("address", event.target.value)}
-              />
+              <div className="relative">
+                <FormField
+                  id="address"
+                  label="Full Restaurant Address"
+                  type="text"
+                  placeholder="Type the address, then select a match"
+                  autoComplete="street-address"
+                  icon={MapPin}
+                  required
+                  value={application.address}
+                  onChange={(event) => updateField("address", event.target.value)}
+                  onBlur={() => window.setTimeout(() => setAddressSuggestions([]), 150)}
+                />
+                {(addressLookupBusy || addressSuggestions.length > 0 || addressLookupError) && (
+                  <div className="absolute z-20 -mt-3 w-full overflow-hidden rounded-lg border border-stone-200 bg-white shadow-lg">
+                    {addressLookupBusy && <p className="px-4 py-3 text-sm text-stone-500">Searching addresses…</p>}
+                    {!addressLookupBusy && addressSuggestions.map((feature, index) => {
+                      const place = feature.properties || {};
+                      const primary = [place.housenumber, place.street].filter(Boolean).join(" ") || place.name || place.street || "Address result";
+                      const secondary = [place.city || place.district || place.county, place.state, place.postcode, place.country].filter(Boolean).join(", ");
+                      return (
+                        <button
+                          key={`${feature.properties?.osm_id || primary}-${index}`}
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => selectRestaurantAddress(feature)}
+                          className="block w-full border-b border-stone-100 px-4 py-3 text-left last:border-0 hover:bg-stone-50"
+                        >
+                          <span className="block text-sm font-medium text-ink">{primary}</span>
+                          {secondary && <span className="mt-0.5 block text-xs text-stone-500">{secondary}</span>}
+                        </button>
+                      );
+                    })}
+                    {!addressLookupBusy && addressLookupError && <p className="px-4 py-3 text-sm text-amber-800">{addressLookupError}</p>}
+                  </div>
+                )}
+                <p className="-mt-2 mb-4 text-xs text-stone-400">Choose a suggested location to fill its street address, city, state, and postal code. Search data © OpenStreetMap contributors.</p>
+              </div>
 
               {/* City / State / PIN */}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -983,16 +1064,8 @@ export default function ManagerRegisterPage() {
                 </div>
 
                 <p className="mt-2 text-xs leading-5 text-stone-400">
-                  The map follows your address. Enter the exact coordinates to place the restaurant pin precisely; those coordinates are saved with the restaurant.
+                  The map preview follows your restaurant address. You can add precise map coordinates later.
                 </p>
-                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <FormField id="latitude" label="Latitude" type="number" step="any" min="-90" max="90" required
-                    placeholder="e.g. 19.0760" value={latitude}
-                    onChange={(event) => setLatitude(event.target.value)} />
-                  <FormField id="longitude" label="Longitude" type="number" step="any" min="-180" max="180" required
-                    placeholder="e.g. 72.8777" value={longitude}
-                    onChange={(event) => setLongitude(event.target.value)} />
-                </div>
               </div>
 
               <Notice message={error} />
