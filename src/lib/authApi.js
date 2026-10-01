@@ -1,4 +1,6 @@
-export const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+// In development, use Vite's same-origin /api proxy so localhost and ngrok
+// visitors both reach the backend. Set VITE_API_URL for separate deployments.
+export const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
 function getErrorMessage(detail, fallbackMessage) {
   if (typeof detail === "string") return detail;

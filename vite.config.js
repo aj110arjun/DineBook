@@ -9,6 +9,15 @@ export default defineConfig({
 
   server: {
     host: "0.0.0.0",
-    allowedHosts: ["kinetic-cling-grunt.ngrok-free.dev"],
+    // Accept ngrok's changing public subdomain while keeping normal host checks.
+    allowedHosts: [".ngrok-free.dev"],
+    // API calls from the shared frontend URL are forwarded to the local API.
+    // This keeps cookies same-origin and means visitors do not need localhost.
+    proxy: {
+      "/api": {
+        target: "http://127.0.0.1:8000",
+        changeOrigin: true,
+      },
+    },
   },
 });
