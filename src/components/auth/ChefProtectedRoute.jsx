@@ -21,7 +21,7 @@ export default function ChefProtectedRoute({ children }) {
       .finally(() => active && setChecking(false));
 
     return () => { active = false; };
-  }, []);
+  }, [location.pathname]);
 
   if (checking) {
     return <main className="landing-loading" aria-live="polite"><span className="loading-mark">D</span><p>Checking chef account…</p></main>;

@@ -58,10 +58,12 @@ npm run preview
 
 ## 🔌 API connection
 
-The frontend defaults to `http://localhost:8000`. Set another API origin in `.env.local`:
+In development, API requests use Vite's `/api` proxy to reach the backend at `http://127.0.0.1:8000`. This also works when sharing the frontend through ngrok: start the backend and frontend locally, then expose the Vite port with ngrok. Visitors use the frontend ngrok URL, and Vite forwards their API requests to the local backend.
+
+For a separately hosted API, set its origin in `.env.local`:
 
 ```env
-VITE_API_URL=http://localhost:8000
+VITE_API_URL=https://your-api.example.com
 ```
 
 Customer sign-in and registration send credentialed requests to:
