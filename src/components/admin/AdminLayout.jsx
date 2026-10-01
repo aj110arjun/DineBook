@@ -1,4 +1,6 @@
 import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import PortalBreadcrumb from "../PortalBreadcrumb.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import {
   Activity,
@@ -44,6 +46,7 @@ export default function AdminLayout({
   activePath,
 }) {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   async function handleLogout() {
     try {
@@ -129,6 +132,7 @@ export default function AdminLayout({
           </div>
         </header>
 
+        <PortalBreadcrumb home={{ label: "Admin", to: "/admin/dashboard" }} items={pathname.startsWith("/admin/requests/") ? [{ label: "Requests", to: "/admin/requests" }, { label: title }] : pathname.startsWith("/admin/restaurants/") ? [{ label: "Restaurants", to: "/admin/restaurants" }, { label: title }] : [{ label: title }]} className="admin-breadcrumb" />
         {children}
       </section>
     </main>

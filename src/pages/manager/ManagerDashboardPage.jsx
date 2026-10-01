@@ -1,5 +1,6 @@
 import { CalendarDays, CircleDollarSign, Plus, ShoppingBasket, Star, Table2, Tag } from "lucide-react";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
+import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
 
 const revenueData = [
   { day: "Mon", value: 32 },
@@ -60,11 +61,7 @@ export default function ManagerDashboardPage() {
   return (
     <ManagerLayout title="Dashboard">
       <div className="manager-dashboard-content">
-          <div className="manager-breadcrumb">
-            <span>Home</span>
-            <span>/</span>
-            <strong>Dashboard</strong>
-          </div>
+          <PortalBreadcrumb home={{ label: "Home", to: "/manager/dashboard" }} items={[{ label: "Dashboard" }]} className="manager-breadcrumb" />
 
           <div className="manager-heading">
             <div>

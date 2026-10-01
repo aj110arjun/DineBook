@@ -2,12 +2,24 @@ import { useState } from 'react';
 import { ArrowLeft, ArrowRight, Mail } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout.jsx';
+import AdminAuthLayout from '../../components/auth/AdminAuthLayout.jsx';
+import ManagerAuthLayout from '../../components/auth/ManagerAuthLayout.jsx';
+import ChefAuthLayout from '../../components/auth/ChefAuthLayout.jsx';
 import { FormField, PasswordField } from '../../components/auth/FormField.jsx';
 import Notice from '../../components/auth/Notice.jsx';
 import { requestJson } from '../../lib/authApi.js';
 
-export default function CustomerRecoveryPage() {
+const portalSettings = {
+  customer: { label: 'customer', endpoint: '/api/auth/customer', login: '/customer/login', Layout: AuthLayout, view: 'recovery' },
+  admin: { label: 'administrator', endpoint: '/api/auth/admin', login: '/admin/login', Layout: AdminAuthLayout },
+  manager: { label: 'manager', endpoint: '/api/auth/manager', login: '/manager/login', Layout: ManagerAuthLayout },
+  chef: { label: 'chef', endpoint: '/api/auth/chef', login: '/chef/login', Layout: ChefAuthLayout },
+};
+
+export default function CustomerRecoveryPage({ role = 'customer' }) {
   const navigate = useNavigate();
+  const config = portalSettings[role] || portalSettings.customer;
+  const Layout = config.Layout;
   const [email, setEmail] = useState('');
   const [codeSent, setCodeSent] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -17,7 +29,7 @@ export default function CustomerRecoveryPage() {
   async function requestCode(event) {
     event.preventDefault(); setError(''); setNotice(''); setBusy(true);
     try {
-      await requestJson('/api/auth/customer/forgot-password', {
+      await requestJson(`${config.endpoint}/forgot-password`, {
         method: 'POST', body: JSON.stringify({ email }),
         fallbackMessage: 'We couldn’t send a reset code. Please try again.',
       });
@@ -40,19 +52,21 @@ export default function CustomerRecoveryPage() {
     }
     setBusy(true);
     try {
-      await requestJson('/api/auth/customer/reset-password', {
+      await requestJson(`${config.endpoint}/reset-password`, {
         method: 'POST', body: JSON.stringify({ email, code, new_password: newPassword }),
         fallbackMessage: 'We couldn’t reset your password. Check the code and try again.',
       });
-      navigate('/customer/login', { replace: true, state: { notice: 'Your password has been reset. You can now sign in.' } });
+      navigate(config.login, { replace: true, state: { notice: 'Your password has been reset. You can now sign in.' } });
     } catch (reason) { setError(reason.message); }
     finally { setBusy(false); }
   }
 
   return (
-    <AuthLayout view="recovery">
+    <Layout {...(config.view ? { view: config.view } : {})}>
       <h2 className="font-display text-3xl font-semibold text-ink">Forgot Password?</h2>
-      <p className="mb-7 mt-2 text-sm leading-6 text-stone-500">{codeSent ? <>Enter the reset code sent to <strong>{email}</strong> and choose a new password. The code expires in 2 minutes.</> : 'Enter the email address registered with your DineBook account.'}</p>
+      <p className="mb-7 mt-2 text-sm leading-6 text-stone-500">
+        {codeSent ? <>Enter the reset code sent to <strong>{email}</strong> and choose a new password. The code expires in 2 minutes.</> : `Enter the email address registered with your DineBook ${config.label} account.`}
+      </p>
       {!codeSent ? (
         <form onSubmit={requestCode}>
           <FormField id="recoveryEmail" label="Registered Email" type="email" placeholder="alex@example.com" autoComplete="email" icon={Mail} value={email} onChange={event => setEmail(event.target.value)} required />
@@ -70,7 +84,7 @@ export default function CustomerRecoveryPage() {
           <button disabled={busy} type="button" onClick={() => { setCodeSent(false); setError(''); setNotice(''); }} className="mt-3 w-full text-sm font-semibold text-wine hover:underline">Send another code</button>
         </form>
       )}
-      <Link className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-wine hover:underline" to="/customer/login"><ArrowLeft size={14} /> Back to Sign In</Link>
-    </AuthLayout>
+      <Link className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-wine hover:underline" to={config.login}><ArrowLeft size={14} /> Back to Sign In</Link>
+    </Layout>
   );
 }

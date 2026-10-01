@@ -32,7 +32,7 @@ export default function AdminRestaurantDetailsPage() {
 
   return (
     <AdminLayout title="Restaurant Details" activePath="/admin/restaurants">
-      <div className="admin-dashboard-content">
+      <div className={`admin-dashboard-content ${restaurant && !loading && !error ? "admin-restaurant-detail-layout" : ""}`}>
         <Link className="admin-restaurant-back" to="/admin/restaurants"><ArrowLeft size={16} /> Back to restaurants</Link>
         {loading ? <div className="admin-request-empty">Loading restaurant details…</div> : error ? <div className="admin-request-error" role="alert">{error}</div> : restaurant ? (
           <>

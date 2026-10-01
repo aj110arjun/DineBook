@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ChefHat, Plus, Trash2, Users } from "lucide-react";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
+import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
 import { FormField } from "../../components/auth/FormField.jsx";
 import Notice from "../../components/auth/Notice.jsx";
 import { requestJson } from "../../lib/authApi.js";
@@ -72,11 +73,11 @@ export default function ManagerStaffPage() {
   return (
     <ManagerLayout title="Staff Management">
       <div className="manager-dashboard-content">
-        <div className="manager-breadcrumb"><span>Home</span><span>/</span><strong>Staff</strong></div>
+        <PortalBreadcrumb home={{ label: "Home", to: "/manager/dashboard" }} items={[{ label: "Staff" }]} className="manager-breadcrumb" />
         <div className="manager-heading"><div><h2>Restaurant Staff</h2><p>Add and manage staff accounts for your restaurant.</p></div></div>
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
-          <section className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+          <section className="manager-staff-panel rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
             <div className="mb-5 flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-lg bg-wine/10 text-wine"><ChefHat size={19} /></span><div><h3 className="font-semibold text-ink">Add a Chef</h3><p className="mt-1 text-xs text-stone-500">Sign-in credentials will be emailed to the chef.</p></div></div>
             <form onSubmit={handleAddChef} noValidate>
               <FormField id="name" label="Chef Full Name" placeholder="Enter the chef’s name" autoComplete="name" minLength={2} required />
@@ -88,7 +89,7 @@ export default function ManagerStaffPage() {
             </form>
           </section>
 
-          <section className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+          <section className="manager-staff-panel rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
             <div className="mb-5 flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-lg bg-stone-100 text-stone-600"><Users size={19} /></span><div><h3 className="font-semibold text-ink">Current Staff</h3><p className="mt-1 text-xs text-stone-500">{staff.length} chef{staff.length === 1 ? "" : "s"} on your team</p></div></div>
             {loading ? <p className="py-10 text-center text-sm text-stone-500">Loading staff…</p> : staff.length === 0 ? <div className="rounded-lg border border-dashed border-stone-200 px-5 py-12 text-center"><ChefHat className="mx-auto text-stone-300" size={24} /><p className="mt-3 text-sm font-medium text-stone-600">No chef accounts yet</p><p className="mt-1 text-xs text-stone-400">Add your first chef using the form.</p></div> : (
               <div className="divide-y divide-stone-100">

@@ -78,6 +78,10 @@ export default function ManagerLoginPage() {
           required
         />
 
+        <div className="mb-5 -mt-2 text-right text-xs">
+          <Link className="font-medium text-wine hover:underline" to="/manager/recovery">Forgot password?</Link>
+        </div>
+
         <Notice message={error} />
         <Notice message={success} type="success" />
 

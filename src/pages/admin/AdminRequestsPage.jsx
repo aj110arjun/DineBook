@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
 import {
   Activity,
   Bell,
@@ -216,6 +217,7 @@ export default function AdminRequestsPage() {
         </header>
 
         <div className="admin-dashboard-content">
+          <PortalBreadcrumb home={{ label: "Admin", to: "/admin/dashboard" }} items={[{ label: "Requests" }]} className="admin-breadcrumb" />
           <div className="admin-dashboard-heading">
             <div>
               <h2>Manager Requests</h2>
@@ -277,7 +279,7 @@ export default function AdminRequestsPage() {
                   <div className="admin-request-details">
                     <div className="admin-request-title">
                       <h3>{manager.restaurant?.name || manager.name}</h3>
-                      <span className="admin-request-status">
+                      <span className={`admin-request-status ${(manager.restaurant?.status || manager.status || "pending").toLowerCase()}`}>
                         {manager.restaurant?.status || manager.status}
                       </span>
                     </div>

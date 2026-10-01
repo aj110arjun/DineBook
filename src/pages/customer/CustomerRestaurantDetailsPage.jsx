@@ -75,11 +75,11 @@ export default function CustomerRestaurantDetailsPage() {
     <div className="customer-home">
       <CustomerHeader user={user} onLogout={() => setUser(null)} />
       <main className="restaurant-details-page">
-        <div className="restaurant-breadcrumbs">
+        <nav className="restaurant-breadcrumbs" aria-label="Breadcrumb">
           <Link to="/customer">Home</Link><span>/</span>
           <Link to="/customer#restaurants-near-you">Restaurants</Link><span>/</span>
           {restaurant ? <><span>{[restaurant.city, restaurant.state].filter(Boolean).join(", ")}</span><span>/</span><strong>{restaurant.name}</strong></> : <span>Restaurant details</span>}
-        </div>
+        </nav>
 
         {loading ? (
           <p className="restaurant-detail-message" role="status">Loading restaurant details…</p>

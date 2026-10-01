@@ -7,6 +7,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { photo } from "../../data/landingData.js";
 import { requestJson } from "../../lib/authApi.js";
+import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
 
 const orders = [
   { id: "#DB1024", customer: "Priya Sharma", time: "12:45 PM", table: "Table 7", items: "9 items", status: "New", prep: "25 min" },
@@ -108,7 +109,7 @@ export default function ChefDashboardPage() {
         </header>
 
         <div className="chef-dashboard-content">
-          <div className="chef-breadcrumb"><span>Home</span><span>/</span><strong>{activeNav}</strong></div>
+          <PortalBreadcrumb home={{ label: "Home", to: "/chef/dashboard" }} items={[{ label: activeNav }]} className="chef-breadcrumb" />
           <div className="chef-page-heading"><h2>Good Morning, Chef {firstName}</h2><p>Here's what's happening in your kitchen today.</p></div>
 
           <section className="chef-stat-grid" aria-label="Today's kitchen stats">

@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import {
   Activity,
@@ -166,6 +167,7 @@ export default function AdminDashboardPage() {
 
         {/* Dashboard content */}
         <div className="admin-dashboard-content">
+          <PortalBreadcrumb home={{ label: "Admin", to: "/admin/dashboard" }} items={[{ label: "Dashboard" }]} className="admin-breadcrumb" />
           {/* Heading */}
           <div className="admin-dashboard-heading">
             <div>

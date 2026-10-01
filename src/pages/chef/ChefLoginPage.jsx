@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowRight, Mail } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import ChefAuthLayout from "../../components/auth/ChefAuthLayout.jsx";
 import { FormField, PasswordField } from "../../components/auth/FormField.jsx";
@@ -107,6 +107,9 @@ export default function ChefLoginPage() {
           onChange={handleFieldChange}
           onBlur={handleFieldBlur}
         />
+        <div className="mb-5 -mt-2 text-right text-xs">
+          <Link className="font-medium text-wine hover:underline" to="/chef/recovery">Forgot password?</Link>
+        </div>
         <Notice message={error} />
         <button
           className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-wine px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-ink focus:outline-none focus:ring-4 focus:ring-wine/20 disabled:cursor-wait disabled:opacity-60"
