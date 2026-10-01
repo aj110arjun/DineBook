@@ -889,10 +889,22 @@ a:focus-visible,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 28px;
+  gap: 14px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #eee5e1;
 }
-.restaurant-pagination > div {
+.restaurant-pagination-summary {
+  color: #817977;
+  font-size: 11px;
+}
+.restaurant-pagination-summary strong {
+  color: #393131;
+  font-weight: 700;
+}
+.restaurant-pagination-pages {
   display: flex;
+  align-items: center;
   gap: 8px;
 }
 .restaurant-pagination button {
@@ -2971,6 +2983,15 @@ a:focus-visible,
     min-width: 32px;
     padding-inline: 8px;
   }
+  .restaurant-pagination {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .restaurant-pagination-pages {
+    width: 100%;
+    justify-content: space-between;
+    gap: 5px;
+  }
 }
 
 .admin-confirm-backdrop {
@@ -3976,8 +3997,16 @@ a:focus-visible,
   gap: 9px;
   margin-bottom: 18px;
   color: #8e8580;
-  font-size: 9px;
+  font-size: 12px;
 }
+
+.portal-breadcrumb-item { display: inline-flex; align-items: center; gap: inherit; }
+.portal-breadcrumb a { color: inherit; text-decoration: none; }
+.portal-breadcrumb a:hover { text-decoration: underline; }
+.portal-breadcrumb strong { font-weight: 600; }
+.admin-breadcrumb { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin: 0 auto; padding: 18px 28px 0; color: #817978; font-size: 12px; }
+.admin-breadcrumb .portal-breadcrumb-item { gap: 9px; }
+.admin-breadcrumb strong { color: #57313a; }
 
 .manager-breadcrumb strong {
   color: #551321;
@@ -4000,6 +4029,61 @@ a:focus-visible,
   margin: 4px 0 0;
   color: #817773;
   font-size: 11px;
+}
+
+.manager-menu-input {
+  display: block;
+  width: 100%;
+  border: 1px solid #e7dfda;
+  border-radius: 8px;
+  background: #fff;
+  padding: 10px 12px;
+  color: #332a2d;
+  font-size: 13px;
+  outline: none;
+}
+
+.manager-menu-input:focus {
+  border-color: #80525c;
+  box-shadow: 0 0 0 3px rgb(85 19 33 / 9%);
+}
+
+.manager-menu-search {
+  display: flex;
+  width: min(100%, 290px);
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #e7dfda;
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #928984;
+}
+
+.manager-menu-search input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #332a2d;
+  font-size: 12px;
+}
+
+:root[data-theme="dark"] .manager-dashboard .manager-menu-panel,
+:root[data-theme="dark"] .manager-dashboard [role="dialog"] {
+  border-color: #3d3538;
+  background: #211d1f;
+  color: #eee7e6;
+}
+
+:root[data-theme="dark"] .manager-dashboard .manager-menu-input,
+:root[data-theme="dark"] .manager-dashboard .manager-menu-search {
+  border-color: #494044;
+  background: #2b2528;
+  color: #eee7e6;
+}
+
+:root[data-theme="dark"] .manager-dashboard .manager-menu-search input {
+  color: #eee7e6;
 }
 
 .manager-quick-actions {
@@ -6326,8 +6410,911 @@ a:focus-visible,
 :root[data-theme="dark"] .image-crop-header p { color: #c4b8b9; }
 :root[data-theme="dark"] .image-crop-close,
 :root[data-theme="dark"] .image-crop-cancel { border-color: #514447; background: #302a2d; color: #f4eeee; }
+
+/* Manager dashboard surfaces and staff controls */
+:root[data-theme="dark"] .manager-dashboard {
+  background: #171516;
+  color: #f1e9e8;
+}
+:root[data-theme="dark"] .manager-topbar {
+  border-color: #40383a;
+  background: #211d1f;
+}
+:root[data-theme="dark"] .manager-topbar-left h1,
+:root[data-theme="dark"] .manager-profile,
+:root[data-theme="dark"] .manager-menu-button,
+:root[data-theme="dark"] .manager-notification-button {
+  color: #f1e9e8;
+}
+:root[data-theme="dark"] .manager-profile span,
+:root[data-theme="dark"] .manager-heading p,
+:root[data-theme="dark"] .manager-breadcrumb {
+  color: #b0a5a5;
+}
+:root[data-theme="dark"] .manager-breadcrumb strong,
+:root[data-theme="dark"] .manager-heading h2 {
+  color: #e4c57d;
+}
+:root[data-theme="dark"] .manager-search,
+:root[data-theme="dark"] .manager-notification-button {
+  background: #302a2d;
+}
+:root[data-theme="dark"] .manager-search input {
+  background: transparent;
+  color: #f1e9e8;
+}
+:root[data-theme="dark"] .manager-search input::placeholder {
+  color: #a99b9e;
+}
+:root[data-theme="dark"] .manager-quick-actions button,
+:root[data-theme="dark"] .manager-summary-card,
+:root[data-theme="dark"] .manager-panel,
+:root[data-theme="dark"] .manager-table-card {
+  border-color: #40383a;
+  background: #211d1f;
+  color: #f1e9e8;
+}
+:root[data-theme="dark"] .manager-quick-actions button:hover {
+  border-color: #806b50;
+  background: #292426;
+}
+:root[data-theme="dark"] .manager-action-icon,
+:root[data-theme="dark"] .manager-summary-icon {
+  background: #39272d;
+  color: #e4c57d;
+}
+:root[data-theme="dark"] .manager-quick-actions strong,
+:root[data-theme="dark"] .manager-summary-top > span,
+:root[data-theme="dark"] .manager-panel-header h3,
+:root[data-theme="dark"] .manager-order-donut strong,
+:root[data-theme="dark"] .manager-table-card strong,
+:root[data-theme="dark"] .manager-popular-item strong,
+:root[data-theme="dark"] .manager-list-row strong,
+:root[data-theme="dark"] .manager-order-row-right > b {
+  color: #f1e9e8;
+}
+:root[data-theme="dark"] .manager-quick-actions small,
+:root[data-theme="dark"] .manager-summary-detail span,
+:root[data-theme="dark"] .manager-panel-header span,
+:root[data-theme="dark"] .manager-chart-column span,
+:root[data-theme="dark"] .manager-order-legend div,
+:root[data-theme="dark"] .manager-table-card span,
+:root[data-theme="dark"] .manager-popular-item span,
+:root[data-theme="dark"] .manager-list-row div span {
+  color: #b0a5a5;
+}
+:root[data-theme="dark"] .manager-summary-value,
+:root[data-theme="dark"] .manager-panel-header button,
+:root[data-theme="dark"] .manager-popular-item b {
+  color: #e4c57d;
+}
+:root[data-theme="dark"] .manager-revenue-chart,
+:root[data-theme="dark"] .manager-popular-item,
+:root[data-theme="dark"] .manager-list-row {
+  border-color: #40383a;
+}
+:root[data-theme="dark"] .manager-table-card.available { background: #1c2d24; }
+:root[data-theme="dark"] .manager-table-card.occupied { background: #34271d; }
+:root[data-theme="dark"] .manager-table-card.reserved { background: #202b39; }
+:root[data-theme="dark"] .manager-table-card.maintenance { background: #292426; }
+:root[data-theme="dark"] .manager-list-row > b {
+  background: #39272d;
+  color: #f0b9c3;
+}
+:root[data-theme="dark"] .manager-order-pill.preparing { background: #3b2b1e; color: #ffbd72; }
+:root[data-theme="dark"] .manager-order-pill.ready { background: #202f42; color: #91c3ff; }
+:root[data-theme="dark"] .manager-order-pill.completed { background: #1d3425; color: #8dd59a; }
+:root[data-theme="dark"] .manager-dashboard .manager-staff-panel {
+  border-color: #40383a;
+  background-color: #211d1f !important;
+  color: #f1e9e8;
+}
+:root[data-theme="dark"] .manager-dashboard .manager-staff-panel .bg-stone-100 {
+  background-color: #302a2d !important;
+}
+:root[data-theme="dark"] .manager-dashboard .manager-staff-panel .border-dashed {
+  border-color: #51484a !important;
+}
+:root[data-theme="dark"] .manager-dashboard .manager-staff-panel input {
+  border-color: #51484a;
+  background-color: #292426;
+  color: #f1e9e8;
+}
+:root[data-theme="dark"] .manager-dashboard .manager-staff-panel .bg-white {
+  background-color: #292426 !important;
+}
+:root[data-theme="dark"] .manager-dashboard .manager-staff-panel input::placeholder {
+  color: #a99b9e;
+}
+:root[data-theme="dark"] .manager-dashboard .manager-staff-panel .text-stone-300 {
+  color: #796f72 !important;
+}
+:root[data-theme="dark"] .manager-dashboard .manager-staff-panel .text-stone-400,
+:root[data-theme="dark"] .manager-dashboard .manager-staff-panel .text-stone-500 {
+  color: #b0a5a5 !important;
+}
+:root[data-theme="dark"] .manager-dashboard .manager-staff-panel .text-stone-600 {
+  color: #d0c7c7 !important;
+}
+:root[data-theme="dark"] .manager-dashboard .manager-staff-panel .divide-stone-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #40383a;
+}
+:root[data-theme="dark"] .manager-dashboard .manager-staff-panel .bg-emerald-50 {
+  background-color: #1d3425 !important;
+  color: #8dd59a !important;
+}
+:root[data-theme="dark"] .manager-dashboard .manager-staff-panel .bg-stone-100.text-stone-500 {
+  color: #b0a5a5 !important;
+}
+:root[data-theme="dark"] .manager-dashboard .manager-staff-panel button[aria-label^="Deactivate"]:hover {
+  background: #3a2328;
+  color: #ff9ca8;
+}
+
+/* Admin portal dark theme: dashboard, restaurants, and manager requests */
+:root[data-theme="dark"] .admin-dashboard {
+  background: #171516;
+  color: #f1e9e8;
+}
+:root[data-theme="dark"] .admin-topbar,
+:root[data-theme="dark"] .admin-stat-card,
+:root[data-theme="dark"] .admin-panel,
+:root[data-theme="dark"] .admin-table-card,
+:root[data-theme="dark"] .admin-restaurant-detail-heading,
+:root[data-theme="dark"] .admin-restaurant-detail-card,
+:root[data-theme="dark"] .admin-request-card,
+:root[data-theme="dark"] .admin-request-empty {
+  border-color: #40383a;
+  background: #211d1f;
+  color: #f1e9e8;
+}
+:root[data-theme="dark"] .admin-topbar {
+  border-bottom-color: #40383a;
+}
+:root[data-theme="dark"] .admin-dashboard-heading h2,
+:root[data-theme="dark"] .admin-page-heading h2,
+:root[data-theme="dark"] .admin-restaurant-detail-heading h2,
+:root[data-theme="dark"] .admin-restaurant-detail-card h3,
+:root[data-theme="dark"] .admin-panel-header h3,
+:root[data-theme="dark"] .admin-stat-value,
+:root[data-theme="dark"] .admin-table td strong,
+:root[data-theme="dark"] .admin-request-title h3,
+:root[data-theme="dark"] .admin-alert-item strong,
+:root[data-theme="dark"] .admin-activity-item strong {
+  color: #f1e9e8;
+}
+:root[data-theme="dark"] .admin-dashboard-heading p,
+:root[data-theme="dark"] .admin-page-heading p,
+:root[data-theme="dark"] .admin-restaurant-detail-heading p,
+:root[data-theme="dark"] .admin-restaurant-detail-item span,
+:root[data-theme="dark"] .admin-restaurant-description > span,
+:root[data-theme="dark"] .admin-restaurant-description p,
+:root[data-theme="dark"] .admin-restaurant-empty,
+:root[data-theme="dark"] .admin-panel-header > span,
+:root[data-theme="dark"] .admin-chart-column span,
+:root[data-theme="dark"] .admin-activity-item span,
+:root[data-theme="dark"] .admin-alert-item span,
+:root[data-theme="dark"] .admin-request-details p,
+:root[data-theme="dark"] .admin-request-details small,
+:root[data-theme="dark"] .admin-table td {
+  color: #b0a5a5;
+}
+:root[data-theme="dark"] .admin-breadcrumb {
+  color: #b0a5a5;
+}
+:root[data-theme="dark"] .admin-breadcrumb strong,
+:root[data-theme="dark"] .admin-restaurant-back {
+  color: #e4c57d;
+}
+:root[data-theme="dark"] .admin-search {
+  border-color: #40383a;
+  background: #292426;
+  color: #b0a5a5;
+}
+:root[data-theme="dark"] .admin-search input {
+  background: transparent;
+  color: #f1e9e8;
+}
+:root[data-theme="dark"] .admin-search input::placeholder {
+  color: #a99b9e;
+}
+:root[data-theme="dark"] .admin-refresh-button,
+:root[data-theme="dark"] .admin-table-action {
+  border-color: #494044;
+  background: #302a2d;
+  color: #e6dfe0;
+}
+:root[data-theme="dark"] .admin-refresh-button:hover,
+:root[data-theme="dark"] .admin-table-action:hover {
+  background: #392a30;
+  color: #f4eeee;
+}
+:root[data-theme="dark"] .admin-table th {
+  border-color: #40383a;
+  background: #292426;
+  color: #c7bfc0;
+}
+:root[data-theme="dark"] .admin-table td {
+  border-color: #40383a;
+}
+:root[data-theme="dark"] .admin-table tr:hover td {
+  background: #292426;
+}
+:root[data-theme="dark"] .admin-table td small {
+  color: #a99b9e;
+}
+:root[data-theme="dark"] .restaurant-status.pending {
+  background: #3b2f1d;
+  color: #f4c96f;
+}
+:root[data-theme="dark"] .restaurant-status.approved,
+:root[data-theme="dark"] .restaurant-status.active {
+  background: #1b3b30;
+  color: #8be0b7;
+}
+:root[data-theme="dark"] .restaurant-status.rejected {
+  background: #482630;
+  color: #ffadba;
+}
+:root[data-theme="dark"] .restaurant-status.inactive {
+  background: #302a2d;
+  color: #c7bfc0;
+}
+:root[data-theme="dark"] .admin-restaurant-detail-item strong,
+:root[data-theme="dark"] .admin-restaurant-hours strong,
+:root[data-theme="dark"] .admin-restaurant-documents strong {
+  color: #f1e9e8;
+}
+:root[data-theme="dark"] .admin-restaurant-detail-item,
+:root[data-theme="dark"] .admin-restaurant-detail-heading > div > span,
+:root[data-theme="dark"] .admin-restaurant-documents a {
+  color: #75d1c5;
+}
+:root[data-theme="dark"] .admin-restaurant-description,
+:root[data-theme="dark"] .admin-restaurant-hours > div {
+  border-color: #40383a;
+}
+:root[data-theme="dark"] .admin-restaurant-documents a {
+  border-color: #494044;
+  background: #292426;
+}
+:root[data-theme="dark"] .admin-restaurant-documents a:hover {
+  border-color: #348f86;
+  background: #24312f;
+}
+:root[data-theme="dark"] .admin-restaurant-documents small {
+  color: #b0a5a5;
+}
+:root[data-theme="dark"] .admin-stat-top > span,
+:root[data-theme="dark"] .admin-stat-warning {
+  color: #c7bfc0;
+}
+:root[data-theme="dark"] .admin-stat-icon,
+:root[data-theme="dark"] .admin-activity-icon {
+  background: #203733;
+  color: #75d1c5;
+}
+:root[data-theme="dark"] .admin-chart {
+  border-color: #40383a;
+}
+:root[data-theme="dark"] .admin-activity-item {
+  border-color: #40383a;
+}
+:root[data-theme="dark"] .admin-request-error {
+  border-color: #65343d;
+  background: #382126;
+  color: #ffadba;
+}
+:root[data-theme="dark"] .admin-request-status-tab {
+  border-color: #494044;
+  background: #211d1f;
+  color: #d0c7c7;
+}
+:root[data-theme="dark"] .admin-request-status-tab span {
+  background: #302a2d;
+  color: #d0c7c7;
+}
+:root[data-theme="dark"] .admin-request-status-tab.active {
+  border-color: #0fa99d;
+  background: #183532;
+  color: #8be0d7;
+}
+:root[data-theme="dark"] .admin-request-status-tab.active span {
+  background: #23514c;
+  color: #b8f0e9;
+}
+:root[data-theme="dark"] .admin-request-card:hover {
+  border-color: #5a7773;
+}
+:root[data-theme="dark"] .admin-request-avatar {
+  background: #203733;
+  color: #8be0d7;
+}
+:root[data-theme="dark"] .admin-request-status {
+  background: #3b2f1d;
+  color: #f4c96f;
+}
+:root[data-theme="dark"] .admin-request-reject {
+  border-color: #65343d;
+  background: #302326;
+  color: #ffadba;
+}
+:root[data-theme="dark"] .admin-request-reject:hover {
+  border-color: #8f4a56;
+  background: #482630;
+}
+:root[data-theme="dark"] .admin-request-empty strong {
+  color: #f1e9e8;
+}
+:root[data-theme="dark"] .admin-request-empty span {
+  color: #b0a5a5;
+}
+
+/* Keep admin navigation still while each admin page scrolls independently. */
+@media (min-width: 801px) {
+  .admin-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: 237px;
+    height: 100vh;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .admin-dashboard-main {
+    grid-column: 2;
+    height: 100vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+@media (max-width: 800px) {
+  .admin-dashboard-main {
+    grid-column: 1;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+}
+
+/* Compact the request details page so its sections fit more comfortably. */
+.admin-request-detail-content {
+  padding: 18px 24px 24px;
+}
+.admin-breadcrumb:has(+ .admin-dashboard-content.admin-request-detail-content) {
+  padding-top: 12px;
+}
+.admin-request-detail-content > .mb-8 {
+  margin-bottom: 16px;
+  padding: 20px;
+}
+.admin-request-detail-content > .grid {
+  gap: 16px;
+}
+.admin-request-detail-content .p-6 {
+  padding: 20px;
+}
+.admin-request-detail-content .mt-6 {
+  margin-top: 16px;
+}
+.admin-request-detail-content .mb-7 {
+  margin-bottom: 16px;
+}
+.admin-request-detail-content > section.mt-6 {
+  margin-top: 16px;
+}
+.admin-request-detail-content > .mt-8 {
+  margin-top: 20px;
+  padding-top: 16px;
+}
+@media (max-width: 800px) {
+  .admin-request-detail-content {
+    padding: 16px 20px 24px;
+  }
+}
+@media (max-width: 520px) {
+  .admin-request-detail-content {
+    padding: 14px 14px 20px;
+  }
+  .admin-request-detail-content > .mb-8,
+  .admin-request-detail-content .p-6 {
+    padding: 16px;
+  }
+}
+:root[data-theme="dark"] .admin-manager-request-details {
+  color: #f1e9e8;
+}
+:root[data-theme="dark"] .admin-dashboard .bg-gray-50 {
+  background-color: #292426 !important;
+}
+:root[data-theme="dark"] .admin-dashboard .bg-red-100 {
+  background-color: #482630 !important;
+}
+:root[data-theme="dark"] .admin-dashboard .bg-red-200 {
+  background-color: #65343d !important;
+}
+:root[data-theme="dark"] .admin-dashboard .text-gray-400,
+:root[data-theme="dark"] .admin-dashboard .text-gray-500,
+:root[data-theme="dark"] .admin-dashboard .text-gray-600 {
+  color: #b0a5a5 !important;
+}
+:root[data-theme="dark"] .admin-dashboard .text-gray-300 {
+  color: #796f72 !important;
+}
+:root[data-theme="dark"] .admin-dashboard .border-red-200 {
+  border-color: #65343d !important;
+}
+:root[data-theme="dark"] .admin-dashboard .border-gray-200,
+:root[data-theme="dark"] .admin-dashboard .border-gray-100 {
+  border-color: #40383a !important;
+}
+:root[data-theme="dark"] .admin-dashboard .admin-document-preview-trigger {
+  border-color: #494044;
+  background-color: #211d1f !important;
+}
+:root[data-theme="dark"] .admin-dashboard .admin-document-preview-trigger:hover {
+  border-color: #348f86;
+  background-color: #292f2e !important;
+}
+:root[data-theme="dark"] .admin-dashboard .admin-document-preview-trigger .text-\[\#172335\] {
+  color: #f1e9e8 !important;
+}
+:root[data-theme="dark"] .admin-dashboard .border-t,
+:root[data-theme="dark"] .admin-dashboard .border-b {
+  border-color: #40383a;
+}
+
+/* Manager request cards and status colors */
+.admin-request-list {
+  gap: 15px;
+}
+.admin-request-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 112px;
+  padding: 20px 22px;
+  border-radius: 15px;
+  box-shadow: 0 5px 18px rgba(28, 35, 45, 0.06);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+.admin-request-card::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: #c99235;
+  content: "";
+}
+.admin-request-card:has(.admin-request-status.approved)::before {
+  background: #16966f;
+}
+.admin-request-card:has(.admin-request-status.rejected)::before {
+  background: #d34f60;
+}
+.admin-request-card:hover {
+  border-color: #b9d7d3;
+  box-shadow: 0 10px 24px rgba(20, 71, 68, 0.11);
+  transform: translateY(-2px);
+}
+.admin-request-avatar {
+  width: 48px;
+  height: 48px;
+  border: 1px solid #ccebe6;
+  background: linear-gradient(145deg, #e5f8f5, #d5efeb);
+  color: #087d73;
+  font-size: 14px;
+}
+.admin-request-title h3 {
+  margin: 0;
+  color: #263346;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.admin-request-details p {
+  margin-top: 7px;
+  color: #607084;
+  font-size: 11px;
+  font-weight: 500;
+}
+.admin-request-details small {
+  margin-top: 7px;
+  color: #8995a3;
+  font-size: 10px;
+}
+.admin-request-status {
+  min-height: 23px;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.045em;
+}
+.admin-request-status::before {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
+}
+.admin-request-status.pending {
+  border-color: #f0d79d;
+  background: #fff6df;
+  color: #9a6508;
+}
+.admin-request-status.approved,
+.admin-request-status.active {
+  border-color: #b7e5d2;
+  background: #e8f8f0;
+  color: #08784f;
+}
+.admin-request-status.rejected {
+  border-color: #f0c3c9;
+  background: #fff0f1;
+  color: #b83247;
+}
+.admin-request-empty strong {
+  display: block;
+  margin-top: 10px;
+  color: #344054;
+  font-size: 14px;
+}
+.admin-request-empty span {
+  display: block;
+  margin-top: 6px;
+  color: #8290a0;
+  font-size: 11px;
+}
+@media (max-width: 800px) {
+  .admin-request-card {
+    padding: 18px 18px 18px 20px;
+  }
+}
+@media (max-width: 520px) {
+  .admin-request-title h3 {
+    font-size: 14px;
+  }
+}
+:root[data-theme="dark"] .admin-request-card {
+  border-color: #40383a;
+  background: #211d1f;
+  box-shadow: 0 7px 22px rgba(0, 0, 0, 0.2);
+}
+:root[data-theme="dark"] .admin-request-card:hover {
+  border-color: #5a7773;
+  background: #262124;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.3);
+}
+:root[data-theme="dark"] .admin-request-avatar {
+  border-color: #31544f;
+  background: linear-gradient(145deg, #203733, #263f3b);
+  color: #8be0d7;
+}
+:root[data-theme="dark"] .admin-request-title h3 {
+  color: #f4eeee;
+}
+:root[data-theme="dark"] .admin-request-details p,
+:root[data-theme="dark"] .admin-request-details small {
+  color: #b0a5a5;
+}
+:root[data-theme="dark"] .admin-request-status.pending {
+  border-color: #705929;
+  background: #3b2f1d;
+  color: #f4c96f;
+}
+:root[data-theme="dark"] .admin-request-status.approved,
+:root[data-theme="dark"] .admin-request-status.active {
+  border-color: #2c664e;
+  background: #1b3b30;
+  color: #8be0b7;
+}
+:root[data-theme="dark"] .admin-request-status.rejected {
+  border-color: #78414b;
+  background: #482630;
+  color: #ffadba;
+}
+:root[data-theme="dark"] .admin-request-empty strong {
+  color: #f1e9e8;
+}
+:root[data-theme="dark"] .admin-request-empty span {
+  color: #b0a5a5;
+}
 @media (max-width: 520px) {
   .image-crop-dialog { padding: 1rem; }
   .image-crop-header h2 { font-size: 1.05rem; }
   .image-crop-header p { font-size: .75rem; }
+}
+
+.admin-filter-select {
+  min-width: 142px;
+  height: 37px;
+  padding: 0 30px 0 11px;
+  border: 1px solid #dfe5e8;
+  border-radius: 9px;
+  background: #fff;
+  color: #536275;
+  font-family: inherit;
+  font-size: 11px;
+}
+.admin-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 4px 0;
+  color: #748399;
+  font-size: 11px;
+}
+.admin-pagination-summary strong {
+  color: #344054;
+  font-weight: 650;
+}
+.admin-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.admin-page-size,
+.admin-pagination-controls button {
+  height: 34px;
+  border: 1px solid #dfe5e8;
+  border-radius: 8px;
+  background: #fff;
+  color: #536275;
+  font: inherit;
+}
+.admin-page-size {
+  padding: 0 8px;
+}
+.admin-pagination-controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 9px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.admin-pagination-controls button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+.admin-pagination-page {
+  padding: 0 3px;
+  color: #536275;
+  font-size: 10px;
+  white-space: nowrap;
+}
+@media (max-width: 800px) {
+  .admin-page-actions .admin-filter-select {
+    width: 100%;
+  }
+  .admin-pagination {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .admin-pagination-controls {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .admin-pagination-controls button:last-child {
+    margin-left: auto;
+  }
+}
+:root[data-theme="dark"] .admin-filter-select,
+:root[data-theme="dark"] .admin-page-size,
+:root[data-theme="dark"] .admin-pagination-controls button {
+  border-color: #494044;
+  background: #292426;
+  color: #e6dfe0;
+}
+:root[data-theme="dark"] .admin-pagination {
+  color: #b0a5a5;
+}
+:root[data-theme="dark"] .admin-pagination-summary strong,
+:root[data-theme="dark"] .admin-pagination-page {
+  color: #e6dfe0;
+}
+
+.admin-restaurant-detail-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 14px;
+  padding: 18px 24px 26px;
+}
+.admin-restaurant-detail-layout > .admin-restaurant-back,
+.admin-restaurant-detail-layout > .admin-restaurant-detail-heading,
+.admin-restaurant-detail-layout > .admin-restaurant-detail-card:first-of-type,
+.admin-restaurant-detail-layout > .admin-restaurant-detail-card:last-of-type {
+  grid-column: 1 / -1;
+}
+.admin-restaurant-detail-layout > .admin-restaurant-back {
+  margin: 0 0 1px;
+}
+.admin-restaurant-detail-layout > .admin-restaurant-detail-heading,
+.admin-restaurant-detail-layout > .admin-restaurant-detail-card {
+  margin: 0;
+  padding: 18px 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 16px rgba(23, 35, 53, 0.045);
+}
+.admin-restaurant-detail-layout > .admin-restaurant-detail-heading {
+  min-height: 112px;
+  border-color: #dbe9e8;
+  background: linear-gradient(120deg, #fff 0%, #f1f9f8 100%);
+}
+.admin-restaurant-detail-heading > div > span {
+  font-size: 10px;
+  letter-spacing: .14em;
+}
+.admin-restaurant-detail-heading h2 {
+  margin: 5px 0 3px;
+  font-size: 27px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+.admin-restaurant-detail-heading p {
+  font-size: 12px;
+  font-weight: 500;
+}
+.admin-restaurant-detail-heading .restaurant-status {
+  padding: 7px 12px;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .04em;
+}
+.admin-restaurant-detail-card h3 {
+  gap: 10px;
+  margin-bottom: 14px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.admin-restaurant-detail-card h3 svg {
+  width: 31px;
+  height: 31px;
+  padding: 7px;
+  border-radius: 9px;
+  background: #e8f6f5;
+  color: #0b9288;
+}
+.admin-restaurant-detail-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.admin-restaurant-detail-item {
+  min-height: 63px;
+  align-items: center;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid #edf1f2;
+  border-radius: 10px;
+  background: #f9fbfb;
+}
+.admin-restaurant-detail-item > svg {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  padding: 6px;
+  border-radius: 8px;
+  background: #e8f6f5;
+}
+.admin-restaurant-detail-item > div {
+  gap: 3px;
+}
+.admin-restaurant-detail-item span,
+.admin-restaurant-description > span {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+}
+.admin-restaurant-detail-item strong {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.admin-restaurant-description {
+  margin-top: 14px;
+  padding-top: 12px;
+}
+.admin-restaurant-description p,
+.admin-restaurant-empty {
+  margin-top: 5px;
+  font-size: 12px;
+}
+.admin-restaurant-hours {
+  gap: 0 18px;
+}
+.admin-restaurant-hours > div {
+  padding: 8px 0;
+  font-size: 11px;
+}
+.admin-restaurant-documents {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+.admin-restaurant-documents a {
+  padding: 11px;
+  border-radius: 10px;
+  background: #fbfdfd;
+}
+.admin-restaurant-documents a > svg {
+  flex: 0 0 auto;
+}
+.admin-restaurant-documents strong {
+  font-size: 10px;
+  font-weight: 700;
+}
+@media (max-width: 1050px) {
+  .admin-restaurant-detail-layout {
+    padding: 18px 20px 24px;
+  }
+  .admin-restaurant-detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .admin-restaurant-documents {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 700px) {
+  .admin-restaurant-detail-layout {
+    grid-template-columns: 1fr;
+    gap: 11px;
+    padding: 14px 16px 22px;
+  }
+  .admin-restaurant-detail-layout > .admin-restaurant-detail-heading,
+  .admin-restaurant-detail-layout > .admin-restaurant-detail-card {
+    grid-column: 1;
+    padding: 16px;
+  }
+  .admin-restaurant-detail-heading h2 {
+    font-size: 23px;
+  }
+  .admin-restaurant-detail-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .admin-restaurant-hours {
+    grid-template-columns: 1fr;
+  }
+  .admin-restaurant-documents {
+    grid-template-columns: 1fr;
+  }
+}
+:root[data-theme="dark"] .admin-restaurant-detail-layout > .admin-restaurant-detail-heading {
+  border-color: #3b514e;
+  background: linear-gradient(120deg, #211d1f 0%, #202d2b 100%);
+}
+:root[data-theme="dark"] .admin-restaurant-detail-layout > .admin-restaurant-detail-heading,
+:root[data-theme="dark"] .admin-restaurant-detail-layout > .admin-restaurant-detail-card {
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.17);
+}
+:root[data-theme="dark"] .admin-restaurant-detail-card h3 svg,
+:root[data-theme="dark"] .admin-restaurant-detail-item > svg {
+  background: #203733;
+  color: #75d1c5;
+}
+:root[data-theme="dark"] .admin-restaurant-detail-item {
+  border-color: #40383a;
+  background: #292426;
+}
+:root[data-theme="dark"] .admin-restaurant-documents a {
+  background: #292426;
+}
+:root[data-theme="dark"] .admin-restaurant-documents a:hover {
+  background: #24312f;
+}
+:root[data-theme="dark"] .restaurant-pagination {
+  border-color: var(--dark-line);
+}
+:root[data-theme="dark"] .restaurant-pagination-summary {
+  color: var(--dark-muted);
+}
+:root[data-theme="dark"] .restaurant-pagination-summary strong {
+  color: var(--dark-text);
 }

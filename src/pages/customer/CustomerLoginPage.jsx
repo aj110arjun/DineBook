@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { ArrowRight, Mail } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import AuthLayout from '../../components/auth/AuthLayout.jsx';
 import { FormField, PasswordField } from '../../components/auth/FormField.jsx';
 import Notice from '../../components/auth/Notice.jsx';
-import { API_BASE, requestJson } from '../../lib/authApi.js';
+import { requestJson } from '../../lib/authApi.js';
 import { demoSessionKey } from '../../data/demoCustomer.js';
+import GoogleSignInButton from '../../components/auth/GoogleSignInButton.jsx';
 
 export default function CustomerLoginPage() {
   const navigate = useNavigate();
@@ -16,59 +17,6 @@ export default function CustomerLoginPage() {
       ? 'This Google account cannot sign in as a customer.' : '');
   const [success, setSuccess] = useState('');
   const [busy, setBusy] = useState(false);
-  const googlePopup = useRef(null);
-  const googlePopupTimer = useRef(null);
-
-  useEffect(() => {
-    function handleGoogleMessage(event) {
-      if (event.origin !== window.location.origin || event.source !== googlePopup.current || event.data?.type !== 'dinebook-google-auth') return;
-      if (googlePopupTimer.current) window.clearInterval(googlePopupTimer.current);
-      googlePopupTimer.current = null;
-      googlePopup.current = null;
-      if (event.data.status === 'success') {
-        navigate('/customer', { replace: true });
-      } else {
-        setError(event.data.status === 'unavailable'
-          ? 'This Google account cannot sign in as a customer.'
-          : 'Google sign-in could not be completed. Please try again.');
-      }
-    }
-    window.addEventListener('message', handleGoogleMessage);
-    return () => {
-      window.removeEventListener('message', handleGoogleMessage);
-      if (googlePopupTimer.current) window.clearInterval(googlePopupTimer.current);
-    };
-  }, [navigate]);
-
-  function handleGoogleSignIn() {
-    setError('');
-    setSuccess('');
-    const width = 520;
-    const height = 680;
-    const left = Math.max(0, Math.round(window.screenX + (window.outerWidth - width) / 2));
-    const top = Math.max(0, Math.round(window.screenY + (window.outerHeight - height) / 2));
-    const popup = window.open(
-      `${API_BASE}/api/auth/customer/google/login`,
-      'dinebook-google-sign-in',
-      `popup=yes,width=${width},height=${height},left=${left},top=${top}`,
-    );
-    if (!popup) {
-      setError('Your browser blocked the Google sign-in window. Allow pop-ups for this site and try again.');
-      return;
-    }
-    googlePopup.current = popup;
-    popup.focus();
-    if (googlePopupTimer.current) window.clearInterval(googlePopupTimer.current);
-    googlePopupTimer.current = window.setInterval(() => {
-      if (googlePopup.current?.closed) {
-        window.clearInterval(googlePopupTimer.current);
-        googlePopupTimer.current = null;
-        googlePopup.current = null;
-        setError('Google sign-in was closed before it finished.');
-      }
-    }, 500);
-  }
-
   function enterDemoCustomer() {
     sessionStorage.setItem(demoSessionKey, 'active');
     navigate('/customer');
@@ -120,9 +68,7 @@ export default function CustomerLoginPage() {
           {busy ? 'Signing in…' : 'Sign in as Customer'}{!busy && <ArrowRight size={16} />}
         </button>
         <div className="my-5 flex items-center gap-3 text-xs text-stone-400"><span className="h-px flex-1 bg-stone-200" />OR<span className="h-px flex-1 bg-stone-200" /></div>
-        <button className="flex h-12 w-full items-center justify-center gap-3 rounded-lg border border-stone-200 bg-white text-sm font-semibold text-ink shadow-sm transition hover:bg-stone-50 focus:outline-none focus:ring-4 focus:ring-wine/10" type="button" onClick={handleGoogleSignIn}>
-          <span className="font-bold text-base" aria-hidden="true">G</span>Continue with Google
-        </button>
+        <GoogleSignInButton onSuccess={() => navigate('/customer', { replace: true })} onError={setError} />
         {import.meta.env.DEV && (
           <button className="demo-login-button" type="button" onClick={enterDemoCustomer}>
             <span className="demo-tag">DEV PREVIEW</span>

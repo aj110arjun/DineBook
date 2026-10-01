@@ -22,6 +22,7 @@ import ManagerDashboardPage from "./pages/manager/ManagerDashboardPage.jsx";
 import ManagerProtectedRoute from "./components/auth/ManagerProtectedRoute.jsx";
 import ManagerPendingPage from "./pages/manager/ManagerPendingPage.jsx";
 import ManagerStaffPage from "./pages/manager/ManagerStaffPage.jsx";
+import ManagerMenuPage from "./pages/manager/ManagerMenuPage.jsx";
 import ChefLoginPage from "./pages/chef/ChefLoginPage.jsx";
 import ChefDashboardPage from "./pages/chef/ChefDashboardPage.jsx";
 import ChefChangePasswordPage from "./pages/chef/ChefChangePasswordPage.jsx";
@@ -58,6 +59,9 @@ export default function App() {
         element={<CustomerEmailVerificationPage />}
       />
       <Route path="/customer/recovery" element={<CustomerRecoveryPage />} />
+      <Route path="/admin/recovery" element={<CustomerRecoveryPage role="admin" />} />
+      <Route path="/manager/recovery" element={<CustomerRecoveryPage role="manager" />} />
+      <Route path="/chef/recovery" element={<CustomerRecoveryPage role="chef" />} />
       <Route
         path="/customer/change-password"
         element={<CustomerChangePasswordPage />}
@@ -144,6 +148,14 @@ export default function App() {
         element={
           <ManagerProtectedRoute>
             <ManagerStaffPage />
+          </ManagerProtectedRoute>
+        }
+      />
+      <Route
+        path="/manager/menu"
+        element={
+          <ManagerProtectedRoute>
+            <ManagerMenuPage />
           </ManagerProtectedRoute>
         }
       />

@@ -5,6 +5,7 @@ import AuthLayout from "../../components/auth/AuthLayout.jsx";
 import { FormField, PasswordField } from "../../components/auth/FormField.jsx";
 import Notice from "../../components/auth/Notice.jsx";
 import { requestJson } from "../../lib/authApi.js";
+import GoogleSignInButton from "../../components/auth/GoogleSignInButton.jsx";
 
 const commonPasswords = new Set([
   "12345678",
@@ -138,6 +139,8 @@ export default function CustomerRegisterPage() {
         Create your guest profile and start planning your next dining
         experience.
       </p>
+      <GoogleSignInButton onSuccess={() => navigate("/customer", { replace: true })} onError={setError} />
+      <div className="my-5 flex items-center gap-3 text-xs text-stone-400"><span className="h-px flex-1 bg-stone-200" />OR SIGN UP WITH EMAIL<span className="h-px flex-1 bg-stone-200" /></div>
       <form onSubmit={handleSubmit} noValidate>
         <FormField
           id="name"

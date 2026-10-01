@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Mail } from "lucide-react";
 import AdminAuthLayout from "../../components/auth/AdminAuthLayout.jsx";
 import { FormField, PasswordField } from "../../components/auth/FormField.jsx";
@@ -77,15 +77,9 @@ export default function AdminLoginPage() {
             <span>Remember me</span>
           </label>
 
-          <button
-            type="button"
-            className="admin-forgot"
-            onClick={() => {
-              alert("Password recovery will be available soon.");
-            }}
-          >
+          <Link to="/admin/recovery" className="admin-forgot">
             Forgot password?
-          </button>
+          </Link>
         </div>
         <Notice message={error} />
         <Notice message={success} type="success" />

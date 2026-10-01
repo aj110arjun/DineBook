@@ -12,7 +12,7 @@ const navigation = [
   { label: "Restaurant", icon: Store },
   { label: "Tables", icon: Table2 },
   { label: "Reservations", icon: CalendarDays },
-  { label: "Menu", icon: Utensils },
+  { label: "Menu", icon: Utensils, to: "/manager/menu" },
   { label: "Orders", icon: ShoppingBasket },
   { label: "Staff", icon: Users, to: "/manager/staff" },
   { label: "Offers", icon: Tag },
@@ -51,7 +51,7 @@ export default function ManagerLayout({ children, title = "Dashboard" }) {
             <button
               key={label}
               type="button"
-              className={`manager-nav-item ${to === pathname ? "active" : ""}`}
+              className={`manager-nav-item ${to === pathname || (label === "Menu" && pathname.startsWith("/manager/menu")) ? "active" : ""}`}
               onClick={() => { if (to) navigate(to); setSidebarOpen(false); }}
               aria-current={to === pathname ? "page" : undefined}
             >

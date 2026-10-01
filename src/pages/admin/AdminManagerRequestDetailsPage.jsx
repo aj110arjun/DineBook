@@ -96,7 +96,7 @@ export default function AdminManagerRequestDetailsPage() {
   if (loading) {
     return (
       <AdminLayout title="Request Details" activePath="/admin/requests">
-        <div className="admin-dashboard-content">
+        <div className="admin-dashboard-content admin-request-detail-content">
           <div className="flex min-h-[420px] items-center justify-center">
               <div className="text-center">
                 <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[#0fa99d]/10 text-[#0fa99d]">
@@ -120,7 +120,7 @@ export default function AdminManagerRequestDetailsPage() {
   if (error && !request) {
     return (
       <AdminLayout title="Request Details" activePath="/admin/requests">
-        <div className="admin-dashboard-content">
+        <div className="admin-dashboard-content admin-request-detail-content">
               <button
                 type="button"
                 onClick={() => navigate("/admin/requests")}
@@ -167,7 +167,7 @@ export default function AdminManagerRequestDetailsPage() {
 
   return (
     <AdminLayout title="Request Details" activePath="/admin/requests">
-      <div className="admin-dashboard-content">
+      <div className="admin-dashboard-content admin-request-detail-content">
           {error && (
             <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
               {error}
