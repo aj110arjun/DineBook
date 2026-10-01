@@ -17,6 +17,16 @@ export default defineConfig({
       "/api": {
         target: "http://127.0.0.1:8000",
         changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on("proxyReq", (proxyReq, req) => {
+            if (req.headers.host) proxyReq.setHeader("x-forwarded-host", req.headers.host);
+            if (req.headers["x-forwarded-proto"]) {
+              proxyReq.setHeader("x-forwarded-proto", req.headers["x-forwarded-proto"]);
+            } else {
+              proxyReq.setHeader("x-forwarded-proto", req.headers.host?.endsWith(".ngrok-free.dev") ? "https" : "http");
+            }
+          });
+        },
       },
     },
   },

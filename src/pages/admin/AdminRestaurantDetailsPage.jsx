@@ -70,8 +70,6 @@ export default function AdminRestaurantDetailsPage() {
                 <Detail label="City" value={restaurant.city} icon={MapPin} />
                 <Detail label="State" value={restaurant.state} icon={MapPin} />
                 <Detail label="PIN code" value={restaurant.pin_code} icon={MapPin} />
-                <Detail label="Latitude" value={restaurant.latitude} icon={MapPin} />
-                <Detail label="Longitude" value={restaurant.longitude} icon={MapPin} />
               </div>
             </section>
 
