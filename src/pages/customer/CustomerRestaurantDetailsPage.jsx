@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, CalendarDays, Clock3, Mail, MapPin, Phone, Star, Users } from "lucide-react";
+import { ArrowLeft, CalendarDays, Clock3, Leaf, Mail, MapPin, Phone, Star, Timer, Users } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
 import LandingFooter from "../../components/landing/LandingFooter.jsx";
@@ -11,7 +11,7 @@ const timeOptions = ["7:30 PM", "8:00 PM", "8:30 PM", "9:00 PM"];
 const detailTabs = [
   { id: "about", label: "About" },
   { id: "amenities", label: "Amenities" },
-  { id: "menu-preview", label: "Menu Preview" },
+  { id: "menu-preview", label: "Menu" },
   { id: "reviews", label: "Reviews" },
 ];
 
@@ -31,6 +31,10 @@ export default function CustomerRestaurantDetailsPage() {
   const [guests, setGuests] = useState("2");
   const [time, setTime] = useState("8:00 PM");
   const [bookingMessage, setBookingMessage] = useState("");
+  const [menuCategories, setMenuCategories] = useState([]);
+  const [menuLoading, setMenuLoading] = useState(false);
+  const [menuError, setMenuError] = useState("");
+  const [selectedMenuCategoryId, setSelectedMenuCategoryId] = useState("");
   const activeSection = detailTabs.some((tab) => tab.id === section) ? section : "about";
 
   useEffect(() => {
@@ -43,6 +47,22 @@ export default function CustomerRestaurantDetailsPage() {
       .finally(() => mounted && setLoading(false));
     return () => { mounted = false; };
   }, [restaurantId]);
+
+  useEffect(() => {
+    if (activeSection !== "menu-preview") return undefined;
+    let mounted = true;
+    setMenuLoading(true);
+    setMenuError("");
+    requestJson(`/api/customer/restaurants/${restaurantId}/menu`)
+      .then((data) => {
+        if (!mounted) return;
+        setMenuCategories(data);
+        setSelectedMenuCategoryId((current) => data.some((category) => category.id === current) ? current : data[0]?.id ?? "");
+      })
+      .catch((reason) => mounted && setMenuError(reason.message))
+      .finally(() => mounted && setMenuLoading(false));
+    return () => { mounted = false; };
+  }, [restaurantId, activeSection]);
 
   useEffect(() => {
     if (import.meta.env.DEV && sessionStorage.getItem(demoSessionKey) === "active") {
@@ -127,7 +147,20 @@ export default function CustomerRestaurantDetailsPage() {
                 </section>}
 
                 {activeSection === "amenities" && <section className="restaurant-detail-section"><h2>Amenities</h2><p>Amenities have not been added by this restaurant yet.</p></section>}
-                {activeSection === "menu-preview" && <section className="restaurant-detail-section"><h2>Popular Dishes Preview</h2><p>The menu preview will be available once this restaurant adds its dishes.</p></section>}
+                {activeSection === "menu-preview" && <section className="restaurant-detail-section customer-live-menu">
+                  <div className="customer-menu-heading"><div><span className="customer-menu-eyebrow">FROM {restaurant.name.toUpperCase()}</span><h2>Explore the menu</h2><p>Browse dishes and choose from this restaurant’s available options.</p></div></div>
+                  {menuLoading ? <p className="customer-menu-message" role="status">Loading menu…</p> : menuError ? <p className="customer-menu-message" role="alert">{menuError}</p> : menuCategories.length === 0 ? <div className="customer-menu-empty"><h3>The menu is being prepared</h3><p>{restaurant.name} hasn’t added any menu categories yet. Please check back soon.</p></div> : <>
+                    <nav className="customer-menu-categories" aria-label="Menu categories">{menuCategories.map((category) => <button type="button" key={category.id} className={(selectedMenuCategoryId || menuCategories[0]?.id) === category.id ? "active" : ""} onClick={() => setSelectedMenuCategoryId(category.id)}>{category.name}<span>{category.foods.length}</span></button>)}</nav>
+                    {menuCategories.filter((category) => category.id === (selectedMenuCategoryId || menuCategories[0]?.id)).map((category) => <div key={category.id} className="customer-menu-category-content"><div className="customer-menu-category-title"><h3>{category.name}</h3>{category.description && <p>{category.description}</p>}</div>{category.foods.length === 0 ? <p className="customer-menu-message">No dishes are listed in this category yet.</p> : <div className="customer-menu-grid">{category.foods.map((food) => <article className={`customer-menu-card ${food.is_available ? "" : "unavailable"}`} key={food.id}>
+                      {food.images[0] ? <img className="customer-menu-card-image" src={food.images[0].image_url} alt={food.name} loading="lazy" /> : <div className="customer-menu-card-image customer-menu-image-placeholder" aria-hidden="true" />}
+                      <div className="customer-menu-card-content"><div className="customer-menu-card-title"><h4>{food.name}</h4>{food.is_vegetarian && <span className="customer-veg-mark" title="Vegetarian"><Leaf size={13} /></span>}</div>
+                        {food.description && <p className="customer-menu-description">{food.description}</p>}
+                        {food.preparation_time_minutes && <p className="customer-menu-prep"><Timer size={13} />About {food.preparation_time_minutes} min</p>}
+                        <div className="customer-menu-variants">{food.variants.map((variant) => <div key={variant.id}><span>{variant.name}</span><strong>₹{variant.price}</strong>{(!food.is_available || !variant.is_available) && <em>Unavailable</em>}</div>)}</div>
+                      </div>
+                    </article>)}</div>}</div>)}
+                  </>}
+                </section>}
                 {activeSection === "reviews" && <section className="restaurant-detail-section"><h2><Star size={18} /> Customer Reviews</h2><p>Customer reviews are not available yet.</p></section>}
               </div>
 
