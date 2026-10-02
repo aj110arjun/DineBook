@@ -23,7 +23,7 @@ export default function AdminRestaurantsPage() {
     requestJson("/api/admin/restaurants")
       .then((data) => mounted && setRestaurants(
         Array.isArray(data)
-          ? data.filter((restaurant) => restaurant.status?.toUpperCase() === "APPROVED")
+          ? data.filter((restaurant) => ["APPROVED", "SUSPENDED"].includes(restaurant.status?.toUpperCase()))
           : [],
       ))
       .catch((reason) => mounted && setError(reason.message))
@@ -58,7 +58,7 @@ export default function AdminRestaurantsPage() {
         <div className="admin-page-heading">
           <div>
             <h2>Restaurant Management</h2>
-            <p>View approved restaurant profiles and their owners.</p>
+            <p>Manage restaurant profiles, owner access, and visibility.</p>
           </div>
           <div className="admin-page-actions">
             <div className="admin-search">

@@ -71,7 +71,6 @@ export default function CustomerLandingPage() {
 
   useEffect(() => {
     let mounted = true;
-    setRestaurantsLoading(true);
     setRestaurantsError("");
     requestJson("/api/customer/restaurants")
       .then((items) => {
@@ -90,6 +89,11 @@ export default function CustomerLandingPage() {
       mounted = false;
     };
   }, [restaurantRefresh]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setRestaurantRefresh((value) => value + 1), 3000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const matchingRestaurants = useMemo(() => {
     if (!selectedCuisine) return restaurants;
