@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Building2, CalendarDays, Clock3, FileText, Mail, MapPin, Phone, Store, User, Users } from "lucide-react";
+import { ArrowLeft, Building2, CalendarDays, Clock3, FileText, Mail, MapPin, Phone, Store, User, Users, ShieldAlert } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
+import { useState as useModalState } from "react";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
 import { requestJson } from "../../lib/authApi.js";
 
@@ -15,6 +16,10 @@ function Detail({ label, value, icon: Icon }) {
 
 export default function AdminRestaurantDetailsPage() {
   const { restaurantId } = useParams();
+  const [action, setAction] = useModalState("");
+  const [reason, setReason] = useModalState("");
+  const [busy, setBusy] = useModalState(false);
+  const [actionError, setActionError] = useModalState("");
   const [restaurant, setRestaurant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -30,6 +35,20 @@ export default function AdminRestaurantDetailsPage() {
     return () => { mounted = false; };
   }, [restaurantId]);
 
+  async function confirmStatusChange() {
+    setBusy(true); setActionError("");
+    try {
+      const suspending = action === "suspend";
+      const updated = await requestJson(`/api/admin/restaurants/${restaurantId}/${action}`, {
+        method: "POST", ...(suspending ? { body: JSON.stringify({ reason }) } : {}),
+      });
+      setRestaurant((current) => ({ ...current, status: updated.status }));
+      setAction(""); setReason("");
+      if (updated.email_sent === false) setActionError("Restaurant suspended, but the manager notification email could not be sent.");
+    } catch (err) { setActionError(err.message); }
+    finally { setBusy(false); }
+  }
+
   return (
     <AdminLayout title="Restaurant Details" activePath="/admin/restaurants">
       <div className={`admin-dashboard-content ${restaurant && !loading && !error ? "admin-restaurant-detail-layout" : ""}`}>
@@ -38,8 +57,9 @@ export default function AdminRestaurantDetailsPage() {
           <>
             <div className="admin-restaurant-detail-heading">
               <div><span>RESTAURANT PROFILE</span><h2>{restaurant.name}</h2><p>{[restaurant.cuisine_type, restaurant.city, restaurant.state].filter(Boolean).join(" · ")}</p></div>
-              <span className={`restaurant-status ${restaurant.status?.toLowerCase()}`}>{restaurant.status}</span>
+              <div className="admin-restaurant-status-actions"><span className={`restaurant-status ${restaurant.status?.toLowerCase()}`}>{restaurant.status}</span>{restaurant.status === "SUSPENDED" ? <button className="admin-confirm-submit approve" onClick={() => setAction("resume")}>Resume restaurant</button> : restaurant.status === "APPROVED" ? <button className="admin-confirm-submit reject" onClick={() => setAction("suspend")}><ShieldAlert size={15} /> Suspend restaurant</button> : null}</div>
             </div>
+            {actionError && <div className="admin-request-error" role="alert">{actionError}</div>}
 
             <section className="admin-restaurant-detail-card">
               <h3><Store size={17} /> Restaurant information</h3>
@@ -85,6 +105,7 @@ export default function AdminRestaurantDetailsPage() {
           </>
         ) : null}
       </div>
+      {action && <div className="admin-confirm-backdrop" role="presentation"><section className="admin-confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="restaurant-action-title"><button type="button" className="admin-confirm-close" onClick={() => setAction("")} disabled={busy} aria-label="Close">×</button><div className={`admin-confirm-icon ${action === "suspend" ? "reject" : "approve"}`}><ShieldAlert size={21} /></div><h2 id="restaurant-action-title">{action === "suspend" ? "Suspend this restaurant?" : "Resume this restaurant?"}</h2><p>{action === "suspend" ? `${restaurant?.name} will disappear from customer pages. The owner and chefs will lose portal access, and the owner will be emailed.` : `${restaurant?.name} will return to customer pages and portal access will be restored.`}</p>{action === "suspend" && <label className="restaurant-suspension-reason">Reason for suspension<textarea value={reason} onChange={(event) => setReason(event.target.value)} maxLength={500} placeholder="Explain why this restaurant is being suspended" /></label>}<div className="admin-confirm-actions"><button className="admin-confirm-cancel" onClick={() => setAction("")} disabled={busy}>Cancel</button><button className={`admin-confirm-submit ${action === "suspend" ? "reject" : "approve"}`} onClick={confirmStatusChange} disabled={busy}>{busy ? "Processing…" : action === "suspend" ? "Suspend restaurant" : "Resume restaurant"}</button></div></section></div>}
     </AdminLayout>
   );
 }

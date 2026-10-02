@@ -5,11 +5,12 @@ import { requestJson } from "../../lib/authApi.js";
 export default function ManagerProtectedRoute({ children }) {
   const [checking, setChecking] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
+  const [suspended, setSuspended] = useState(false);
 
   useEffect(() => {
     let active = true;
 
-    async function checkManager() {
+    async function checkManager(initial = false) {
       try {
         await requestJson("/api/auth/manager/me", {
           method: "GET",
@@ -18,22 +19,23 @@ export default function ManagerProtectedRoute({ children }) {
 
         if (active) {
           setAuthenticated(true);
+          if (initial) setChecking(false);
         }
-      } catch {
+      } catch (error) {
         if (active) {
           setAuthenticated(false);
-        }
-      } finally {
-        if (active) {
+          setSuspended(/suspend/i.test(error.message));
           setChecking(false);
         }
       }
     }
 
-    checkManager();
+    checkManager(true);
+    const timer = window.setInterval(() => checkManager(false), 2000);
 
     return () => {
       active = false;
+      window.clearInterval(timer);
     };
   }, []);
 
@@ -47,7 +49,7 @@ export default function ManagerProtectedRoute({ children }) {
   }
 
   if (!authenticated) {
-    return <Navigate to="/manager/login" replace />;
+    return <Navigate to="/manager/login" replace state={{ notice: suspended ? "Your restaurant has been suspended. You have been signed out." : "Your session has ended. Please sign in again." }} />;
   }
 
   return children;

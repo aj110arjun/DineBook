@@ -24,11 +24,13 @@ export default function CustomerRestaurantListingPage() {
 
   useEffect(() => {
     let mounted = true;
-    requestJson("/api/customer/restaurants")
+    const loadRestaurants = () => requestJson("/api/customer/restaurants")
       .then((data) => mounted && setRestaurants(Array.isArray(data) ? data : []))
       .catch((reason) => mounted && setError(reason.message))
       .finally(() => mounted && setLoading(false));
-    return () => { mounted = false; };
+    loadRestaurants();
+    const timer = window.setInterval(loadRestaurants, 3000);
+    return () => { mounted = false; window.clearInterval(timer); };
   }, []);
 
   useEffect(() => {

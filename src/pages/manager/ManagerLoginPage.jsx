@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowRight, Mail } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import ManagerAuthLayout from "../../components/auth/ManagerAuthLayout.jsx";
 import { FormField, PasswordField } from "../../components/auth/FormField.jsx";
@@ -9,6 +9,7 @@ import { requestJson } from "../../lib/authApi.js";
 
 export default function ManagerLoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -52,6 +53,7 @@ export default function ManagerLoginPage() {
       <h2 className="font-display text-3xl font-semibold text-ink">
         Manager Sign In
       </h2>
+      {location.state?.notice && <Notice message={location.state.notice} />}
 
       <p className="mb-7 mt-2 text-sm leading-6 text-stone-500">
         Sign in to access your DineBook restaurant management portal.
