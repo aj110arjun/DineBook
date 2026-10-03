@@ -3749,7 +3749,218 @@ a:focus-visible,
 }
 
 .manager-form-wrap {
-  max-width: 470px;
+  max-width: 520px;
+}
+
+/* Keep the manager sign-in form comfortable to read on large and high-DPI screens. */
+.manager-form-wrap h2 {
+  font-size: clamp(36px, 2.4vw, 42px);
+  margin-bottom: 12px;
+}
+
+.manager-form-wrap > p {
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+.manager-form-wrap form label > span:first-child {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.manager-form-wrap form label > span:nth-child(2) {
+  min-height: 56px;
+}
+
+.manager-form-wrap form input {
+  font-size: 16px;
+}
+
+.manager-form-wrap form .text-xs {
+  font-size: 14px;
+}
+
+.manager-form-wrap form button[type="submit"] {
+  min-height: 56px;
+  font-size: 16px;
+}
+
+.manager-form-wrap form [role="alert"],
+.manager-form-wrap form [role="status"] {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.manager-story .manager-eyebrow,
+.manager-story footer {
+  font-size: 13px;
+}
+
+.manager-story .story-copy p {
+  font-size: 17px;
+}
+
+@media (max-width: 700px) {
+  .manager-form-wrap h2 {
+    font-size: 34px;
+  }
+}
+
+/* Readable navigation and supporting text across every portal. */
+.site-brand {
+  font-size: 19px;
+}
+
+.location-select,
+.location-select select {
+  font-size: 14px;
+}
+
+.nav-links a,
+.text-button {
+  font-size: 16px;
+}
+
+.admin-dashboard {
+  grid-template-columns: 260px minmax(0, 1fr);
+}
+
+.admin-sidebar-brand span {
+  font-size: 11px;
+}
+
+.admin-nav-item {
+  min-height: 48px;
+  height: auto;
+  font-size: 16px;
+}
+
+.admin-sidebar-user strong {
+  font-size: 14px;
+}
+
+.admin-sidebar-user span {
+  font-size: 12px;
+}
+
+.manager-sidebar {
+  width: 250px;
+}
+
+.manager-dashboard-main {
+  width: calc(100% - 250px);
+  margin-left: 250px;
+}
+
+.manager-restaurant-card strong {
+  font-size: 14px;
+}
+
+.manager-restaurant-card span {
+  font-size: 12px;
+}
+
+.manager-nav-item {
+  min-height: 46px;
+  font-size: 16px;
+}
+
+.manager-topbar {
+  min-height: 76px;
+  height: auto;
+}
+
+.manager-topbar-left h1 {
+  font-size: 24px;
+}
+
+.manager-order-status-badge {
+  font-size: 12px;
+  padding: 8px 12px;
+}
+
+.manager-search {
+  width: 280px;
+  height: 40px;
+}
+
+.manager-search input {
+  font-size: 15px;
+}
+
+.manager-notification-button {
+  width: 42px;
+  height: 42px;
+}
+
+.manager-notification-button span {
+  min-width: 18px;
+  height: 18px;
+  font-size: 11px;
+}
+
+.manager-profile-avatar {
+  width: 40px;
+  height: 40px;
+  font-size: 12px;
+}
+
+.manager-profile strong {
+  font-size: 14px;
+}
+
+.manager-profile span {
+  font-size: 12px;
+}
+
+.manager-menu-button {
+  width: 42px;
+  height: 42px;
+}
+
+.chef-nav-item {
+  min-height: 48px;
+  font-size: 16px;
+}
+
+.chef-identity-copy strong {
+  font-size: 16px;
+}
+
+.chef-identity-copy span {
+  font-size: 14px;
+}
+
+@media (max-width: 760px) {
+  .nav-links a,
+  .text-button {
+    font-size: 16px;
+  }
+
+  .manager-sidebar {
+    width: min(290px, 86vw);
+  }
+
+  .manager-dashboard-main {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 650px) {
+  .manager-topbar-left h1 {
+    font-size: 20px;
+  }
+
+  .manager-topbar {
+    min-height: 68px;
+  }
+}
+
+@media (max-width: 800px) {
+  .admin-dashboard {
+    grid-template-columns: 1fr;
+  }
 }
 /* =========================================================
    Manager Dashboard
@@ -4130,7 +4341,7 @@ a:focus-visible,
 .customer-menu-category-title { margin: 0 0 14px; }
 .customer-menu-category-title h3 { margin: 0; color: #551321; font-family: "Playfair Display", serif; font-size: 21px; }
 .customer-menu-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-.customer-menu-card { display: grid; grid-template-columns: 128px minmax(0, 1fr); overflow: hidden; border: 1px solid #eee7e3; border-radius: 12px; background: #fff; }
+.customer-menu-card { display: block; overflow: hidden; border: 1px solid #eee7e3; border-radius: 12px; background: #fff; }
 .customer-menu-card.unavailable { opacity: .72; }
 .customer-menu-card-image { width: 128px; height: 100%; min-height: 160px; object-fit: cover; background: #f4efec; }
 .customer-menu-image-placeholder { background: linear-gradient(135deg, #f5eeea, #e8ded8); }
@@ -6022,6 +6233,20 @@ a:focus-visible,
 .chef-dish-meta b { padding: 4px 8px; border-radius: 7px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
 .chef-dish-meta b.available { background: #dcfce8; color: #16a34a; }
 .chef-dish-meta b.out-of-stock { background: #f1f2f4; color: #73777f; }
+.chef-menu-category { margin-top: 24px; }
+.chef-menu-category > h4 { margin: 0; color: var(--chef-ink); font-size: 17px; font-weight: 700; }
+.chef-menu-refresh-note { color: var(--chef-muted); font-size: 13px; }
+.chef-menu-empty { margin: 0; padding: 20px; border: 1px dashed #ddd5d2; border-radius: 12px; color: var(--chef-muted); font-size: 15px; }
+.chef-menu-image-placeholder { height: 145px; display: grid; place-items: center; background: #f8f3f0; color: #a58e8a; }
+.chef-menu-description { margin: 8px 0 0; color: var(--chef-muted); font-size: 13px; line-height: 1.5; }
+.chef-menu-prep { margin: 8px 0 0; color: var(--chef-muted); font-size: 12px; }
+.chef-dish-title .chef-veg-label,
+.chef-dish-title .chef-nonveg-label { padding: 4px 7px; border-radius: 6px; font-size: 10px; }
+.chef-dish-title .chef-veg-label { background: #dcfce8; color: #168243; }
+.chef-dish-title .chef-nonveg-label { background: #fce8e8; color: #a53434; }
+.chef-dish-title .chef-menu-availability { padding: 4px 7px; border-radius: 6px; font-size: 11px; }
+.chef-dish-title .chef-menu-availability.available { background: #dcfce8; color: #168243; }
+.chef-dish-title .chef-menu-availability.unavailable { background: #f1f2f4; color: #73777f; }
 .chef-dashboard-footer { display: flex; justify-content: space-between; margin-top: 24px; padding: 16px 0 5px; border-top: 1px solid #ebe5e2; color: #948b8c; font-size: 11px; }
 .chef-dashboard-footer span,.chef-dashboard-footer button { display: inline-flex; align-items: center; gap: 6px; }
 .chef-dashboard-footer button { border: 0; background: transparent; color: #84797b; font: inherit; cursor: pointer; }

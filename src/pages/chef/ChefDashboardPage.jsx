@@ -5,7 +5,6 @@ import {
   Search, Settings, ShoppingBag, Soup, Star, Timer, X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { photo } from "../../data/landingData.js";
 import { requestJson } from "../../lib/authApi.js";
 import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
 
@@ -15,13 +14,6 @@ const orders = [
   { id: "#DB1022", customer: "Ananya Iyer", time: "12:20 PM", table: "Table 9", items: "3 items", status: "Ready", prep: "18 min" },
   { id: "#DB1021", customer: "Rohan Das", time: "12:15 PM", table: "Table 5", items: "12 items", status: "Completed", prep: "32 min" },
   { id: "#DB1020", customer: "Sarah Miller", time: "12:02 PM", table: "Table 11", items: "2 items", status: "Cancelled", prep: "—" },
-];
-
-const dishes = [
-  { name: "Chicken Biryani", rating: "4.9", orders: "42 orders", image: "photo-1603894584373-5ac82b2ae398", availability: "Available" },
-  { name: "Paneer Butter Masala", rating: "4.7", orders: "31 orders", image: "photo-1585937421612-70a008356fbe", availability: "Available" },
-  { name: "Truffle Margherita", rating: "4.8", orders: "25 orders", image: "photo-1565299624946-b28f40a0ae38", availability: "Available" },
-  { name: "Tiramisu", rating: "4.6", orders: "18 orders", image: "photo-1571877227200-a0d98ea607e9", availability: "Out of stock" },
 ];
 
 const pipeline = [
@@ -52,6 +44,9 @@ const chefNav = [
 export default function ChefDashboardPage() {
   const navigate = useNavigate();
   const [chef, setChef] = useState(null);
+  const [menuCategories, setMenuCategories] = useState([]);
+  const [menuLoading, setMenuLoading] = useState(true);
+  const [menuError, setMenuError] = useState("");
   const [activeNav, setActiveNav] = useState("Dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const dateLabel = useMemo(() => new Intl.DateTimeFormat("en-US", {
@@ -63,6 +58,29 @@ export default function ChefDashboardPage() {
       .then(setChef)
       .catch(() => navigate("/chef/login", { replace: true }));
   }, [navigate]);
+
+  useEffect(() => {
+    let active = true;
+    async function loadMenu() {
+      try {
+        const categories = await requestJson("/api/chef/menu", { method: "GET" });
+        if (active) {
+          setMenuCategories(categories);
+          setMenuError("");
+        }
+      } catch (error) {
+        if (active) setMenuError(error.message);
+      } finally {
+        if (active) setMenuLoading(false);
+      }
+    }
+    loadMenu();
+    const timer = window.setInterval(loadMenu, 15000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, []);
 
   async function handleLogout() {
     try {
@@ -86,7 +104,7 @@ export default function ChefDashboardPage() {
         </div>
         <nav className="chef-sidebar-nav" aria-label="Chef portal">
           {chefNav.map(({ label, icon: Icon }) => (
-            <button key={label} type="button" className={`chef-nav-item ${activeNav === label ? "active" : ""}`} onClick={() => { setActiveNav(label); setSidebarOpen(false); }}>
+            <button key={label} type="button" className={`chef-nav-item ${activeNav === label ? "active" : ""}`} onClick={() => { setActiveNav(label); setSidebarOpen(false); if (label === "Menu") document.getElementById("chef-menu")?.scrollIntoView({ behavior: "smooth" }); }}>
               <Icon size={18} /><span>{label}</span>
             </button>
           ))}
@@ -139,7 +157,24 @@ export default function ChefDashboardPage() {
             <div className="chef-orders-scroll"><table className="chef-orders-table"><thead><tr><th>Order ID</th><th>Customer</th><th>Time</th><th>Table</th><th>Items</th><th>Status</th><th>Est. Prep</th><th>Action</th></tr></thead><tbody>{orders.map((order) => <tr key={order.id}><td className="chef-order-id">{order.id}</td><td>{order.customer}</td><td className="chef-muted-cell">{order.time}</td><td>{order.table}</td><td>{order.items}</td><td><span className={`chef-order-status ${order.status.toLowerCase()}`}>{order.status}</span></td><td>{order.prep}</td><td><button className="chef-view-order" type="button" onClick={() => setActiveNav("Kitchen Orders")}>View</button></td></tr>)}</tbody></table></div>
           </section>
 
-          <section className="chef-dishes-section"><h3>Popular Dishes This Week</h3><div className="chef-dish-grid">{dishes.map((dish) => <article className="chef-dish-card" key={dish.name}><img src={photo(dish.image, 700)} alt={dish.name} loading="lazy" /><div className="chef-dish-info"><div className="chef-dish-title"><h4>{dish.name}</h4><span><Star size={14} fill="currentColor" /> {dish.rating}</span></div><div className="chef-dish-meta"><span>{dish.orders}</span><b className={dish.availability === "Available" ? "available" : "out-of-stock"}>{dish.availability}</b></div></div></article>)}</div></section>
+          <section className="chef-dishes-section" id="chef-menu">
+            <div className="chef-panel-heading"><h3>Restaurant Menu</h3><span className="chef-menu-refresh-note">Updates automatically</span></div>
+            {menuLoading ? <p className="chef-menu-empty">Loading restaurant menu…</p> : menuError ? <p className="chef-menu-empty" role="alert">{menuError}</p> : menuCategories.length === 0 || menuCategories.every((category) => category.foods.length === 0) ? <p className="chef-menu-empty">No menu items have been added yet.</p> : menuCategories.map((category) => (
+              <section className="chef-menu-category" key={category.id}>
+                <h4>{category.name}</h4>
+                <div className="chef-dish-grid">
+                  {category.foods.map((food) => (
+                    <article className="chef-dish-card" key={food.id}>
+                      <div className="chef-dish-info">
+                        <div className="chef-dish-title"><h4>{food.name}</h4><span className={`chef-menu-availability ${food.is_available ? "available" : "unavailable"}`}>{food.is_available ? "Available" : "Unavailable"}</span></div>
+                        {food.description && <p className="chef-menu-description">{food.description}</p>}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </section>
           <footer className="chef-dashboard-footer"><span><Clock3 size={14} /> Kitchen dashboard</span><button type="button" onClick={() => setActiveNav("Settings")}><CircleHelp size={14} /> Help & support</button></footer>
         </div>
       </section>
