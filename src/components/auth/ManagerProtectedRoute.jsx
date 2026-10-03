@@ -1,11 +1,12 @@
 import { Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { requestJson } from "../../lib/authApi.js";
 
 export default function ManagerProtectedRoute({ children }) {
   const [checking, setChecking] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
   const [suspended, setSuspended] = useState(false);
+  const hadSession = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -19,12 +20,16 @@ export default function ManagerProtectedRoute({ children }) {
 
         if (active) {
           setAuthenticated(true);
+          hadSession.current = true;
           if (initial) setChecking(false);
         }
       } catch (error) {
         if (active) {
           setAuthenticated(false);
           setSuspended(/suspend/i.test(error.message));
+          // A direct visit to a protected URL with no cookie is simply a sign-in
+          // redirect, not an expired session. `hadSession` distinguishes that
+          // from a cookie expiring after this guard confirmed authentication.
           setChecking(false);
         }
       }
@@ -49,7 +54,12 @@ export default function ManagerProtectedRoute({ children }) {
   }
 
   if (!authenticated) {
-    return <Navigate to="/manager/login" replace state={{ notice: suspended ? "Your restaurant has been suspended. You have been signed out." : "Your session has ended. Please sign in again." }} />;
+    const notice = suspended
+      ? "Your restaurant has been suspended. You have been signed out."
+      : hadSession.current
+        ? "Your session has ended. Please sign in again."
+        : undefined;
+    return <Navigate to="/manager/login" replace state={notice ? { notice } : null} />;
   }
 
   return children;

@@ -3,12 +3,10 @@ import {
   ArrowLeft,
   CalendarDays,
   Clock3,
-  Leaf,
   Mail,
   MapPin,
   Phone,
   Star,
-  Timer,
   Users,
 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
@@ -351,55 +349,15 @@ export default function CustomerRestaurantDetailsPage() {
                                       className={`customer-menu-card ${food.is_available ? "" : "unavailable"}`}
                                       key={food.id}
                                     >
-                                      {food.images[0] ? (
-                                        <img
-                                          className="customer-menu-card-image"
-                                          src={food.images[0].image_url}
-                                          alt={food.name}
-                                          loading="lazy"
-                                        />
-                                      ) : (
-                                        <div
-                                          className="customer-menu-card-image customer-menu-image-placeholder"
-                                          aria-hidden="true"
-                                        />
-                                      )}
                                       <div className="customer-menu-card-content">
                                         <div className="customer-menu-card-title">
                                           <h4>{food.name}</h4>
-                                          {food.is_vegetarian && (
-                                            <span
-                                              className="customer-veg-mark"
-                                              title="Vegetarian"
-                                            >
-                                              <Leaf size={13} />
-                                            </span>
-                                          )}
                                         </div>
                                         {food.description && (
                                           <p className="customer-menu-description">
                                             {food.description}
                                           </p>
                                         )}
-                                        {food.preparation_time_minutes && (
-                                          <p className="customer-menu-prep">
-                                            <Timer size={13} />
-                                            About{" "}
-                                            {food.preparation_time_minutes} min
-                                          </p>
-                                        )}
-                                        <div className="customer-menu-variants">
-                                          {food.variants.map((variant) => (
-                                            <div key={variant.id}>
-                                              <span>{variant.name}</span>
-                                              <strong>₹{variant.price}</strong>
-                                              {(!food.is_available ||
-                                                !variant.is_available) && (
-                                                <em>Unavailable</em>
-                                              )}
-                                            </div>
-                                          ))}
-                                        </div>
                                       </div>
                                     </article>
                                   ))}

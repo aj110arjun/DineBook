@@ -53,7 +53,9 @@ export default function ManagerLoginPage() {
       <h2 className="font-display text-3xl font-semibold text-ink">
         Manager Sign In
       </h2>
-      {location.state?.notice && <Notice message={location.state.notice} />}
+      {location.state?.notice?.includes("suspended") && (
+        <Notice message={location.state.notice} />
+      )}
 
       <p className="mb-7 mt-2 text-sm leading-6 text-stone-500">
         Sign in to access your DineBook restaurant management portal.
