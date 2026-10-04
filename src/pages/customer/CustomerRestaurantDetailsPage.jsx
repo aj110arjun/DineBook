@@ -41,6 +41,7 @@ export default function CustomerRestaurantDetailsPage() {
   const [time, setTime] = useState("8:00 PM");
   const [bookingMessage, setBookingMessage] = useState("");
   const [menuCategories, setMenuCategories] = useState([]);
+  const [floors, setFloors] = useState([]);
   const [menuLoading, setMenuLoading] = useState(false);
   const [menuError, setMenuError] = useState("");
   const [selectedMenuCategoryId, setSelectedMenuCategoryId] = useState("");
@@ -59,6 +60,12 @@ export default function CustomerRestaurantDetailsPage() {
     return () => {
       mounted = false;
     };
+  }, [restaurantId]);
+
+  useEffect(() => {
+    requestJson(`/api/customer/restaurants/${restaurantId}/floors`)
+      .then(setFloors)
+      .catch(() => setFloors([]));
   }, [restaurantId]);
 
   useEffect(() => {
@@ -238,6 +245,7 @@ export default function CustomerRestaurantDetailsPage() {
                         </span>
                       )}
                     </div>
+                    {floors.length > 0 && <div className="restaurant-detail-hours-block"><h2>Floor & table availability</h2>{floors.map(floor => <div className="restaurant-hour-row" key={floor.id}><span>{floor.name}</span><span>{floor.tables.filter(table => table.status === "available").length} available / {floor.tables.length} tables</span></div>)}</div>}
                     <div className="restaurant-detail-hours-block">
                       <h2>
                         <Clock3 size={18} /> Operating hours
