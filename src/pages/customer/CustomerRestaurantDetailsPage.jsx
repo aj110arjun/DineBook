@@ -357,6 +357,14 @@ export default function CustomerRestaurantDetailsPage() {
                                       className={`customer-menu-card ${food.is_available ? "" : "unavailable"}`}
                                       key={food.id}
                                     >
+                                      {food.images?.[0] && (
+                                        <img
+                                          className="customer-menu-image"
+                                          src={food.images[0].url}
+                                          alt={food.name}
+                                          loading="lazy"
+                                        />
+                                      )}
                                       <div className="customer-menu-card-content">
                                         <div className="customer-menu-card-title">
                                           <h4>{food.name}</h4>
@@ -365,6 +373,13 @@ export default function CustomerRestaurantDetailsPage() {
                                           <p className="customer-menu-description">
                                             {food.description}
                                           </p>
+                                        )}
+                                        {food.variants?.length > 0 && (
+                                          <ul className="customer-menu-variants">
+                                            {food.variants.filter((variant) => variant.is_available).map((variant) => (
+                                              <li key={variant.id}><span>{variant.name}</span><strong>₹{Number(variant.price).toFixed(2)}</strong></li>
+                                            ))}
+                                          </ul>
                                         )}
                                       </div>
                                     </article>
