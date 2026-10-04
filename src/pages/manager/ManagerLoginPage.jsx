@@ -1,16 +1,20 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Mail } from "lucide-react";
-import AdminAuthLayout from "../../components/auth/AdminAuthLayout.jsx";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+
+import ManagerAuthLayout from "../../components/auth/ManagerAuthLayout.jsx";
 import { FormField, PasswordField } from "../../components/auth/FormField.jsx";
 import Notice from "../../components/auth/Notice.jsx";
 import { requestJson } from "../../lib/authApi.js";
 
-export default function AdminLoginPage() {
+export default function ManagerLoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [busy, setBusy] = useState(false);
+
   async function handleSubmit(event) {
     event.preventDefault();
 
@@ -23,19 +27,19 @@ export default function AdminLoginPage() {
     const form = new FormData(event.currentTarget);
 
     try {
-      await requestJson("/api/auth/admin/login", {
+      await requestJson("/api/auth/manager/login", {
         method: "POST",
         body: JSON.stringify({
           email: form.get("email").trim().toLowerCase(),
           password: form.get("password"),
         }),
-        fallbackMessage: "Invalid admin email or password.",
+        fallbackMessage: "Invalid manager email or password.",
       });
 
-      setSuccess("Admin sign-in successful.");
+      setSuccess("Manager sign-in successful.");
 
       window.setTimeout(() => {
-        navigate("/admin/dashboard");
+        navigate("/manager/dashboard");
       }, 500);
     } catch (reason) {
       setError(reason.message);
@@ -45,19 +49,25 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <AdminAuthLayout view="login">
-      <h2 className="font-display text-3xl font-semibold text-ink">Sign In</h2>
+    <ManagerAuthLayout>
+      <h2 className="font-display text-3xl font-semibold text-ink">
+        Manager Sign In
+      </h2>
+      {location.state?.notice?.includes("suspended") && (
+        <Notice message={location.state.notice} />
+      )}
 
       <p className="mb-7 mt-2 text-sm leading-6 text-stone-500">
-        Sign in to access the DineBook administration portal.
+        Sign in to access your DineBook restaurant management portal.
       </p>
 
       <form onSubmit={handleSubmit} noValidate>
         <FormField
           id="email"
-          label="Admin Email Address"
+          name="email"
+          label="Manager Email Address"
           type="email"
-          placeholder="admin@dinebook.com"
+          placeholder="manager@restaurant.com"
           autoComplete="email"
           icon={Mail}
           required
@@ -66,21 +76,16 @@ export default function AdminLoginPage() {
         <PasswordField
           id="password"
           label="Password"
-          placeholder="Enter your admin password"
+          placeholder="Enter your manager password"
           autoComplete="current-password"
           minLength={8}
           required
         />
-        <div className="admin-login-options">
-          <label className="admin-remember">
-            <input type="checkbox" name="remember" />
-            <span>Remember me</span>
-          </label>
 
-          <Link to="/admin/recovery" className="admin-forgot">
-            Forgot password?
-          </Link>
+        <div className="mb-5 -mt-2 text-right text-xs">
+          <Link className="font-medium text-wine hover:underline" to="/manager/recovery">Forgot password?</Link>
         </div>
+
         <Notice message={error} />
         <Notice message={success} type="success" />
 
@@ -89,10 +94,20 @@ export default function AdminLoginPage() {
           type="submit"
           disabled={busy}
         >
-          {busy ? "Signing in…" : "Access Administrator Console"}
+          {busy ? "Signing in…" : "Sign In to Manager Portal"}
           {!busy && <ArrowRight size={16} />}
         </button>
       </form>
-    </AdminAuthLayout>
+
+      <p className="mt-6 text-center text-sm text-stone-500">
+        Don't have a manager account?{" "}
+        <Link
+          to="/manager/register"
+          className="font-semibold text-wine hover:text-ink"
+        >
+          Register
+        </Link>
+      </p>
+    </ManagerAuthLayout>
   );
 }

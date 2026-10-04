@@ -20,13 +20,13 @@ DineBook’s customer experience pairs a burgundy navigation bar and restaurant 
 
 | Screen | What it does |
 | --- | --- |
-| **Sign in** | Email and password form, password visibility toggle, remember-me option, and API feedback |
+| **Sign in** | Email and password or Google sign-in, password visibility toggle, remember-me option, and API feedback |
 | **Create account** | Name, email, password, and confirmation with client-side validation |
 | **Forgot password** | Email-only recovery screen; clearly marked as unavailable until the secure recovery service exists |
 | **Change password** | Requires an active customer session; validates the new password and shows strength guidance |
 | **Customer home** | Restaurant discovery, cuisine filters, featured and nearby venues, trending dishes, offers, and guest reviews |
 
-The credential model is **email and password**. There are no phone fields, OTP flows, social sign-in, or email verification screens.
+Customers can sign in with email and password or their Google account. New Google customers are created with a verified email and an active customer session.
 
 ## 🧭 Customer routes
 
@@ -58,22 +58,27 @@ npm run preview
 
 ## 🔌 API connection
 
-The frontend defaults to `http://localhost:8000`. Set another API origin in `.env.local`:
+In development, API requests use Vite's `/api` proxy to reach the backend at `http://127.0.0.1:8000`. This also works when sharing the frontend through ngrok: start the backend and frontend locally, then expose the Vite port with ngrok. Visitors use the frontend ngrok URL, and Vite forwards their API requests to the local backend.
+
+For a separately hosted API, set its origin in `.env.local`:
 
 ```env
-VITE_API_URL=http://localhost:8000
+VITE_API_URL=https://your-api.example.com
 ```
 
 Customer sign-in and registration send credentialed requests to:
 
 - `POST /api/auth/customer/login`
 - `POST /api/auth/customer/register`
+- `GET /api/auth/customer/google/login` (OAuth start; callback: `/api/auth/customer/google/callback`)
 
 They expect a backend that sets an HttpOnly session cookie and allows credentialed CORS requests from the frontend origin. Change-password checks `GET /api/customer/me` before opening, then submits to `POST /api/auth/customer/change-password`.
 
 The customer home validates the same session with `GET /api/customer/me`; signing out calls `POST /api/auth/logout`.
 
 **Backend note:** this workspace contains the React frontend. The API must be running separately for sign-in, registration, and password changes to complete. Password recovery is presentation-only and does not send an email.
+
+Google OAuth credentials belong in `Backend/src/.env` as `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. Register the exact `GOOGLE_REDIRECT_URI` value with the Google OAuth client; it defaults to `http://localhost:8000/api/auth/customer/google/callback`.
 
 ## 🧩 Frontend structure
 

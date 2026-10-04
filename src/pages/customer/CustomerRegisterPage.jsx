@@ -5,6 +5,7 @@ import AuthLayout from "../../components/auth/AuthLayout.jsx";
 import { FormField, PasswordField } from "../../components/auth/FormField.jsx";
 import Notice from "../../components/auth/Notice.jsx";
 import { requestJson } from "../../lib/authApi.js";
+import GoogleSignInButton from "../../components/auth/GoogleSignInButton.jsx";
 
 const commonPasswords = new Set([
   "12345678",
@@ -42,8 +43,8 @@ function validateEmail(email) {
 }
 
 function validatePassword(password) {
-  if (password.length < 8)
-    return "Use at least 8 characters for your password.";
+  if (password.length < 10)
+    return "Use at least 10 characters for your password.";
   if (!/\p{Lu}/u.test(password))
     return "Add at least one uppercase letter to your password.";
   if (!/\p{Ll}/u.test(password))
@@ -60,12 +61,23 @@ function validatePassword(password) {
 export default function CustomerRegisterPage() {
   const navigate = useNavigate();
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [success, setSuccess] = useState("");
   const [busy, setBusy] = useState(false);
+
+  function clearFieldError(field) {
+    setFieldErrors((current) => {
+      if (!current[field]) return current;
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
+    setFieldErrors({});
     setSuccess("");
 
     const formElement = event.currentTarget;
@@ -74,37 +86,20 @@ export default function CustomerRegisterPage() {
     const confirmation = form.get("confirmPassword");
     const name = form.get("name").trim().replace(/\s+/gu, " ");
     const email = form.get("email").trim();
-    if (!name) {
-      setError("Please enter your full name.");
-      return;
+    const validationErrors = {};
+    if (!name) validationErrors.name = "Enter your full name.";
+    else if (!validateFullName(name)) validationErrors.name = "Use at least 2 characters with letters and spaces only.";
+    if (!email) validationErrors.email = "Enter your email address.";
+    else if (!validateEmail(email)) validationErrors.email = "Enter a valid email address, such as alex@example.com.";
+    if (!password) validationErrors.password = "Create a password.";
+    else {
+      const passwordError = validatePassword(password);
+      if (passwordError) validationErrors.password = passwordError;
     }
-    if (!validateFullName(name)) {
-      setError("Full name must be at least 2 characters and contain letters and spaces only.");
-      return;
-    }
-    if (!email) {
-      setError("Please enter your email address.");
-      return;
-    }
-    if (!validateEmail(email)) {
-      setError("Enter a valid email address, such as alex@example.com.");
-      return;
-    }
-    if (!password) {
-      setError("Please create a password.");
-      return;
-    }
-    if (!confirmation) {
-      setError("Please confirm your password.");
-      return;
-    }
-    const passwordError = validatePassword(password);
-    if (passwordError) {
-      setError(passwordError);
-      return;
-    }
-    if (password !== confirmation) {
-      setError("Your passwords don’t match. Check both fields and try again.");
+    if (!confirmation) validationErrors.confirmPassword = "Confirm your password.";
+    else if (password && password !== confirmation) validationErrors.confirmPassword = "Passwords don’t match.";
+    if (Object.keys(validationErrors).length) {
+      setFieldErrors(validationErrors);
       return;
     }
 
@@ -125,7 +120,11 @@ export default function CustomerRegisterPage() {
       sessionStorage.setItem('dinebook-verification-email', email.toLowerCase());
       navigate('/customer/verify-email', { state: { email: email.toLowerCase() } });
     } catch (reason) {
-      setError(reason.message);
+      if (/email/i.test(reason.message) && /already|exists|registered/i.test(reason.message)) {
+        setFieldErrors({ email: reason.message });
+      } else {
+        setError(reason.message);
+      }
     } finally {
       setBusy(false);
     }
@@ -140,6 +139,8 @@ export default function CustomerRegisterPage() {
         Create your guest profile and start planning your next dining
         experience.
       </p>
+      <GoogleSignInButton onSuccess={() => navigate("/customer", { replace: true })} onError={setError} />
+      <div className="my-5 flex items-center gap-3 text-xs text-stone-400"><span className="h-px flex-1 bg-stone-200" />OR SIGN UP WITH EMAIL<span className="h-px flex-1 bg-stone-200" /></div>
       <form onSubmit={handleSubmit} noValidate>
         <FormField
           id="name"
@@ -147,6 +148,8 @@ export default function CustomerRegisterPage() {
           placeholder="Alex Morgan"
           autoComplete="name"
           minLength={2}
+          error={fieldErrors.name}
+          onChange={() => clearFieldError("name")}
         />
         <FormField
           id="email"
@@ -155,16 +158,20 @@ export default function CustomerRegisterPage() {
           placeholder="alex@example.com"
           autoComplete="email"
           icon={Mail}
+          error={fieldErrors.email}
+          onChange={() => clearFieldError("email")}
         />
         <PasswordField
           id="password"
           label="Create Password"
-          placeholder="At least 8 characters"
+          placeholder="At least 10 characters"
           autoComplete="new-password"
-          minLength={8}
+          minLength={10}
+          error={fieldErrors.password}
+          onChange={() => clearFieldError("password")}
         />
         <p className="-mt-2 mb-4 text-xs leading-5 text-stone-500">
-          Use 8 or more characters with uppercase and lowercase letters, a
+          Use 10 or more characters with uppercase and lowercase letters, a
           number, and a special symbol. Avoid common passwords.
         </p>
         <PasswordField
@@ -172,7 +179,9 @@ export default function CustomerRegisterPage() {
           label="Confirm Password"
           placeholder="Enter your password again"
           autoComplete="new-password"
-          minLength={8}
+          minLength={10}
+          error={fieldErrors.confirmPassword}
+          onChange={() => clearFieldError("confirmPassword")}
         />
         <Notice message={error} />
         <Notice message={success} type="success" />

@@ -9,12 +9,7 @@ import LandingFooter from "../../components/landing/LandingFooter.jsx";
 import PromoBanner from "../../components/landing/PromoBanner.jsx";
 import RestaurantSection from "../../components/landing/RestaurantSection.jsx";
 import Testimonials from "../../components/landing/Testimonials.jsx";
-import {
-  featuredRestaurants,
-  nearbyRestaurants,
-  signatureDishes,
-  testimonials,
-} from "../../data/landingData.js";
+import { signatureDishes, testimonials } from "../../data/landingData.js";
 import { requestJson } from "../../lib/authApi.js";
 import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
 
@@ -33,6 +28,10 @@ export default function CustomerLandingPage() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [restaurants, setRestaurants] = useState([]);
+  const [restaurantsLoading, setRestaurantsLoading] = useState(true);
+  const [restaurantsError, setRestaurantsError] = useState("");
+  const [restaurantRefresh, setRestaurantRefresh] = useState(0);
   const [selectedCuisine, setSelectedCuisine] = useState("");
   const [toast, setToast] = useState("");
 
@@ -70,9 +69,34 @@ export default function CustomerLandingPage() {
     };
   }, [navigate]);
 
+  useEffect(() => {
+    let mounted = true;
+    setRestaurantsError("");
+    requestJson("/api/customer/restaurants")
+      .then((items) => {
+        if (mounted) {
+          setRestaurants(Array.isArray(items) ? items : []);
+          setRestaurantsError("");
+        }
+      })
+      .catch((reason) => {
+        if (mounted) setRestaurantsError(reason.message);
+      })
+      .finally(() => {
+        if (mounted) setRestaurantsLoading(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [restaurantRefresh]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setRestaurantRefresh((value) => value + 1), 3000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   const matchingRestaurants = useMemo(() => {
-    if (!selectedCuisine)
-      return { featured: featuredRestaurants, nearby: nearbyRestaurants };
+    if (!selectedCuisine) return restaurants;
     const terms = cuisineMatches[selectedCuisine] || [
       selectedCuisine.toLowerCase(),
     ];
@@ -80,11 +104,8 @@ export default function CustomerLandingPage() {
       terms.some((term) =>
         `${restaurant.cuisine} ${restaurant.name}`.toLowerCase().includes(term),
       );
-    return {
-      featured: featuredRestaurants.filter(matches),
-      nearby: nearbyRestaurants.filter(matches),
-    };
-  }, [selectedCuisine]);
+    return restaurants.filter(matches);
+  }, [restaurants, selectedCuisine]);
 
   function notifyReservation(restaurant) {
     setToast(`Table reservations at ${restaurant.name} are coming soon.`);
@@ -106,19 +127,14 @@ export default function CustomerLandingPage() {
       <main>
         <CuisineGrid selected={selectedCuisine} onSelect={setSelectedCuisine} />
         <RestaurantSection
-          id="featured"
-          eyebrow="CRITICALLY ACCLAIMED"
-          title="Featured Restaurants"
-          restaurants={matchingRestaurants.featured}
-          onReserve={notifyReservation}
-          actionLabel="View All Featured"
-          actionHref="#restaurants-near-you"
-        />
-        <RestaurantSection
           id="restaurants-near-you"
-          eyebrow="WITHIN YOUR REACH"
-          title="Restaurants Near You"
-          restaurants={matchingRestaurants.nearby}
+          eyebrow="DISCOVER YOUR NEXT TABLE"
+          title="Restaurants to Explore"
+          restaurants={matchingRestaurants}
+          emptyMessage={selectedCuisine ? `No approved ${selectedCuisine} restaurants are available yet. Choose another cuisine to explore.` : "No approved restaurants are available yet."}
+          loading={restaurantsLoading}
+          error={restaurantsError}
+          onRetry={() => setRestaurantRefresh((value) => value + 1)}
           onReserve={notifyReservation}
           actionLabel="Explore Nearby"
           actionHref="#restaurants-near-you"
