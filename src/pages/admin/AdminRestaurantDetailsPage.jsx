@@ -68,6 +68,8 @@ export default function AdminRestaurantDetailsPage() {
 
             <section className="admin-restaurant-detail-card"><h3><Building2 size={17} /> Floor and table oversight</h3>{floorData.length ? floorData.map(floor => <div key={floor.id}><strong>{floor.name}</strong><p>{floor.tables.length ? floor.tables.map(table => `Table ${table.table_number} · ${table.seats} seats · ${table.status}`).join(" | ") : "No tables assigned"}</p></div>) : <p>No floors or tables configured.</p>}</section>
 
+            <section className="admin-restaurant-detail-card"><h3><Store size={17} /> Menu inspection</h3>{restaurant.menu?.length ? restaurant.menu.map((category) => <div key={category.id} className="admin-menu-inspection-category"><strong>{category.name}{!category.is_active && " · Inactive"}</strong>{category.foods.length ? <div className="admin-menu-inspection-grid">{category.foods.map((food) => <article key={food.id}>{food.images?.[0] && <img src={food.images[0].url} alt={food.name} loading="lazy" />}<h4>{food.name}{!food.is_available && " · Unavailable"}</h4>{food.description && <p>{food.description}</p>}{food.variants?.length ? <ul>{food.variants.map((variant) => <li key={variant.id}>{variant.name} · ₹{Number(variant.price).toFixed(2)}{!variant.is_available && " · Unavailable"}</li>)}</ul> : <small>No variants</small>}</article>)}</div> : <p>No menu items in this category.</p>}</div>) : <p className="admin-restaurant-empty">No menu categories have been added.</p>}</section>
+
             <section className="admin-restaurant-detail-card">
               <h3><Store size={17} /> Restaurant information</h3>
               <div className="admin-restaurant-detail-grid">
