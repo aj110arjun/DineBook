@@ -21,6 +21,7 @@ export default function AdminRestaurantDetailsPage() {
   const [busy, setBusy] = useModalState(false);
   const [actionError, setActionError] = useModalState("");
   const [restaurant, setRestaurant] = useState(null);
+  const [floorData, setFloorData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -33,6 +34,10 @@ export default function AdminRestaurantDetailsPage() {
       .catch((reason) => mounted && setError(reason.message))
       .finally(() => mounted && setLoading(false));
     return () => { mounted = false; };
+  }, [restaurantId]);
+
+  useEffect(() => {
+    requestJson(`/api/admin/restaurants/${restaurantId}/floors`).then(setFloorData).catch(() => setFloorData([]));
   }, [restaurantId]);
 
   async function confirmStatusChange() {
@@ -60,6 +65,8 @@ export default function AdminRestaurantDetailsPage() {
               <div className="admin-restaurant-status-actions"><span className={`restaurant-status ${restaurant.status?.toLowerCase()}`}>{restaurant.status}</span>{restaurant.status === "SUSPENDED" ? <button className="admin-confirm-submit approve" onClick={() => setAction("resume")}>Resume restaurant</button> : restaurant.status === "APPROVED" ? <button className="admin-confirm-submit reject" onClick={() => setAction("suspend")}><ShieldAlert size={15} /> Suspend restaurant</button> : null}</div>
             </div>
             {actionError && <div className="admin-request-error" role="alert">{actionError}</div>}
+
+            <section className="admin-restaurant-detail-card"><h3><Building2 size={17} /> Floor and table oversight</h3>{floorData.length ? floorData.map(floor => <div key={floor.id}><strong>{floor.name}</strong><p>{floor.tables.length ? floor.tables.map(table => `Table ${table.table_number} · ${table.seats} seats · ${table.status}`).join(" | ") : "No tables assigned"}</p></div>) : <p>No floors or tables configured.</p>}</section>
 
             <section className="admin-restaurant-detail-card">
               <h3><Store size={17} /> Restaurant information</h3>

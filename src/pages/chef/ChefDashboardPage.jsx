@@ -45,6 +45,7 @@ export default function ChefDashboardPage() {
   const navigate = useNavigate();
   const [chef, setChef] = useState(null);
   const [menuCategories, setMenuCategories] = useState([]);
+  const [diningFloors, setDiningFloors] = useState([]);
   const [menuLoading, setMenuLoading] = useState(true);
   const [menuError, setMenuError] = useState("");
   const [activeNav, setActiveNav] = useState("Dashboard");
@@ -80,6 +81,10 @@ export default function ChefDashboardPage() {
       active = false;
       window.clearInterval(timer);
     };
+  }, []);
+
+  useEffect(() => {
+    requestJson("/api/chef/floors").then(setDiningFloors).catch(() => setDiningFloors([]));
   }, []);
 
   async function handleLogout() {
@@ -127,6 +132,7 @@ export default function ChefDashboardPage() {
         </header>
 
         <div className="chef-dashboard-content">
+          {diningFloors.length > 0 && <section className="chef-panel"><div className="chef-panel-heading"><h3>Floor service context</h3></div>{diningFloors.map(floor => <p key={floor.id}><strong>{floor.name}</strong>: {floor.tables.map(table => `Table ${table.table_number} (${table.status})`).join(" · ") || "No tables assigned"}</p>)}</section>}
           <PortalBreadcrumb home={{ label: "Home", to: "/chef/dashboard" }} items={[{ label: activeNav }]} className="chef-breadcrumb" />
           <div className="chef-page-heading"><h2>Good Morning, Chef {firstName}</h2><p>Here's what's happening in your kitchen today.</p></div>
 
