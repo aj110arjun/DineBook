@@ -1,108 +1,69 @@
-<div align="center">
+# DineBook Frontend
 
-# 🍷 DineBook · Customer Discovery & Authentication
+Responsive React application for the DineBook customer, manager, chef, and platform administrator portals. It uses Vite, React Router, Tailwind CSS, shared styles, and Lucide icons. API requests use credentialed fetch calls so the backend's HttpOnly session cookie is sent with each request.
 
-**A polished React customer experience for discovering exceptional dining.**
+## Requirements
 
-Discover restaurants, browse cuisines, find nearby tables, and manage your customer account.
+- Node.js 18 or newer
+- The DineBook API for account, restaurant, menu, and floor data
 
-![React](https://img.shields.io/badge/React-18-149eca?logo=react&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-6-646cff?logo=vite&logoColor=white)
-![Status](https://img.shields.io/badge/Status-Customer%20Frontend-c6a35e)
-
-</div>
-
----
-
-## ✨ The experience
-
-DineBook’s customer experience pairs a burgundy navigation bar and restaurant hero with curated food discovery, venue cards, signature dishes, member offers, and guest stories. Customer authentication uses a matching split-screen restaurant layout.
-
-| Screen | What it does |
-| --- | --- |
-| **Sign in** | Email and password or Google sign-in, password visibility toggle, remember-me option, and API feedback |
-| **Create account** | Name, email, password, and confirmation with client-side validation |
-| **Forgot password** | Email-only recovery screen; clearly marked as unavailable until the secure recovery service exists |
-| **Change password** | Requires an active customer session; validates the new password and shows strength guidance |
-| **Customer home** | Restaurant discovery, cuisine filters, featured and nearby venues, trending dishes, offers, and guest reviews |
-
-Customers can sign in with email and password or their Google account. New Google customers are created with a verified email and an active customer session.
-
-## 🧭 Customer routes
-
-| Route | Screen |
-| --- | --- |
-| `/customer/login` | Sign in |
-| `/customer/register` | Create account |
-| `/customer/recovery` | Recovery placeholder |
-| `/customer/change-password` | Protected password change |
-| `/customer` | Protected customer discovery home |
-
-`/` redirects to `/customer`, which checks the customer session and sends signed-out visitors to sign in.
-
-## 🚀 Run locally
-
-Requires Node.js 18 or newer.
+## Run locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open the local URL printed by Vite. To create and serve a production build:
+Vite prints the local URL (normally `http://localhost:5173`). Its `/api` proxy forwards requests to `http://127.0.0.1:8000`, keeping API calls same-origin during development. To use another API origin, create `.env.local` from `.env.example` and set `VITE_API_URL`:
+
+```env
+VITE_API_URL=https://api.example.com
+```
+
+Build and serve the production bundle with:
 
 ```bash
 npm run build
 npm run preview
 ```
 
-## 🔌 API connection
+To share a local development frontend over ngrok, expose the Vite port. The Vite proxy forwards `/api` to the local backend; configure the backend's `FRONTEND_PUBLIC_URL` to the public frontend origin for CORS and email links.
 
-In development, API requests use Vite's `/api` proxy to reach the backend at `http://127.0.0.1:8000`. This also works when sharing the frontend through ngrok: start the backend and frontend locally, then expose the Vite port with ngrok. Visitors use the frontend ngrok URL, and Vite forwards their API requests to the local backend.
+## Portals and routes
 
-For a separately hosted API, set its origin in `.env.local`:
+| Portal | Routes | Main features |
+| --- | --- | --- |
+| Customer | `/customer`, `/customer/restaurants`, `/customer/restaurants/:restaurantId/:section?`, `/customer/login`, `/customer/register`, `/customer/verify-email`, `/customer/recovery`, `/customer/change-password` | Restaurant discovery and details, menu variants/prices/images, email or Google sign-in, registration, verification, recovery, and profile session |
+| Manager | `/manager/register`, `/manager/login`, `/manager/pending`, `/manager/dashboard`, `/manager/staff`, `/manager/menu`, `/manager/tables`, `/manager/recovery` | Restaurant application and dashboard, staff accounts, menu categories/items, variant and image management, and floor/table layout |
+| Chef | `/chef/login`, `/chef/dashboard`, `/chef/change-password`, `/chef/recovery` | Kitchen dashboard, restaurant menu details, and first-login password change |
+| Platform admin | `/admin/login`, `/admin/dashboard`, `/admin/requests`, `/admin/requests/:requestId`, `/admin/restaurants`, `/admin/restaurants/:restaurantId`, `/admin/recovery` | Manager application review, restaurant oversight, menu inspection, and restaurant suspension/resumption |
 
-```env
-VITE_API_URL=https://your-api.example.com
-```
+Protected routes check the matching portal session before rendering. `/` redirects to `/customer`; unknown paths redirect to `/customer/login`.
 
-Customer sign-in and registration send credentialed requests to:
+## API behavior
 
-- `POST /api/auth/customer/login`
-- `POST /api/auth/customer/register`
-- `GET /api/auth/customer/google/login` (OAuth start; callback: `/api/auth/customer/google/callback`)
+`src/lib/authApi.js` adds `credentials: "include"` to API requests. In development, Vite proxies `/api` to the backend. Set `VITE_API_URL` only when the API is hosted at a separate origin; that backend must allow the frontend origin with credentialed CORS.
 
-They expect a backend that sets an HttpOnly session cookie and allows credentialed CORS requests from the frontend origin. Change-password checks `GET /api/customer/me` before opening, then submits to `POST /api/auth/customer/change-password`.
+The customer discovery page and landing-page sections include curated presentation data in `src/data`. Account actions and restaurant, menu, floor, staff, and administration data come from the API. Menu item images are rendered from the URLs returned by the backend.
 
-The customer home validates the same session with `GET /api/customer/me`; signing out calls `POST /api/auth/logout`.
+For customer Google sign-in, configure `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and the callback URL on the backend. The callback defaults to `http://localhost:8000/api/auth/customer/google/callback`; register the exact callback URL with the Google OAuth client.
 
-**Backend note:** this workspace contains the React frontend. The API must be running separately for sign-in, registration, and password changes to complete. Password recovery is presentation-only and does not send an email.
-
-Google OAuth credentials belong in `Backend/src/.env` as `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. Register the exact `GOOGLE_REDIRECT_URI` value with the Google OAuth client; it defaults to `http://localhost:8000/api/auth/customer/google/callback`.
-
-## 🧩 Frontend structure
+## Project structure
 
 ```text
 src/
-├── App.jsx                              # Customer routes
-├── main.jsx                             # React entry point
-├── styles.css                           # Shared auth and landing styles
-├── components/
-│   ├── auth/                             # Shared auth layout, fields, notices
-│   └── landing/                          # Header, hero, cards, page sections
-├── data/landingData.js                   # Curated sample content
-├── lib/authApi.js                        # Credentialed API helper
-└── pages/customer/                       # Customer home and auth screens
+├── App.jsx                    # Customer, manager, chef, and admin routes
+├── components/                # Portal layouts, route guards, forms, shared UI
+├── data/                      # Curated landing-page/demo content
+├── lib/authApi.js             # Credentialed API helper
+├── pages/customer/            # Discovery, restaurant details, and account pages
+├── pages/manager/             # Dashboard, staff, menu, and floor management
+├── pages/chef/                # Kitchen dashboard and account pages
+├── pages/admin/               # Applications and restaurant oversight
+├── index.css
+└── styles.css
 ```
 
-## 🎨 Design notes
+## Demo mode
 
-- Restaurant photography and dark overlay on the story panel
-- Warm burgundy actions, champagne-gold accents, and a soft neutral form surface
-- Responsive layout that stacks on small screens
-- Shared auth layout, form fields, password visibility controls, and feedback notices
-- Native email and password validation with clear inline messages
-
-## 🧪 Local demo customer
-
-When running `npm run dev`, the sign-in page includes **Continue as Demo Customer**. It opens the landing page as **Mia Sharma** (`mia.sharma@demo.dinebook.local`) using a session-only frontend preview identity. It does not create a database account or authenticate with the API. This preview control is excluded from production builds; production access still requires a valid backend customer session.
+During local development, the customer sign-in page offers **Continue as Demo Customer**. It opens a session-only frontend preview identity and does not create or authenticate a backend account. It is excluded from production builds.

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Image as ImageIcon, Pencil, Plus, Search, Trash2, Utensils, X } from "lucide-react";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
+import ImageUploadField from "../../components/manager/ImageUploadField.jsx";
 import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
 import Notice from "../../components/auth/Notice.jsx";
 import { requestJson } from "../../lib/authApi.js";
@@ -81,14 +82,12 @@ function FoodExtras({ food, onChanged }) {
     try { await requestJson(`/api/manager/menu/food/${food.id}/variants/${variant.id}`, { method: "DELETE" }); await onChanged(); }
     catch (reason) { setError(reason.message); } finally { setBusy(false); }
   }
-  async function uploadImage(event) {
-    const input = event.currentTarget;
-    const image = input.files?.[0];
+  async function uploadImage(image) {
     if (!image) return;
     const body = new FormData(); body.append("image", image);
     setBusy(true); setError("");
     try { await requestJson(`/api/manager/menu/food/${food.id}/images`, { method: "POST", body, fallbackMessage: "Unable to upload image." }); await onChanged(); }
-    catch (reason) { setError(reason.message); } finally { setBusy(false); input.value = ""; }
+    catch (reason) { setError(reason.message); } finally { setBusy(false); }
   }
   async function removeImage(image) {
     setBusy(true); setError("");
@@ -96,16 +95,21 @@ function FoodExtras({ food, onChanged }) {
     catch (reason) { setError(reason.message); } finally { setBusy(false); }
   }
   return <div className="manager-menu-food-extras col-span-full mt-3 border-t border-stone-100 pt-3">
-    <button type="button" onClick={() => setOpen((value) => !value)} className="inline-flex items-center gap-1.5 text-xs font-semibold text-wine"><ImageIcon size={14} />{open ? "Hide variants and images" : `Manage variants and images${food.variants?.length || food.images?.length ? ` (${food.variants.length} variants · ${food.images.length} images)` : ""}`}</button>
-    {open && <div className="mt-3 grid gap-4 lg:grid-cols-2">
-      <div><h6 className="mb-2 text-xs font-bold uppercase tracking-wide text-stone-500">Variants and prices</h6>
-        {food.variants?.length ? <ul className="mb-3 space-y-1">{food.variants.map((variant) => <li key={variant.id} className="flex items-center justify-between rounded bg-stone-50 px-2.5 py-2 text-xs"><span>{variant.name} · ₹{Number(variant.price).toFixed(2)}</span><span className="flex gap-2"><button type="button" onClick={() => setEditing(variant)} className="font-semibold text-wine">Edit</button><button type="button" disabled={busy} onClick={() => removeVariant(variant)} className="font-semibold text-rose-600">Delete</button></span></li>)}</ul> : <p className="mb-3 text-xs text-stone-400">No variants added.</p>}
-        <form onSubmit={saveVariant} className="manager-menu-variant-form"><input key={editing?.id ?? "new-name"} name="name" required maxLength="100" defaultValue={editing?.name ?? ""} placeholder="Variant name" className="manager-menu-input" /><input key={editing?.id ?? "new-price"} name="price" type="number" min="0" step="0.01" required defaultValue={editing?.price ?? ""} placeholder="Price" className="manager-menu-input" /><div className="flex items-center gap-2">{editing && <label className="flex items-center gap-1 text-xs text-stone-500"><input type="checkbox" name="is_available" defaultChecked={editing.is_available} />Available</label>}<button disabled={busy} className="rounded bg-wine px-3 py-2 text-xs font-semibold text-white">{editing ? "Save" : "Add"}</button>{editing && <button type="button" onClick={() => setEditing(null)} className="px-2 text-xs text-stone-500">Cancel</button>}</div></form>
-      </div>
-      <div><h6 className="mb-2 text-xs font-bold uppercase tracking-wide text-stone-500">Item images</h6>
-        <div className="mb-3 flex flex-wrap gap-2">{food.images?.map((image) => <div key={image.id} className="relative"><img src={image.url} alt={food.name} className="h-20 w-24 rounded object-cover" /><button type="button" disabled={busy} onClick={() => removeImage(image)} aria-label={`Delete image for ${food.name}`} className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/70 text-white"><X size={13} /></button></div>)}{!food.images?.length && <p className="text-xs text-stone-400">No images uploaded.</p>}</div>
-        <label className="inline-flex cursor-pointer items-center gap-2 rounded border border-stone-200 px-3 py-2 text-xs font-semibold text-wine">Upload image<input type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadImage} disabled={busy} className="sr-only" /></label><p className="mt-1 text-[11px] text-stone-400">JPEG, PNG, or WebP · up to 10 MB</p>
-      </div>
+    <button type="button" onClick={() => setOpen((value) => !value)} aria-expanded={open} className="inline-flex items-center gap-1.5 text-xs font-semibold text-wine"><ImageIcon size={14} />{open ? "Hide variants and images" : `Manage variants and images${food.variants?.length || food.images?.length ? ` (${food.variants.length} variants · ${food.images.length} images)` : ""}`}</button>
+    {open && <div className="manager-menu-assets-grid mt-4">
+      <section className="manager-menu-asset-card">
+        <header className="manager-menu-asset-heading"><div><h6>Variants and prices</h6><p>Set customer-facing sizes and prices.</p></div><span>{food.variants?.length ?? 0}</span></header>
+        {food.variants?.length ? <ul className="manager-menu-variant-list">{food.variants.map((variant) => <li key={variant.id}>
+          <div className="manager-menu-variant-info"><strong>{variant.name}</strong><span>₹{Number(variant.price).toFixed(2)}</span></div>
+          <div className="manager-menu-variant-actions"><span className={`manager-menu-variant-status ${variant.is_available ? "available" : "unavailable"}`}>{variant.is_available ? "Available" : "Unavailable"}</span><button type="button" onClick={() => setEditing(variant)}>Edit</button><button type="button" disabled={busy} onClick={() => removeVariant(variant)}>Delete</button></div>
+        </li>)}</ul> : <p className="manager-menu-assets-empty">No variants yet. Add a size or serving option below.</p>}
+        <form onSubmit={saveVariant} className="manager-menu-variant-form"><input key={editing?.id ?? "new-name"} name="name" required maxLength="100" defaultValue={editing?.name ?? ""} placeholder="Variant name" aria-label="Variant name" className="manager-menu-input" /><input key={editing?.id ?? "new-price"} name="price" type="number" min="0" step="0.01" required defaultValue={editing?.price ?? ""} placeholder="Price" aria-label="Variant price" className="manager-menu-input" /><div className="flex items-center gap-2">{editing && <label className="flex items-center gap-1 text-xs text-stone-500"><input type="checkbox" name="is_available" defaultChecked={editing.is_available} />Available</label>}<button disabled={busy} className="rounded bg-wine px-3 py-2 text-xs font-semibold text-white">{editing ? "Save" : "Add variant"}</button>{editing && <button type="button" onClick={() => setEditing(null)} className="px-2 text-xs text-stone-500">Cancel</button>}</div></form>
+      </section>
+      <section className="manager-menu-asset-card">
+        <header className="manager-menu-asset-heading"><div><h6>Dish images</h6><p>Upload photos to show with this menu item.</p></div><span>{food.images?.length ?? 0}</span></header>
+        {food.images?.length ? <div className="manager-menu-image-grid">{food.images.map((image, index) => <figure key={image.id} className="manager-menu-image-card"><img src={image.url} alt={`${food.name} image ${index + 1}`} /><figcaption><span>Image {index + 1}</span><button type="button" disabled={busy} onClick={() => removeImage(image)} aria-label={`Delete image ${index + 1} for ${food.name}`}><X size={14} /></button></figcaption></figure>)}</div> : <p className="manager-menu-assets-empty">No images uploaded yet.</p>}
+        <ImageUploadField id={`food-image-${food.id}`} accept="image/jpeg,image/png,image/webp" prompt="Upload a dish image" hint="JPEG, PNG, or WebP · up to 10 MB" onSelect={uploadImage} disabled={busy} compact />
+      </section>
     </div>}
     {open && <Notice message={error} />}
   </div>;
