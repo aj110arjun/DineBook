@@ -16,6 +16,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import ManagerAuthLayout from "../../components/auth/ManagerAuthLayout.jsx";
 import ImageCropDialog from "../../components/manager/ImageCropDialog.jsx";
+import ImageUploadField from "../../components/manager/ImageUploadField.jsx";
 import { FormField, PasswordField } from "../../components/auth/FormField.jsx";
 import Notice from "../../components/auth/Notice.jsx";
 
@@ -56,6 +57,24 @@ function DocumentCard({
   error,
 }) {
   const inputId = `document-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+
+  if (image) {
+    return (
+      <div className={`mb-4 rounded-xl border bg-white p-4 ${error ? "border-red-300" : "border-stone-200"}`}>
+        <div className="mb-3 flex items-center gap-3">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-stone-100 text-wine"><ImageIcon size={18} /></div>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-sm font-semibold text-ink">{title}</h3>
+              <span className={`rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${required ? "bg-rose-50 text-rose-600" : "bg-stone-100 text-stone-500"}`}>{required ? "Required" : "Optional"}</span>
+            </div>
+            <p className="mt-1 text-xs text-stone-400">{description}</p>
+          </div>
+        </div>
+        <ImageUploadField id={inputId} file={file} accept={accept} prompt="Upload your restaurant banner" hint="PNG or JPG · 16:9 crop · up to 10 MB" onSelect={onUpload} onRemove={onRemove} error={error} />
+      </div>
+    );
+  }
 
   return (
     <div className={`mb-4 rounded-xl border bg-white p-4 ${error ? "border-red-300" : "border-stone-200"}`}>
@@ -417,27 +436,23 @@ export default function ManagerRegisterPage() {
     }));
   }
 
-  function handleInteriorMedia(event) {
-    const file = event.target.files?.[0] || null;
-
+  function handleInteriorMedia(file) {
     if (!file) return;
 
     const maxSize = 10 * 1024 * 1024;
 
     if (!["image/jpeg", "image/png"].includes(file.type)) {
-      setError("Interior media must be a JPEG or PNG image.");
+      setFieldErrors((current) => ({ ...current, interiorMedia: "Interior media must be a JPEG or PNG image." }));
       return;
     }
 
     if (file.size > maxSize) {
-      setError("Interior media must be 10 MB or smaller.");
+      setFieldErrors((current) => ({ ...current, interiorMedia: "Interior media must be 10 MB or smaller." }));
       return;
     }
 
-    setError("");
+    setFieldErrors((current) => ({ ...current, interiorMedia: "" }));
     setInteriorMedia(file);
-
-    event.target.value = "";
   }
 
   function validateDocuments() {
@@ -1155,7 +1170,7 @@ export default function ManagerRegisterPage() {
                 error={fieldErrors.brandingImages}
                 onUpload={handleBannerSelection}
                 onRemove={() => removeDocument("brandingImages")}
-                accept=".png,.jpg,.jpeg"
+                accept="image/png,image/jpeg"
                 image
               />
 
@@ -1330,43 +1345,7 @@ export default function ManagerRegisterPage() {
                 <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink">
                   Optional Interior Media
                 </h3>
-
-                <label
-                  htmlFor="interiorMedia"
-                  className="flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-stone-300 bg-stone-50 px-6 py-6 text-center transition hover:border-wine hover:bg-wine/[0.02]"
-                >
-                  <Upload size={20} className="mb-2 text-wine" />
-
-                  {interiorMedia ? (
-                    <>
-                      <span className="text-sm font-semibold text-ink">
-                        {interiorMedia.name}
-                      </span>
-
-                      <span className="mt-1 text-xs text-emerald-600">
-                        {(interiorMedia.size / (1024 * 1024)).toFixed(1)} MB
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-sm font-semibold text-wine">
-                        Click to upload or drag & drop images
-                      </span>
-
-                      <span className="mt-1 text-xs text-stone-400">
-                        JPEG, PNG up to 10MB. Ideal dimension 1200x800.
-                      </span>
-                    </>
-                  )}
-
-                  <input
-                    id="interiorMedia"
-                    type="file"
-                    accept=".jpg,.jpeg,.png"
-                    className="hidden"
-                    onChange={handleInteriorMedia}
-                  />
-                </label>
+                <ImageUploadField id="interiorMedia" file={interiorMedia} accept="image/jpeg,image/png" hint="JPEG or PNG · up to 10 MB · ideal size 1200 × 800" prompt="Upload interior photos" onSelect={handleInteriorMedia} onRemove={() => { setInteriorMedia(null); setFieldErrors((current) => ({ ...current, interiorMedia: "" })); }} error={fieldErrors.interiorMedia} />
               </div>
 
               <Notice message={error} />
