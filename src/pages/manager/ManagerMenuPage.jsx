@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Pencil, Plus, Search, Trash2, Utensils, X } from "lucide-react";
+import { Image as ImageIcon, Pencil, Plus, Search, Trash2, Utensils, X } from "lucide-react";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
 import Notice from "../../components/auth/Notice.jsx";
@@ -58,6 +58,57 @@ function FoodForm({ food, categories, initialCategoryId, onCancel, onSaved }) {
     <Notice message={error} />
     <div className="flex justify-end gap-2 border-t border-stone-100 pt-4"><button type="button" onClick={onCancel} className="rounded-lg border border-stone-200 px-4 py-2 text-sm">Cancel</button><button disabled={saving} className="rounded-lg bg-wine px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{saving ? "Saving…" : food ? "Save changes" : "Add dish"}</button></div>
   </form>;
+}
+
+function FoodExtras({ food, onChanged }) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [editing, setEditing] = useState(null);
+  async function saveVariant(event) {
+    event.preventDefault();
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
+    const body = { name: String(form.get("name")).trim(), price: Number(form.get("price")), is_available: editing ? form.get("is_available") === "on" : true };
+    setBusy(true); setError("");
+    try {
+      await requestJson(`/api/manager/menu/food/${food.id}/variants${editing ? `/${editing.id}` : ""}`, { method: editing ? "PATCH" : "POST", body: JSON.stringify(body), fallbackMessage: "Unable to save variant." });
+      formElement.reset(); setEditing(null); await onChanged();
+    } catch (reason) { setError(reason.message); } finally { setBusy(false); }
+  }
+  async function removeVariant(variant) {
+    setBusy(true); setError("");
+    try { await requestJson(`/api/manager/menu/food/${food.id}/variants/${variant.id}`, { method: "DELETE" }); await onChanged(); }
+    catch (reason) { setError(reason.message); } finally { setBusy(false); }
+  }
+  async function uploadImage(event) {
+    const input = event.currentTarget;
+    const image = input.files?.[0];
+    if (!image) return;
+    const body = new FormData(); body.append("image", image);
+    setBusy(true); setError("");
+    try { await requestJson(`/api/manager/menu/food/${food.id}/images`, { method: "POST", body, fallbackMessage: "Unable to upload image." }); await onChanged(); }
+    catch (reason) { setError(reason.message); } finally { setBusy(false); input.value = ""; }
+  }
+  async function removeImage(image) {
+    setBusy(true); setError("");
+    try { await requestJson(`/api/manager/menu/food/${food.id}/images/${image.id}`, { method: "DELETE" }); await onChanged(); }
+    catch (reason) { setError(reason.message); } finally { setBusy(false); }
+  }
+  return <div className="manager-menu-food-extras col-span-full mt-3 border-t border-stone-100 pt-3">
+    <button type="button" onClick={() => setOpen((value) => !value)} className="inline-flex items-center gap-1.5 text-xs font-semibold text-wine"><ImageIcon size={14} />{open ? "Hide variants and images" : `Manage variants and images${food.variants?.length || food.images?.length ? ` (${food.variants.length} variants · ${food.images.length} images)` : ""}`}</button>
+    {open && <div className="mt-3 grid gap-4 lg:grid-cols-2">
+      <div><h6 className="mb-2 text-xs font-bold uppercase tracking-wide text-stone-500">Variants and prices</h6>
+        {food.variants?.length ? <ul className="mb-3 space-y-1">{food.variants.map((variant) => <li key={variant.id} className="flex items-center justify-between rounded bg-stone-50 px-2.5 py-2 text-xs"><span>{variant.name} · ₹{Number(variant.price).toFixed(2)}</span><span className="flex gap-2"><button type="button" onClick={() => setEditing(variant)} className="font-semibold text-wine">Edit</button><button type="button" disabled={busy} onClick={() => removeVariant(variant)} className="font-semibold text-rose-600">Delete</button></span></li>)}</ul> : <p className="mb-3 text-xs text-stone-400">No variants added.</p>}
+        <form onSubmit={saveVariant} className="manager-menu-variant-form"><input key={editing?.id ?? "new-name"} name="name" required maxLength="100" defaultValue={editing?.name ?? ""} placeholder="Variant name" className="manager-menu-input" /><input key={editing?.id ?? "new-price"} name="price" type="number" min="0" step="0.01" required defaultValue={editing?.price ?? ""} placeholder="Price" className="manager-menu-input" /><div className="flex items-center gap-2">{editing && <label className="flex items-center gap-1 text-xs text-stone-500"><input type="checkbox" name="is_available" defaultChecked={editing.is_available} />Available</label>}<button disabled={busy} className="rounded bg-wine px-3 py-2 text-xs font-semibold text-white">{editing ? "Save" : "Add"}</button>{editing && <button type="button" onClick={() => setEditing(null)} className="px-2 text-xs text-stone-500">Cancel</button>}</div></form>
+      </div>
+      <div><h6 className="mb-2 text-xs font-bold uppercase tracking-wide text-stone-500">Item images</h6>
+        <div className="mb-3 flex flex-wrap gap-2">{food.images?.map((image) => <div key={image.id} className="relative"><img src={image.url} alt={food.name} className="h-20 w-24 rounded object-cover" /><button type="button" disabled={busy} onClick={() => removeImage(image)} aria-label={`Delete image for ${food.name}`} className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/70 text-white"><X size={13} /></button></div>)}{!food.images?.length && <p className="text-xs text-stone-400">No images uploaded.</p>}</div>
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded border border-stone-200 px-3 py-2 text-xs font-semibold text-wine">Upload image<input type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadImage} disabled={busy} className="sr-only" /></label><p className="mt-1 text-[11px] text-stone-400">JPEG, PNG, or WebP · up to 10 MB</p>
+      </div>
+    </div>}
+    {open && <Notice message={error} />}
+  </div>;
 }
 
 function DeleteConfirmation({ target, busy, onCancel, onConfirm }) {
@@ -127,9 +178,10 @@ export default function ManagerMenuPage() {
       <div className="p-4 sm:p-6"><Notice message={error} />
         {loading ? <p className="py-12 text-center text-sm text-stone-500">Loading menu…</p> : categories.length === 0 ? <div className="rounded-lg border border-dashed border-stone-200 px-5 py-14 text-center"><Utensils className="mx-auto text-stone-300" size={26} /><p className="mt-3 text-sm font-semibold text-stone-600">Start with a menu category</p><p className="mt-1 text-xs text-stone-400">Create a category, then add dishes to it.</p><button onClick={() => setModal({ type: "category" })} className="mt-4 rounded-lg bg-wine px-4 py-2 text-sm font-semibold text-white">Add category</button></div> : normalized.length === 0 ? <p className="py-10 text-center text-sm text-stone-500">No menu items match “{query}”.</p> : <div className="space-y-6">{normalized.map((category) => <section key={category.id} className="overflow-hidden rounded-lg border border-stone-100">
           <header className="flex flex-wrap items-center justify-between gap-2 bg-stone-50 px-4 py-3"><div><h4 className="text-sm font-bold text-ink">{category.name}<span className="ml-2 text-xs font-medium text-stone-400">{category.foods.length}</span>{!category.is_active && <span className="ml-2 rounded-full bg-stone-200 px-2 py-0.5 text-[10px] text-stone-600">Inactive</span>}</h4>{category.description && <p className="mt-1 text-xs text-stone-500">{category.description}</p>}</div><div className="flex gap-1"><button onClick={() => setModal({ type: "category", category })} aria-label={`Edit ${category.name}`} className="grid h-8 w-8 place-items-center rounded text-stone-400 hover:bg-white"><Pencil size={14} /></button><button onClick={() => setDeleteTarget({ type: "category", item: category })} disabled={busyId === category.id} aria-label={`Delete ${category.name}`} className="grid h-8 w-8 place-items-center rounded text-stone-400 hover:bg-rose-50 hover:text-rose-600"><Trash2 size={14} /></button><button onClick={() => setModal({ type: "food", category_id: category.id })} disabled={!category.is_active} className="ml-1 inline-flex items-center gap-1 rounded-md border border-stone-200 bg-white px-2 text-xs font-semibold text-wine disabled:opacity-40"><Plus size={13} />Dish</button></div></header>
-          <div className="divide-y divide-stone-100">{category.foods.length === 0 ? <p className="px-4 py-6 text-center text-xs text-stone-400">No dishes in this category yet.</p> : category.foods.map((food) => <article key={food.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+          <div className="divide-y divide-stone-100">{category.foods.length === 0 ? <p className="px-4 py-6 text-center text-xs text-stone-400">No dishes in this category yet.</p> : category.foods.map((food) => <article key={food.id} className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
             <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h5 className="font-semibold text-ink">{food.name}</h5><span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${food.is_available ? "bg-emerald-50 text-emerald-700" : "bg-stone-100 text-stone-500"}`}>{food.is_available ? "Available" : "Unavailable"}</span></div>{food.description && <p className="mt-1 line-clamp-2 text-xs text-stone-500">{food.description}</p>}</div>
             <div className="flex items-center justify-end gap-2"><button type="button" onClick={() => toggleFood(food)} disabled={busyId === food.id} aria-label={`Toggle availability for ${food.name}`} className={`relative h-6 w-11 rounded-full ${food.is_available ? "bg-emerald-500" : "bg-stone-300"} disabled:opacity-50`}><span className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow ${food.is_available ? "left-6" : "left-1"}`} /></button><button onClick={() => setModal({ type: "food", food })} aria-label={`Edit ${food.name}`} className="grid h-9 w-9 place-items-center rounded-lg text-stone-400 hover:bg-stone-100"><Pencil size={15} /></button><button onClick={() => setDeleteTarget({ type: "food", item: food })} disabled={busyId === food.id} aria-label={`Delete ${food.name}`} className="grid h-9 w-9 place-items-center rounded-lg text-stone-400 hover:bg-rose-50 hover:text-rose-600"><Trash2 size={15} /></button></div>
+            <FoodExtras food={food} onChanged={loadMenu} />
           </article>)}</div>
         </section>)}</div>}
       </div>

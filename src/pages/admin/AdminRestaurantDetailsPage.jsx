@@ -21,6 +21,7 @@ export default function AdminRestaurantDetailsPage() {
   const [busy, setBusy] = useModalState(false);
   const [actionError, setActionError] = useModalState("");
   const [restaurant, setRestaurant] = useState(null);
+  const [floorData, setFloorData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -33,6 +34,10 @@ export default function AdminRestaurantDetailsPage() {
       .catch((reason) => mounted && setError(reason.message))
       .finally(() => mounted && setLoading(false));
     return () => { mounted = false; };
+  }, [restaurantId]);
+
+  useEffect(() => {
+    requestJson(`/api/admin/restaurants/${restaurantId}/floors`).then(setFloorData).catch(() => setFloorData([]));
   }, [restaurantId]);
 
   async function confirmStatusChange() {
@@ -60,6 +65,10 @@ export default function AdminRestaurantDetailsPage() {
               <div className="admin-restaurant-status-actions"><span className={`restaurant-status ${restaurant.status?.toLowerCase()}`}>{restaurant.status}</span>{restaurant.status === "SUSPENDED" ? <button className="admin-confirm-submit approve" onClick={() => setAction("resume")}>Resume restaurant</button> : restaurant.status === "APPROVED" ? <button className="admin-confirm-submit reject" onClick={() => setAction("suspend")}><ShieldAlert size={15} /> Suspend restaurant</button> : null}</div>
             </div>
             {actionError && <div className="admin-request-error" role="alert">{actionError}</div>}
+
+            <section className="admin-restaurant-detail-card"><h3><Building2 size={17} /> Floor and table oversight</h3>{floorData.length ? floorData.map(floor => <div key={floor.id}><strong>{floor.name}</strong><p>{floor.tables.length ? floor.tables.map(table => `Table ${table.table_number} · ${table.seats} seats · ${table.status}`).join(" | ") : "No tables assigned"}</p></div>) : <p>No floors or tables configured.</p>}</section>
+
+            <section className="admin-restaurant-detail-card"><h3><Store size={17} /> Menu inspection</h3>{restaurant.menu?.length ? restaurant.menu.map((category) => <div key={category.id} className="admin-menu-inspection-category"><strong>{category.name}{!category.is_active && " · Inactive"}</strong>{category.foods.length ? <div className="admin-menu-inspection-grid">{category.foods.map((food) => <article key={food.id}>{food.images?.[0] && <img src={food.images[0].url} alt={food.name} loading="lazy" />}<h4>{food.name}{!food.is_available && " · Unavailable"}</h4>{food.description && <p>{food.description}</p>}{food.variants?.length ? <ul>{food.variants.map((variant) => <li key={variant.id}>{variant.name} · ₹{Number(variant.price).toFixed(2)}{!variant.is_available && " · Unavailable"}</li>)}</ul> : <small>No variants</small>}</article>)}</div> : <p>No menu items in this category.</p>}</div>) : <p className="admin-restaurant-empty">No menu categories have been added.</p>}</section>
 
             <section className="admin-restaurant-detail-card">
               <h3><Store size={17} /> Restaurant information</h3>

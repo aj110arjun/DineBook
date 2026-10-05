@@ -23,6 +23,7 @@ import ManagerProtectedRoute from "./components/auth/ManagerProtectedRoute.jsx";
 import ManagerPendingPage from "./pages/manager/ManagerPendingPage.jsx";
 import ManagerStaffPage from "./pages/manager/ManagerStaffPage.jsx";
 import ManagerMenuPage from "./pages/manager/ManagerMenuPage.jsx";
+import ManagerFloorsPage from "./pages/manager/ManagerFloorsPage.jsx";
 import ChefLoginPage from "./pages/chef/ChefLoginPage.jsx";
 import ChefDashboardPage from "./pages/chef/ChefDashboardPage.jsx";
 import ChefChangePasswordPage from "./pages/chef/ChefChangePasswordPage.jsx";
@@ -186,6 +187,8 @@ export default function App() {
             </ManagerProtectedRoute>
           }
         />
+        <Route path="/manager/tables" element={<ManagerProtectedRoute><ManagerFloorsPage /></ManagerProtectedRoute>} />
+        <Route path="/manager/floors" element={<Navigate to="/manager/tables" replace />} />
         <Route
           path="/chef"
           element={<Navigate to="/chef/dashboard" replace />}
