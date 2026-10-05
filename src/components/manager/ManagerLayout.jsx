@@ -11,7 +11,7 @@ const navigation = [
   { label: "Dashboard", icon: Grid2X2, to: "/manager/dashboard" },
   { label: "Restaurant", icon: Store },
   { label: "Tables", icon: Table2, to: "/manager/tables" },
-  { label: "Reservations", icon: CalendarDays },
+  { label: "Reservations", icon: CalendarDays, to: "/manager/reservations" },
   { label: "Menu", icon: Utensils, to: "/manager/menu" },
   { label: "Orders", icon: ShoppingBasket },
   { label: "Staff", icon: Users, to: "/manager/staff" },

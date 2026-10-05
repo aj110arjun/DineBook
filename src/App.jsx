@@ -6,6 +6,7 @@ import CustomerRegisterPage from "./pages/customer/CustomerRegisterPage.jsx";
 import CustomerLandingPage from "./pages/customer/CustomerLandingPage.jsx";
 import CustomerEmailVerificationPage from "./pages/customer/CustomerEmailVerificationPage.jsx";
 import CustomerRestaurantDetailsPage from "./pages/customer/CustomerRestaurantDetailsPage.jsx";
+import CustomerReservationPage from "./pages/customer/CustomerReservationPage.jsx";
 import CustomerRestaurantListingPage from "./pages/customer/CustomerRestaurantListingPage.jsx";
 import GuestOnlyRoute from "./components/auth/GuestOnlyRoute.jsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
@@ -24,6 +25,7 @@ import ManagerPendingPage from "./pages/manager/ManagerPendingPage.jsx";
 import ManagerStaffPage from "./pages/manager/ManagerStaffPage.jsx";
 import ManagerMenuPage from "./pages/manager/ManagerMenuPage.jsx";
 import ManagerFloorsPage from "./pages/manager/ManagerFloorsPage.jsx";
+import ManagerReservationsPage from "./pages/manager/ManagerReservationsPage.jsx";
 import ChefLoginPage from "./pages/chef/ChefLoginPage.jsx";
 import ChefDashboardPage from "./pages/chef/ChefDashboardPage.jsx";
 import ChefChangePasswordPage from "./pages/chef/ChefChangePasswordPage.jsx";
@@ -40,6 +42,14 @@ export default function App() {
         <Route
           path="/customer/restaurants"
           element={<CustomerRestaurantListingPage />}
+        />
+        <Route
+          path="/customer/restaurants/:restaurantId/booking"
+          element={
+            <ProtectedRoute>
+              <CustomerReservationPage />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/customer/restaurants/:restaurantId/:section?"
@@ -188,6 +198,7 @@ export default function App() {
           }
         />
         <Route path="/manager/tables" element={<ManagerProtectedRoute><ManagerFloorsPage /></ManagerProtectedRoute>} />
+        <Route path="/manager/reservations" element={<ManagerProtectedRoute><ManagerReservationsPage /></ManagerProtectedRoute>} />
         <Route path="/manager/floors" element={<Navigate to="/manager/tables" replace />} />
         <Route
           path="/chef"

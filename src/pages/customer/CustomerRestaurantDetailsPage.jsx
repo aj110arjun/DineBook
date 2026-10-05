@@ -9,7 +9,7 @@ import {
   Star,
   Users,
 } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
 import LandingFooter from "../../components/landing/LandingFooter.jsx";
 import { requestJson } from "../../lib/authApi.js";
@@ -32,6 +32,7 @@ function localDateValue() {
 
 export default function CustomerRestaurantDetailsPage() {
   const { restaurantId, section } = useParams();
+  const navigate = useNavigate();
   const [restaurant, setRestaurant] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -40,6 +41,12 @@ export default function CustomerRestaurantDetailsPage() {
   const [guests, setGuests] = useState("2");
   const [time, setTime] = useState("8:00 PM");
   const [bookingMessage, setBookingMessage] = useState("");
+  const [bookingBusy, setBookingBusy] = useState(false);
+  const [myReservations, setMyReservations] = useState([]);
+  const [bookingStep, setBookingStep] = useState(1);
+  const [availableTables, setAvailableTables] = useState([]);
+  const [selectedTableId, setSelectedTableId] = useState("");
+  const [reservationResult, setReservationResult] = useState(null);
   const [menuCategories, setMenuCategories] = useState([]);
   const [floors, setFloors] = useState([]);
   const [menuLoading, setMenuLoading] = useState(false);
@@ -107,19 +114,73 @@ export default function CustomerRestaurantDetailsPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+    requestJson("/api/customer/reservations")
+      .then(setMyReservations)
+      .catch(() => setMyReservations([]));
+  }, [user]);
+
   const gallery = restaurant?.images?.length
     ? restaurant.images
     : restaurant?.image
       ? [restaurant.image]
       : [photo("photo-1517248135467-4c7edcad34c4", 1400)];
-
-  function submitReservation(event) {
+  async function submitReservation(event) {
     event.preventDefault();
-    setBookingMessage(
-      restaurant.phone
-        ? `Online reservations are coming soon. Call ${restaurant.phone} to request this table.`
-        : "Online reservations are coming soon for this restaurant.",
-    );
+    if (!user) {
+      setBookingMessage("Sign in as a customer to reserve a table.");
+      return;
+    }
+    navigate(`/customer/restaurants/${restaurantId}/booking`, { state: { date, guests, time } });
+  }
+
+  function reservationStartTime() {
+    const [clock, meridiem] = time.split(" ");
+    let [hour, minute] = clock.split(":").map(Number);
+    if (meridiem === "PM" && hour !== 12) hour += 12;
+    if (meridiem === "AM" && hour === 12) hour = 0;
+    return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+  }
+
+  async function confirmReservation() {
+    setBookingBusy(true);
+    setBookingMessage("");
+    try {
+      const reservation = await requestJson("/api/customer/reservations", {
+        method: "POST",
+        body: JSON.stringify({ restaurant_id: restaurant.id, reservation_date: date,
+          start_time: reservationStartTime(), number_of_guests: Number(guests), table_id: selectedTableId }),
+      });
+      setReservationResult(reservation);
+      setMyReservations((current) => [reservation, ...current]);
+      setBookingStep(4);
+    } catch (reason) {
+      setBookingMessage(reason.message);
+      if (reason.message.toLowerCase().includes("no suitable table") || reason.message.toLowerCase().includes("no longer available")) {
+        setBookingStep(1);
+        setAvailableTables([]);
+      }
+    } finally {
+      setBookingBusy(false);
+    }
+  }
+
+  function resetReservationFlow() {
+    setBookingStep(1);
+    setAvailableTables([]);
+    setSelectedTableId("");
+    setReservationResult(null);
+    setBookingMessage("");
+  }
+
+  async function cancelMyReservation(item) {
+    try {
+      await requestJson(`/api/customer/reservations/${item.id}/cancel`, { method: "POST" });
+      setMyReservations((current) => current.map((reservation) => reservation.id === item.id ? { ...reservation, status: "CANCELLED" } : reservation));
+    } catch (reason) {
+      setBookingMessage(reason.message);
+    }
   }
 
   return (
@@ -404,6 +465,8 @@ export default function CustomerRestaurantDetailsPage() {
 
               <aside className="restaurant-booking-card">
                 <p className="booking-eyebrow">SECURE A TABLE</p>
+                <div className="reservation-flow-progress"><span className={bookingStep >= 1 ? "active" : ""}>1 Details</span><i /><span className={bookingStep >= 2 ? "active" : ""}>2 Table</span><i /><span className={bookingStep >= 3 ? "active" : ""}>3 Review</span></div>
+                {bookingStep === 1 && <>
                 <h2>Booking Reservation</h2>
                 <form onSubmit={submitReservation}>
                   <label htmlFor="booking-date">Select date</label>
@@ -413,7 +476,7 @@ export default function CustomerRestaurantDetailsPage() {
                       type="date"
                       min={localDateValue()}
                       value={date}
-                      onChange={(event) => setDate(event.target.value)}
+                      onChange={(event) => { setDate(event.target.value); setBookingMessage(""); }}
                       required
                     />
                     <CalendarDays size={16} />
@@ -423,7 +486,7 @@ export default function CustomerRestaurantDetailsPage() {
                     <select
                       id="booking-guests"
                       value={guests}
-                      onChange={(event) => setGuests(event.target.value)}
+                      onChange={(event) => { setGuests(event.target.value); setBookingMessage(""); }}
                     >
                       {Array.from({ length: 12 }, (_, index) => index + 1).map(
                         (count) => (
@@ -442,25 +505,35 @@ export default function CustomerRestaurantDetailsPage() {
                         type="button"
                         key={option}
                         className={time === option ? "selected" : ""}
-                        onClick={() => setTime(option)}
+                        onClick={() => { setTime(option); setBookingMessage(""); }}
                       >
                         {option}
                       </button>
                     ))}
                   </div>
-                  <button className="booking-submit" type="submit">
-                    Check Availability
+                  <button className="booking-submit" type="submit" disabled={bookingBusy}>
+                    {bookingBusy ? "Checking tables…" : "Check availability"}
                   </button>
                   {bookingMessage && (
                     <p className="booking-message" role="status">
                       {bookingMessage}
                     </p>
                   )}
-                  <p className="booking-note">
-                    No booking fee. Availability is confirmed directly by the
-                    restaurant.
-                  </p>
+                  <p className="booking-note">Choose a date, party size, and time to see tables that are available for your visit.</p>
                 </form>
+                </>}
+                {bookingStep === 2 && <section className="customer-table-step">
+                  <h2>Select your table</h2><p className="booking-note">{date} · {time} · {guests} {Number(guests) === 1 ? "guest" : "guests"}</p>
+                  {availableTables.length ? <div className="customer-available-table-list">{availableTables.map((table) => <button type="button" key={table.id} className={`customer-available-table${selectedTableId === table.id ? " selected" : ""}`} onClick={() => setSelectedTableId(table.id)}><span className="customer-table-check">{selectedTableId === table.id ? "✓" : ""}</span><span className="customer-table-copy"><strong>Table {table.table_number}</strong><small>{table.floor_name} · Seats up to {table.capacity}</small></span><strong className="customer-table-price">₹{Number(table.reservation_fee).toFixed(2)}</strong></button>)}</div> : <div className="customer-no-tables">No suitable tables are available for this date and time.</div>}
+                  {bookingMessage && <p className="booking-message" role="status">{bookingMessage}</p>}
+                  <div className="customer-reservation-actions"><button type="button" className="customer-booking-back" onClick={() => { setBookingStep(1); setBookingMessage(""); }}>Back</button><button type="button" className="booking-submit" disabled={!selectedTableId} onClick={() => setBookingStep(3)}>Continue to review</button></div>
+                </section>}
+                {bookingStep === 3 && (() => {
+                  const selectedTable = availableTables.find((table) => table.id === selectedTableId);
+                  return <section className="customer-review-step"><h2>Review reservation</h2><div className="customer-reservation-summary"><div><span>Restaurant</span><strong>{restaurant.name}</strong></div><div><span>Date</span><strong>{new Intl.DateTimeFormat("en", { weekday: "long", month: "long", day: "numeric", year: "numeric" }).format(new Date(`${date}T12:00:00`))}</strong></div><div><span>Guests</span><strong>{guests}</strong></div><div><span>Preferred time</span><strong>{time}</strong></div><div><span>Selected table</span><strong>{selectedTable?.floor_name} · Table {selectedTable?.table_number}</strong></div><div className="customer-reservation-total"><span>Table booking fee</span><strong>₹{Number(selectedTable?.reservation_fee || 0).toFixed(2)}</strong></div></div><div className="customer-fee-notice"><strong>Payment required to confirm</strong><p>The restaurant will verify your payment. Your reservation remains pending until payment is recorded by the restaurant.</p></div>{bookingMessage && <p className="booking-message" role="alert">{bookingMessage}</p>}<div className="customer-reservation-actions"><button type="button" className="customer-booking-back" onClick={() => setBookingStep(2)}>Back</button><button type="button" className="booking-submit" disabled={bookingBusy} onClick={confirmReservation}>{bookingBusy ? "Submitting…" : "Submit reservation"}</button></div></section>;
+                })()}
+                {bookingStep === 4 && reservationResult && <section className="customer-reservation-confirmation"><div className="customer-reservation-confirm-icon">✓</div><span className="booking-eyebrow">RESERVATION REQUEST RECEIVED</span><h2>Payment pending</h2><p>Your table request is saved. The restaurant will confirm the reservation after receiving the ₹{Number(reservationResult.fee_amount).toFixed(2)} table fee.</p><div className="customer-reservation-summary"><div><span>Reservation ID</span><strong>{reservationResult.id.slice(0, 8).toUpperCase()}</strong></div><div><span>Date & time</span><strong>{reservationResult.reservation_date} · {time}</strong></div><div><span>Table</span><strong>{reservationResult.tables?.[0]?.floor_name} · Table {reservationResult.tables?.[0]?.table_number}</strong></div><div><span>Party size</span><strong>{reservationResult.number_of_guests} guests</strong></div><div className="customer-reservation-total"><span>Status</span><strong>Awaiting payment</strong></div></div><button type="button" className="customer-booking-back customer-new-booking" onClick={resetReservationFlow}>Start another reservation</button></section>}
+                {myReservations.length > 0 && <section className="customer-my-reservations"><h3>Your reservations</h3>{myReservations.slice(0, 4).map((item) => <article key={item.id}><strong>{item.reservation_date} · {item.start_time}</strong><span>{item.number_of_guests} guests · ₹{Number(item.fee_amount).toFixed(2)} · {item.status.replaceAll("_", " ")}</span>{["PENDING_PAYMENT", "CONFIRMED"].includes(item.status) && <button type="button" onClick={() => cancelMyReservation(item)}>Cancel</button>}</article>)}</section>}
               </aside>
             </div>
           </>

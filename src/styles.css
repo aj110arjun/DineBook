@@ -1461,6 +1461,47 @@ a:focus-visible,
   line-height: 1.5;
   text-align: center;
 }
+.reservation-flow-progress { display:flex; align-items:center; gap:7px; margin:0 0 18px; color:#a99e98; font-size:9px; font-weight:700; text-transform:uppercase; }
+.reservation-flow-progress span.active { color:var(--wine); }
+.reservation-flow-progress i { flex:1; height:1px; background:#e9dfd9; }
+.customer-table-step > h2, .customer-review-step > h2, .customer-reservation-confirmation > h2 { margin-bottom:10px; }
+.customer-available-table-list { display:grid; gap:8px; max-height:270px; overflow:auto; margin-top:16px; }
+.customer-available-table { display:flex; align-items:center; gap:10px; width:100%; min-height:67px; padding:10px; border:1px solid #eee5e1; border-radius:10px; background:#fff; text-align:left; cursor:pointer; }
+.customer-available-table:hover, .customer-available-table.selected { border-color:var(--wine); background:#fbf7f4; }
+.customer-table-check { display:grid; place-items:center; flex:0 0 18px; width:18px; height:18px; border:1px solid #d8ccc5; border-radius:50%; color:white; font-size:11px; }
+.customer-available-table.selected .customer-table-check { border-color:var(--wine); background:var(--wine); }
+.customer-table-copy { display:grid; gap:4px; flex:1; min-width:0; }
+.customer-table-copy strong { color:#382c2a; font-size:12px; }
+.customer-table-copy small { color:#978b85; font-size:10px; }
+.customer-table-price { color:#b28b40; font-size:12px; white-space:nowrap; }
+.customer-no-tables { margin-top:14px; padding:14px; border-radius:9px; background:#fbf3ee; color:#80525a; font-size:11px; line-height:1.5; }
+.customer-reservation-actions { display:flex; gap:9px; align-items:center; }
+.customer-reservation-actions .booking-submit { flex:1; margin-top:16px; }
+.customer-booking-back { min-height:44px; margin-top:16px; padding:0 15px; border:1px solid #79323d; border-radius:9px; background:white; color:#79323d; font-size:11px; font-weight:700; cursor:pointer; }
+.customer-reservation-summary { display:grid; gap:0; margin:13px 0; padding:0 12px; border:1px solid #eee5e1; border-radius:11px; background:#fff; }
+.customer-reservation-summary > div { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:11px 0; border-bottom:1px solid #f1eae5; font-size:10px; }
+.customer-reservation-summary > div:last-child { border-bottom:0; }
+.customer-reservation-summary span { color:#978b85; }
+.customer-reservation-summary strong { color:#3b302d; text-align:right; }
+.customer-reservation-summary .customer-reservation-total { font-size:12px; font-weight:700; }
+.customer-fee-notice { padding:12px; border-radius:9px; background:#fbf7f0; color:#725e42; font-size:10px; line-height:1.5; }
+.customer-fee-notice p { margin:5px 0 0; }
+.customer-reservation-confirmation { text-align:center; }
+.customer-reservation-confirmation > p { color:#8c807a; font-size:11px; line-height:1.5; }
+.customer-reservation-confirm-icon { display:grid; place-items:center; width:42px; height:42px; margin:0 auto 12px; border-radius:50%; background:#fff1df; color:#bd7914; font-size:22px; }
+.customer-reservation-confirmation .customer-reservation-summary { text-align:left; }
+.customer-new-booking { width:100%; }
+.customer-my-reservations { display:grid; gap:8px; margin-top:20px; padding-top:16px; border-top:1px solid #eee5e1; }
+.customer-my-reservations h3 { margin:0; font-size:13px; }
+.customer-my-reservations article { display:grid; gap:4px; padding:10px; border:1px solid #eee5e1; border-radius:9px; }
+.customer-my-reservations article strong { font-size:10px; }
+.customer-my-reservations article span { color:#978b85; font-size:9px; }
+.customer-my-reservations article button { justify-self:start; border:0; background:none; color:#79323d; font-size:10px; cursor:pointer; }
+:root[data-theme="dark"] .customer-available-table, :root[data-theme="dark"] .customer-reservation-summary { background:#292426; border-color:#494044; }
+:root[data-theme="dark"] .customer-table-copy strong, :root[data-theme="dark"] .customer-reservation-summary strong { color:#f1e9e8; }
+:root[data-theme="dark"] .customer-available-table:hover, :root[data-theme="dark"] .customer-available-table.selected { background:#34272b; }
+:root[data-theme="dark"] .customer-fee-notice { background:#383022; color:#e5ce9e; }
+:root[data-theme="dark"] .customer-booking-back { background:#292426; color:#e8c8c9; }
 .restaurant-details-back {
   display: inline-flex;
   align-items: center;

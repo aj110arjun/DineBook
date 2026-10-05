@@ -46,6 +46,7 @@ export default function ChefDashboardPage() {
   const [chef, setChef] = useState(null);
   const [menuCategories, setMenuCategories] = useState([]);
   const [diningFloors, setDiningFloors] = useState([]);
+  const [upcomingReservations, setUpcomingReservations] = useState([]);
   const [menuLoading, setMenuLoading] = useState(true);
   const [menuError, setMenuError] = useState("");
   const [activeNav, setActiveNav] = useState("Dashboard");
@@ -85,6 +86,10 @@ export default function ChefDashboardPage() {
 
   useEffect(() => {
     requestJson("/api/chef/floors").then(setDiningFloors).catch(() => setDiningFloors([]));
+  }, []);
+
+  useEffect(() => {
+    requestJson("/api/chef/reservations/upcoming").then(setUpcomingReservations).catch(() => setUpcomingReservations([]));
   }, []);
 
   async function handleLogout() {
@@ -135,6 +140,11 @@ export default function ChefDashboardPage() {
           {diningFloors.length > 0 && <section className="chef-panel"><div className="chef-panel-heading"><h3>Floor service context</h3></div>{diningFloors.map(floor => <p key={floor.id}><strong>{floor.name}</strong>: {floor.tables.map(table => `Table ${table.table_number} (${table.status})`).join(" · ") || "No tables assigned"}</p>)}</section>}
           <PortalBreadcrumb home={{ label: "Home", to: "/chef/dashboard" }} items={[{ label: activeNav }]} className="chef-breadcrumb" />
           <div className="chef-page-heading"><h2>Good Morning, Chef {firstName}</h2><p>Here's what's happening in your kitchen today.</p></div>
+
+          <section className="chef-panel">
+            <div className="chef-panel-heading"><h3>Upcoming reservations</h3><span>{upcomingReservations.length} confirmed</span></div>
+            {!upcomingReservations.length ? <p className="chef-menu-empty">No upcoming confirmed reservations.</p> : <div className="chef-activity-list">{upcomingReservations.map((item) => <article className="chef-activity-item" key={item.id}><i className="green" /><div><p><strong>{item.customer_name}</strong> · {item.number_of_guests} guests</p><span>{item.reservation_date} at {item.start_time} · {item.tables.map((table) => `${table.floor_name}, Table ${table.table_number}`).join(", ")}</span></div></article>)}</div>}
+          </section>
 
           <section className="chef-stat-grid" aria-label="Today's kitchen stats">
             <StatCard title="Today's Orders" value="47" change="+12%" icon={Package} tone="wine" />
