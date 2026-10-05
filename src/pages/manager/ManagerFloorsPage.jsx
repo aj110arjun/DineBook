@@ -28,6 +28,7 @@ export default function ManagerFloorsPage() {
   const [floorId, setFloorId] = useState("");
   const [number, setNumber] = useState("");
   const [seats, setSeats] = useState("2");
+  const [reservationFee, setReservationFee] = useState("250");
   const [shape, setShape] = useState("round");
   const [tableStatus, setTableStatus] = useState("available");
   const [editingTable, setEditingTable] = useState(null);
@@ -131,6 +132,7 @@ export default function ManagerFloorsPage() {
         floor_id: floorId,
         table_number: number.trim(),
         capacity: Number(seats),
+        reservation_fee: Number(reservationFee),
         table_type: shape,
         status: tableStatus,
       };
@@ -157,6 +159,7 @@ export default function ManagerFloorsPage() {
     setFloorId(floorFilter !== "all" ? floorFilter : floors[0]?.id || "");
     setNumber("");
     setSeats("4");
+    setReservationFee("250");
     setShape("round");
     setTableStatus("available");
     setEditingTable(null);
@@ -189,6 +192,7 @@ export default function ManagerFloorsPage() {
     setFloorId(floor.id);
     setNumber(table.table_number);
     setSeats(String(table.capacity ?? table.seats));
+    setReservationFee(String(table.reservation_fee ?? 0));
     setShape(table.table_type || "round");
     setTableStatus(table.status);
     setError("");
@@ -465,6 +469,10 @@ export default function ManagerFloorsPage() {
                       onChange={(e) => setSeats(e.target.value)}
                       required
                     />
+                  </label>
+                  <label>
+                    Reservation Fee (₹ per table) <b>*</b>
+                    <input type="number" min="0" step="0.01" value={reservationFee} onChange={(e) => setReservationFee(e.target.value)} required />
                   </label>
                   <label>
                     Floor / Zone <b>*</b>
