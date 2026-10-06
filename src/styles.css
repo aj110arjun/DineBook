@@ -8014,3 +8014,30 @@ a:focus-visible,
 :root[data-theme="dark"] .manager-menu-variant-status.available { background:#1d382e; color:#82dfb8; }
 :root[data-theme="dark"] .manager-menu-variant-status.unavailable { background:#373034; color:#c2b5b0; }
 :root[data-theme="dark"] .manager-menu-image-card figcaption button:hover { background:#39272d; }
+
+/* Manager reservation date field: keep native date controls aligned across browsers. */
+.reservation-page .reservation-toolbar { flex-wrap: nowrap; gap: 10px; }
+.reservation-page .reservation-date-control { box-sizing: border-box; display: flex; flex: 0 0 220px; align-items: center; gap: 9px; min-width: 220px; height: 46px; padding: 0 12px; overflow: hidden; border: 1px solid #eee4dc; border-radius: 10px; background: #fff; color: #322927; white-space: nowrap; }
+.reservation-page .reservation-date-control > svg { flex: 0 0 17px; }
+.reservation-page .reservation-date-control input[type="date"] { display: block; box-sizing: border-box; flex: 1 1 auto; width: 145px; min-width: 145px; height: 32px; min-height: 32px; align-self: center; padding: 0 2px; border: 0; outline: 0; background: transparent; color: #322927; font: 500 13px/normal "DM Sans", sans-serif; vertical-align: middle; appearance: auto; -webkit-appearance: auto; overflow: visible; }
+.reservation-page .reservation-date-control input[type="date"]::-webkit-datetime-edit { padding: 0; line-height: normal; }
+.reservation-page .reservation-date-control input[type="date"]::-webkit-calendar-picker-indicator { margin: 0; padding: 0 1px; }
+.reservation-page .reservation-toolbar > select { box-sizing: border-box; flex: 0 0 160px; min-width: 160px; }
+.reservation-page .reservation-search { box-sizing: border-box; flex: 1 1 185px; min-width: 185px; }
+.reservation-page .reservation-search input { width: 100%; min-width: 0; }
+:root[data-theme="dark"] .reservation-page .reservation-date-control { border-color: #40383a; background: #292426; color: #eee4e2; }
+:root[data-theme="dark"] .reservation-page .reservation-date-control input[type="date"] { color-scheme: dark; color: #eee4e2; }
+:root[data-theme="light"] .reservation-page .reservation-date-control input[type="date"] { color-scheme: light; }
+@media (max-width: 1200px) {
+  .reservation-page .reservation-toolbar { flex-wrap: wrap; }
+  .reservation-page .reservation-date-control { flex: 1 1 200px; min-width: 200px; }
+  .reservation-page .reservation-toolbar > select { flex: 1 1 160px; }
+  .reservation-page .reservation-search { flex: 1 1 185px; }
+}
+@media (max-width: 560px) {
+  .reservation-page .reservation-toolbar { flex-wrap: wrap; }
+  .reservation-page .reservation-date-control,
+  .reservation-page .reservation-toolbar > select,
+  .reservation-page .reservation-search { flex: 1 1 100%; width: 100%; min-width: 0; }
+  .reservation-page .reservation-date-control input[type="date"] { width: 100%; min-width: 0; }
+}
