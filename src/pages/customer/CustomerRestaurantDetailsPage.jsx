@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  X,
   Clock3,
   Mail,
   MapPin,
@@ -22,6 +25,7 @@ const detailTabs = [
   { id: "amenities", label: "Amenities" },
   { id: "menu-preview", label: "Menu" },
   { id: "reviews", label: "Reviews" },
+  { id: "reservations", label: "Reservations" },
 ];
 
 function localDateValue() {
@@ -43,6 +47,11 @@ export default function CustomerRestaurantDetailsPage() {
   const [bookingMessage, setBookingMessage] = useState("");
   const [bookingBusy, setBookingBusy] = useState(false);
   const [myReservations, setMyReservations] = useState([]);
+  const [reservationStatusFilter, setReservationStatusFilter] = useState("ALL");
+  const [reservationDateFilter, setReservationDateFilter] = useState("");
+  const [reservationSort, setReservationSort] = useState("NEWEST");
+  const [reservationPage, setReservationPage] = useState(1);
+  const [selectedReservation, setSelectedReservation] = useState(null);
   const [bookingStep, setBookingStep] = useState(1);
   const [availableTables, setAvailableTables] = useState([]);
   const [selectedTableId, setSelectedTableId] = useState("");
@@ -55,6 +64,26 @@ export default function CustomerRestaurantDetailsPage() {
   const activeSection = detailTabs.some((tab) => tab.id === section)
     ? section
     : "about";
+  const restaurantReservations = myReservations.filter((item) => String(item.restaurant_id) === String(restaurantId));
+  const sortedReservations = restaurantReservations
+    .filter((item) => reservationStatusFilter === "ALL" || item.status === reservationStatusFilter)
+    .filter((item) => !reservationDateFilter || item.reservation_date === reservationDateFilter)
+    .sort((a, b) => {
+      const aDate = `${a.reservation_date}T${a.start_time}`;
+      const bDate = `${b.reservation_date}T${b.start_time}`;
+      if (reservationSort === "OLDEST") return aDate.localeCompare(bDate);
+      if (reservationSort === "FEE_LOW") return Number(a.fee_amount) - Number(b.fee_amount);
+      if (reservationSort === "FEE_HIGH") return Number(b.fee_amount) - Number(a.fee_amount);
+      return bDate.localeCompare(aDate);
+    });
+  const reservationsPerPage = 4;
+  const reservationPageCount = Math.max(1, Math.ceil(sortedReservations.length / reservationsPerPage));
+  const currentReservationPage = Math.min(reservationPage, reservationPageCount);
+  const pagedReservations = sortedReservations.slice((currentReservationPage - 1) * reservationsPerPage, currentReservationPage * reservationsPerPage);
+
+  useEffect(() => {
+    setReservationPage(1);
+  }, [reservationStatusFilter, reservationDateFilter, reservationSort]);
 
   useEffect(() => {
     let mounted = true;
@@ -228,7 +257,7 @@ export default function CustomerRestaurantDetailsPage() {
               ))}
             </div>
 
-            <div className="restaurant-details-layout">
+            <div className={`restaurant-details-layout${activeSection === "reservations" ? " has-booking" : " no-booking"}`}>
               <div className="restaurant-details-main">
                 <div className="restaurant-detail-tags">
                   <span>{restaurant.cuisine}</span>
@@ -461,9 +490,67 @@ export default function CustomerRestaurantDetailsPage() {
                     <p>Customer reviews are not available yet.</p>
                   </section>
                 )}
+                {activeSection === "reservations" && (
+                  <section className="restaurant-detail-section">
+                    <h2>Reserve a table at {restaurant.name}</h2>
+                    <p>Choose your date, party size, and preferred time in the booking panel. We’ll check this restaurant’s operating hours and table availability before you select a table.</p>
+                    <div className="restaurant-capacity-facts">
+                      <span><CalendarDays size={16} /> Select an available date and time</span>
+                      <span><Users size={16} /> Choose a table that fits your party</span>
+                    </div>
+                    <section className="customer-my-reservations customer-reservation-history">
+                      <div className="reservation-history-heading">
+                        <div><h3>Your reservations</h3><p>Manage your upcoming and past visits.</p></div>
+                        <span>{restaurantReservations.length} total</span>
+                      </div>
+                      <div className="reservation-history-toolbar">
+                        <label>Status<select value={reservationStatusFilter} onChange={(event) => setReservationStatusFilter(event.target.value)}>
+                          <option value="ALL">All statuses</option><option value="PENDING_PAYMENT">Payment due</option><option value="CONFIRMED">Confirmed</option><option value="CANCELLED">Cancelled</option><option value="COMPLETED">Completed</option>
+                        </select></label>
+                        <label>Date<input type="date" value={reservationDateFilter} onChange={(event) => setReservationDateFilter(event.target.value)} /></label>
+                        <label>Sort by<select value={reservationSort} onChange={(event) => setReservationSort(event.target.value)}>
+                          <option value="NEWEST">Newest first</option><option value="OLDEST">Oldest first</option><option value="FEE_LOW">Fee: low to high</option><option value="FEE_HIGH">Fee: high to low</option>
+                        </select></label>
+                      </div>
+                      {restaurantReservations.length === 0 ? <p className="reservation-history-empty">You haven’t made any reservations at this restaurant yet.</p> : sortedReservations.length === 0 ? <p className="reservation-history-empty">No reservations match these filters. Adjust the status or date to see more.</p> : <>
+                        <div className="reservation-history-cards">
+                          {pagedReservations.map((item) => {
+                            const label = { PENDING_PAYMENT: "Payment due", CONFIRMED: "Confirmed", CANCELLED: "Cancelled", COMPLETED: "Completed" }[item.status] ?? item.status.replaceAll("_", " ");
+                            const tableNames = item.tables?.map((table) => table.table_number).filter(Boolean).join(", ");
+                            return <article className="reservation-history-card" key={item.id} role="button" tabIndex={0} onClick={() => setSelectedReservation(item)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelectedReservation(item); } }} aria-label={`View reservation details for ${item.reservation_date}`}>
+                              <div className="reservation-card-top"><div><span className="reservation-card-eyebrow">Reservation</span><h4>{new Intl.DateTimeFormat("en", { weekday: "short", month: "short", day: "numeric", year: "numeric" }).format(new Date(`${item.reservation_date}T12:00:00`))}</h4></div><span className={`reservation-status-pill status-${item.status.toLowerCase().replaceAll("_", "-")}`}>{label}</span></div>
+                              <div className="reservation-card-details"><span><Clock3 size={15} />{item.start_time}</span><span><Users size={15} />{item.number_of_guests} guests</span><span><CalendarDays size={15} />{tableNames ? `Table ${tableNames}` : "Table assignment pending"}</span></div>
+                              <div className="reservation-card-bottom"><div><small>Table reservation fee</small><strong>₹{Number(item.fee_amount ?? 0).toFixed(2)}</strong></div><span className="reservation-card-view">View details</span></div>
+                            </article>;
+                          })}
+                        </div>
+                        <div className="reservation-pagination"><span>Showing {(currentReservationPage - 1) * reservationsPerPage + 1}–{Math.min(currentReservationPage * reservationsPerPage, sortedReservations.length)} of {sortedReservations.length}</span><div><button type="button" aria-label="Previous page" disabled={currentReservationPage <= 1} onClick={() => setReservationPage((page) => Math.max(1, page - 1))}><ChevronLeft size={16} /></button><strong>{currentReservationPage} / {reservationPageCount}</strong><button type="button" aria-label="Next page" disabled={currentReservationPage >= reservationPageCount} onClick={() => setReservationPage((page) => Math.min(reservationPageCount, page + 1))}><ChevronRight size={16} /></button></div></div>
+                      </>}
+                    </section>
+                    {selectedReservation && <div className="reservation-detail-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedReservation(null); }}>
+                      <section className="reservation-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="reservation-detail-title">
+                        <button type="button" className="reservation-detail-close" aria-label="Close reservation details" onClick={() => setSelectedReservation(null)}><X size={18} /></button>
+                        <span className="reservation-card-eyebrow">RESERVATION DETAILS</span>
+                        <div className="reservation-detail-title-row"><h3 id="reservation-detail-title">{restaurant.name}</h3><span className={`reservation-status-pill status-${selectedReservation.status.toLowerCase().replaceAll("_", "-")}`}>{({ PENDING_PAYMENT: "Payment due", CONFIRMED: "Confirmed", CANCELLED: "Cancelled", COMPLETED: "Completed" })[selectedReservation.status] ?? selectedReservation.status.replaceAll("_", " ")}</span></div>
+                        <p className="reservation-detail-reference">Booking reference · {selectedReservation.id.slice(0, 8).toUpperCase()}</p>
+                        <div className="reservation-detail-grid">
+                          <div><small>Date</small><strong>{new Intl.DateTimeFormat("en", { weekday: "long", month: "long", day: "numeric", year: "numeric" }).format(new Date(`${selectedReservation.reservation_date}T12:00:00`))}</strong></div>
+                          <div><small>Time</small><strong>{selectedReservation.start_time}{selectedReservation.end_time ? ` – ${selectedReservation.end_time}` : ""}</strong></div>
+                          <div><small>Party size</small><strong>{selectedReservation.number_of_guests} {selectedReservation.number_of_guests === 1 ? "guest" : "guests"}</strong></div>
+                          <div><small>Table</small><strong>{selectedReservation.tables?.length ? selectedReservation.tables.map((table) => `${table.floor_name} · Table ${table.table_number} (${table.capacity} seats)`).join(", ") : "Assignment pending"}</strong></div>
+                          <div><small>Reservation fee</small><strong>₹{Number(selectedReservation.fee_amount ?? 0).toFixed(2)}</strong></div>
+                          <div><small>Payment</small><strong>{selectedReservation.payment_status === "PAID" ? "Paid" : "Pending"}</strong></div>
+                        </div>
+                        {selectedReservation.special_request && <div className="reservation-detail-request"><small>Special request</small><p>{selectedReservation.special_request}</p></div>}
+                        <p className="reservation-detail-note">Food and drinks are billed separately at the restaurant.</p>
+                        <div className="reservation-detail-actions"><button type="button" className="reservation-detail-done" onClick={() => setSelectedReservation(null)}>Close</button>{["PENDING_PAYMENT", "CONFIRMED"].includes(selectedReservation.status) && <button type="button" className="reservation-detail-cancel" onClick={async () => { await cancelMyReservation(selectedReservation); setSelectedReservation((current) => current ? { ...current, status: "CANCELLED" } : current); }}>Cancel reservation</button>}</div>
+                      </section>
+                    </div>}
+                  </section>
+                )}
               </div>
 
-              <aside className="restaurant-booking-card">
+              {activeSection === "reservations" && <aside className="restaurant-booking-card">
                 <p className="booking-eyebrow">SECURE A TABLE</p>
                 <div className="reservation-flow-progress"><span className={bookingStep >= 1 ? "active" : ""}>1 Details</span><i /><span className={bookingStep >= 2 ? "active" : ""}>2 Table</span><i /><span className={bookingStep >= 3 ? "active" : ""}>3 Review</span></div>
                 {bookingStep === 1 && <>
@@ -533,8 +620,7 @@ export default function CustomerRestaurantDetailsPage() {
                   return <section className="customer-review-step"><h2>Review reservation</h2><div className="customer-reservation-summary"><div><span>Restaurant</span><strong>{restaurant.name}</strong></div><div><span>Date</span><strong>{new Intl.DateTimeFormat("en", { weekday: "long", month: "long", day: "numeric", year: "numeric" }).format(new Date(`${date}T12:00:00`))}</strong></div><div><span>Guests</span><strong>{guests}</strong></div><div><span>Preferred time</span><strong>{time}</strong></div><div><span>Selected table</span><strong>{selectedTable?.floor_name} · Table {selectedTable?.table_number}</strong></div><div className="customer-reservation-total"><span>Table booking fee</span><strong>₹{Number(selectedTable?.reservation_fee || 0).toFixed(2)}</strong></div></div><div className="customer-fee-notice"><strong>Payment required to confirm</strong><p>The restaurant will verify your payment. Your reservation remains pending until payment is recorded by the restaurant.</p></div>{bookingMessage && <p className="booking-message" role="alert">{bookingMessage}</p>}<div className="customer-reservation-actions"><button type="button" className="customer-booking-back" onClick={() => setBookingStep(2)}>Back</button><button type="button" className="booking-submit" disabled={bookingBusy} onClick={confirmReservation}>{bookingBusy ? "Submitting…" : "Submit reservation"}</button></div></section>;
                 })()}
                 {bookingStep === 4 && reservationResult && <section className="customer-reservation-confirmation"><div className="customer-reservation-confirm-icon">✓</div><span className="booking-eyebrow">RESERVATION REQUEST RECEIVED</span><h2>Payment pending</h2><p>Your table request is saved. The restaurant will confirm the reservation after receiving the ₹{Number(reservationResult.fee_amount).toFixed(2)} table fee.</p><div className="customer-reservation-summary"><div><span>Reservation ID</span><strong>{reservationResult.id.slice(0, 8).toUpperCase()}</strong></div><div><span>Date & time</span><strong>{reservationResult.reservation_date} · {time}</strong></div><div><span>Table</span><strong>{reservationResult.tables?.[0]?.floor_name} · Table {reservationResult.tables?.[0]?.table_number}</strong></div><div><span>Party size</span><strong>{reservationResult.number_of_guests} guests</strong></div><div className="customer-reservation-total"><span>Status</span><strong>Awaiting payment</strong></div></div><button type="button" className="customer-booking-back customer-new-booking" onClick={resetReservationFlow}>Start another reservation</button></section>}
-                {myReservations.length > 0 && <section className="customer-my-reservations"><h3>Your reservations</h3>{myReservations.slice(0, 4).map((item) => <article key={item.id}><strong>{item.reservation_date} · {item.start_time}</strong><span>{item.number_of_guests} guests · ₹{Number(item.fee_amount).toFixed(2)} · {item.status.replaceAll("_", " ")}</span>{["PENDING_PAYMENT", "CONFIRMED"].includes(item.status) && <button type="button" onClick={() => cancelMyReservation(item)}>Cancel</button>}</article>)}</section>}
-              </aside>
+              </aside>}
             </div>
           </>
         ) : null}

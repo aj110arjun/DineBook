@@ -46,8 +46,12 @@
 .reservation-slots-card { padding: 23px 23px 19px; }
 .reservation-slots-card h3 { margin: 0 0 16px; font-size: 16px; }
 .reservation-time-slots { display: flex; gap: 9px; flex-wrap: wrap; }
-.reservation-time-slots button { min-width: 87px; height: 43px; padding: 0 10px; border: 0; border-radius: 10px; background: #faf7f3; color: #817671; font-size: 12px; font-weight: 700; cursor: pointer; }
+.reservation-time-slots button { display: grid; align-content: center; gap: 4px; min-width: 100px; min-height: 48px; padding: 6px 10px; border: 0; border-radius: 10px; background: #faf7f3; color: #817671; font-size: 12px; font-weight: 700; cursor: pointer; text-align: center; }
 .reservation-time-slots button.active { background: #79323d; color: white; }
+.reservation-time-slots button.has-reservations:not(.active) { background: #e6f2fc; color: #285f91; box-shadow: inset 0 -3px #2873c9; }
+.reservation-time-slots button.has-pending:not(.active) { background: #fff2df; color: #a65c00; box-shadow: inset 0 -3px #ed7800; }
+.reservation-time-slots button small { font-size: 9px; font-weight: 600; line-height: 1.1; }
+.reservation-time-slots button.active small { color: #f2dca5; }
 .reservation-slots-card > p { margin: 15px 0 0; color: #ad9f98; font-size: 13px; }
 .reservation-list-column { min-width: 0; }
 .reservation-list-summary { display: flex; align-items: center; gap: 9px; min-height: 78px; padding: 17px 19px; }
@@ -92,6 +96,8 @@
 :root[data-theme="dark"] .reservation-calendar-day.today, :root[data-theme="dark"] .reservation-calendar-day.selected.today { background: #1f3142; }
 :root[data-theme="dark"] .reservation-calendar-day.selected:not(.today), :root[data-theme="dark"] .reservation-time-slots button.active { background: #79323d; }
 :root[data-theme="dark"] .reservation-calendar-header button, :root[data-theme="dark"] .reservation-day-count, :root[data-theme="dark"] .reservation-expand, :root[data-theme="dark"] .reservation-time-slots button { background: #211d1f; color: #d0c3be; }
+:root[data-theme="dark"] .reservation-time-slots button.has-reservations:not(.active) { background:#1f3142; color:#aed6fb; box-shadow:inset 0 -3px #4389db; }
+:root[data-theme="dark"] .reservation-time-slots button.has-pending:not(.active) { background:#3b3021; color:#f0c06b; box-shadow:inset 0 -3px #ed7800; }
 :root[data-theme="dark"] .reservation-guest-name strong, :root[data-theme="dark"] .reservation-empty strong { color: #f1e9e8; }
 :root[data-theme="dark"] .reservation-expanded-details { border-color: #40383a; color: #c0b5b1; }
 :root[data-theme="dark"] .reservation-expanded-details button { background: #292426; }

@@ -7,6 +7,7 @@ import "./ManagerReservationsPage.css";
 const statusClass = { CONFIRMED: "confirmed", PENDING_PAYMENT: "pending", CANCELLED: "cancelled", COMPLETED: "completed", SEATED: "confirmed" };
 const statusLabel = { CONFIRMED: "Confirmed", PENDING_PAYMENT: "Payment due", CANCELLED: "Cancelled", COMPLETED: "Completed", SEATED: "Seated" };
 const baseSlots = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30"];
+const blockingStatuses = new Set(["PENDING_PAYMENT", "CONFIRMED", "SEATED"]);
 const weekDays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 const dayKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 const shortTime = (value) => {
@@ -14,6 +15,13 @@ const shortTime = (value) => {
   const [h, m] = value.slice(0, 5).split(":").map(Number);
   const period = h >= 12 ? "PM" : "AM";
   return `${String(h % 12 || 12).padStart(2, "0")}:${String(m).padStart(2, "0")} ${period}`;
+};
+const minuteOfDay = (value) => { const [hour, minute] = value.slice(0, 5).split(":").map(Number); return hour * 60 + minute; };
+const slotText = (minutes) => `${String(Math.floor(minutes / 60) % 24).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+const timeSlotCaption = (reservations, hasPending) => {
+  const tableNames = [...new Set(reservations.flatMap((item) => item.tables.map((table) => table.table_number)))];
+  const tableLabel = tableNames.length === 1 ? `Table ${tableNames[0]}` : `${tableNames.length} tables`;
+  return `${tableLabel} ${hasPending ? "payment due" : "reserved"}`;
 };
 
 export default function ManagerReservationsPage() {
@@ -40,13 +48,28 @@ export default function ManagerReservationsPage() {
 
   const tables = useMemo(() => Array.from(new Map(items.flatMap((item) => item.tables.map((table) => [table.id, table]))).values()), [items]);
   const selectedItems = useMemo(() => items.filter((item) => {
-    if (item.reservation_date !== selectedDate || item.start_time.slice(0, 5) !== selectedTime) return false;
+    if (item.reservation_date !== selectedDate) return false;
+    const slotMinute = minuteOfDay(selectedTime);
+    const startsAt = minuteOfDay(item.start_time);
+    const endsAt = minuteOfDay(item.end_time);
+    const occupiesSlot = blockingStatuses.has(item.status)
+      ? startsAt <= slotMinute && slotMinute < endsAt
+      : startsAt === slotMinute;
+    if (!occupiesSlot) return false;
     if (tableFilter !== "all" && !item.tables.some((table) => table.id === tableFilter)) return false;
     const haystack = `${item.customer_name} ${item.customer_email || ""} ${item.tables.map((table) => table.table_number).join(" ")}`.toLowerCase();
     return haystack.includes(query.toLowerCase());
   }), [items, selectedDate, selectedTime, tableFilter, query]);
   const dateReservations = items.filter((item) => item.reservation_date === selectedDate);
-  const slots = [...new Set([...baseSlots, ...dateReservations.map((item) => item.start_time.slice(0, 5))])].sort();
+  const reservationSlots = dateReservations.flatMap((item) => {
+    const start = minuteOfDay(item.start_time);
+    if (!blockingStatuses.has(item.status)) return [item.start_time.slice(0, 5)];
+    const end = minuteOfDay(item.end_time);
+    const occupied = [];
+    for (let minute = start; minute < end; minute += 30) occupied.push(slotText(minute));
+    return occupied;
+  });
+  const slots = [...new Set([...baseSlots, ...reservationSlots])].sort();
   const dayGuestCount = selectedItems.reduce((total, item) => total + item.number_of_guests, 0);
 
   async function update(item, action) {
@@ -93,7 +116,7 @@ export default function ManagerReservationsPage() {
               </button>;
             })}</div>
           </section>
-          <section className="reservation-slots-card"><h3>Time Slots – {selectedLabel}</h3><div className="reservation-time-slots">{slots.map((slot) => <button type="button" key={slot} className={slot === selectedTime ? "active" : ""} onClick={() => setSelectedTime(slot)}>{shortTime(slot)}</button>)}</div><p>Showing {selectedItems.length} reservation{selectedItems.length === 1 ? "" : "s"} for {shortTime(selectedTime)}</p></section>
+          <section className="reservation-slots-card"><h3>Time Slots – {selectedLabel}</h3><div className="reservation-time-slots">{slots.map((slot) => { const slotMinute = minuteOfDay(slot); const occupying = dateReservations.filter((item) => blockingStatuses.has(item.status) && minuteOfDay(item.start_time) <= slotMinute && slotMinute < minuteOfDay(item.end_time)); const pending = occupying.some((item) => item.status === "PENDING_PAYMENT"); return <button type="button" key={slot} title={occupying.length ? occupying.map((item) => `${item.customer_name} · ${item.status.replaceAll("_", " ")}`).join("; ") : "No active reservations"} className={`${slot === selectedTime ? "active " : ""}${occupying.length ? "has-reservations" : ""}${pending ? "has-pending" : ""}`} onClick={() => setSelectedTime(slot)}><span>{shortTime(slot)}</span>{occupying.length > 0 && <small>{timeSlotCaption(occupying, pending)}</small>}</button>; })}</div><p>Showing {selectedItems.length} reservation{selectedItems.length === 1 ? "" : "s"} occupying {shortTime(selectedTime)}</p></section>
         </div>
 
         <aside className="reservation-list-column">
