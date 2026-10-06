@@ -6,6 +6,7 @@ import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
 import LandingFooter from "../../components/landing/LandingFooter.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import { photo } from "../../data/landingData.js";
+import { saveReservation } from "../../data/customerReservations.js";
 import "./CustomerReservationPage.css";
 
 const lunchSlots = ["12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "2:00 PM"];
@@ -261,6 +262,7 @@ export default function CustomerReservationPage() {
         body: JSON.stringify({ restaurant_id: restaurantId, reservation_date: date, start_time: to24Hour(time), number_of_guests: guests, table_id: selectedTable.id }),
       });
       setReservation(result);
+      saveReservation(user?.email, { ...result, restaurant_name: restaurant?.name, restaurant_location: restaurant?.location || restaurant?.address });
       setStep(4);
     } catch (reason) {
       setError(reason.message);

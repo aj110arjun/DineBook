@@ -17,6 +17,7 @@ import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
 import LandingFooter from "../../components/landing/LandingFooter.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
+import { mergeReservations, saveReservation } from "../../data/customerReservations.js";
 import { photo } from "../../data/landingData.js";
 
 const timeOptions = ["7:30 PM", "8:00 PM", "8:30 PM", "9:00 PM"];
@@ -146,8 +147,8 @@ export default function CustomerRestaurantDetailsPage() {
   useEffect(() => {
     if (!user) return;
     requestJson("/api/customer/reservations")
-      .then(setMyReservations)
-      .catch(() => setMyReservations([]));
+      .then((items) => setMyReservations(mergeReservations(items, user.email)))
+      .catch(() => setMyReservations(mergeReservations([], user.email)));
   }, [user]);
 
   const gallery = restaurant?.images?.length
@@ -181,8 +182,9 @@ export default function CustomerRestaurantDetailsPage() {
         body: JSON.stringify({ restaurant_id: restaurant.id, reservation_date: date,
           start_time: reservationStartTime(), number_of_guests: Number(guests), table_id: selectedTableId }),
       });
+      saveReservation(user?.email, { ...reservation, restaurant_name: restaurant.name, restaurant_location: restaurant.location || restaurant.address });
       setReservationResult(reservation);
-      setMyReservations((current) => [reservation, ...current]);
+      setMyReservations((current) => [reservation, ...current.filter((item) => item.id !== reservation.id)]);
       setBookingStep(4);
     } catch (reason) {
       setBookingMessage(reason.message);
@@ -206,7 +208,9 @@ export default function CustomerRestaurantDetailsPage() {
   async function cancelMyReservation(item) {
     try {
       await requestJson(`/api/customer/reservations/${item.id}/cancel`, { method: "POST" });
-      setMyReservations((current) => current.map((reservation) => reservation.id === item.id ? { ...reservation, status: "CANCELLED" } : reservation));
+      const updated = { ...item, status: "CANCELLED" };
+      saveReservation(user?.email, updated);
+      setMyReservations((current) => current.map((reservation) => reservation.id === item.id ? updated : reservation));
     } catch (reason) {
       setBookingMessage(reason.message);
     }

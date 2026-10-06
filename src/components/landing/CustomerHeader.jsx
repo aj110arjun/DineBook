@@ -107,11 +107,7 @@ export default function CustomerHeader({ user, onLogout }) {
 
                 <button
                   className="profile-button"
-                  onClick={() =>
-                    document.querySelector("#voices")?.scrollIntoView({
-                      behavior: "smooth",
-                    })
-                  }
+                  onClick={() => { closeMenu(); navigate("/customer/profile"); }}
                 >
                   {user?.name?.split(" ")[0] || "Profile"}
                 </button>

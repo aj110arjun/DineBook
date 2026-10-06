@@ -8,6 +8,9 @@ import CustomerEmailVerificationPage from "./pages/customer/CustomerEmailVerific
 import CustomerRestaurantDetailsPage from "./pages/customer/CustomerRestaurantDetailsPage.jsx";
 import CustomerReservationPage from "./pages/customer/CustomerReservationPage.jsx";
 import CustomerRestaurantListingPage from "./pages/customer/CustomerRestaurantListingPage.jsx";
+import CustomerProfilePage from "./pages/customer/CustomerProfilePage.jsx";
+import CustomerReservationsPage from "./pages/customer/CustomerReservationsPage.jsx";
+import CustomerReservationDetailsPage from "./pages/customer/CustomerReservationDetailsPage.jsx";
 import GuestOnlyRoute from "./components/auth/GuestOnlyRoute.jsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 import AdminProtectedRoute from "./components/auth/AdminProtectedRoute.jsx";
@@ -39,6 +42,9 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/customer" replace />} />
         <Route path="/customer" element={<CustomerLandingPage />} />
+        <Route path="/customer/profile" element={<ProtectedRoute><CustomerProfilePage /></ProtectedRoute>} />
+        <Route path="/customer/profile/reservations" element={<ProtectedRoute><CustomerReservationsPage /></ProtectedRoute>} />
+        <Route path="/customer/profile/reservations/:reservationId" element={<ProtectedRoute><CustomerReservationDetailsPage /></ProtectedRoute>} />
         <Route
           path="/customer/restaurants"
           element={<CustomerRestaurantListingPage />}
