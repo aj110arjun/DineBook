@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { CalendarDays, CircleDollarSign, Plus, ShoppingBasket, Star, Table2, Tag } from "lucide-react";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
+import { requestJson } from "../../lib/authApi.js";
 
 const revenueData = [
   { day: "Mon", value: 32 },
@@ -58,6 +60,21 @@ const popularItems = [
 ];
 
 export default function ManagerDashboardPage() {
+  const [managerName, setManagerName] = useState("");
+  const [restaurantName, setRestaurantName] = useState("");
+  useEffect(() => {
+    let active = true;
+    requestJson("/api/auth/manager/me")
+      .then((manager) => {
+        if (active) {
+          setManagerName(manager.name?.trim() || "");
+          setRestaurantName(manager.restaurant_name?.trim() || "");
+        }
+      })
+      .catch(() => { if (active) { setManagerName(""); setRestaurantName(""); } });
+    return () => { active = false; };
+  }, []);
+
   return (
     <ManagerLayout title="Dashboard">
       <div className="manager-dashboard-content">
@@ -65,8 +82,8 @@ export default function ManagerDashboardPage() {
 
           <div className="manager-heading">
             <div>
-              <h2>Good Morning, Marco</h2>
-              <p>Here's what's happening at Trattoria Bella today.</p>
+              <h2>Good Morning{managerName ? `, ${managerName}` : ""}</h2>
+              <p>{restaurantName ? `Here's what's happening at ${restaurantName} today.` : "Here's what's happening at your restaurant today."}</p>
             </div>
           </div>
 
