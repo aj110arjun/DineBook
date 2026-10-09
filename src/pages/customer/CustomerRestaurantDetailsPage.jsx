@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  Armchair,
   ArrowLeft,
   CalendarDays,
   ChevronLeft,
@@ -317,47 +318,28 @@ export default function CustomerRestaurantDetailsPage() {
                       {tab.label}
                     </Link>
                   ))}
+                  <Link
+                    className="restaurant-detail-availability-link"
+                    to={`/customer/restaurants/${restaurant.id}/reservations`}
+                  >
+                    <CalendarDays size={14} /> Check availability
+                  </Link>
                 </nav>
 
                 {activeSection === "about" && (
-                  <section className="restaurant-detail-section">
-                    <h2>About {restaurant.name}</h2>
-                    <p>
-                      {restaurant.description ||
-                        "More information about this restaurant will be available soon."}
-                    </p>
-                    <div className="restaurant-capacity-facts">
-                      {restaurant.capacity != null && (
-                        <span>
-                          <Users size={16} /> Seating capacity:{" "}
-                          {restaurant.capacity}
-                        </span>
-                      )}
-                      {restaurant.tables != null && (
-                        <span>
-                          <Users size={16} /> Dining tables: {restaurant.tables}
-                        </span>
-                      )}
-                    </div>
-                    {floors.length > 0 && <div className="restaurant-detail-hours-block"><h2>Floor & table availability</h2>{floors.map(floor => <div className="restaurant-hour-row" key={floor.id}><span>{floor.name}</span><span>{floor.tables.filter(table => table.status === "available").length} available / {floor.tables.length} tables</span></div>)}</div>}
-                    <div className="restaurant-detail-hours-block">
-                      <h2>
-                        <Clock3 size={18} /> Operating hours
-                      </h2>
-                      {restaurant.hours?.length ? (
-                        restaurant.hours.map((hour) => (
-                          <div className="restaurant-hour-row" key={hour.day}>
-                            <span>{hour.day}</span>
-                            <span>
-                              {hour.enabled
-                                ? `${hour.opens || "—"} – ${hour.closes || "—"}`
-                                : "Closed"}
-                            </span>
-                          </div>
-                        ))
-                      ) : (
-                        <p>Operating hours have not been added yet.</p>
-                      )}
+                  <section className="restaurant-detail-section restaurant-about-section">
+                    <header className="restaurant-about-intro">
+                      <span className="restaurant-about-eyebrow">RESTAURANT GUIDE</span>
+                      <h2>About {restaurant.name}</h2>
+                      <p>{restaurant.description || "More information about this restaurant will be available soon."}</p>
+                    </header>
+                    <div className={`restaurant-about-info-grid${floors.length ? " has-floors" : ""}`}>
+                      {floors.length > 0 && <section className="restaurant-about-card"><div className="restaurant-about-card-heading"><div><span>SEATING</span><h3>Floor & table availability</h3></div><Armchair size={18} /></div><div className="restaurant-about-floor-list">{floors.map((floor) => {
+                        const tables = floor.tables || [];
+                        const available = tables.filter((table) => table.status === "available").length;
+                        return <div className="restaurant-about-floor" key={floor.id}><span><strong>{floor.name}</strong><small>{tables.length} {tables.length === 1 ? "table" : "tables"}</small></span><b className={available ? "available" : "full"}>{available} available</b></div>;
+                      })}</div></section>}
+                      <section className="restaurant-about-card restaurant-about-hours"><div className="restaurant-about-card-heading"><div><span>PLAN YOUR VISIT</span><h3>Operating hours</h3></div><Clock3 size={18} /></div>{restaurant.hours?.length ? <div className="restaurant-about-hours-list">{restaurant.hours.map((hour) => <div className="restaurant-hour-row" key={hour.day}><span>{hour.day}</span><span className={hour.enabled ? "" : "closed"}>{hour.enabled ? `${hour.opens || "—"} – ${hour.closes || "—"}` : "Closed"}</span></div>)}</div> : <p>Operating hours have not been added yet.</p>}</section>
                     </div>
                   </section>
                 )}
