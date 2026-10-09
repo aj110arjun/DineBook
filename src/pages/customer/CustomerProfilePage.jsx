@@ -48,7 +48,7 @@ export default function CustomerProfilePage() {
       <div className="profile-layout">
         <aside className="profile-sidebar">
           <div className="profile-identity"><div className="profile-avatar"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=240&h=240&fit=crop&crop=faces" alt="Profile" /></div><strong>{user?.name || "Your Profile"}</strong><span>{user?.email || ""}</span></div>
-          <div className="profile-menu">{navItems.map(({ label, icon: Icon }) => label === "Booking History" ? <Link className={section === label ? "selected" : ""} key={label} to="/customer/profile/reservations"><Icon size={17} />{label}</Link> : <button className={section === label ? "selected" : ""} key={label} onClick={() => setSection(label)}><Icon size={17} />{label}</button>)}</div>
+          <div className="profile-menu">{navItems.map(({ label, icon: Icon }) => label === "Booking History" ? <Link className={section === label ? "selected" : ""} key={label} to="/customer/profile/reservations"><Icon size={17} />{label}</Link> : label === "Wallet" ? <Link className={section === label ? "selected" : ""} key={label} to="/customer/profile/wallet"><Icon size={17} />{label}</Link> : <button className={section === label ? "selected" : ""} key={label} onClick={() => setSection(label)}><Icon size={17} />{label}</button>)}</div>
           <button className="profile-logout" onClick={logout}><LogOut size={17} />Logout Account</button>
         </aside>
         <div className="profile-content">

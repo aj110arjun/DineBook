@@ -33,4 +33,73 @@
 .reservation-row-actions{display:flex;align-items:center;gap:12px}.reservation-row-actions>a{display:flex;align-items:center;color:#571521;text-decoration:none;font-size:12px;font-weight:600}.reservation-row-actions>button{border:0;background:transparent;color:#8a681f;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer}.reservation-row-actions>button:hover,.reservation-row-actions>a:hover{text-decoration:underline}
 .reservation-pass-backdrop{position:fixed;inset:0;z-index:1400;display:grid;place-items:center;padding:20px;background:rgb(25 13 15 / 58%);backdrop-filter:blur(3px)}.reservation-pass-dialog{position:relative;display:grid;justify-items:center;width:min(100%,360px);padding:28px 24px 22px;border:1px solid #eee5e1;border-radius:18px;background:#fff;text-align:center;box-shadow:0 24px 70px rgb(24 12 14 / 28%)}.reservation-pass-close{position:absolute;top:12px;right:12px;display:grid;width:32px;height:32px;place-items:center;border:1px solid #eee5e1;border-radius:9px;background:#fff;color:#716564;cursor:pointer}.reservation-pass-eyebrow{margin:3px 0 8px;color:#b18a46;font-size:9px;font-weight:800;letter-spacing:.12em}.reservation-pass-dialog h2{max-width:270px;margin:0;color:#392d2a;font-size:18px}.reservation-pass-dialog>p{margin:7px 0 15px;color:#8c807a;font-size:11px}.reservation-pass-qr{display:block;width:164px;height:164px;image-rendering:pixelated}.reservation-pass-qr-placeholder{display:grid;width:164px;height:164px;place-items:center;border:1px dashed #ded4ce;border-radius:8px;color:#8c807a;font-size:10px}.reservation-pass-id-label{margin-top:12px;color:#9b8b84;font-size:8px;font-weight:800;letter-spacing:.12em}.reservation-pass-id{margin-top:3px;color:#3d302d;font-size:14px;letter-spacing:.1em}.reservation-pass-meta{display:flex;justify-content:center;flex-wrap:wrap;gap:7px;margin-top:12px}.reservation-pass-meta span{padding:5px 8px;border-radius:20px;background:#f8f3ee;color:#746660;font-size:9px;font-weight:600}.reservation-pass-download{margin-top:14px;padding:8px 16px;border:1px solid #79323d;border-radius:20px;color:#79323d;font-size:10px;font-weight:700;text-decoration:none}.reservation-pass-download:hover{background:#79323d;color:#fff}
 :root[data-theme="dark"] .reservation-row-actions>a{color:#e7c5ca}:root[data-theme="dark"] .reservation-row-actions>button{color:#e3c179}:root[data-theme="dark"] .reservation-pass-dialog{border-color:#40383a;background:#292426}:root[data-theme="dark"] .reservation-pass-close{border-color:#494044;background:#211d1f;color:#eee4e2}:root[data-theme="dark"] .reservation-pass-dialog h2,:root[data-theme="dark"] .reservation-pass-id{color:#f1e9e8}:root[data-theme="dark"] .reservation-pass-dialog>p,:root[data-theme="dark"] .reservation-pass-qr-placeholder{color:#b6aaa6}:root[data-theme="dark"] .reservation-pass-meta span{background:#211d1f;color:#c8bdbc}:root[data-theme="dark"] .reservation-pass-download{border-color:#b87781;color:#e7c5ca}:root[data-theme="dark"] .reservation-pass-download:hover{background:#4f101d;color:#d7b96c}
+.customer-wallet-page { display: grid; gap: 18px; }
+.customer-wallet-page .profile-card-title { align-items: center; }
+.customer-wallet-page .profile-card-title > svg { color: #9b773b; }
+.wallet-eyebrow { color: #a48243; font-size: 9px; font-weight: 800; letter-spacing: .12em; }
+.customer-wallet-page .profile-card-title h1 { margin-top: 4px; }
+.wallet-intro { margin: -10px 0 0; color: #817671; font-size: 12px; }
+.wallet-balance-card { display: grid; gap: 9px; padding: 24px; border-radius: 15px; background: linear-gradient(120deg, #50131f, #762d3b); color: #fff; }
+.wallet-balance-card > span { color: #e8d5a7; font-size: 9px; font-weight: 800; letter-spacing: .12em; }
+.wallet-balance-card > strong { font-size: clamp(28px, 5vw, 38px); line-height: 1.1; }
+.wallet-balance-card > small { color: #e5d6d5; font-size: 10px; }
+.wallet-topup-card { display: grid; gap: 15px; padding: 18px; border: 1px solid #eee5e1; border-radius: 14px; background: #fff; }
+.wallet-topup-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.wallet-topup-heading > svg { color: #a48243; }
+.wallet-topup-heading h2 { margin: 4px 0; font-size: 15px; }
+.wallet-topup-heading p { margin: 0; color: #817671; font-size: 10px; line-height: 1.5; }
+.wallet-topup-controls { display: grid; grid-template-columns: minmax(130px, .7fr) minmax(0, 1fr) auto; align-items: end; gap: 11px; }
+.wallet-topup-controls > label { display: grid; gap: 6px; color: #766965; font-size: 10px; font-weight: 700; }
+.wallet-topup-input { display: flex; align-items: center; height: 40px; padding: 0 10px; border: 1px solid #e5d9d3; border-radius: 8px; color: #766965; }
+.wallet-topup-input input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: #453936; font: inherit; font-size: 12px; }
+.wallet-topup-presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.wallet-topup-presets button { min-height: 36px; padding: 0 9px; border: 1px solid #e5d9d3; border-radius: 8px; background: #fff; color: #645653; font: inherit; font-size: 9px; cursor: pointer; }
+.wallet-topup-presets button.selected { border-color: #79323d; background: #fff8f5; color: #712b38; font-weight: 700; }
+.wallet-topup-submit { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; padding: 0 14px; border: 0; border-radius: 8px; background: #4f101d; color: #e3c179; font: inherit; font-size: 10px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.wallet-topup-actions { display: grid; gap: 6px; }
+.wallet-topup-submit.manual { border: 1px solid #d8c59b; background: #f8f2e5; color: #604d2d; }
+.wallet-test-mode-note { margin: -6px 0 0; color: #856d43; font-size: 9px; }
+.wallet-topup-submit:disabled { opacity: .6; cursor: wait; }
+.wallet-topup-retry { justify-self: start; padding: 0; border: 0; background: transparent; color: #79323d; font: inherit; font-size: 10px; font-weight: 700; text-decoration: underline; cursor: pointer; }
+.wallet-topup-message { margin: 0; padding: 10px 12px; border-radius: 8px; font-size: 10px; line-height: 1.5; }
+.wallet-topup-message.error { background: #fff0ed; color: #8f202d; }
+.wallet-topup-message.success { background: #edf5ec; color: #39734a; }
+.wallet-history-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 3px; }
+.wallet-history-heading h2 { margin: 0; font-size: 16px; }
+.wallet-history-heading p { margin: 4px 0 0; color: #8d827d; font-size: 10px; }
+.wallet-history-heading > span { color: #8d827d; font-size: 10px; }
+.wallet-transactions { display: grid; }
+.wallet-transaction { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-top: 1px solid #eee5e1; }
+.wallet-transaction-icon { display: grid; flex: 0 0 36px; width: 36px; height: 36px; place-items: center; border-radius: 50%; }
+.wallet-transaction-icon.credit { background: #e9f5ec; color: #39814a; }
+.wallet-transaction-icon.debit { background: #f8ecea; color: #9d3e43; }
+.wallet-transaction-copy { display: grid; flex: 1; gap: 4px; min-width: 0; }
+.wallet-transaction-copy strong { overflow: hidden; color: #453936; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.wallet-transaction-copy small { color: #968983; font-size: 9px; }
+.wallet-transaction > strong { font-size: 12px; white-space: nowrap; }
+.wallet-credit-amount { color: #348047; }
+.wallet-debit-amount { color: #9d3e43; }
+.wallet-empty { display: grid; justify-items: center; gap: 8px; padding: 30px 15px; border: 1px dashed #e5d9d3; border-radius: 12px; color: #8d827d; text-align: center; font-size: 11px; }
+.wallet-empty strong { color: #493c38; }
+.wallet-empty p { margin: 0; }
+:root[data-theme="dark"] .wallet-intro,:root[data-theme="dark"] .wallet-history-heading p,:root[data-theme="dark"] .wallet-history-heading>span,:root[data-theme="dark"] .wallet-transaction-copy small { color: #bdb2b3; }
+:root[data-theme="dark"] .wallet-history-heading h2,:root[data-theme="dark"] .wallet-transaction-copy strong,:root[data-theme="dark"] .wallet-empty strong { color: #f1e9e8; }
+:root[data-theme="dark"] .wallet-transaction { border-color: #40383a; }
+:root[data-theme="dark"] .wallet-transaction-icon.credit { background: #20362a; color: #9ed1ad; }
+:root[data-theme="dark"] .wallet-transaction-icon.debit { background: #442625; color: #efaaa5; }
+:root[data-theme="dark"] .wallet-credit-amount { color: #9ed1ad; }
+:root[data-theme="dark"] .wallet-debit-amount { color: #efaaa5; }
+:root[data-theme="dark"] .wallet-empty { border-color: #494044; color: #bdb2b3; }
+:root[data-theme="dark"] .wallet-topup-card { border-color: #40383a; background: #211d1f; }
+:root[data-theme="dark"] .wallet-topup-heading p,:root[data-theme="dark"] .wallet-topup-controls>label { color: #bdb2b3; }
+:root[data-theme="dark"] .wallet-topup-input,:root[data-theme="dark"] .wallet-topup-presets button { border-color: #494044; background: #292426; color: #c8bdbc; }
+:root[data-theme="dark"] .wallet-topup-input input { color: #f1e9e8; }
+:root[data-theme="dark"] .wallet-topup-presets button.selected { border-color: #a96570; background: #36272b; color: #f1e9e8; }
+:root[data-theme="dark"] .wallet-topup-submit.manual { border-color: #6e6046; background: #383022; color: #e7ca8e; }
+:root[data-theme="dark"] .wallet-test-mode-note { color: #d8bd89; }
+:root[data-theme="dark"] .wallet-topup-message.error { background: #382429; color: #ffd5d4; }
+:root[data-theme="dark"] .wallet-topup-message.success { background: #20362a; color: #9ed1ad; }
+:root[data-theme="dark"] .wallet-topup-retry { color: #e7c5ca; }
+@media (max-width: 780px) { .wallet-topup-controls { grid-template-columns: minmax(0, 1fr) auto; } .wallet-topup-presets { grid-column: 1 / -1; grid-row: 2; } }
+@media (max-width: 520px) { .wallet-topup-controls { grid-template-columns: 1fr; } .wallet-topup-presets { grid-column: auto; grid-row: auto; } .wallet-topup-submit { width: 100%; } }
 @media(max-width:600px){.reservation-row-actions{gap:8px}.reservation-row-actions>a,.reservation-row-actions>button{font-size:11px}}
