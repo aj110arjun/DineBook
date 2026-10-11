@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--font-sans, 'DM Sans', sans-serif);
     color: #241719;
     background: #fbf8f3;
     font-synthesis: none;
@@ -26,8 +26,21 @@
 
   button:focus-visible,
   a:focus-visible,
-  input:focus-visible {
-    outline: 2px solid #c6a66b;
+  [role="button"]:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--color-accent, #c6a66b);
     outline-offset: 3px;
+  }
+
+  input[type="checkbox"],
+  input[type="radio"] {
+    accent-color: var(--color-primary, #551321);
+  }
+
+  ::selection {
+    color: #fff;
+    background: var(--color-primary, #551321);
   }
 }

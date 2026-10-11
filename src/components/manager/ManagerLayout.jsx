@@ -29,7 +29,7 @@ const navigation = [
   { label: "Reservations", icon: CalendarDays, to: "/manager/reservations" },
   { label: "Tables", icon: Table2, to: "/manager/tables" },
   { label: "Menu", icon: Utensils, to: "/manager/menu" },
-  { label: "Orders", icon: ShoppingBasket },
+  { label: "Orders", icon: ShoppingBasket, to: "/manager/orders" },
   { label: "Staff", icon: Users, to: "/manager/staff" },
   { label: "Offers", icon: Tag },
   { label: "Reviews", icon: MessageCircle },

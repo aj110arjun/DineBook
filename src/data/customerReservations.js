@@ -18,5 +18,9 @@ export function saveReservation(email, reservation) {
 export function mergeReservations(apiItems, email) {
   const merged = new Map(getSavedReservations(email).map((item) => [item.id, item]));
   (Array.isArray(apiItems) ? apiItems : []).forEach((item) => merged.set(item.id, { ...merged.get(item.id), ...item }));
-  return [...merged.values()].sort((a, b) => `${b.reservation_date}T${b.start_time}`.localeCompare(`${a.reservation_date}T${a.start_time}`));
+  return [...merged.values()].sort((a, b) => {
+    const createdA = Date.parse(a.created_at || `${a.reservation_date}T${a.start_time}`) || 0;
+    const createdB = Date.parse(b.created_at || `${b.reservation_date}T${b.start_time}`) || 0;
+    return createdB - createdA;
+  });
 }

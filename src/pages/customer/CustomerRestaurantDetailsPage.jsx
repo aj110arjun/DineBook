@@ -11,6 +11,7 @@ import {
   MapPin,
   Phone,
   Star,
+  Utensils,
   Users,
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -18,6 +19,8 @@ import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
 import CustomTimePicker from "../../components/CustomTimePicker.jsx";
 import CustomDatePicker from "../../components/CustomDatePicker.jsx";
 import CustomGuestPicker from "../../components/CustomGuestPicker.jsx";
+import Pagination from "../../components/Pagination.jsx";
+import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
 import LandingFooter from "../../components/landing/LandingFooter.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
@@ -56,6 +59,8 @@ export default function CustomerRestaurantDetailsPage() {
   const [reservationSort, setReservationSort] = useState("NEWEST");
   const [reservationPage, setReservationPage] = useState(1);
   const [selectedReservation, setSelectedReservation] = useState(null);
+  const [pendingReservationCancellation, setPendingReservationCancellation] = useState(null);
+  const [cancellingReservation, setCancellingReservation] = useState(false);
   const [bookingStep, setBookingStep] = useState(1);
   const [availableTables, setAvailableTables] = useState([]);
   const [selectedTableId, setSelectedTableId] = useState("");
@@ -65,25 +70,49 @@ export default function CustomerRestaurantDetailsPage() {
   const [menuLoading, setMenuLoading] = useState(false);
   const [menuError, setMenuError] = useState("");
   const [selectedMenuCategoryId, setSelectedMenuCategoryId] = useState("");
+  const [menuQuery, setMenuQuery] = useState("");
+  const [menuSort, setMenuSort] = useState("name");
+  const [menuPage, setMenuPage] = useState(1);
+  const [orderCart, setOrderCart] = useState([]);
+  const [selectedOrderReservationId, setSelectedOrderReservationId] = useState("");
+  const [offerCode, setOfferCode] = useState("");
+  const [orderPaymentMethod, setOrderPaymentMethod] = useState("PAY_AT_DESK");
+  const [orderBusy, setOrderBusy] = useState(false);
+  const [orderMessage, setOrderMessage] = useState("");
+  const [checkoutKey, setCheckoutKey] = useState(() => window.crypto.randomUUID());
   const activeSection = detailTabs.some((tab) => tab.id === section)
     ? section
     : "about";
   const restaurantReservations = myReservations.filter((item) => String(item.restaurant_id) === String(restaurantId));
+  const seatedReservations = restaurantReservations.filter((item) => item.status === "SEATED");
   const sortedReservations = restaurantReservations
     .filter((item) => reservationStatusFilter === "ALL" || item.status === reservationStatusFilter)
     .filter((item) => !reservationDateFilter || item.reservation_date === reservationDateFilter)
     .sort((a, b) => {
-      const aDate = `${a.reservation_date}T${a.start_time}`;
-      const bDate = `${b.reservation_date}T${b.start_time}`;
-      if (reservationSort === "OLDEST") return aDate.localeCompare(bDate);
+      const aDate = Date.parse(a.created_at || `${a.reservation_date}T${a.start_time}`) || 0;
+      const bDate = Date.parse(b.created_at || `${b.reservation_date}T${b.start_time}`) || 0;
+      if (reservationSort === "OLDEST") return aDate - bDate;
       if (reservationSort === "FEE_LOW") return Number(a.fee_amount) - Number(b.fee_amount);
       if (reservationSort === "FEE_HIGH") return Number(b.fee_amount) - Number(a.fee_amount);
-      return bDate.localeCompare(aDate);
+      return bDate - aDate;
     });
   const reservationsPerPage = 4;
   const reservationPageCount = Math.max(1, Math.ceil(sortedReservations.length / reservationsPerPage));
   const currentReservationPage = Math.min(reservationPage, reservationPageCount);
   const pagedReservations = sortedReservations.slice((currentReservationPage - 1) * reservationsPerPage, currentReservationPage * reservationsPerPage);
+  const activeMenuCategory = menuCategories.find((category) => category.id === (selectedMenuCategoryId || menuCategories[0]?.id));
+  const menuNeedle = menuQuery.trim().toLowerCase();
+  const filteredMenuFoods = (activeMenuCategory?.foods || []).filter((food) => food.is_available && (!menuNeedle || `${food.name} ${food.description || ""} ${activeMenuCategory?.name || ""}`.toLowerCase().includes(menuNeedle))).sort((left, right) => {
+    if (menuSort === "price-low" || menuSort === "price-high") {
+      const lowest = (food) => Math.min(...(food.variants || []).filter((variant) => variant.is_available).map((variant) => Number(variant.price)), Number.POSITIVE_INFINITY);
+      const delta = lowest(left) - lowest(right);
+      return menuSort === "price-low" ? delta : -delta;
+    }
+    return menuSort === "name-desc" ? right.name.localeCompare(left.name) : left.name.localeCompare(right.name);
+  });
+  const menuPageSize = 8;
+  const visibleMenuFoods = filteredMenuFoods.slice((menuPage - 1) * menuPageSize, menuPage * menuPageSize);
+  useEffect(() => { setMenuPage(1); }, [menuQuery, menuSort, selectedMenuCategoryId]);
 
   useEffect(() => {
     setReservationPage(1);
@@ -150,9 +179,15 @@ export default function CustomerRestaurantDetailsPage() {
   useEffect(() => {
     if (!user) return;
     requestJson("/api/customer/reservations")
-      .then((items) => setMyReservations(mergeReservations(items, user.email)))
+      .then((items) => {
+        const merged = mergeReservations(items, user.email);
+        setMyReservations(merged);
+        setSelectedOrderReservationId((current) => merged.some((item) => item.id === current && item.status === "SEATED" && String(item.restaurant_id) === String(restaurantId))
+          ? current
+          : merged.find((item) => item.status === "SEATED" && String(item.restaurant_id) === String(restaurantId))?.id || "");
+      })
       .catch(() => setMyReservations(mergeReservations([], user.email)));
-  }, [user]);
+  }, [user, restaurantId]);
 
   const gallery = restaurant?.images?.length
     ? restaurant.images
@@ -169,6 +204,41 @@ export default function CustomerRestaurantDetailsPage() {
   }
 
   function reservationStartTime() { return time; }
+  function addToOrderCart(variant) {
+    setOrderCart((current) => {
+      const existing = current.find((line) => line.variant_id === variant.id);
+      return existing
+        ? current.map((line) => line.variant_id === variant.id ? { ...line, quantity: Math.min(99, line.quantity + 1) } : line)
+        : [...current, { variant_id: variant.id, quantity: 1, name: `${variant.food_name} · ${variant.name}`, price: Number(variant.price) }];
+    });
+    setOrderMessage("");
+  }
+  async function submitFoodOrder(event) {
+    event.preventDefault();
+    if (!orderCart.length || orderBusy) return;
+    if (!selectedOrderReservationId) {
+      setOrderMessage("Choose a seated reservation at this restaurant before placing an order.");
+      return;
+    }
+    setOrderBusy(true);
+    setOrderMessage("");
+    try {
+      const order = await requestJson(`/api/customer/reservations/${selectedOrderReservationId}/orders`, { method: "POST", body: JSON.stringify({
+        idempotency_key: checkoutKey,
+        items: orderCart.map(({ variant_id, quantity }) => ({ variant_id, quantity })),
+        offer_code: offerCode.trim() || null,
+        payment_method: orderPaymentMethod,
+      }) });
+      setOrderCart([]);
+      setOfferCode("");
+      setCheckoutKey(window.crypto.randomUUID());
+      setOrderMessage(`Order ${order.id.slice(0, 8).toUpperCase()} placed. Total ₹${order.total.toFixed(2)}.`);
+    } catch (reason) {
+      setOrderMessage(reason.message);
+    } finally {
+      setOrderBusy(false);
+    }
+  }
   function displayTime(value) {
     const [hour, minute] = value.split(":").map(Number);
     return `${hour % 12 || 12}:${String(minute).padStart(2, "0")} ${hour >= 12 ? "PM" : "AM"}`;
@@ -207,13 +277,19 @@ export default function CustomerRestaurantDetailsPage() {
   }
 
   async function cancelMyReservation(item) {
+    setCancellingReservation(true);
     try {
       await requestJson(`/api/customer/reservations/${item.id}/cancel`, { method: "POST" });
       const updated = { ...item, status: "CANCELLED" };
       saveReservation(user?.email, updated);
       setMyReservations((current) => current.map((reservation) => reservation.id === item.id ? updated : reservation));
+      setSelectedReservation(updated);
+      return true;
     } catch (reason) {
       setBookingMessage(reason.message);
+      return false;
+    } finally {
+      setCancellingReservation(false);
     }
   }
 
@@ -382,6 +458,7 @@ export default function CustomerRestaurantDetailsPage() {
                       </div>
                     ) : (
                       <>
+                        <div className="customer-menu-discovery"><label>Search dishes<input type="search" value={menuQuery} onChange={(event) => setMenuQuery(event.target.value)} placeholder="Dish name or description" /></label><label>Sort dishes<select value={menuSort} onChange={(event) => setMenuSort(event.target.value)}><option value="name">Name A–Z</option><option value="name-desc">Name Z–A</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select></label><span>{filteredMenuFoods.length} available dishes</span></div>
                         <nav
                           className="customer-menu-categories"
                           aria-label="Menu categories"
@@ -401,7 +478,7 @@ export default function CustomerRestaurantDetailsPage() {
                               }
                             >
                               {category.name}
-                              <span>{category.foods.length}</span>
+                                  <span>{category.foods.filter((food) => food.is_available && (!menuNeedle || `${food.name} ${food.description || ""} ${category.name}`.toLowerCase().includes(menuNeedle))).length}</span>
                             </button>
                           ))}
                         </nav>
@@ -422,25 +499,25 @@ export default function CustomerRestaurantDetailsPage() {
                                   <p>{category.description}</p>
                                 )}
                               </div>
-                              {category.foods.length === 0 ? (
+                              {visibleMenuFoods.length === 0 ? (
                                 <p className="customer-menu-message">
-                                  No dishes are listed in this category yet.
+                                  {category.foods.length ? "No available dishes match your search." : "No dishes are listed in this category yet."}
                                 </p>
                               ) : (
                                 <div className="customer-menu-grid">
-                                  {category.foods.map((food) => (
+                                  {visibleMenuFoods.map((food) => (
                                     <article
                                       className={`customer-menu-card ${food.is_available ? "" : "unavailable"}`}
                                       key={food.id}
                                     >
-                                      {food.images?.[0] && (
+                                      {food.image_url ? (
                                         <img
                                           className="customer-menu-image"
-                                          src={food.images[0].url}
+                                          src={food.image_url}
                                           alt={food.name}
                                           loading="lazy"
                                         />
-                                      )}
+                                      ) : <div className="customer-menu-image-placeholder" aria-label={`${food.name} image unavailable`}><Utensils size={26} /></div>}
                                       <div className="customer-menu-card-content">
                                         <div className="customer-menu-card-title">
                                           <h4>{food.name}</h4>
@@ -453,7 +530,7 @@ export default function CustomerRestaurantDetailsPage() {
                                         {food.variants?.length > 0 && (
                                           <ul className="customer-menu-variants">
                                             {food.variants.filter((variant) => variant.is_available).map((variant) => (
-                                              <li key={variant.id}><span>{variant.name}</span><strong>₹{Number(variant.price).toFixed(2)}</strong></li>
+                                              <li key={variant.id}><span>{variant.name}</span><strong>₹{Number(variant.price).toFixed(2)}</strong><button type="button" onClick={() => addToOrderCart({ ...variant, food_name: food.name, food_image_url: food.image_url })}>Add</button></li>
                                             ))}
                                           </ul>
                                         )}
@@ -462,8 +539,22 @@ export default function CustomerRestaurantDetailsPage() {
                                   ))}
                                 </div>
                               )}
+                              {filteredMenuFoods.length > menuPageSize && <Pagination page={menuPage} pageSize={menuPageSize} total={filteredMenuFoods.length} onPageChange={setMenuPage} label="menu items" className="customer-menu-pagination" />}
                             </div>
                           ))}
+                        <form className="customer-order-cart" onSubmit={submitFoodOrder}>
+                          <div className="customer-order-cart-heading"><h3>Your order</h3><Link to="/customer/profile/orders">Order history</Link></div>
+                          <label>Dining reservation<select value={selectedOrderReservationId} onChange={(event) => setSelectedOrderReservationId(event.target.value)}><option value="">Choose a seated reservation</option>{seatedReservations.map((reservation) => <option value={reservation.id} key={reservation.id}>{reservation.reservation_date} · {reservation.tables?.map((table) => `${table.floor_name} · ${table.table_number}`).join(", ") || "Table pending"}</option>)}</select></label>
+                          {!seatedReservations.length && <p>Orders become available after the manager marks your reservation as seated.</p>}
+                          {!orderCart.length ? <p>Your cart is empty. Add a menu option to get started.</p> : <>
+                          <ul>{orderCart.map((line) => <li key={line.variant_id}>{line.food_image_url && <img className="order-food-thumb" src={line.food_image_url} alt="" loading="lazy" />}<span>{line.name}</span><div><button type="button" aria-label={`Remove one ${line.name}`} onClick={() => setOrderCart((items) => items.flatMap((item) => item.variant_id !== line.variant_id ? [item] : item.quantity > 1 ? [{ ...item, quantity: item.quantity - 1 }] : []))}>−</button><b>{line.quantity}</b><button type="button" aria-label={`Add one ${line.name}`} onClick={() => setOrderCart((items) => items.map((item) => item.variant_id === line.variant_id ? { ...item, quantity: Math.min(99, item.quantity + 1) } : item))}>+</button><strong>₹{(line.price * line.quantity).toFixed(2)}</strong></div></li>)}</ul>
+                            <label>Offer code<input value={offerCode} onChange={(event) => setOfferCode(event.target.value)} placeholder="Enter a restaurant offer" /></label>
+                            <label>Payment<select value={orderPaymentMethod} onChange={(event) => setOrderPaymentMethod(event.target.value)}><option value="PAY_AT_DESK">Pay at restaurant</option><option value="WALLET">DineBook wallet</option></select></label>
+                            <p className="customer-order-cart-total">Subtotal: ₹{orderCart.reduce((total, line) => total + line.price * line.quantity, 0).toFixed(2)} <small>Discount is calculated at checkout.</small></p>
+                            <button className="customer-order-submit" type="submit" disabled={orderBusy}>{orderBusy ? "Placing order…" : "Place order"}</button>
+                          </>}
+                          {orderMessage && <p role="status">{orderMessage}</p>}
+                        </form>
                       </>
                     )}
                   </section>
@@ -495,7 +586,7 @@ export default function CustomerRestaurantDetailsPage() {
                         </select></label>
                         <label>Date<input type="date" value={reservationDateFilter} onChange={(event) => setReservationDateFilter(event.target.value)} /></label>
                         <label>Sort by<select value={reservationSort} onChange={(event) => setReservationSort(event.target.value)}>
-                          <option value="NEWEST">Newest first</option><option value="OLDEST">Oldest first</option><option value="FEE_LOW">Fee: low to high</option><option value="FEE_HIGH">Fee: high to low</option>
+                          <option value="NEWEST">Created: newest first</option><option value="OLDEST">Created: oldest first</option><option value="FEE_LOW">Fee: low to high</option><option value="FEE_HIGH">Fee: high to low</option>
                         </select></label>
                       </div>
                       {restaurantReservations.length === 0 ? <p className="reservation-history-empty">You haven’t made any reservations at this restaurant yet.</p> : sortedReservations.length === 0 ? <p className="reservation-history-empty">No reservations match these filters. Adjust the status or date to see more.</p> : <>
@@ -508,9 +599,9 @@ export default function CustomerRestaurantDetailsPage() {
                               <div className="reservation-card-details"><span><Clock3 size={15} />{item.start_time}</span><span><Users size={15} />{item.number_of_guests} guests</span><span><CalendarDays size={15} />{tableNames ? `Table ${tableNames}` : "Table assignment pending"}</span></div>
                               <div className="reservation-card-bottom"><div><small>Table reservation fee</small><strong>₹{Number(item.fee_amount ?? 0).toFixed(2)}</strong></div><span className="reservation-card-view">View details</span></div>
                             </article>;
-                          })}
-                        </div>
-                        <div className="reservation-pagination"><span>Showing {(currentReservationPage - 1) * reservationsPerPage + 1}–{Math.min(currentReservationPage * reservationsPerPage, sortedReservations.length)} of {sortedReservations.length}</span><div><button type="button" aria-label="Previous page" disabled={currentReservationPage <= 1} onClick={() => setReservationPage((page) => Math.max(1, page - 1))}><ChevronLeft size={16} /></button><strong>{currentReservationPage} / {reservationPageCount}</strong><button type="button" aria-label="Next page" disabled={currentReservationPage >= reservationPageCount} onClick={() => setReservationPage((page) => Math.min(reservationPageCount, page + 1))}><ChevronRight size={16} /></button></div></div>
+                        })}
+                      </div>
+                        <Pagination page={currentReservationPage} pageSize={reservationsPerPage} total={sortedReservations.length} onPageChange={setReservationPage} label="reservations" />
                       </>}
                     </section>
                     {selectedReservation && <div className="reservation-detail-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedReservation(null); }}>
@@ -529,7 +620,7 @@ export default function CustomerRestaurantDetailsPage() {
                         </div>
                         {selectedReservation.special_request && <div className="reservation-detail-request"><small>Special request</small><p>{selectedReservation.special_request}</p></div>}
                         <p className="reservation-detail-note">Food and drinks are billed separately at the restaurant.</p>
-                        <div className="reservation-detail-actions"><button type="button" className="reservation-detail-done" onClick={() => setSelectedReservation(null)}>Close</button>{["PENDING_PAYMENT", "CONFIRMED"].includes(selectedReservation.status) && <button type="button" className="reservation-detail-cancel" onClick={async () => { await cancelMyReservation(selectedReservation); setSelectedReservation((current) => current ? { ...current, status: "CANCELLED" } : current); }}>Cancel reservation</button>}</div>
+                        <div className="reservation-detail-actions"><button type="button" className="reservation-detail-done" onClick={() => setSelectedReservation(null)}>Close</button>{["PENDING_PAYMENT", "CONFIRMED"].includes(selectedReservation.status) && <button type="button" className="reservation-detail-cancel" onClick={() => setPendingReservationCancellation(selectedReservation)}>Cancel reservation</button>}</div>
                       </section>
                     </div>}
                   </section>
@@ -582,6 +673,7 @@ export default function CustomerRestaurantDetailsPage() {
         </Link>
       </main>
       <LandingFooter />
+      {pendingReservationCancellation && <ConfirmActionDialog action="cancel" resourceType="reservation" resourceName={restaurant?.name} title="Cancel this reservation?" description="If you cancel more than 24 hours after booking, the reservation fee is not refundable. Any paid preorder amount and other eligible refunds are credited to your DineBook wallet." busy={cancellingReservation} onCancel={() => { if (!cancellingReservation) setPendingReservationCancellation(null); }} onConfirm={async () => { const cancelled = await cancelMyReservation(pendingReservationCancellation); if (cancelled) setPendingReservationCancellation(null); }} />}
     </div>
   );
 }

@@ -95,6 +95,7 @@ export default function CustomerHeader({ user, onLogout }) {
             <Link to="/customer#how-it-works" onClick={closeMenu}>
               Wallet
             </Link>
+            {user && <Link className={location.pathname === "/customer/profile/orders" ? "active" : ""} to="/customer/profile/orders" onClick={closeMenu}>Orders</Link>}
           </div>
 
           {/* Account */}

@@ -6,6 +6,7 @@ import ManagerAuthLayout from "../../components/auth/ManagerAuthLayout.jsx";
 import { FormField, PasswordField } from "../../components/auth/FormField.jsx";
 import Notice from "../../components/auth/Notice.jsx";
 import { requestJson } from "../../lib/authApi.js";
+import DevQuickLogin from "../../components/auth/DevQuickLogin.jsx";
 
 export default function ManagerLoginPage() {
   const navigate = useNavigate();
@@ -98,6 +99,7 @@ export default function ManagerLoginPage() {
           {!busy && <ArrowRight size={16} />}
         </button>
       </form>
+      <DevQuickLogin portal="manager" onSuccess={() => navigate("/manager/dashboard", { replace: true })} />
 
       <p className="mt-6 text-center text-sm text-stone-500">
         Don't have a manager account?{" "}

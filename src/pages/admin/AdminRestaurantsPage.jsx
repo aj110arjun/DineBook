@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Eye, RefreshCw, Search } from "lucide-react";
+import { Eye, RefreshCw, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
+import Pagination from "../../components/Pagination.jsx";
 import { requestJson } from "../../lib/authApi.js";
 
 export default function AdminRestaurantsPage() {
@@ -10,6 +11,8 @@ export default function AdminRestaurantsPage() {
   const [query, setQuery] = useState("");
   const [cuisineFilter, setCuisineFilter] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [sort, setSort] = useState("newest");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(true);
@@ -40,16 +43,19 @@ export default function AdminRestaurantsPage() {
       (!normalized || [restaurant.name, restaurant.cuisine_type, restaurant.location, restaurant.manager?.name, restaurant.manager?.email]
         .filter(Boolean).join(" ").toLowerCase().includes(normalized))
       && (!cuisineFilter || restaurant.cuisine_type === cuisineFilter)
-      && (!locationFilter || restaurant.location === locationFilter),
-    );
-  }, [restaurants, query, cuisineFilter, locationFilter]);
+      && (!locationFilter || restaurant.location === locationFilter)
+      && (!statusFilter || restaurant.status?.toUpperCase() === statusFilter),
+    ).sort((left, right) => {
+      if (sort === "name") return left.name.localeCompare(right.name);
+      if (sort === "oldest") return (Date.parse(left.created_at || 0) || 0) - (Date.parse(right.created_at || 0) || 0);
+      return (Date.parse(right.created_at || 0) || 0) - (Date.parse(left.created_at || 0) || 0);
+    });
+  }, [restaurants, query, cuisineFilter, locationFilter, statusFilter, sort]);
 
   const pageCount = Math.max(1, Math.ceil(filteredRestaurants.length / pageSize));
   const visibleRestaurants = filteredRestaurants.slice((page - 1) * pageSize, page * pageSize);
-  const firstResult = filteredRestaurants.length ? (page - 1) * pageSize + 1 : 0;
-  const lastResult = Math.min(page * pageSize, filteredRestaurants.length);
 
-  useEffect(() => { setPage(1); }, [query, cuisineFilter, locationFilter, pageSize]);
+  useEffect(() => { setPage(1); }, [query, cuisineFilter, locationFilter, statusFilter, sort, pageSize]);
   useEffect(() => { if (page > pageCount) setPage(pageCount); }, [page, pageCount]);
 
   return (
@@ -73,6 +79,9 @@ export default function AdminRestaurantsPage() {
               <option value="">All locations</option>
               {locations.map((location) => <option key={location} value={location}>{location}</option>)}
             </select>
+            <select className="admin-filter-select" aria-label="Filter by restaurant status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option value="">All statuses</option>{[...new Set(restaurants.map((restaurant) => restaurant.status?.toUpperCase()).filter(Boolean))].sort().map((status) => <option key={status} value={status}>{status}</option>)}</select>
+            <select className="admin-filter-select" aria-label="Sort restaurants" value={sort} onChange={(event) => setSort(event.target.value)}><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="name">Name A–Z</option></select>
+            <button type="button" className="admin-refresh-button" onClick={() => { setQuery(""); setCuisineFilter(""); setLocationFilter(""); setStatusFilter(""); setSort("newest"); setPage(1); }}>Clear filters</button>
             <button type="button" className="admin-refresh-button" onClick={() => setRefresh((value) => value + 1)} disabled={loading}>
               <RefreshCw size={15} /> Refresh
             </button>
@@ -101,18 +110,7 @@ export default function AdminRestaurantsPage() {
             </tbody>
           </table>
         </div>
-        {!loading && restaurants.length > 0 && <div className="admin-pagination">
-          <span className="admin-pagination-summary">Showing <strong>{firstResult}–{lastResult}</strong> of <strong>{filteredRestaurants.length}</strong> restaurants</span>
-          <div className="admin-pagination-controls">
-            <label htmlFor="restaurant-page-size">Rows</label>
-            <select id="restaurant-page-size" className="admin-page-size" value={pageSize} onChange={(event) => setPageSize(Number(event.target.value))}>
-              {[10, 20, 50].map((size) => <option key={size} value={size}>{size}</option>)}
-            </select>
-            <button type="button" aria-label="Previous page" disabled={page <= 1} onClick={() => setPage((current) => current - 1)}><ChevronLeft size={16} /> Previous</button>
-            <span className="admin-pagination-page">Page {page} of {pageCount}</span>
-            <button type="button" aria-label="Next page" disabled={page >= pageCount} onClick={() => setPage((current) => current + 1)}>Next <ChevronRight size={16} /></button>
-          </div>
-        </div>}
+        {!loading && restaurants.length > 0 && <Pagination page={page} pageSize={pageSize} total={filteredRestaurants.length} onPageChange={setPage} onPageSizeChange={setPageSize} label="restaurants" />}
       </div>
     </AdminLayout>
   );

@@ -3,6 +3,7 @@ import { MapPin, Search, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
 import LandingFooter from "../../components/landing/LandingFooter.jsx";
+import Pagination from "../../components/Pagination.jsx";
 import RestaurantCard from "../../components/landing/RestaurantCard.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
@@ -55,15 +56,11 @@ export default function CustomerRestaurantListingPage() {
       const matchesLocation = locations.length === 0 || locations.includes(restaurant.location);
       return matchesSearch && matchesCuisine && matchesLocation;
     });
-    return results.sort((left, right) => sort === "name" ? left.name.localeCompare(right.name) : new Date(right.created_at || 0) - new Date(left.created_at || 0));
+    return results.sort((left, right) => sort === "name" ? left.name.localeCompare(right.name) : sort === "name-desc" ? right.name.localeCompare(left.name) : new Date(right.created_at || 0) - new Date(left.created_at || 0));
   }, [restaurants, query, cuisines, locations, sort]);
 
   const pageCount = Math.max(1, Math.ceil(filteredRestaurants.length / PAGE_SIZE));
   const visibleRestaurants = filteredRestaurants.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const firstResult = filteredRestaurants.length ? (page - 1) * PAGE_SIZE + 1 : 0;
-  const lastResult = Math.min(page * PAGE_SIZE, filteredRestaurants.length);
-  const pageWindowStart = Math.max(1, Math.min(page - 2, pageCount - 4));
-  const pageNumbers = Array.from({ length: Math.min(pageCount, 5) }, (_, index) => pageWindowStart + index);
 
   useEffect(() => {
     if (page > pageCount) setPage(pageCount);
@@ -112,16 +109,9 @@ export default function CustomerRestaurantListingPage() {
           </aside>
 
           <section className="restaurant-listing-results" aria-live="polite">
-            <div className="restaurant-listing-toolbar"><h2>{loading ? "Loading restaurants…" : `Showing ${filteredRestaurants.length} restaurant${filteredRestaurants.length === 1 ? "" : "s"}`}</h2><label>Sort by:<select value={sort} onChange={(event) => setSort(event.target.value)}><option value="newest">Recently added</option><option value="name">Name A–Z</option></select></label></div>
+            <div className="restaurant-listing-toolbar"><h2>{loading ? "Loading restaurants…" : `Showing ${filteredRestaurants.length} restaurant${filteredRestaurants.length === 1 ? "" : "s"}`}</h2><label>Sort by:<select value={sort} onChange={(event) => { setSort(event.target.value); setPage(1); }}><option value="newest">Recently added</option><option value="name">Name A–Z</option><option value="name-desc">Name Z–A</option></select></label></div>
             {error ? <div className="empty-state" role="alert">{error}</div> : loading ? <div className="empty-state" role="status">Loading approved restaurants…</div> : visibleRestaurants.length ? <div className="restaurant-grid">{visibleRestaurants.map((restaurant) => <RestaurantCard key={restaurant.id} restaurant={restaurant} onReserve={notifyReservation} />)}</div> : <div className="empty-state">{restaurants.length ? "No restaurants match these filters." : "No approved restaurants are available yet."}</div>}
-            {!loading && !error && filteredRestaurants.length > 0 && <nav className="restaurant-pagination" aria-label="Restaurant pages">
-              <span className="restaurant-pagination-summary">Showing <strong>{firstResult}–{lastResult}</strong> of <strong>{filteredRestaurants.length}</strong></span>
-              <div className="restaurant-pagination-pages">
-                <button type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page === 1}>Previous</button>
-                {pageNumbers.map((number) => <button type="button" key={number} className={page === number ? "selected" : ""} aria-current={page === number ? "page" : undefined} onClick={() => setPage(number)}>{number}</button>)}
-                <button type="button" onClick={() => setPage((current) => Math.min(pageCount, current + 1))} disabled={page === pageCount}>Next</button>
-              </div>
-            </nav>}
+            {!loading && !error && filteredRestaurants.length > 0 && <Pagination page={page} pageSize={PAGE_SIZE} total={filteredRestaurants.length} onPageChange={setPage} label="restaurants" className="restaurant-pagination" showPageNumbers />}
           </section>
         </div>
       </main>
