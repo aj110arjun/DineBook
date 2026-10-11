@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   LogOut,
   MapPin,
+  Search,
   Settings,
   ShieldCheck,
   SlidersHorizontal,
@@ -23,6 +24,7 @@ import {
 
 import { requestJson } from "../../lib/authApi.js";
 import AdminActionConfirmModal from "../../components/admin/AdminActionConfirmModal.jsx";
+import Pagination from "../../components/Pagination.jsx";
 
 const navigation = [
   {
@@ -59,6 +61,10 @@ export default function AdminRequestsPage() {
   const [confirmation, setConfirmation] = useState(null);
   const [activeStatus, setActiveStatus] = useState("ALL");
   const [error, setError] = useState("");
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState("newest");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   async function loadManagerRequests() {
     setLoading(true);
@@ -141,9 +147,18 @@ export default function AdminRequestsPage() {
     APPROVED: managerRequests.filter((manager) => (manager.restaurant?.status || manager.status) === "APPROVED").length,
     REJECTED: managerRequests.filter((manager) => (manager.restaurant?.status || manager.status) === "REJECTED").length,
   };
-  const visibleRequests = activeStatus === "ALL"
-    ? managerRequests
-    : managerRequests.filter((manager) => (manager.restaurant?.status || manager.status) === activeStatus);
+  const filteredRequests = managerRequests.filter((manager) => {
+    const status = manager.restaurant?.status || manager.status;
+    const haystack = `${manager.id} ${manager.name || ""} ${manager.email || ""} ${manager.restaurant?.name || ""} ${manager.restaurant?.city || ""} ${manager.restaurant?.cuisine_type || ""}`.toLowerCase();
+    return (activeStatus === "ALL" || status === activeStatus) && (!query.trim() || haystack.includes(query.trim().toLowerCase()));
+  }).sort((left, right) => {
+    const createdDelta = (Date.parse(left.created_at || 0) || 0) - (Date.parse(right.created_at || 0) || 0);
+    return sort === "oldest" ? createdDelta : -createdDelta;
+  });
+  const visibleRequests = filteredRequests.slice((page - 1) * pageSize, page * pageSize);
+  const pageCount = Math.max(1, Math.ceil(filteredRequests.length / pageSize));
+  useEffect(() => { setPage(1); }, [activeStatus, query, sort, pageSize]);
+  useEffect(() => { if (page > pageCount) setPage(pageCount); }, [page, pageCount]);
 
   return (
     <main className="admin-dashboard">
@@ -203,6 +218,8 @@ export default function AdminRequestsPage() {
                 type="search"
                 placeholder="Search platform..."
                 aria-label="Search platform"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
               />
             </div>
 
@@ -252,6 +269,12 @@ export default function AdminRequestsPage() {
             ))}
           </div>
 
+          <div className="admin-page-actions">
+            <div className="admin-search"><Search size={15} /><input type="search" placeholder="Search manager, restaurant, or location" aria-label="Search manager requests" value={query} onChange={(event) => setQuery(event.target.value)} /></div>
+            <label className="admin-filter-select">Sort <select value={sort} onChange={(event) => setSort(event.target.value)}><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select></label>
+            <button type="button" className="admin-refresh-button" onClick={() => { setQuery(""); setActiveStatus("ALL"); setSort("newest"); }}>Clear filters</button>
+          </div>
+
           {error && <div className="admin-request-error">{error}</div>}
 
           {loading ? (
@@ -261,8 +284,8 @@ export default function AdminRequestsPage() {
           ) : visibleRequests.length === 0 ? (
             <div className="admin-request-empty">
               <UserCheck size={28} />
-              <strong>{activeStatus === "ALL" ? "No manager applications" : `No ${activeStatus.toLowerCase()} applications`}</strong>
-              <span>{activeStatus === "ALL" ? "New restaurant applications will appear here." : "Choose another status to see other applications."}</span>
+              <strong>{managerRequests.length === 0 ? "No manager applications" : "No requests match these filters"}</strong>
+              <span>{managerRequests.length === 0 ? "New restaurant applications will appear here." : "Try another status or search term."}</span>
             </div>
           ) : (
             <div className="admin-request-list">
@@ -326,6 +349,7 @@ export default function AdminRequestsPage() {
               ))}
             </div>
           )}
+          {!loading && filteredRequests.length > 0 && <Pagination page={page} pageSize={pageSize} total={filteredRequests.length} onPageChange={setPage} onPageSizeChange={setPageSize} label="requests" />}
         </div>
       </section>
       <AdminActionConfirmModal

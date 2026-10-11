@@ -7,6 +7,7 @@ import Notice from "../../components/auth/Notice.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import { demoSessionKey } from "../../data/demoCustomer.js";
 import GoogleSignInButton from "../../components/auth/GoogleSignInButton.jsx";
+import DevQuickLogin from "../../components/auth/DevQuickLogin.jsx";
 
 export default function CustomerLoginPage() {
   const navigate = useNavigate();
@@ -109,6 +110,7 @@ export default function CustomerLoginPage() {
           onError={setError}
         />
       </form>
+      <DevQuickLogin portal="customer" onSuccess={() => navigate("/customer", { replace: true })} />
       <p className="mt-7 border-t border-stone-100 pt-5 text-center text-sm text-stone-500">
         New to DineBook?{" "}
         <Link

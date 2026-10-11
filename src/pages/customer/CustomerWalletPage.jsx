@@ -7,7 +7,9 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
+import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
 import { ProfileFrame } from "./CustomerReservationsPage.jsx";
+import Pagination from "../../components/Pagination.jsx";
 import "./CustomerProfilePage.css";
 
 function loadRazorpayCheckout() {
@@ -35,6 +37,47 @@ export default function CustomerWalletPage() {
   const [topupBusy, setTopupBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [pendingVerification, setPendingVerification] = useState(null);
+  const [activityQuery, setActivityQuery] = useState("");
+  const [activityType, setActivityType] = useState("ALL");
+  const [activityFrom, setActivityFrom] = useState("");
+  const [activityTo, setActivityTo] = useState("");
+  const [activitySort, setActivitySort] = useState("newest");
+  const [activityPage, setActivityPage] = useState(1);
+  const [activityPageSize, setActivityPageSize] = useState(10);
+  const [activityTransactions, setActivityTransactions] = useState([]);
+  const [activityTotal, setActivityTotal] = useState(0);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [activityError, setActivityError] = useState("");
+  const [activityRefresh, setActivityRefresh] = useState(0);
+
+  async function refreshWallet() {
+    const latest = await requestJson("/api/customer/wallet");
+    setWallet(latest);
+    setActivityRefresh((current) => current + 1);
+  }
+
+  const realtimeStatus = useRealtimeEvents({ enabled: Boolean(user), onEvent: refreshWallet, onReconnect: refreshWallet });
+  useEffect(() => { setActivityPage(1); }, [activityQuery, activityType, activityFrom, activityTo, activitySort, activityPageSize]);
+  useEffect(() => {
+    if (!user) return undefined;
+    let active = true;
+    const timer = window.setTimeout(async () => {
+      setActivityLoading(true);
+      setActivityError("");
+      const params = new URLSearchParams({ page: String(activityPage), page_size: String(activityPageSize), sort: activitySort });
+      if (activityQuery.trim()) params.set("q", activityQuery.trim());
+      if (activityType !== "ALL") params.set("transaction_type", activityType === "DEBIT" ? "DEBIT" : "CREDIT");
+      if (activityFrom) params.set("date_from", activityFrom);
+      if (activityTo) params.set("date_to", activityTo);
+      try {
+        const result = await requestJson(`/api/customer/wallet/activity?${params.toString()}`);
+        if (active) { setActivityTransactions(result.transactions || []); setActivityTotal(Number(result.total || 0)); }
+      } catch (reason) { if (active) setActivityError(reason.message); }
+      finally { if (active) setActivityLoading(false); }
+    }, 250);
+    return () => { active = false; window.clearTimeout(timer); };
+  }, [user, activityPage, activityPageSize, activitySort, activityQuery, activityType, activityFrom, activityTo, wallet?.balance, activityRefresh]);
+  useEffect(() => { setActivityPage((current) => Math.min(current, Math.max(1, Math.ceil(activityTotal / activityPageSize)))); }, [activityTotal, activityPageSize]);
 
   useEffect(() => {
     let active = true;
@@ -194,6 +237,9 @@ export default function CustomerWalletPage() {
           Use your wallet balance to pay for restaurant reservations and
           preorders.
         </p>
+        <p className={`realtime-status realtime-${realtimeStatus}`} aria-live="polite">
+          {realtimeStatus === "connected" ? "Live balance updates connected" : realtimeStatus === "reconnecting" ? "Reconnecting to live updates…" : realtimeStatus === "disconnected" ? "Live updates disconnected · Refresh to sync" : "Connecting to live updates…"}
+        </p>
         <div className="wallet-balance-card">
           <span>AVAILABLE BALANCE</span>
           <strong>₹{Number(wallet?.balance || 0).toFixed(2)}</strong>
@@ -305,13 +351,14 @@ export default function CustomerWalletPage() {
             </p>
           )}
         </form>
-        <div className="wallet-history-heading">
+        <div className="wallet-history-heading" id="activity">
           <div>
             <h2>Wallet activity</h2>
             <p>Your latest credits, payments, and refunds.</p>
           </div>
-          <span>{wallet?.transactions?.length || 0} entries</span>
+          <span>{activityTotal} entries</span>
         </div>
+        {wallet && <div className="wallet-activity-toolbar"><label>Search activity<input type="search" value={activityQuery} onChange={(event) => setActivityQuery(event.target.value)} placeholder="Transaction, order, or reservation reference" /></label><label>Type<select value={activityType} onChange={(event) => setActivityType(event.target.value)}><option value="ALL">All activity</option><option value="CREDIT">Credits and refunds</option><option value="DEBIT">Payments</option></select></label><label>From<input type="date" value={activityFrom} onChange={(event) => setActivityFrom(event.target.value)} /></label><label>To<input type="date" value={activityTo} onChange={(event) => setActivityTo(event.target.value)} /></label><label>Sort<select value={activitySort} onChange={(event) => setActivitySort(event.target.value)}><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="amount-low">Amount: low to high</option><option value="amount-high">Amount: high to low</option></select></label><button type="button" onClick={() => { setActivityQuery(""); setActivityType("ALL"); setActivityFrom(""); setActivityTo(""); setActivitySort("newest"); }}>Clear filters</button></div>}
         {error ? (
           <p className="wallet-empty" role="alert">
             {error}
@@ -320,15 +367,21 @@ export default function CustomerWalletPage() {
           <p className="wallet-empty" role="status">
             Loading wallet…
           </p>
-        ) : wallet.transactions.length === 0 ? (
+        ) : activityError ? (
+          <p className="wallet-empty" role="alert">{activityError}</p>
+        ) : activityLoading && activityTotal === 0 ? (
+          <p className="wallet-empty" role="status">Loading wallet activity…</p>
+        ) : activityTotal === 0 && wallet.transactions.length === 0 && !activityQuery.trim() && activityType === "ALL" && !activityFrom && !activityTo ? (
           <div className="wallet-empty">
             <WalletIcon size={25} />
             <strong>No wallet activity yet</strong>
             <p>Credits and reservation payments will appear here.</p>
           </div>
+        ) : activityTotal === 0 ? (
+          <div className="wallet-empty">No wallet activity matches these filters.</div>
         ) : (
           <div className="wallet-transactions">
-            {wallet.transactions.map((transaction) => {
+            {activityTransactions.map((transaction) => {
               const credit = transaction.amount > 0;
               return (
                 <article className="wallet-transaction" key={transaction.id}>
@@ -363,6 +416,7 @@ export default function CustomerWalletPage() {
             })}
           </div>
         )}
+        {activityTotal > 0 && <Pagination page={activityPage} pageSize={activityPageSize} total={activityTotal} onPageChange={setActivityPage} onPageSizeChange={setActivityPageSize} label="transactions" />}
       </section>
     </ProfileFrame>
   );

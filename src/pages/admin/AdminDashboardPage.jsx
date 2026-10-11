@@ -209,13 +209,6 @@ export default function AdminDashboardPage() {
             />
 
             <AdminStatCard
-              title="Orders"
-              value="9,426"
-              change="+7.8% vs last month"
-              icon={WalletCards}
-            />
-
-            <AdminStatCard
               title="Revenue"
               value="$428.6K"
               change="+14.3% vs last month"

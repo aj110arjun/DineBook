@@ -6,6 +6,7 @@ import ChefAuthLayout from "../../components/auth/ChefAuthLayout.jsx";
 import { FormField, PasswordField } from "../../components/auth/FormField.jsx";
 import Notice from "../../components/auth/Notice.jsx";
 import { requestJson } from "../../lib/authApi.js";
+import DevQuickLogin from "../../components/auth/DevQuickLogin.jsx";
 
 export default function ChefLoginPage() {
   const navigate = useNavigate();
@@ -122,6 +123,7 @@ export default function ChefLoginPage() {
           {!busy && <ArrowRight size={16} />}
         </button>
       </form>
+      <DevQuickLogin portal="chef" onSuccess={() => navigate("/chef/dashboard", { replace: true })} />
     </ChefAuthLayout>
   );
 }

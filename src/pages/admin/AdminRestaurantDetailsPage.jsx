@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
-import { ArrowLeft, Building2, CalendarDays, Clock3, FileText, Mail, MapPin, Phone, Store, User, Users, ShieldAlert } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, Building2, CalendarDays, Clock3, FileText, Mail, MapPin, Phone, Store, User, Users, ShieldAlert, Search } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { useState as useModalState } from "react";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
+import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
 import { requestJson } from "../../lib/authApi.js";
+import Pagination from "../../components/Pagination.jsx";
 
 function Detail({ label, value, icon: Icon }) {
   return (
@@ -12,6 +14,20 @@ function Detail({ label, value, icon: Icon }) {
       <div><span>{label}</span><strong>{value || "Not provided"}</strong></div>
     </div>
   );
+}
+
+function compareLabels(left, right) {
+  return String(left ?? "").localeCompare(String(right ?? ""), undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
+}
+
+function formatTableStatus(status) {
+  return String(status || "Unknown")
+    .replaceAll("_", " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 export default function AdminRestaurantDetailsPage() {
@@ -24,6 +40,28 @@ export default function AdminRestaurantDetailsPage() {
   const [floorData, setFloorData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [tableQuery, setTableQuery] = useState("");
+  const [tableStatus, setTableStatus] = useState("ALL");
+  const [menuQuery, setMenuQuery] = useState("");
+  const [menuCategory, setMenuCategory] = useState("ALL");
+  const [menuAvailability, setMenuAvailability] = useState("ALL");
+  const [menuSort, setMenuSort] = useState("name");
+  const [menuPage, setMenuPage] = useState(1);
+  const menuPageSize = 10;
+
+  const orderedFloors = [...floorData].sort((left, right) =>
+    Number(left.floor_number ?? Number.MAX_SAFE_INTEGER) - Number(right.floor_number ?? Number.MAX_SAFE_INTEGER)
+      || compareLabels(left.name, right.name)
+  );
+  const menuFoods = useMemo(() => (restaurant?.menu || []).flatMap((category) => category.foods.map((food) => ({ ...food, category_id: category.id, category_name: category.name })))
+    .filter((food) => (menuCategory === "ALL" || food.category_id === menuCategory)
+      && (!menuQuery.trim() || `${food.name || ""} ${food.description || ""} ${food.category_name || ""}`.toLowerCase().includes(menuQuery.trim().toLowerCase()))
+      && (menuAvailability === "ALL" || (menuAvailability === "AVAILABLE" ? food.is_available : !food.is_available)))
+    .sort((left, right) => menuSort === "name-desc" ? right.name.localeCompare(left.name) : left.name.localeCompare(right.name)), [restaurant?.menu, menuCategory, menuQuery, menuAvailability, menuSort]);
+  const menuPageCount = Math.max(1, Math.ceil(menuFoods.length / menuPageSize));
+  const visibleMenuFoods = menuFoods.slice((menuPage - 1) * menuPageSize, menuPage * menuPageSize);
+  useEffect(() => { setMenuPage(1); }, [menuCategory, menuQuery, menuAvailability, menuSort]);
+  useEffect(() => { setMenuPage((current) => Math.min(current, menuPageCount)); }, [menuPageCount]);
 
   useEffect(() => {
     let mounted = true;
@@ -66,18 +104,12 @@ export default function AdminRestaurantDetailsPage() {
             </div>
             {actionError && <div className="admin-request-error" role="alert">{actionError}</div>}
 
-            <section className="admin-restaurant-detail-card"><h3><Building2 size={17} /> Floor and table oversight</h3>{floorData.length ? floorData.map(floor => <div key={floor.id}><strong>{floor.name}</strong><p>{floor.tables.length ? floor.tables.map(table => `Table ${table.table_number} · ${table.seats} seats · ${table.status}`).join(" | ") : "No tables assigned"}</p></div>) : <p>No floors or tables configured.</p>}</section>
-
-            <section className="admin-restaurant-detail-card"><h3><Store size={17} /> Menu inspection</h3>{restaurant.menu?.length ? restaurant.menu.map((category) => <div key={category.id} className="admin-menu-inspection-category"><strong>{category.name}{!category.is_active && " · Inactive"}</strong>{category.foods.length ? <div className="admin-menu-inspection-grid">{category.foods.map((food) => <article key={food.id}>{food.images?.[0] && <img src={food.images[0].url} alt={food.name} loading="lazy" />}<h4>{food.name}{!food.is_available && " · Unavailable"}</h4>{food.description && <p>{food.description}</p>}{food.variants?.length ? <ul>{food.variants.map((variant) => <li key={variant.id}>{variant.name} · ₹{Number(variant.price).toFixed(2)}{!variant.is_available && " · Unavailable"}</li>)}</ul> : <small>No variants</small>}</article>)}</div> : <p>No menu items in this category.</p>}</div>) : <p className="admin-restaurant-empty">No menu categories have been added.</p>}</section>
-
             <section className="admin-restaurant-detail-card">
               <h3><Store size={17} /> Restaurant information</h3>
               <div className="admin-restaurant-detail-grid">
                 <Detail label="Cuisine" value={restaurant.cuisine_type} icon={Store} />
                 <Detail label="Restaurant email" value={restaurant.email} icon={Mail} />
                 <Detail label="Phone" value={restaurant.phone} icon={Phone} />
-                <Detail label="Seating capacity" value={restaurant.capacity} icon={Users} />
-                <Detail label="Dining tables" value={restaurant.tables} icon={Building2} />
                 <Detail label="Registered" value={restaurant.created_at ? new Date(restaurant.created_at).toLocaleString() : null} icon={CalendarDays} />
               </div>
               <div className="admin-restaurant-description"><span>Description</span><p>{restaurant.description || "No description provided."}</p></div>
@@ -107,14 +139,18 @@ export default function AdminRestaurantDetailsPage() {
               {restaurant.hours?.length ? <div className="admin-restaurant-hours">{restaurant.hours.map((hour) => <div key={hour.day}><span>{hour.day}</span><strong>{hour.enabled ? `${hour.opens || "—"} – ${hour.closes || "—"}` : "Closed"}</strong></div>)}</div> : <p className="admin-restaurant-empty">No operating hours have been provided.</p>}
             </section>
 
-            <section className="admin-restaurant-detail-card">
+            <section className="admin-restaurant-detail-card admin-restaurant-wide-card">
               <h3><FileText size={17} /> Submitted documents</h3>
               {restaurant.documents?.length ? <div className="admin-restaurant-documents">{restaurant.documents.map((document) => <a key={document.id} href={document.file_path} target="_blank" rel="noreferrer"><FileText size={17} /><span><strong>{document.document_type.replaceAll("_", " ")}</strong><small>{document.file_name}</small></span></a>)}</div> : <p className="admin-restaurant-empty">No documents have been uploaded.</p>}
             </section>
+
+            <section className="admin-restaurant-detail-card admin-restaurant-wide-card"><h3><Building2 size={17} /> Floor and table oversight</h3>{orderedFloors.length ? <><div className="admin-page-actions"><div className="admin-search"><Search size={15} /><input type="search" value={tableQuery} onChange={(event) => setTableQuery(event.target.value)} placeholder="Search table or floor" aria-label="Search floor tables" /></div><select className="admin-filter-select" aria-label="Filter tables by status" value={tableStatus} onChange={(event) => setTableStatus(event.target.value)}><option value="ALL">All table statuses</option>{[...new Set(orderedFloors.flatMap((floor) => floor.tables.map((table) => table.status)).filter(Boolean))].sort().map((status) => <option key={status} value={status}>{formatTableStatus(status)}</option>)}</select></div><div className="admin-floor-list">{orderedFloors.map(floor => { const tables = [...floor.tables].filter((table) => (tableStatus === "ALL" || table.status === tableStatus) && (!tableQuery.trim() || `${table.table_number} ${table.id} ${floor.name}`.toLowerCase().includes(tableQuery.trim().toLowerCase()))).sort((left, right) => compareLabels(left.table_number, right.table_number)); return <article className="admin-floor-item" key={floor.id}><div className="admin-floor-heading"><strong>{floor.name}</strong><span>{tables.length} {tables.length === 1 ? "table" : "tables"}</span></div>{tables.length ? <div className="admin-floor-table-list">{tables.map(table => <div className="admin-floor-table" key={table.id}><strong>Table {table.table_number}</strong><span>{table.seats} seats</span><span className={`admin-floor-table-status ${table.status?.toLowerCase()}`}>{formatTableStatus(table.status)}</span></div>)}</div> : <p className="admin-floor-empty">No tables match these filters.</p>}</article>; })}</div></> : <p className="admin-restaurant-empty">No floors or tables configured.</p>}</section>
+
+            <section className="admin-restaurant-detail-card admin-restaurant-wide-card"><h3><Store size={17} /> Menu inspection</h3>{restaurant.menu?.length ? <><div className="admin-page-actions"><div className="admin-search"><Search size={15} /><input type="search" value={menuQuery} onChange={(event) => setMenuQuery(event.target.value)} placeholder="Search dish or description" aria-label="Search inspected menu" /></div><select className="admin-filter-select" aria-label="Filter menu category" value={menuCategory} onChange={(event) => setMenuCategory(event.target.value)}><option value="ALL">All categories</option>{restaurant.menu.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select><select className="admin-filter-select" aria-label="Filter dish availability" value={menuAvailability} onChange={(event) => setMenuAvailability(event.target.value)}><option value="ALL">All availability</option><option value="AVAILABLE">Available</option><option value="UNAVAILABLE">Unavailable</option></select><select className="admin-filter-select" aria-label="Sort menu dishes" value={menuSort} onChange={(event) => setMenuSort(event.target.value)}><option value="name">Name A–Z</option><option value="name-desc">Name Z–A</option></select></div>{visibleMenuFoods.length ? <div className="admin-menu-inspection-grid">{visibleMenuFoods.map((food) => <article key={food.id}>{food.image_url && <img src={food.image_url} alt={food.name} loading="lazy" />}<small>{food.category_name}</small><h4>{food.name}{!food.is_available && " · Unavailable"}</h4>{food.description && <p>{food.description}</p>}{food.variants?.length ? <ul>{food.variants.map((variant) => <li key={variant.id}>{variant.name} · ₹{Number(variant.price).toFixed(2)}{!variant.is_available && " · Unavailable"}</li>)}</ul> : <small>No variants</small>}</article>)}</div> : <p className="admin-restaurant-empty">No menu items match these filters.</p>}{menuFoods.length > 0 && <Pagination page={menuPage} pageSize={menuPageSize} total={menuFoods.length} onPageChange={setMenuPage} label="menu items" />}</> : <p className="admin-restaurant-empty">No menu categories have been added.</p>}</section>
           </>
         ) : null}
       </div>
-      {action && <div className="admin-confirm-backdrop" role="presentation"><section className="admin-confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="restaurant-action-title"><button type="button" className="admin-confirm-close" onClick={() => setAction("")} disabled={busy} aria-label="Close">×</button><div className={`admin-confirm-icon ${action === "suspend" ? "reject" : "approve"}`}><ShieldAlert size={21} /></div><h2 id="restaurant-action-title">{action === "suspend" ? "Suspend this restaurant?" : "Resume this restaurant?"}</h2><p>{action === "suspend" ? `${restaurant?.name} will disappear from customer pages. The owner and chefs will lose portal access, and the owner will be emailed.` : `${restaurant?.name} will return to customer pages and portal access will be restored.`}</p>{action === "suspend" && <label className="restaurant-suspension-reason">Reason for suspension<textarea value={reason} onChange={(event) => setReason(event.target.value)} maxLength={500} placeholder="Explain why this restaurant is being suspended" /></label>}<div className="admin-confirm-actions"><button className="admin-confirm-cancel" onClick={() => setAction("")} disabled={busy}>Cancel</button><button className={`admin-confirm-submit ${action === "suspend" ? "reject" : "approve"}`} onClick={confirmStatusChange} disabled={busy}>{busy ? "Processing…" : action === "suspend" ? "Suspend restaurant" : "Resume restaurant"}</button></div></section></div>}
+      {action && <ConfirmActionDialog action={action} resourceType="restaurant" resourceName={restaurant?.name} title={action === "suspend" ? "Suspend this restaurant?" : "Resume this restaurant?"} description={action === "suspend" ? `${restaurant?.name} will disappear from customer pages. The owner and chefs will lose portal access, and the owner will be notified by email.` : `${restaurant?.name} will return to customer pages and manager portal access will be restored.`} confirmLabel={action === "suspend" ? "Suspend restaurant" : "Resume restaurant"} busy={busy} requireReason={action === "suspend"} reasonLabel="Reason for suspension" reason={reason} onReasonChange={setReason} onCancel={() => { if (!busy) { setAction(""); setReason(""); } }} onConfirm={confirmStatusChange} />}
     </AdminLayout>
   );
 }

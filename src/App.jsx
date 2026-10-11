@@ -36,6 +36,8 @@ import ChefChangePasswordPage from "./pages/chef/ChefChangePasswordPage.jsx";
 import ChefProtectedRoute from "./components/auth/ChefProtectedRoute.jsx";
 import PortalGuestOnlyRoute from "./components/auth/PortalGuestOnlyRoute.jsx";
 import ThemeToggle from "./components/ThemeToggle.jsx";
+import OrdersPage from "./pages/shared/OrdersPage.jsx";
+import ManagerOrderDetailsPage from "./pages/manager/ManagerOrderDetailsPage.jsx";
 
 export default function App() {
   return (
@@ -47,6 +49,7 @@ export default function App() {
         <Route path="/customer/profile/wallet" element={<ProtectedRoute><CustomerWalletPage /></ProtectedRoute>} />
         <Route path="/customer/profile/reservations" element={<ProtectedRoute><CustomerReservationsPage /></ProtectedRoute>} />
         <Route path="/customer/profile/reservations/:reservationId" element={<ProtectedRoute><CustomerReservationDetailsPage /></ProtectedRoute>} />
+        <Route path="/customer/profile/orders" element={<ProtectedRoute><OrdersPage mode="customer" /></ProtectedRoute>} />
         <Route
           path="/customer/restaurants"
           element={<CustomerRestaurantListingPage />}
@@ -146,6 +149,7 @@ export default function App() {
             </AdminProtectedRoute>
           }
         />
+        <Route path="/admin/orders" element={<AdminProtectedRoute><Navigate to="/admin/dashboard" replace /></AdminProtectedRoute>} />
         <Route
           path="/admin/requests"
           element={
@@ -205,8 +209,18 @@ export default function App() {
             </ManagerProtectedRoute>
           }
         />
+        <Route
+          path="/manager/menu/:foodId"
+          element={
+            <ManagerProtectedRoute>
+              <ManagerMenuPage />
+            </ManagerProtectedRoute>
+          }
+        />
         <Route path="/manager/tables" element={<ManagerProtectedRoute><ManagerFloorsPage /></ManagerProtectedRoute>} />
         <Route path="/manager/reservations" element={<ManagerProtectedRoute><ManagerReservationsPage /></ManagerProtectedRoute>} />
+        <Route path="/manager/orders" element={<ManagerProtectedRoute><OrdersPage mode="manager" /></ManagerProtectedRoute>} />
+        <Route path="/manager/orders/:orderId" element={<ManagerProtectedRoute><ManagerOrderDetailsPage /></ManagerProtectedRoute>} />
         <Route path="/manager/floors" element={<Navigate to="/manager/tables" replace />} />
         <Route
           path="/chef"
@@ -232,6 +246,7 @@ export default function App() {
             </ChefProtectedRoute>
           }
         />
+        <Route path="/chef/orders" element={<ChefProtectedRoute><OrdersPage mode="chef" /></ChefProtectedRoute>} />
         <Route
           path="/chef/change-password"
           element={
