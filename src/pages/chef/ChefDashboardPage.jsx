@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Bell, ChartNoAxesColumn, Check, CheckCheck, ChefHat, CircleHelp,
   CirclePlus, Clock3, LayoutDashboard, List, LogOut, Menu, Package,
@@ -6,29 +6,8 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
+import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
 import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
-
-const orders = [
-  { id: "#DB1024", customer: "Priya Sharma", time: "12:45 PM", table: "Table 7", items: "9 items", status: "New", prep: "25 min" },
-  { id: "#DB1023", customer: "James Chen", time: "12:38 PM", table: "Table 3", items: "4 items", status: "Preparing", prep: "15 min" },
-  { id: "#DB1022", customer: "Ananya Iyer", time: "12:20 PM", table: "Table 9", items: "3 items", status: "Ready", prep: "18 min" },
-  { id: "#DB1021", customer: "Rohan Das", time: "12:15 PM", table: "Table 5", items: "12 items", status: "Completed", prep: "32 min" },
-  { id: "#DB1020", customer: "Sarah Miller", time: "12:02 PM", table: "Table 11", items: "2 items", status: "Cancelled", prep: "—" },
-];
-
-const pipeline = [
-  { label: "New", value: 8, tone: "red" },
-  { label: "Accepted", value: 4, tone: "orange" },
-  { label: "Preparing", value: 5, tone: "orange" },
-  { label: "Ready", value: 3, tone: "green" },
-  { label: "Completed", value: 31, tone: "green" },
-];
-
-const activity = [
-  { message: "Order #DB1024 received", time: "12:45 PM", tone: "red" },
-  { message: "Chicken Biryani started preparing", time: "12:40 PM", tone: "orange" },
-  { message: "Order #DB1021 marked ready", time: "12:35 PM", tone: "green" },
-];
 
 const chefNav = [
   { label: "Dashboard", icon: LayoutDashboard },
@@ -45,6 +24,13 @@ export default function ChefDashboardPage() {
   const navigate = useNavigate();
   const [chef, setChef] = useState(null);
   const [menuCategories, setMenuCategories] = useState([]);
+  const [diningFloors, setDiningFloors] = useState([]);
+  const [upcomingReservations, setUpcomingReservations] = useState([]);
+  const [reservationsLoading, setReservationsLoading] = useState(true);
+  const [reservationError, setReservationError] = useState("");
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [ordersError, setOrdersError] = useState("");
   const [menuLoading, setMenuLoading] = useState(true);
   const [menuError, setMenuError] = useState("");
   const [activeNav, setActiveNav] = useState("Dashboard");
@@ -82,6 +68,39 @@ export default function ChefDashboardPage() {
     };
   }, []);
 
+  useEffect(() => {
+    requestJson("/api/chef/floors").then(setDiningFloors).catch(() => setDiningFloors([]));
+  }, []);
+
+  const loadOrders = useCallback(async () => {
+    try {
+      setOrders(await requestJson("/api/chef/orders"));
+      setOrdersError("");
+    } catch (error) {
+      setOrdersError(error.message || "Could not refresh kitchen orders.");
+    } finally {
+      setOrdersLoading(false);
+    }
+  }, []);
+  const loadUpcomingReservations = useCallback(async () => {
+    try {
+      setUpcomingReservations(await requestJson("/api/chef/reservations/upcoming"));
+      setReservationError("");
+    } catch (error) {
+      setReservationError(error.message || "Could not refresh upcoming reservations.");
+    } finally {
+      setReservationsLoading(false);
+    }
+  }, []);
+  const refreshLiveData = useCallback(() => Promise.all([loadOrders(), loadUpcomingReservations()]), [loadOrders, loadUpcomingReservations]);
+  useRealtimeEvents({ enabled: Boolean(chef), onEvent: refreshLiveData, onReconnect: refreshLiveData });
+  useEffect(() => { loadUpcomingReservations(); }, [loadUpcomingReservations]);
+  useEffect(() => {
+    loadOrders();
+    const timer = window.setInterval(loadOrders, 60000);
+    return () => window.clearInterval(timer);
+  }, [loadOrders]);
+
   async function handleLogout() {
     try {
       await requestJson("/api/auth/chef/logout", { method: "POST" });
@@ -92,6 +111,11 @@ export default function ChefDashboardPage() {
 
   const firstName = chef?.name?.trim().split(/\s+/)[0] || "Chef";
   const avatarLetters = chef?.name?.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "CA";
+  const todayOrders = orders.filter((order) => new Date(order.created_at).toDateString() === new Date().toDateString());
+  const countStatus = (status) => todayOrders.filter((order) => order.status === status).length;
+  const pipeline = [{ label: "New", value: countStatus("PLACED"), tone: "red" }, { label: "Accepted", value: countStatus("ACCEPTED"), tone: "orange" }, { label: "Preparing", value: countStatus("PREPARING"), tone: "orange" }, { label: "Ready", value: countStatus("READY"), tone: "green" }, { label: "Completed", value: countStatus("COMPLETED"), tone: "green" }];
+  const recentOrders = [...todayOrders].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 8);
+  const activity = [...orders].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)).slice(0, 5).map((order) => ({ message: `Order #${order.id.slice(0, 8).toUpperCase()} is ${order.status.toLowerCase().replaceAll("_", " ")}`, time: new Date(order.updated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), tone: order.status === "COMPLETED" ? "green" : order.status === "PREPARING" ? "orange" : "red" }));
 
   return (
     <main className="chef-dashboard-shell">
@@ -104,7 +128,7 @@ export default function ChefDashboardPage() {
         </div>
         <nav className="chef-sidebar-nav" aria-label="Chef portal">
           {chefNav.map(({ label, icon: Icon }) => (
-            <button key={label} type="button" className={`chef-nav-item ${activeNav === label ? "active" : ""}`} onClick={() => { setActiveNav(label); setSidebarOpen(false); if (label === "Menu") document.getElementById("chef-menu")?.scrollIntoView({ behavior: "smooth" }); }}>
+            <button key={label} type="button" className={`chef-nav-item ${activeNav === label ? "active" : ""}`} onClick={() => { setActiveNav(label); setSidebarOpen(false); if (label === "Kitchen Orders") navigate("/chef/orders"); if (label === "Menu") document.getElementById("chef-menu")?.scrollIntoView({ behavior: "smooth" }); }}>
               <Icon size={18} /><span>{label}</span>
             </button>
           ))}
@@ -127,16 +151,22 @@ export default function ChefDashboardPage() {
         </header>
 
         <div className="chef-dashboard-content">
+          {diningFloors.length > 0 && <section className="chef-panel"><div className="chef-panel-heading"><h3>Floor service context</h3></div>{diningFloors.map(floor => <p key={floor.id}><strong>{floor.name}</strong>: {floor.tables.map(table => `Table ${table.table_number} (${table.status})`).join(" · ") || "No tables assigned"}</p>)}</section>}
           <PortalBreadcrumb home={{ label: "Home", to: "/chef/dashboard" }} items={[{ label: activeNav }]} className="chef-breadcrumb" />
           <div className="chef-page-heading"><h2>Good Morning, Chef {firstName}</h2><p>Here's what's happening in your kitchen today.</p></div>
 
+          <section className="chef-panel">
+            <div className="chef-panel-heading"><h3>Upcoming reservations</h3><span>{upcomingReservations.length} confirmed</span></div>
+            {reservationsLoading ? <p className="chef-menu-empty" role="status">Loading reservations…</p> : reservationError ? <p className="chef-menu-empty" role="alert">{reservationError}</p> : !upcomingReservations.length ? <p className="chef-menu-empty">No upcoming confirmed reservations.</p> : <div className="chef-activity-list">{upcomingReservations.map((item) => <article className="chef-activity-item" key={item.id}><i className="green" /><div><p><strong>{item.customer_name}</strong> · {item.number_of_guests} guests</p><span>{item.reservation_date} at {item.start_time} · {item.tables.map((table) => `${table.floor_name}, Table ${table.table_number}`).join(", ")}</span></div></article>)}</div>}
+          </section>
+
           <section className="chef-stat-grid" aria-label="Today's kitchen stats">
-            <StatCard title="Today's Orders" value="47" change="+12%" icon={Package} tone="wine" />
-            <StatCard title="New Orders" value="8" change="+4%" icon={CirclePlus} tone="wine" />
-            <StatCard title="Preparing" value="5" change="-2%" icon={Soup} tone="amber" />
-            <StatCard title="Ready" value="3" change="+1%" icon={CheckCheck} tone="green" />
-            <StatCard title="Completed" value="31" change="+18%" icon={ShoppingBag} tone="green" />
-            <StatCard title="Avg Prep Time" value="18m" change="-5%" icon={Timer} tone="wine" />
+            <StatCard title="Today's Orders" value={todayOrders.length} icon={Package} tone="wine" />
+            <StatCard title="New Orders" value={countStatus("PLACED")} icon={CirclePlus} tone="wine" />
+            <StatCard title="Preparing" value={countStatus("PREPARING")} icon={Soup} tone="amber" />
+            <StatCard title="Ready" value={countStatus("READY")} icon={CheckCheck} tone="green" />
+            <StatCard title="Completed" value={countStatus("COMPLETED")} icon={ShoppingBag} tone="green" />
+            <StatCard title="Accepted" value={countStatus("ACCEPTED")} icon={Timer} tone="wine" />
           </section>
 
           <div className="chef-overview-grid">
@@ -148,13 +178,13 @@ export default function ChefDashboardPage() {
             </section>
             <section className="chef-panel chef-activity-panel">
               <h3>Kitchen Activity Log</h3>
-              <div className="chef-activity-list">{activity.map((item) => <div className="chef-activity-item" key={item.message}><i className={item.tone} /><div><p>{item.message}</p><span>{item.time}</span></div></div>)}</div>
+              <div className="chef-activity-list">{activity.map((item) => <div className="chef-activity-item" key={item.message}><i className={item.tone} /><div><p>{item.message}</p><span>{item.time}</span></div></div>)}{activity.length === 0 && <p className="chef-menu-empty">No kitchen activity yet.</p>}</div>
             </section>
           </div>
 
           <section className="chef-panel chef-orders-panel">
             <div className="chef-panel-heading"><h3>Recent Orders Today</h3><button type="button" onClick={() => setActiveNav("Kitchen Orders")}>View kitchen orders</button></div>
-            <div className="chef-orders-scroll"><table className="chef-orders-table"><thead><tr><th>Order ID</th><th>Customer</th><th>Time</th><th>Table</th><th>Items</th><th>Status</th><th>Est. Prep</th><th>Action</th></tr></thead><tbody>{orders.map((order) => <tr key={order.id}><td className="chef-order-id">{order.id}</td><td>{order.customer}</td><td className="chef-muted-cell">{order.time}</td><td>{order.table}</td><td>{order.items}</td><td><span className={`chef-order-status ${order.status.toLowerCase()}`}>{order.status}</span></td><td>{order.prep}</td><td><button className="chef-view-order" type="button" onClick={() => setActiveNav("Kitchen Orders")}>View</button></td></tr>)}</tbody></table></div>
+            <div className="chef-orders-scroll"><table className="chef-orders-table"><thead><tr><th>Order ID</th><th>Customer</th><th>Time</th><th>Table</th><th>Items</th><th>Status</th><th>Action</th></tr></thead><tbody>{recentOrders.map((order) => <tr key={order.id}><td className="chef-order-id">#{order.id.slice(0, 8).toUpperCase()}</td><td>{order.customer_name}</td><td className="chef-muted-cell">{new Date(order.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</td><td>{order.reservation?.tables?.map((table) => table.table_number).join(", ") || "—"}</td><td>{order.items.reduce((sum, item) => sum + Number(item.quantity || 0), 0)} items</td><td><span className={`chef-order-status ${order.status.toLowerCase()}`}>{order.status.replaceAll("_", " ")}</span></td><td><button className="chef-view-order" type="button" onClick={() => navigate("/chef/orders")}>View</button></td></tr>)}{recentOrders.length === 0 && <tr><td colSpan="7">{ordersLoading ? "Loading kitchen orders…" : ordersError || "No orders today."}</td></tr>}</tbody></table></div>
           </section>
 
           <section className="chef-dishes-section" id="chef-menu">
@@ -165,9 +195,11 @@ export default function ChefDashboardPage() {
                 <div className="chef-dish-grid">
                   {category.foods.map((food) => (
                     <article className="chef-dish-card" key={food.id}>
+                      {food.image_url && <img className="chef-dish-image" src={food.image_url} alt={food.name} loading="lazy" />}
                       <div className="chef-dish-info">
                         <div className="chef-dish-title"><h4>{food.name}</h4><span className={`chef-menu-availability ${food.is_available ? "available" : "unavailable"}`}>{food.is_available ? "Available" : "Unavailable"}</span></div>
                         {food.description && <p className="chef-menu-description">{food.description}</p>}
+                        {food.variants?.length > 0 && <ul className="chef-dish-variants">{food.variants.map((variant) => <li key={variant.id}><span>{variant.name}{!variant.is_available ? " · Unavailable" : ""}</span><strong>₹{Number(variant.price).toFixed(2)}</strong></li>)}</ul>}
                       </div>
                     </article>
                   ))}

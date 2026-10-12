@@ -9,6 +9,7 @@ import LandingFooter from "../../components/landing/LandingFooter.jsx";
 import PromoBanner from "../../components/landing/PromoBanner.jsx";
 import RestaurantSection from "../../components/landing/RestaurantSection.jsx";
 import Testimonials from "../../components/landing/Testimonials.jsx";
+import CustomerOrderTracker from "../../components/landing/CustomerOrderTracker.jsx";
 import { signatureDishes, testimonials } from "../../data/landingData.js";
 import { requestJson } from "../../lib/authApi.js";
 import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
@@ -34,6 +35,7 @@ export default function CustomerLandingPage() {
   const [restaurantRefresh, setRestaurantRefresh] = useState(0);
   const [selectedCuisine, setSelectedCuisine] = useState("");
   const [toast, setToast] = useState("");
+  const isDemoSession = import.meta.env.DEV && sessionStorage.getItem(demoSessionKey) === "active";
 
   useEffect(() => {
     let mounted = true;
@@ -124,6 +126,7 @@ export default function CustomerLandingPage() {
     <div className="customer-home">
       <CustomerHeader user={user} onLogout={() => setUser(null)} />
       <HeroBanner />
+      <CustomerOrderTracker enabled={Boolean(user) && !isDemoSession} />
       <main>
         <CuisineGrid selected={selectedCuisine} onSelect={setSelectedCuisine} />
         <RestaurantSection

@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { MapPin, Search, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
 import LandingFooter from "../../components/landing/LandingFooter.jsx";
+import Pagination from "../../components/Pagination.jsx";
 import RestaurantCard from "../../components/landing/RestaurantCard.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
@@ -11,6 +12,9 @@ const PAGE_SIZE = 6;
 
 export default function CustomerRestaurantListingPage() {
   const [restaurants, setRestaurants] = useState([]);
+  const [totalRestaurants, setTotalRestaurants] = useState(0);
+  const [cuisineOptions, setCuisineOptions] = useState([]);
+  const [locationOptions, setLocationOptions] = useState([]);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -24,14 +28,24 @@ export default function CustomerRestaurantListingPage() {
 
   useEffect(() => {
     let mounted = true;
-    const loadRestaurants = () => requestJson("/api/customer/restaurants")
-      .then((data) => mounted && setRestaurants(Array.isArray(data) ? data : []))
+    const params = new URLSearchParams({ page: String(page), page_size: String(PAGE_SIZE), sort });
+    if (query.trim()) params.set("search", query.trim());
+    cuisines.forEach((value) => params.append("cuisine", value));
+    locations.forEach((value) => params.append("location", value));
+    setLoading(true);
+    setError("");
+    requestJson(`/api/customer/restaurants?${params.toString()}`)
+      .then((data) => {
+        if (!mounted) return;
+        setRestaurants(Array.isArray(data?.items) ? data.items : []);
+        setTotalRestaurants(Number(data?.total) || 0);
+        setCuisineOptions(Array.isArray(data?.cuisines) ? data.cuisines : []);
+        setLocationOptions(Array.isArray(data?.locations) ? data.locations : []);
+      })
       .catch((reason) => mounted && setError(reason.message))
       .finally(() => mounted && setLoading(false));
-    loadRestaurants();
-    const timer = window.setInterval(loadRestaurants, 3000);
-    return () => { mounted = false; window.clearInterval(timer); };
-  }, []);
+    return () => { mounted = false; };
+  }, [page, query, cuisines, locations, sort]);
 
   useEffect(() => {
     if (import.meta.env.DEV && sessionStorage.getItem(demoSessionKey) === "active") {
@@ -45,29 +59,7 @@ export default function CustomerRestaurantListingPage() {
     return () => { mounted = false; };
   }, []);
 
-  const cuisineOptions = useMemo(() => [...new Set(restaurants.map((item) => item.cuisine).filter(Boolean))].sort(), [restaurants]);
-  const locationOptions = useMemo(() => [...new Set(restaurants.map((item) => item.location).filter(Boolean))].sort(), [restaurants]);
-  const filteredRestaurants = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    const results = restaurants.filter((restaurant) => {
-      const matchesSearch = !normalized || `${restaurant.name} ${restaurant.cuisine} ${restaurant.location}`.toLowerCase().includes(normalized);
-      const matchesCuisine = cuisines.length === 0 || cuisines.includes(restaurant.cuisine);
-      const matchesLocation = locations.length === 0 || locations.includes(restaurant.location);
-      return matchesSearch && matchesCuisine && matchesLocation;
-    });
-    return results.sort((left, right) => sort === "name" ? left.name.localeCompare(right.name) : new Date(right.created_at || 0) - new Date(left.created_at || 0));
-  }, [restaurants, query, cuisines, locations, sort]);
-
-  const pageCount = Math.max(1, Math.ceil(filteredRestaurants.length / PAGE_SIZE));
-  const visibleRestaurants = filteredRestaurants.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const firstResult = filteredRestaurants.length ? (page - 1) * PAGE_SIZE + 1 : 0;
-  const lastResult = Math.min(page * PAGE_SIZE, filteredRestaurants.length);
-  const pageWindowStart = Math.max(1, Math.min(page - 2, pageCount - 4));
-  const pageNumbers = Array.from({ length: Math.min(pageCount, 5) }, (_, index) => pageWindowStart + index);
-
-  useEffect(() => {
-    if (page > pageCount) setPage(pageCount);
-  }, [page, pageCount]);
+  const visibleRestaurants = restaurants;
 
   function toggleFilter(value, setter) {
     setter((current) => current.includes(value) ? current.filter((item) => item !== value) : [...current, value]);
@@ -112,16 +104,9 @@ export default function CustomerRestaurantListingPage() {
           </aside>
 
           <section className="restaurant-listing-results" aria-live="polite">
-            <div className="restaurant-listing-toolbar"><h2>{loading ? "Loading restaurants…" : `Showing ${filteredRestaurants.length} restaurant${filteredRestaurants.length === 1 ? "" : "s"}`}</h2><label>Sort by:<select value={sort} onChange={(event) => setSort(event.target.value)}><option value="newest">Recently added</option><option value="name">Name A–Z</option></select></label></div>
-            {error ? <div className="empty-state" role="alert">{error}</div> : loading ? <div className="empty-state" role="status">Loading approved restaurants…</div> : visibleRestaurants.length ? <div className="restaurant-grid">{visibleRestaurants.map((restaurant) => <RestaurantCard key={restaurant.id} restaurant={restaurant} onReserve={notifyReservation} />)}</div> : <div className="empty-state">{restaurants.length ? "No restaurants match these filters." : "No approved restaurants are available yet."}</div>}
-            {!loading && !error && filteredRestaurants.length > 0 && <nav className="restaurant-pagination" aria-label="Restaurant pages">
-              <span className="restaurant-pagination-summary">Showing <strong>{firstResult}–{lastResult}</strong> of <strong>{filteredRestaurants.length}</strong></span>
-              <div className="restaurant-pagination-pages">
-                <button type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page === 1}>Previous</button>
-                {pageNumbers.map((number) => <button type="button" key={number} className={page === number ? "selected" : ""} aria-current={page === number ? "page" : undefined} onClick={() => setPage(number)}>{number}</button>)}
-                <button type="button" onClick={() => setPage((current) => Math.min(pageCount, current + 1))} disabled={page === pageCount}>Next</button>
-              </div>
-            </nav>}
+            <div className="restaurant-listing-toolbar"><h2>{loading ? "Loading restaurants…" : `Showing ${totalRestaurants} restaurant${totalRestaurants === 1 ? "" : "s"}`}</h2><label>Sort by:<select value={sort} onChange={(event) => { setSort(event.target.value); setPage(1); }}><option value="newest">Recently added</option><option value="name">Name A–Z</option><option value="name-desc">Name Z–A</option></select></label></div>
+            {error ? <div className="empty-state" role="alert">{error}</div> : loading ? <div className="empty-state" role="status">Loading approved restaurants…</div> : visibleRestaurants.length ? <div className="restaurant-grid">{visibleRestaurants.map((restaurant) => <RestaurantCard key={restaurant.id} restaurant={restaurant} onReserve={notifyReservation} />)}</div> : <div className="empty-state">{totalRestaurants ? "No restaurants match these filters." : "No approved restaurants are available yet."}</div>}
+            {!loading && !error && totalRestaurants > 0 && <Pagination page={page} pageSize={PAGE_SIZE} total={totalRestaurants} onPageChange={setPage} label="restaurants" className="restaurant-pagination" showPageNumbers />}
           </section>
         </div>
       </main>

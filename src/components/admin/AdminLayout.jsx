@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import PortalBreadcrumb from "../PortalBreadcrumb.jsx";
@@ -9,12 +10,14 @@ import {
   FileText,
   LayoutDashboard,
   LogOut,
+  Menu,
   Settings,
   ShieldCheck,
   SlidersHorizontal,
   Store,
   Users,
   WalletCards,
+  X,
 } from "lucide-react";
 
 const navigation = [
@@ -47,6 +50,7 @@ export default function AdminLayout({
 }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   async function handleLogout() {
     try {
@@ -61,7 +65,8 @@ export default function AdminLayout({
 
   return (
     <main className="admin-dashboard">
-      <aside className="admin-sidebar">
+      {sidebarOpen && <button className="admin-sidebar-scrim" type="button" aria-label="Close navigation" onClick={() => setSidebarOpen(false)} />}
+      <aside className={`admin-sidebar${sidebarOpen ? " is-open" : ""}`}>
         <div className="admin-sidebar-brand">
           <div className="admin-brand-mark">
             <UtensilsIcon />
@@ -73,15 +78,13 @@ export default function AdminLayout({
           </div>
         </div>
 
-        <nav className="admin-nav">
+        <nav id="admin-primary-nav" className="admin-nav" aria-label="Administrator navigation">
           {navigation.map(({ label, icon: Icon, path }) => (
             <button
               key={label}
               type="button"
-              className={`admin-nav-item ${
-                activePath === path ? "active" : ""
-              }`}
-              onClick={() => path && navigate(path)}
+              className={`admin-nav-item ${activePath === path || pathname === path ? "active" : ""}`}
+              onClick={() => { if (path) navigate(path); setSidebarOpen(false); }}
             >
               <Icon size={16} />
               <span>{label}</span>
@@ -110,6 +113,9 @@ export default function AdminLayout({
 
       <section className="admin-dashboard-main">
         <header className="admin-topbar">
+          <button className="admin-mobile-nav-toggle" type="button" aria-label={sidebarOpen ? "Close navigation" : "Open navigation"} aria-expanded={sidebarOpen} aria-controls="admin-primary-nav" onClick={() => setSidebarOpen((open) => !open)}>
+            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
           <h1>{title}</h1>
 
           <div className="admin-topbar-actions">

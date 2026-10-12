@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
 import { requestJson } from "../../lib/authApi.js";
@@ -9,6 +10,7 @@ import {
   FileText,
   LayoutDashboard,
   LogOut,
+  Menu,
   Settings,
   SlidersHorizontal,
   Store,
@@ -17,6 +19,7 @@ import {
   Utensils,
   CreditCard,
   Clock3,
+  X,
 } from "lucide-react";
 
 const navigation = [
@@ -78,6 +81,7 @@ const activities = [
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   async function handleLogout() {
     try {
@@ -92,8 +96,9 @@ export default function AdminDashboardPage() {
 
   return (
     <main className="admin-dashboard">
+      {sidebarOpen && <button className="admin-sidebar-scrim" type="button" aria-label="Close navigation" onClick={() => setSidebarOpen(false)} />}
       {/* Sidebar */}
-      <aside className="admin-sidebar">
+      <aside className={`admin-sidebar${sidebarOpen ? " is-open" : ""}`}>
         <div className="admin-sidebar-brand">
           <div className="admin-brand-mark">
             <UtensilsIcon />
@@ -105,13 +110,13 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        <nav className="admin-nav">
+        <nav id="admin-primary-nav" className="admin-nav" aria-label="Administrator navigation">
           {navigation.map(({ label, icon: Icon, active, path }) => (
             <button
               key={label}
               type="button"
               className={`admin-nav-item ${active ? "active" : ""}`}
-              onClick={() => path && navigate(path)}
+              onClick={() => { if (path) navigate(path); setSidebarOpen(false); }}
             >
               <Icon size={16} />
               <span>{label}</span>
@@ -142,6 +147,9 @@ export default function AdminDashboardPage() {
       <section className="admin-dashboard-main">
         {/* Topbar */}
         <header className="admin-topbar">
+          <button className="admin-mobile-nav-toggle" type="button" aria-label={sidebarOpen ? "Close navigation" : "Open navigation"} aria-expanded={sidebarOpen} aria-controls="admin-primary-nav" onClick={() => setSidebarOpen((open) => !open)}>
+            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
           <h1>Dashboard</h1>
 
           <div className="admin-topbar-actions">
@@ -206,13 +214,6 @@ export default function AdminDashboardPage() {
               value="12,840"
               change="+9.6% vs last month"
               icon={CalendarDays}
-            />
-
-            <AdminStatCard
-              title="Orders"
-              value="9,426"
-              change="+7.8% vs last month"
-              icon={WalletCards}
             />
 
             <AdminStatCard
