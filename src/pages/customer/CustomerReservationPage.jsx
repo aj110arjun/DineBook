@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Armchair, ArrowLeft, ArrowRight, Banknote, CalendarDays, Check, Clock3, MapPin, Minus, Plus, Utensils, Users, Wallet } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarDays, Check, Clock3, MapPin, Minus, Plus, Users, Wallet } from "lucide-react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import QRCode from "qrcode";
 import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
@@ -11,6 +11,11 @@ import "./CustomerReservationPage.css";
 
 const weekDays = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 const isoDate = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+const todayInRestaurantTimezone = () => {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+  return `${values.year}-${values.month}-${values.day}`;
+};
 function to24Hour(value) {
   if (/^\d{2}:\d{2}$/.test(value)) return value;
   const [clock, period] = value.split(" ");
@@ -106,16 +111,10 @@ export default function CustomerReservationPage() {
   const navigate = useNavigate();
   const [restaurant, setRestaurant] = useState(null);
   const [user, setUser] = useState(null);
-  const [date, setDate] = useState(location.state?.date || isoDate(new Date()));
-  const [month, setMonth] = useState(() => { const selected = new Date(`${location.state?.date || isoDate(new Date())}T12:00:00`); return new Date(selected.getFullYear(), selected.getMonth(), 1); });
+  const [date, setDate] = useState(location.state?.date || todayInRestaurantTimezone());
+  const [month, setMonth] = useState(() => { const selected = new Date(`${location.state?.date || todayInRestaurantTimezone()}T12:00:00`); return new Date(selected.getFullYear(), selected.getMonth(), 1); });
   const [guests, setGuests] = useState(Number(location.state?.guests || 2));
   const [time, setTime] = useState(to24Hour(location.state?.time || "20:00"));
-  const [fulfillmentType, setFulfillmentType] = useState("TABLE_ONLY");
-  const [menuCategories, setMenuCategories] = useState([]);
-  const [menuLoading, setMenuLoading] = useState(false);
-  const [menuError, setMenuError] = useState("");
-  const [preorderCart, setPreorderCart] = useState({});
-  const [preorderPaymentMethod, setPreorderPaymentMethod] = useState("PAY_AT_DESK");
   const [walletBalance, setWalletBalance] = useState(0);
   const [walletLoading, setWalletLoading] = useState(true);
   const [availability, setAvailability] = useState({});
@@ -129,7 +128,7 @@ export default function CustomerReservationPage() {
   const [qrCode, setQrCode] = useState("");
   const [passDownload, setPassDownload] = useState("");
   const [qrError, setQrError] = useState("");
-  const checkoutStep = fulfillmentType === "PREORDER" ? 4 : 3;
+  const checkoutStep = 3;
   const resultStep = checkoutStep + 1;
 
   const operatingHours = useMemo(() => restaurant?.hours || [], [restaurant]);
@@ -156,17 +155,6 @@ export default function CustomerReservationPage() {
       .finally(() => active && setWalletLoading(false));
     return () => { active = false; };
   }, []);
-
-  useEffect(() => {
-    if (fulfillmentType !== "PREORDER" || menuCategories.length) return;
-    let active = true;
-    setMenuLoading(true);
-    requestJson(`/api/customer/restaurants/${restaurantId}/menu`)
-      .then((value) => { if (active) { setMenuCategories(value); setMenuError(""); } })
-      .catch((reason) => { if (active) setMenuError(reason.message); })
-      .finally(() => { if (active) setMenuLoading(false); });
-    return () => { active = false; };
-  }, [fulfillmentType, menuCategories.length, restaurantId]);
 
   useEffect(() => {
     if (!hasConfiguredHours || isOpenDate(date)) return;
@@ -241,24 +229,8 @@ export default function CustomerReservationPage() {
   const availableTables = selectedAvailability.tables || [];
   const selectedTable = availableTables.find((table) => table.id === selectedTableId);
   const quotedFee = step === 1 ? Math.min(...(availableTables.length ? availableTables.map((table) => Number(table.reservation_fee)) : [250])) : Number(selectedTable?.reservation_fee || reservation?.fee_amount || 0);
-  const preorderChoices = menuCategories.flatMap((category) => category.foods.flatMap((food) =>
-    (food.variants || []).filter((variant) => food.is_available && variant.is_available).map((variant) => ({
-      ...variant, foodName: food.name, variantName: variant.name, categoryName: category.name, image: food.image_url,
-    })),
-  ));
-  const selectedPreorderItems = preorderChoices.filter((item) => preorderCart[item.id]).map((item) => ({
-    ...item, quantity: preorderCart[item.id], lineTotal: Number(item.price) * preorderCart[item.id],
-  }));
-  const preorderTotal = selectedPreorderItems.reduce((total, item) => total + item.lineTotal, 0);
-  const checkoutTotal = quotedFee + (fulfillmentType === "PREORDER" ? preorderTotal : 0);
-  const preorderPayNowTotal = quotedFee + preorderTotal;
-  const amountDueNow = quotedFee + (fulfillmentType === "PREORDER" && preorderPaymentMethod === "WALLET" ? preorderTotal : 0);
-  const preorderDueAtDesk = fulfillmentType === "PREORDER" && preorderPaymentMethod === "PAY_AT_DESK" ? preorderTotal : 0;
-  useEffect(() => {
-    if (fulfillmentType === "PREORDER" && !walletLoading && preorderPaymentMethod === "WALLET" && walletBalance < preorderPayNowTotal) {
-      setPreorderPaymentMethod("PAY_AT_DESK");
-    }
-  }, [fulfillmentType, walletLoading, preorderPaymentMethod, walletBalance, preorderPayNowTotal]);
+  const checkoutTotal = quotedFee;
+  const amountDueNow = quotedFee;
   const monthTitle = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(month);
 
   function chooseDate(value) {
@@ -273,18 +245,9 @@ export default function CustomerReservationPage() {
     setStep(2);
   }
 
-  function changePreorderQuantity(variantId, delta) {
-    setPreorderCart((current) => {
-      const quantity = Math.max(0, Math.min(99, (current[variantId] || 0) + delta));
-      const next = { ...current };
-      if (quantity) next[variantId] = quantity;
-      else delete next[variantId];
-      return next;
-    });
-  }
 
   function continueFromTable() {
-    setStep(fulfillmentType === "PREORDER" ? 3 : checkoutStep);
+    setStep(checkoutStep);
   }
 
   async function submitReservation() {
@@ -294,7 +257,7 @@ export default function CustomerReservationPage() {
     try {
       const result = await requestJson("/api/customer/reservations", {
         method: "POST",
-        body: JSON.stringify({ restaurant_id: restaurantId, reservation_date: date, start_time: time, number_of_guests: guests, table_ids: selectedTable.table_ids, fulfillment_type: fulfillmentType, payment_method: "WALLET", preorder_payment_method: fulfillmentType === "PREORDER" ? preorderPaymentMethod : null, preorder_items: fulfillmentType === "PREORDER" ? selectedPreorderItems.map(({ id, quantity }) => ({ variant_id: id, quantity })) : [] }),
+        body: JSON.stringify({ restaurant_id: restaurantId, reservation_date: date, start_time: time, number_of_guests: guests, table_ids: selectedTable.table_ids, fulfillment_type: "TABLE_ONLY", payment_method: "WALLET", preorder_payment_method: null, preorder_items: [] }),
       });
       setReservation(result);
       saveReservation(user?.email, { ...result, restaurant_name: restaurant?.name, restaurant_location: restaurant?.location || restaurant?.address });
@@ -317,32 +280,28 @@ export default function CustomerReservationPage() {
         <div className="customer-booking-layout">
           <section className="customer-booking-main">
             {step === 1 && <>
-              <section className="booking-calendar-panel"><header><div><span className="booking-step-label">RESERVATION STEP 1 OF {fulfillmentType === "PREORDER" ? 5 : 4}</span><h2>Select Date</h2></div><div className="booking-month-controls"><button type="button" aria-label="Previous month" onClick={() => setMonth((current) => new Date(current.getFullYear(), current.getMonth() - 1, 1))}><ArrowLeft size={16} /></button><strong>{monthTitle}</strong><button type="button" aria-label="Next month" onClick={() => setMonth((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1))}><ArrowRight size={16} /></button></div></header>
-                <div className="booking-calendar-grid">{["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => <span className="booking-calendar-weekday" key={day}>{day}</span>)}{calendarDays.map((day) => { const key = isoDate(day); const outside = day.getMonth() !== month.getMonth(); const past = key < isoDate(new Date()); const closed = !hoursByDay[weekDays[day.getDay()]]?.enabled; return <button type="button" disabled={outside || past || closed} title={closed ? "Restaurant is closed" : undefined} key={key} className={`${outside ? "outside " : ""}${past ? "past " : ""}${closed ? "closed " : ""}${date === key ? "selected" : ""}`} onClick={() => chooseDate(key)}>{day.getDate()}</button>; })}</div>
+              <section className="booking-calendar-panel"><header><div><span className="booking-step-label">RESERVATION STEP 1 OF 3</span><h2>Select Date</h2></div><div className="booking-month-controls"><button type="button" aria-label="Previous month" onClick={() => setMonth((current) => new Date(current.getFullYear(), current.getMonth() - 1, 1))}><ArrowLeft size={16} /></button><strong>{monthTitle}</strong><button type="button" aria-label="Next month" onClick={() => setMonth((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1))}><ArrowRight size={16} /></button></div></header>
+                <div className="booking-calendar-grid">{["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => <span className="booking-calendar-weekday" key={day}>{day}</span>)}{calendarDays.map((day) => { const key = isoDate(day); const outside = day.getMonth() !== month.getMonth(); const past = key <= todayInRestaurantTimezone(); const closed = !hoursByDay[weekDays[day.getDay()]]?.enabled; return <button type="button" disabled={outside || past || closed} title={closed ? "Restaurant is closed" : undefined} key={key} className={`${outside ? "outside " : ""}${past ? "past " : ""}${closed ? "closed " : ""}${date === key ? "selected" : ""}`} onClick={() => chooseDate(key)}>{day.getDate()}</button>; })}</div>
+                {date <= todayInRestaurantTimezone() && <p className="booking-hours-message">Reservations must be made at least one day in advance. Please choose a future date.</p>}
                 {!hasConfiguredHours && <p className="booking-hours-message">This restaurant has not configured operating hours, so reservations are unavailable.</p>}
               </section>
               <section className="booking-guest-panel"><div><h3>Number of Guests</h3><p>For parties larger than 16, please contact the restaurant.</p></div><div className="booking-guest-stepper"><button type="button" aria-label="Remove guest" disabled={guests <= 1} onClick={() => setGuests((value) => Math.max(1, value - 1))}><Minus size={16} /></button><strong>{guests} {guests === 1 ? "Guest" : "Guests"}</strong><button type="button" aria-label="Add guest" disabled={guests >= 16} onClick={() => setGuests((value) => Math.min(16, value + 1))}><Plus size={16} /></button></div></section>
-              <section className="booking-intent-panel"><h3>What would you like to do?</h3><p>Choose how you’d like to enjoy your visit.</p><div className="booking-intent-options"><button type="button" className={fulfillmentType === "TABLE_ONLY" ? "selected" : ""} onClick={() => { setFulfillmentType("TABLE_ONLY"); setPreorderPaymentMethod("PAY_AT_DESK"); }}><span className="booking-intent-icon"><Armchair size={18} /></span><strong>Reserve a table</strong><small>Book your table and order when you arrive.</small></button><button type="button" className={fulfillmentType === "PREORDER" ? "selected" : ""} onClick={() => { setFulfillmentType("PREORDER"); setPreorderPaymentMethod("PAY_AT_DESK"); }}><span className="booking-intent-icon"><Utensils size={18} /></span><strong>Preorder food</strong><small>Choose dishes now and have them ready for your visit.</small></button></div></section>
-              <section className="booking-slots-panel"><h3>Available time slots</h3><p className="booking-hours-message">Choose a 30-minute reservation start time. Each slot reflects current table availability for {guests} {guests === 1 ? "guest" : "guests"}.</p>{timeSlotsLoading ? <p className="booking-hours-message">Checking available times…</p> : <div className="booking-time-slots" role="group" aria-label="Available reservation times">{Object.keys(availability).map((slot) => <SlotButton key={slot} slot={displayTime(slot)} selected={time === slot} availability={availability[slot]} onClick={() => { setTime(slot); setSelectedTableId(""); }} />)}</div>}{!timeSlotsLoading && !Object.keys(availability).length && <p className="reservation-page-error">No reservation times are available for this date.</p>}{availabilityError && <p className="reservation-page-error">{availabilityError}</p>}</section>
+              <section className="booking-intent-panel"><h3>Reserve your table</h3><p>Choose your visit details and confirm your reservation. Food orders are handled by the restaurant manager at reception.</p></section>
+              <section className="booking-slots-panel"><h3>Available time slots</h3><p className="booking-hours-message">Choose a 30-minute reservation start time. Each slot reflects current table availability for {guests} {guests === 1 ? "guest" : "guests"}.</p>{timeSlotsLoading ? <p className="booking-hours-message">Checking available times…</p> : <div className="booking-time-slots" role="group" aria-label="Available reservation times">{Object.keys(availability).map((slot) => <SlotButton key={slot} slot={displayTime(slot)} selected={time === slot} availability={availability[slot]} onClick={() => { setTime(slot); setSelectedTableId(""); }} />)}</div>}{!timeSlotsLoading && !Object.keys(availability).length && <p className="reservation-page-error">{date <= todayInRestaurantTimezone() ? "No same-day reservations. Choose a future date." : "No reservation times are available for this date."}</p>}{availabilityError && <p className="reservation-page-error">{availabilityError}</p>}</section>
             </>}
 
-            {step === 2 && <section className="booking-table-panel"><span className="booking-step-label">RESERVATION STEP 2 OF {fulfillmentType === "PREORDER" ? 5 : 4}</span><h2>Select Your Table Setup</h2><p>Suggested tables for {selectedDateLabel} at {displayTime(time)} · {guests} guests</p><div className="booking-table-legend"><span>Available</span><span>Selected</span><span>Unavailable</span></div><div className="booking-table-list">{availableTables.map((table) => <button type="button" key={table.id} className={selectedTableId === table.id ? "selected" : ""} onClick={() => setSelectedTableId(table.id)}><span className="booking-table-bullet">{selectedTableId === table.id ? <Check size={15} /> : null}</span><span><strong>{table.table_ids.length > 1 ? `${table.table_ids.length} tables together` : `Table ${table.table_number}`}</strong><small>{table.floor_name} · Tables {table.table_number} · Seats up to {table.capacity} · {table.table_type}</small></span><b>₹{Number(table.reservation_fee).toFixed(2)}</b></button>)}</div><button type="button" className="booking-back-button" onClick={() => setStep(1)}>Back to date & time</button></section>}
-
-            {step === 3 && fulfillmentType === "PREORDER" && <section className="booking-preorder-panel"><span className="booking-step-label">RESERVATION STEP 3 OF 5</span><h2>Preorder from the menu</h2><p>Choose your dishes and quantities. You can pay at the restaurant desk during checkout.</p>{menuLoading ? <p className="booking-hours-message">Loading menu…</p> : menuError ? <p className="reservation-page-error">{menuError}</p> : !menuCategories.length ? <p className="booking-hours-message">This restaurant has no menu items available for preorder yet.</p> : menuCategories.map((category) => <div className="booking-preorder-category" key={category.id}><h3>{category.name}</h3>{category.foods.filter((food) => food.is_available && food.variants?.some((variant) => variant.is_available)).map((food) => <article className="booking-preorder-food" key={food.id}>{food.image_url && <img src={food.image_url} alt="" />}<div className="booking-preorder-food-copy"><strong>{food.name}</strong>{food.description && <small>{food.description}</small>}{food.variants.filter((variant) => variant.is_available).map((variant) => <div className="booking-preorder-variant" key={variant.id}><span>{variant.name} · ₹{Number(variant.price).toFixed(2)}</span><div><button type="button" aria-label={`Remove one ${food.name} ${variant.name}`} disabled={!preorderCart[variant.id]} onClick={() => changePreorderQuantity(variant.id, -1)}>−</button><strong>{preorderCart[variant.id] || 0}</strong><button type="button" aria-label={`Add one ${food.name} ${variant.name}`} onClick={() => changePreorderQuantity(variant.id, 1)}>+</button></div></div>)}</div></article>)}</div>)}<div className="booking-preorder-footer"><button type="button" className="booking-back-button" onClick={() => setStep(2)}>Back to table</button><button type="button" className="booking-primary-action" disabled={!selectedPreorderItems.length} onClick={() => setStep(checkoutStep)}>Continue to checkout · ₹{preorderTotal.toFixed(2)}</button></div></section>}
+            {step === 2 && <section className="booking-table-panel"><span className="booking-step-label">RESERVATION STEP 2 OF 3</span><h2>Select Your Table Setup</h2><p>Suggested tables for {selectedDateLabel} at {displayTime(time)} · {guests} guests</p><div className="booking-table-legend"><span>Available</span><span>Selected</span><span>Unavailable</span></div><div className="booking-table-list">{availableTables.map((table) => <button type="button" key={table.id} className={selectedTableId === table.id ? "selected" : ""} onClick={() => setSelectedTableId(table.id)}><span className="booking-table-bullet">{selectedTableId === table.id ? <Check size={15} /> : null}</span><span><strong>{table.table_ids.length > 1 ? `${table.table_ids.length} tables together` : `Table ${table.table_number}`}</strong><small>{table.floor_name} · Tables {table.table_number} · Seats up to {table.capacity} · {table.table_type}</small></span><b>₹{Number(table.reservation_fee).toFixed(2)}</b></button>)}</div><button type="button" className="booking-back-button" onClick={() => setStep(1)}>Back to date & time</button></section>}
 
             {step === checkoutStep && <section className="booking-checkout-panel">
-              <header className="booking-checkout-heading"><span className="booking-step-label">RESERVATION STEP {checkoutStep} OF {fulfillmentType === "PREORDER" ? 5 : 4}</span><h2>Checkout</h2><p>Review your visit and payment details before confirming.</p></header>
+              <header className="booking-checkout-heading"><span className="booking-step-label">RESERVATION STEP {checkoutStep} OF 3</span><h2>Checkout</h2><p>Review your visit and payment details before confirming.</p></header>
               <section className="booking-checkout-payment" aria-labelledby="checkout-payment-title">
                 <div className="booking-checkout-section-heading"><div><span className="booking-checkout-kicker">PAYMENT</span><h3 id="checkout-payment-title">Reservation fee</h3></div><span className="booking-checkout-due">Required · Pay now</span></div>
                 <div className="booking-required-fee"><Wallet size={19} /><div><strong>Pay reservation fee from wallet</strong><small>{walletLoading ? "Checking wallet balance…" : `Wallet balance ₹${walletBalance.toFixed(2)} · This fee must be paid to confirm your reservation.`}</small></div><b>₹{quotedFee.toFixed(2)}</b></div>
                 {!walletLoading && walletBalance < amountDueNow && <p className="booking-wallet-warning">Add ₹{(amountDueNow - walletBalance).toFixed(2)} to your wallet to place this reservation.</p>}
-                {fulfillmentType === "PREORDER" && <div className="booking-preorder-payment-choice"><div className="booking-checkout-section-heading"><div><span className="booking-checkout-kicker">OPTIONAL</span><h3>Preorder food payment</h3></div><span className="booking-preorder-optional-badge">Choose when to pay</span></div><div className="booking-payment-methods">
-                  <button type="button" className={`booking-payment-option${preorderPaymentMethod === "PAY_AT_DESK" ? " selected" : ""}`} onClick={() => setPreorderPaymentMethod("PAY_AT_DESK")}><Banknote size={19} /><span><strong>Pay food at desk</strong><small>Only the reservation fee is charged now.</small></span><i>{preorderPaymentMethod === "PAY_AT_DESK" ? "Selected" : "Select"}</i></button>
-                  <button type="button" className={`booking-payment-option${preorderPaymentMethod === "WALLET" ? " selected" : ""}`} disabled={walletLoading || walletBalance < preorderPayNowTotal} onClick={() => setPreorderPaymentMethod("WALLET")}><Wallet size={19} /><span><strong>Pay food now from wallet</strong><small>{walletLoading ? "Checking wallet balance…" : walletBalance < preorderPayNowTotal ? `Add ₹${Math.max(preorderPayNowTotal - walletBalance, 0).toFixed(2)} more to pay the preorder now.` : "Reservation fee and preorder food will be charged now."}</small></span><i>{walletBalance < preorderPayNowTotal ? "Insufficient" : preorderPaymentMethod === "WALLET" ? "Selected" : "Select"}</i></button>
-                </div></div>}
+
               </section>
               <section className="booking-checkout-summary" aria-labelledby="checkout-summary-title">
-                <div className="booking-checkout-section-heading"><div><span className="booking-checkout-kicker">YOUR VISIT</span><h3 id="checkout-summary-title">Reservation details</h3></div><span className="booking-detail-step">{fulfillmentType === "PREORDER" ? "TABLE + FOOD" : "TABLE ONLY"}</span></div>
+                <div className="booking-checkout-section-heading"><div><span className="booking-checkout-kicker">YOUR VISIT</span><h3 id="checkout-summary-title">Reservation details</h3></div><span className="booking-detail-step">TABLE ONLY</span></div>
                 <div className="booking-checkout-visit-grid">
                   <div><CalendarDays /><span>Date</span><strong>{selectedDateLabel}</strong></div>
                   <div><Clock3 /><span>Time</span><strong>{displayTime(time)}</strong></div>
@@ -351,17 +310,15 @@ export default function CustomerReservationPage() {
                 </div>
                 <div className="booking-checkout-costs">
                   <div className="booking-checkout-cost-line"><span>Table reservation fee</span><strong>₹{quotedFee.toFixed(2)}</strong></div>
-                  {fulfillmentType === "PREORDER" && <div className="booking-checkout-foods"><div className="booking-checkout-cost-line booking-food-subtotal"><span>Preordered food</span><strong>₹{preorderTotal.toFixed(2)}</strong></div>{selectedPreorderItems.map((item) => <div className="booking-checkout-food-line" key={item.id}><span><b>{item.quantity}×</b> {item.foodName}<small>{item.variantName}</small></span><strong>₹{item.lineTotal.toFixed(2)}</strong></div>)}</div>}
-                  {preorderDueAtDesk > 0 && <div className="booking-checkout-cost-line booking-food-desk-due"><span>Preorder food due at desk</span><strong>₹{preorderDueAtDesk.toFixed(2)}</strong></div>}
                   <div className="booking-checkout-grand-total"><span>Pay now from wallet<small>Reservation fee is required; food is included only if selected above</small></span><strong>₹{amountDueNow.toFixed(2)}</strong></div>
                 </div>
               </section>
-              <div className="booking-checkout-actions"><button type="button" className="booking-back-button" onClick={() => setStep(fulfillmentType === "PREORDER" ? 3 : 2)}>Back</button></div>
+              <div className="booking-checkout-actions"><button type="button" className="booking-back-button" onClick={() => setStep(2)}>Back</button></div>
             </section>}
-            {step === resultStep && reservation && <section className="booking-result-panel"><span className="booking-step-label">RESERVATION PASS</span><div className={`booking-result-icon ${reservation.status === "CONFIRMED" ? "paid" : "pending"}`}>{reservation.status === "CONFIRMED" ? "✓" : "!"}</div><h2>{reservation.status === "CONFIRMED" ? "Reservation Confirmed" : "Reservation Request Received"}</h2><p>{reservation.status === "CONFIRMED" ? reservation.preorder_payment_status === "PENDING" ? "Your reservation fee is paid and the table is confirmed. Pay your preorder food at the restaurant desk." : "Your reservation fee is paid. Show this QR pass at the restaurant when you arrive." : "Your reservation details were received."}</p><div className="booking-pass-layout"><div className="booking-review-lines"><ReviewLine label="Reservation ID" value={reservation.id.slice(0, 8).toUpperCase()} /><ReviewLine label="Date & time" value={`${reservation.reservation_date} · ${shortTime(reservation.start_time)}`} /><ReviewLine label="Table" value={reservation.tables?.map((table) => `${table.floor_name} · ${table.table_number}`).join(", ") || "Pending"} /><ReviewLine label="Guests" value={`${reservation.number_of_guests}`} /><ReviewLine label="Reservation fee · Paid" value={`₹${Number(reservation.fee_amount).toFixed(2)}`} />{reservation.fulfillment_type === "PREORDER" && <ReviewLine label={`Preorder food · ${reservation.preorder_payment_status === "PAID" ? "Paid" : "Due at desk"}`} value={`₹${Number(reservation.preorder_total || 0).toFixed(2)}`} />}<ReviewLine label="Reservation payment" value="DineBook wallet · Paid" bold /></div><div className="booking-qr-card"><div className="booking-qr-caption"><span>RESERVATION ID</span><strong>{reservation.id.slice(0, 8).toUpperCase()}</strong></div>{qrCode ? <img src={qrCode} alt="QR code for reservation ID" /> : <span className="booking-qr-placeholder">{qrError || "Generating QR…"}</span>}<small>Scan to look up this reservation at the restaurant.</small><a className={`booking-download-pass${passDownload ? " ready" : ""}`} href={passDownload || undefined} download={`DineBook-pass-${reservation.id.slice(0, 8)}.png`} aria-disabled={!passDownload}>{passDownload ? "Download reservation pass" : "Preparing download…"}</a></div></div>{qrError && <p className="reservation-page-error">{qrError}</p>}<button type="button" className="booking-back-button" onClick={async () => { try { const latest = await requestJson(`/api/customer/reservations/${reservation.id}`); setReservation(latest); } catch (reason) { setError(reason.message); } }}>Refresh reservation status</button> <Link to={`/customer/restaurants/${restaurantId}`} className="booking-back-button">Back to restaurant</Link></section>}
+            {step === resultStep && reservation && <section className="booking-result-panel"><span className="booking-step-label">RESERVATION PASS</span><div className={`booking-result-icon ${reservation.status === "CONFIRMED" ? "paid" : "pending"}`}>{reservation.status === "CONFIRMED" ? "✓" : "!"}</div><h2>{reservation.status === "CONFIRMED" ? "Reservation Confirmed" : "Reservation Request Received"}</h2><p>{reservation.status === "CONFIRMED" ? "Your reservation fee is paid. Show this QR pass at the restaurant when you arrive. Food orders are handled by the manager at reception." : "Your reservation details were received."}</p><div className="booking-pass-layout"><div className="booking-review-lines"><ReviewLine label="Reservation ID" value={reservation.id.slice(0, 8).toUpperCase()} /><ReviewLine label="Date & time" value={`${reservation.reservation_date} · ${shortTime(reservation.start_time)}`} /><ReviewLine label="Table" value={reservation.tables?.map((table) => `${table.floor_name} · ${table.table_number}`).join(", ") || "Pending"} /><ReviewLine label="Guests" value={`${reservation.number_of_guests}`} /><ReviewLine label="Reservation fee · Paid" value={`₹${Number(reservation.fee_amount).toFixed(2)}`} /><ReviewLine label="Reservation payment" value="DineBook wallet · Paid" bold /></div><div className="booking-qr-card"><div className="booking-qr-caption"><span>RESERVATION ID</span><strong>{reservation.id.slice(0, 8).toUpperCase()}</strong></div>{qrCode ? <img src={qrCode} alt="QR code for reservation ID" /> : <span className="booking-qr-placeholder">{qrError || "Generating QR…"}</span>}<small>Scan to look up this reservation at the restaurant.</small><a className={`booking-download-pass${passDownload ? " ready" : ""}`} href={passDownload || undefined} download={`DineBook-pass-${reservation.id.slice(0, 8)}.png`} aria-disabled={!passDownload}>{passDownload ? "Download reservation pass" : "Preparing download…"}</a></div></div>{qrError && <p className="reservation-page-error">{qrError}</p>}<button type="button" className="booking-back-button" onClick={async () => { try { const latest = await requestJson(`/api/customer/reservations/${reservation.id}`); setReservation(latest); } catch (reason) { setError(reason.message); } }}>Refresh reservation status</button> <Link to={`/customer/restaurants/${restaurantId}`} className="booking-back-button">Back to restaurant</Link></section>}
           </section>
 
-          <aside className="booking-summary-column"><section className="booking-summary-card"><span className="booking-step-label">RESERVATION STEP {step} OF {fulfillmentType === "PREORDER" ? 5 : 4}</span><h2>{step === 1 ? "Booking Summary" : step === 2 ? "Dine-in Details" : step === checkoutStep ? "Checkout Summary" : step === resultStep ? "Reservation Status" : fulfillmentType === "PREORDER" ? "Preorder" : "Reservation Summary"}</h2><div className="booking-summary-lines"><ReviewLine label="Selected date" value={selectedDateLabel} /><ReviewLine label="Guests" value={`${guests} ${guests === 1 ? "Guest" : "Guests"}`} /><ReviewLine label="Preferred time" value={displayTime(time)} />{step >= 2 && <ReviewLine label="Selected table" value={selectedTable ? `Table ${selectedTable.table_number}` : "Choose a table"} />}<ReviewLine label="Table reservation fee · pay now" value={selectedAvailability.loading && step === 1 ? "Checking…" : `₹${quotedFee.toFixed(2)}`} />{fulfillmentType === "PREORDER" && <><ReviewLine label="Preorder food" value={`₹${preorderTotal.toFixed(2)}`} />{step >= checkoutStep && preorderDueAtDesk > 0 && <ReviewLine label="Food due at desk" value={`₹${preorderDueAtDesk.toFixed(2)}`} />}</>}<ReviewLine label={step >= checkoutStep ? "Pay now from wallet" : "Current total"} value={`₹${step >= checkoutStep ? amountDueNow.toFixed(2) : checkoutTotal.toFixed(2)}`} bold /></div>{step === 1 && <button type="button" className="booking-primary-action" disabled={selectedAvailability.loading || !availableTables.length} onClick={continueToTables}>{selectedAvailability.loading ? "Checking table availability…" : !availableTables.length ? "No tables available" : "Continue to Table Selection"}</button>}{step === 2 && <button type="button" className="booking-primary-action" disabled={!selectedTable} onClick={continueFromTable}>Continue</button>}{step === 3 && fulfillmentType === "PREORDER" && <button type="button" className="booking-primary-action" disabled={!selectedPreorderItems.length} onClick={() => setStep(checkoutStep)}>Continue to Checkout</button>}{step === checkoutStep && <button type="button" className="booking-primary-action" disabled={busy || walletLoading || walletBalance < amountDueNow || (fulfillmentType === "PREORDER" && !selectedPreorderItems.length)} onClick={submitReservation}>{busy ? "Submitting…" : "Confirm reservation"}</button>}{step === resultStep && <Link to="/customer/restaurants" className="booking-primary-action booking-link-action">Explore restaurants</Link>}</section><p className="booking-summary-footnote">The reservation fee is charged to your wallet when you confirm. {preorderDueAtDesk > 0 ? "Preorder food is payable at the restaurant desk." : ""}</p>{error && step > 1 && <p className="reservation-page-error" role="alert">{error}</p>}</aside>
+          <aside className="booking-summary-column"><section className="booking-summary-card"><span className="booking-step-label">RESERVATION STEP {step} OF 3</span><h2>{step === 1 ? "Booking Summary" : step === 2 ? "Dine-in Details" : step === checkoutStep ? "Checkout Summary" : step === resultStep ? "Reservation Status" : "Reservation Summary"}</h2><div className="booking-summary-lines"><ReviewLine label="Selected date" value={selectedDateLabel} /><ReviewLine label="Guests" value={`${guests} ${guests === 1 ? "Guest" : "Guests"}`} /><ReviewLine label="Preferred time" value={displayTime(time)} />{step >= 2 && <ReviewLine label="Selected table" value={selectedTable ? `Table ${selectedTable.table_number}` : "Choose a table"} />}<ReviewLine label="Table reservation fee · pay now" value={selectedAvailability.loading && step === 1 ? "Checking…" : `₹${quotedFee.toFixed(2)}`} /><ReviewLine label={step >= checkoutStep ? "Pay now from wallet" : "Current total"} value={`₹${step >= checkoutStep ? amountDueNow.toFixed(2) : checkoutTotal.toFixed(2)}`} bold /></div>{step === 1 && <button type="button" className="booking-primary-action" disabled={selectedAvailability.loading || !availableTables.length} onClick={continueToTables}>{selectedAvailability.loading ? "Checking table availability…" : !availableTables.length ? "No tables available" : "Continue to Table Selection"}</button>}{step === 2 && <button type="button" className="booking-primary-action" disabled={!selectedTable} onClick={continueFromTable}>Continue</button>}{step === checkoutStep && <button type="button" className="booking-primary-action" disabled={busy || walletLoading || walletBalance < amountDueNow} onClick={submitReservation}>{busy ? "Submitting…" : "Confirm reservation"}</button>}{step === resultStep && <Link to="/customer/restaurants" className="booking-primary-action booking-link-action">Explore restaurants</Link>}</section><p className="booking-summary-footnote">The reservation fee is charged to your wallet when you confirm. </p>{error && step > 1 && <p className="reservation-page-error" role="alert">{error}</p>}</aside>
         </div>
       </>}
     </main><LandingFooter />

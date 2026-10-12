@@ -17,7 +17,9 @@ export function isRestaurantSaved(id) {
 export function toggleSavedRestaurant(id) {
   const current = getSavedRestaurantIds();
   const normalized = String(id);
-  const next = current.includes(normalized) ? current.filter((value) => value !== normalized) : [...current, normalized];
+  const next = current.includes(normalized)
+    ? current.filter((value) => value !== normalized)
+    : [...current, normalized];
   localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   window.dispatchEvent(new Event(EVENT_NAME));
   return next.includes(normalized);

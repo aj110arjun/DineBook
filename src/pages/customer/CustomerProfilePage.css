@@ -26,10 +26,9 @@
 :root[data-theme="dark"] .reservation-special p{color:#e6dcda}
 .reservation-toolbar{display:flex;align-items:flex-end;gap:14px;margin:20px 0 16px;padding:15px;background:#faf8f6;border:1px solid #eee6e1;border-radius:11px}.reservation-toolbar label{display:grid;gap:7px;font-size:var(--font-size-xs);font-weight:700;color:#6d6062}.reservation-toolbar select{height:39px;min-width:185px;border:1px solid #e8ded8;border-radius:8px;background:#fff;color:#43383a;padding:0 11px;font:500 12px inherit}.reservation-result-count{margin-left:auto;color:#857a7b;font-size:var(--font-size-xs);padding-bottom:11px}.reservation-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;color:#857a7b;font-size:var(--font-size-xs)}.reservation-pagination>div{display:flex;gap:6px}.reservation-pagination button{width:34px;height:34px;display:grid;place-items:center;border:1px solid #eee5e0;border-radius:8px;background:#fff;color:#554649;cursor:pointer;font:500 12px inherit}.reservation-pagination button.current{background:#50131f;border-color:#50131f;color:#d2ad5e}.reservation-pagination button:disabled{opacity:.45;cursor:not-allowed}.reservation-empty.compact{padding:28px 12px}
 .reservation-toolbar input[type="search"],.reservation-toolbar input[type="date"]{min-height:39px;min-width:160px;border:1px solid #e8ded8;border-radius:8px;background:#fff;color:#43383a;padding:0 10px;font:inherit}.reservation-toolbar button{min-height:39px;border:1px solid #e8ded8;border-radius:8px;background:#fff;padding:0 11px;color:#554649;cursor:pointer}.reservation-page .reservation-toolbar{flex-wrap:wrap}
-.reservation-list-card{max-height:calc(100vh - 285px);min-height:300px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#9c7a46 transparent}.reservation-list-card::-webkit-scrollbar{width:8px}.reservation-list-card::-webkit-scrollbar-thumb{background:#b89a62;border:2px solid transparent;background-clip:padding-box;border-radius:8px}.reservation-list-card::-webkit-scrollbar-track{background:transparent}
+.reservation-list-card{min-width:0;min-height:300px}
 :root[data-theme="dark"] .reservation-toolbar{background:#292426;border-color:#40383a}.profile-page .reservation-toolbar label{color:#c8bdbc}.profile-page .reservation-toolbar select,:root[data-theme="dark"] .reservation-pagination button{background:#211d1f;border-color:#494044;color:#eee4e2}.profile-page .reservation-pagination button.current{background:#4f101d;border-color:#4f101d;color:#e1c477}.profile-page .reservation-result-count{color:#bdb2b3}
-@media(max-width:600px){.reservation-list-card{max-height:72vh;min-height:260px}.reservation-toolbar{align-items:stretch;flex-direction:column}.reservation-toolbar select{width:100%}.reservation-result-count{margin-left:0;padding:0}.reservation-pagination{align-items:flex-start;flex-direction:column}.reservation-pagination>div{flex-wrap:wrap}}
-:root[data-theme="dark"] .reservation-list-card{scrollbar-color:#856739 transparent}:root[data-theme="dark"] .reservation-list-card::-webkit-scrollbar-thumb{background:#856739}
+@media(max-width:600px){.reservation-list-card{min-height:260px}.reservation-toolbar{align-items:stretch;flex-direction:column}.reservation-toolbar select{width:100%}.reservation-result-count{margin-left:0;padding:0}.reservation-pagination{align-items:flex-start;flex-direction:column}.reservation-pagination>div{flex-wrap:wrap}}
 .reservation-list-card .reservation-toolbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:end;gap:12px;margin:20px 0 16px;padding:16px;background:#f7f4f1;border-color:#e9e1dc}
 .reservation-list-card .reservation-toolbar>label{min-width:0;gap:7px}
 .reservation-list-card .reservation-toolbar>label:first-child{grid-column:span 2}
@@ -143,12 +142,7 @@
 .reservation-details-page .profile-menu a.selected { background: #f4ebeb; color: #50131f; box-shadow: inset 3px 0 #c7a45e; }
 .reservation-details-page .profile-menu a.selected svg { color: #8b6330; }
 .reservation-details-page .profile-logout { width: 100%; margin-top: 12px; padding: 10px; font-size: var(--font-size-sm); }
-.reservation-details-page .profile-content { max-height: calc(100vh - 285px); min-height: 300px; gap: 18px; overflow-y: auto; overscroll-behavior: contain; padding-right: 8px; scrollbar-width: thin; scrollbar-color: #9c7a46 transparent; }
-.reservation-details-page .profile-content::-webkit-scrollbar { width: 8px; }
-.reservation-details-page .profile-content::-webkit-scrollbar-thumb { background: #b89a62; border: 2px solid transparent; background-clip: padding-box; border-radius: 8px; }
-.reservation-details-page .profile-content::-webkit-scrollbar-track { background: transparent; }
-:root[data-theme="dark"] .reservation-details-page .profile-content { scrollbar-color: #856739 transparent; }
-:root[data-theme="dark"] .reservation-details-page .profile-content::-webkit-scrollbar-thumb { background: #856739; }
+.reservation-details-page .profile-content { min-width: 0; gap: 18px; }
 .reservation-page-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; padding: 2px 2px 4px; }
 .reservation-page-eyebrow { color: #987744; font-size: var(--font-size-xs); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .reservation-page-header h1 { margin: 4px 0 3px; color: #3f1420; font-size: clamp(28px, 3vw, 34px); font-weight: 700; letter-spacing: -.025em; }
@@ -218,7 +212,6 @@
 }
 @media (max-width: 600px) {
   .reservation-details-page .profile-shell { padding: 20px 4% 48px; }
-  .reservation-details-page .profile-content { max-height: 72vh; min-height: 260px; }
   .reservation-page-header { align-items: flex-start; flex-direction: column; gap: 12px; }
   .reservation-page-header h1 { font-size: var(--font-size-2xl); }
   .reservation-details-page .reservation-back { min-height: 40px; }
@@ -277,3 +270,5 @@
 .realtime-status { display: inline-flex; margin: 5px 0 10px; color: #8b8587; font-size: var(--font-size-xs); }
 .realtime-connected { color: #36a879; }
 .realtime-reconnecting { color: #c18b32; }
+/* Keep the sticky account rail below the sticky customer navigation. */
+.profile-page .profile-sidebar{top:102px}

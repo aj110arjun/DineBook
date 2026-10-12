@@ -1,10 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { API_BASE } from "./authApi.js";
 
-const REALTIME_EVENT_TYPES = ["order.status_changed", "booking.updated", "payment.status_changed"];
+const REALTIME_EVENT_TYPES = [
+  "order.status_changed",
+  "booking.updated",
+  "payment.status_changed",
+];
 
 /** Cookie-authenticated SSE client with cursor recovery and jittered reconnects. */
-export function useRealtimeEvents({ enabled = true, onEvent, onReconnect } = {}) {
+export function useRealtimeEvents({
+  enabled = true,
+  onEvent,
+  onReconnect,
+} = {}) {
   const callbacks = useRef({ onEvent, onReconnect });
   const cursor = useRef("");
   const [status, setStatus] = useState(enabled ? "connecting" : "disconnected");
@@ -28,7 +36,10 @@ export function useRealtimeEvents({ enabled = true, onEvent, onReconnect } = {})
 
     const connect = () => {
       if (stopped) return;
-      const url = new URL(`${API_BASE}/api/events/stream`, window.location.href);
+      const url = new URL(
+        `${API_BASE}/api/events/stream`,
+        window.location.href,
+      );
       if (cursor.current) url.searchParams.set("after", cursor.current);
       source = new EventSource(url.toString(), { withCredentials: true });
       source.onopen = () => {
@@ -46,7 +57,9 @@ export function useRealtimeEvents({ enabled = true, onEvent, onReconnect } = {})
           // Ignore malformed event data; the next reconciliation reloads source state.
         }
       };
-      REALTIME_EVENT_TYPES.forEach((type) => source.addEventListener(type, receive));
+      REALTIME_EVENT_TYPES.forEach((type) =>
+        source.addEventListener(type, receive),
+      );
       source.addEventListener("auth.expired", () => {
         authExpired = true;
         source.close();
@@ -56,7 +69,9 @@ export function useRealtimeEvents({ enabled = true, onEvent, onReconnect } = {})
         if (stopped || authExpired) return;
         setStatus("reconnecting");
         source.close();
-        const jitter = Math.floor(Math.random() * Math.max(250, retryMs * 0.25));
+        const jitter = Math.floor(
+          Math.random() * Math.max(250, retryMs * 0.25),
+        );
         timer = window.setTimeout(connect, retryMs + jitter);
         retryMs = Math.min(retryMs * 2, 30000);
       };

@@ -30,6 +30,7 @@ const navigation = [
   { label: "Tables", icon: Table2, to: "/manager/tables" },
   { label: "Menu", icon: Utensils, to: "/manager/menu" },
   { label: "Orders", icon: ShoppingBasket, to: "/manager/orders" },
+  { label: "Spot Order", icon: ClipboardList, to: "/manager/spot-order" },
   { label: "Staff", icon: Users, to: "/manager/staff" },
   { label: "Offers", icon: Tag },
   { label: "Reviews", icon: MessageCircle },

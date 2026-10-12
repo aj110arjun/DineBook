@@ -5,16 +5,34 @@ const TEST_PASSWORD = "DineBookTest!2026";
 
 const TEST_ACCOUNTS = {
   customer: [
-    { label: "Test Customer · Olive & Thyme", email: "test.dinebook.customer.olive@example.com" },
-    { label: "Test Customer · Harbor Table", email: "test.dinebook.customer.harbor@example.com" },
+    {
+      label: "Test Customer · Olive & Thyme",
+      email: "test.dinebook.customer.olive@example.com",
+    },
+    {
+      label: "Test Customer · Harbor Table",
+      email: "test.dinebook.customer.harbor@example.com",
+    },
   ],
   manager: [
-    { label: "Test Manager · Olive & Thyme", email: "test.dinebook.manager.olive@example.com" },
-    { label: "Test Manager · Harbor Table", email: "test.dinebook.manager.harbor@example.com" },
+    {
+      label: "Test Manager · Olive & Thyme",
+      email: "test.dinebook.manager.olive@example.com",
+    },
+    {
+      label: "Test Manager · Harbor Table",
+      email: "test.dinebook.manager.harbor@example.com",
+    },
   ],
   chef: [
-    { label: "Test Chef · Olive & Thyme", email: "test.dinebook.chef.olive@example.com" },
-    { label: "Test Chef · Harbor Table", email: "test.dinebook.chef.harbor@example.com" },
+    {
+      label: "Test Chef · Olive & Thyme",
+      email: "test.dinebook.chef.olive@example.com",
+    },
+    {
+      label: "Test Chef · Harbor Table",
+      email: "test.dinebook.chef.harbor@example.com",
+    },
   ],
 };
 
@@ -43,8 +61,13 @@ export default function DevQuickLogin({ portal, onSuccess }) {
   }
 
   return (
-    <section className="mt-6 rounded-xl border border-amber-200/20 bg-amber-100/[0.04] p-4" aria-label="Development test accounts">
-      <p className="text-xs font-semibold uppercase tracking-wider text-amber-200/80">Local test accounts</p>
+    <section
+      className="mt-6 rounded-xl border border-amber-200/20 bg-amber-100/[0.04] p-4"
+      aria-label="Development test accounts"
+    >
+      <p className="text-xs font-semibold uppercase tracking-wider text-amber-200/80">
+        Local test accounts
+      </p>
       <div className="mt-3 grid gap-2">
         {TEST_ACCOUNTS[portal].map((account) => (
           <button
@@ -55,11 +78,17 @@ export default function DevQuickLogin({ portal, onSuccess }) {
             className="flex min-h-10 items-center justify-between rounded-lg border border-white/10 px-3 text-left text-sm text-stone-200 transition hover:border-amber-200/50 hover:bg-white/[0.04] disabled:cursor-wait disabled:opacity-60"
           >
             <span>{account.label}</span>
-            <span className="ml-3 text-xs text-amber-200">{busyEmail === account.email ? "Signing in…" : "Sign in →"}</span>
+            <span className="ml-3 text-xs text-amber-200">
+              {busyEmail === account.email ? "Signing in…" : "Sign in →"}
+            </span>
           </button>
         ))}
       </div>
-      {error && <p className="mt-3 text-sm text-red-300" role="alert">{error}</p>}
+      {error && (
+        <p className="mt-3 text-sm text-red-300" role="alert">
+          {error}
+        </p>
+      )}
     </section>
   );
 }

@@ -1,0 +1,49 @@
+.customer-order-tracker { width:min(1180px,calc(100% - 48px)); margin:28px auto 0; color:#33282b; }
+.customer-order-tracker-heading { display:flex; align-items:end; justify-content:space-between; gap:16px; margin-bottom:14px; }
+.customer-order-tracker-heading > div > span { color:#986e35; font-size:11px; font-weight:800; letter-spacing:.12em; }
+.customer-order-tracker-heading h2 { margin:4px 0 0; font-size:24px; }
+.customer-order-tracker-heading > button { min-height:36px; border:1px solid #e5d9cf; border-radius:9px; background:#fff; padding:0 13px; color:#6e2936; font-size:13px; font-weight:650; cursor:pointer; }
+.customer-order-tracker-heading > button:disabled { opacity:.65; cursor:wait; }
+.customer-order-search { display:flex; width:min(520px,100%); height:42px; align-items:center; gap:9px; margin:0 0 14px; border:1px solid #e5d9cf; border-radius:10px; background:#fff; padding:0 12px; color:#93847e; }
+.customer-order-search input { width:100%; min-width:0; border:0; outline:0; background:transparent; color:inherit; font:inherit; font-size:13px; }
+.customer-order-search:focus-within { border-color:#986e35; box-shadow:0 0 0 3px rgb(152 110 53 / 12%); }
+.customer-order-progress-card { margin-bottom:12px; border:1px solid #e8ddd6; border-radius:14px; background:#fff; padding:18px 20px; box-shadow:0 5px 18px rgb(40 25 25 / 5%); }
+.customer-order-progress-card > header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+.customer-order-progress-card > header span { color:#887a74; font-size:11px; font-weight:750; letter-spacing:.08em; }
+.customer-order-progress-card h3 { margin:4px 0 0; font-size:17px; }
+.customer-order-current-status { border-radius:999px; background:#f7f0df; padding:7px 11px; color:#755414; font-size:12px; }
+.customer-order-current-status.status-preparing { background:#fff0df; color:#a75612; }
+.customer-order-current-status.status-ready { background:#e8f6ed; color:#287446; }
+.customer-order-items-summary { margin:10px 0 17px; color:#766b67; font-size:13px; }
+.customer-order-terminal-note { margin:12px 0 0; color:#766b67; font-size:13px; }
+.customer-order-status-steps { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); margin:0; padding:0; list-style:none; }
+.customer-order-status-steps li { position:relative; display:flex; min-width:0; flex-direction:column; align-items:center; gap:7px; color:#988d88; font-size:12px; text-align:center; }
+.customer-order-status-steps li::before { position:absolute; top:15px; right:50%; z-index:0; width:100%; height:2px; background:#e9e2de; content:""; }
+.customer-order-status-steps li:first-child::before { display:none; }
+.customer-order-step-marker { position:relative; z-index:1; display:grid; width:32px; height:32px; place-items:center; border:2px solid #e4dbd6; border-radius:50%; background:#fff; color:#9a8d86; }
+.customer-order-status-steps li.is-complete,.customer-order-status-steps li.is-current { color:#702b38; font-weight:700; }
+.customer-order-status-steps li.is-complete::before { background:#9a5b63; }
+.customer-order-status-steps li.is-complete .customer-order-step-marker { border-color:#9a5b63; background:#9a5b63; color:#fff; }
+.customer-order-status-steps li.is-current .customer-order-step-marker { border-color:#702b38; background:#702b38; color:#fff; box-shadow:0 0 0 4px rgb(112 43 56 / 12%); }
+.customer-order-tracker-message { border:1px solid #e8ddd6; border-radius:12px; background:#fff; padding:16px; color:#766b67; font-size:13px; }
+.customer-order-tracker-message.is-error { border-color:#efc9c9; color:#a3323a; }
+:root[data-theme="dark"] .customer-order-tracker { color:#f0e7e5; }
+:root[data-theme="dark"] .customer-order-progress-card,:root[data-theme="dark"] .customer-order-tracker-message,:root[data-theme="dark"] .customer-order-tracker-heading > button { border-color:#40383a; background:#211d1f; color:#e9dfdd; }
+:root[data-theme="dark"] .customer-order-search { border-color:#40383a; background:#211d1f; color:#c1b4b1; }
+:root[data-theme="dark"] .customer-order-progress-card > header span,:root[data-theme="dark"] .customer-order-items-summary,:root[data-theme="dark"] .customer-order-tracker-message { color:#b9adaa; }
+:root[data-theme="dark"] .customer-order-terminal-note { color:#b9adaa; }
+:root[data-theme="dark"] .customer-order-current-status { background:#403722; color:#edd391; }
+:root[data-theme="dark"] .customer-order-current-status.status-preparing { background:#432f20; color:#ffbf83; }
+:root[data-theme="dark"] .customer-order-current-status.status-ready { background:#20392d; color:#9de0b5; }
+:root[data-theme="dark"] .customer-order-status-steps li { color:#a99c99; }
+:root[data-theme="dark"] .customer-order-status-steps li.is-complete,:root[data-theme="dark"] .customer-order-status-steps li.is-current { color:#e5bcc2; }
+:root[data-theme="dark"] .customer-order-status-steps li::before { background:#4a4142; }
+:root[data-theme="dark"] .customer-order-step-marker { border-color:#51484a; background:#292426; color:#bbada9; }
+@media(max-width:600px) {
+  .customer-order-tracker { width:calc(100% - 28px); margin-top:18px; }
+  .customer-order-tracker-heading h2 { font-size:20px; }
+  .customer-order-progress-card { padding:14px; }
+  .customer-order-status-steps li { font-size:10px; }
+  .customer-order-step-marker { width:29px; height:29px; }
+  .customer-order-status-steps li::before { top:14px; }
+}
