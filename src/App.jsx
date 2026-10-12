@@ -39,6 +39,8 @@ import ThemeToggle from "./components/ThemeToggle.jsx";
 import OrdersPage from "./pages/shared/OrdersPage.jsx";
 import ManagerOrderDetailsPage from "./pages/manager/ManagerOrderDetailsPage.jsx";
 import ManagerSpotOrderPage from "./pages/manager/ManagerSpotOrderPage.jsx";
+import ManagerOperatingHoursPage from "./pages/manager/ManagerOperatingHoursPage.jsx";
+import ChefServiceHoursPage from "./pages/chef/ChefServiceHoursPage.jsx";
 
 export default function App() {
   return (
@@ -220,6 +222,7 @@ export default function App() {
         />
         <Route path="/manager/tables" element={<ManagerProtectedRoute><ManagerFloorsPage /></ManagerProtectedRoute>} />
         <Route path="/manager/reservations" element={<ManagerProtectedRoute><ManagerReservationsPage /></ManagerProtectedRoute>} />
+        <Route path="/manager/operating-hours" element={<ManagerProtectedRoute><ManagerOperatingHoursPage /></ManagerProtectedRoute>} />
         <Route path="/manager/orders" element={<ManagerProtectedRoute><OrdersPage mode="manager" /></ManagerProtectedRoute>} />
         <Route path="/manager/spot-order" element={<ManagerProtectedRoute><ManagerSpotOrderPage /></ManagerProtectedRoute>} />
         <Route path="/manager/orders/:orderId" element={<ManagerProtectedRoute><ManagerOrderDetailsPage /></ManagerProtectedRoute>} />
@@ -249,6 +252,7 @@ export default function App() {
           }
         />
         <Route path="/chef/orders" element={<ChefProtectedRoute><OrdersPage mode="chef" /></ChefProtectedRoute>} />
+        <Route path="/chef/service-hours" element={<ChefProtectedRoute><ChefServiceHoursPage /></ChefProtectedRoute>} />
         <Route
           path="/chef/change-password"
           element={

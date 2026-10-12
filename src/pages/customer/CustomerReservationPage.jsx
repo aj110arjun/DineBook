@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, CalendarDays, Check, Clock3, MapPin, Minus, Plus, Users, Wallet } from "lucide-react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import QRCode from "qrcode";
@@ -110,11 +110,15 @@ export default function CustomerReservationPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [restaurant, setRestaurant] = useState(null);
+  const [hoursExceptions, setHoursExceptions] = useState([]);
+  const [hoursLoaded, setHoursLoaded] = useState(false);
   const [user, setUser] = useState(null);
   const [date, setDate] = useState(location.state?.date || todayInRestaurantTimezone());
   const [month, setMonth] = useState(() => { const selected = new Date(`${location.state?.date || todayInRestaurantTimezone()}T12:00:00`); return new Date(selected.getFullYear(), selected.getMonth(), 1); });
   const [guests, setGuests] = useState(Number(location.state?.guests || 2));
   const [time, setTime] = useState(to24Hour(location.state?.time || "20:00"));
+  const selectedTimeRef = useRef(time);
+  selectedTimeRef.current = time;
   const [walletBalance, setWalletBalance] = useState(0);
   const [walletLoading, setWalletLoading] = useState(true);
   const [availability, setAvailability] = useState({});
@@ -136,6 +140,8 @@ export default function CustomerReservationPage() {
   const hasConfiguredHours = operatingHours.length > 0;
 
   function isOpenDate(value) {
+    const exception = hoursExceptions.find((item) => item.start_date <= value && item.end_date >= value);
+    if (exception) return !exception.is_closed && exception.periods?.length > 0;
     const day = new Date(`${value}T12:00:00`).getDay();
     return Boolean(hoursByDay[weekDays[day]]?.enabled);
   }
@@ -143,6 +149,7 @@ export default function CustomerReservationPage() {
   useEffect(() => {
     let active = true;
     requestJson(`/api/customer/restaurants/${restaurantId}`).then((value) => active && setRestaurant(value)).catch((reason) => active && setError(reason.message));
+    requestJson(`/api/customer/restaurants/${restaurantId}/operating-hours`).then((value) => { if (active) { setHoursExceptions(value.exceptions || []); setHoursLoaded(true); } }).catch(() => { if (active) { setHoursExceptions([]); setHoursLoaded(true); } });
     requestJson("/api/customer/me").then((value) => active && setUser(value)).catch(() => active && navigate("/customer/login", { replace: true }));
     return () => { active = false; };
   }, [restaurantId, navigate]);
@@ -157,7 +164,7 @@ export default function CustomerReservationPage() {
   }, []);
 
   useEffect(() => {
-    if (!hasConfiguredHours || isOpenDate(date)) return;
+    if (!hasConfiguredHours || !hoursLoaded || isOpenDate(date)) return;
     const start = new Date(`${date}T12:00:00`);
     for (let offset = 1; offset <= 370; offset += 1) {
       const candidate = new Date(start.getFullYear(), start.getMonth(), start.getDate() + offset);
@@ -168,7 +175,7 @@ export default function CustomerReservationPage() {
         break;
       }
     }
-  }, [hasConfiguredHours, hoursByDay, date]);
+  }, [hasConfiguredHours, hoursLoaded, hoursExceptions, hoursByDay, date]);
 
   useEffect(() => {
     let active = true;
@@ -176,19 +183,21 @@ export default function CustomerReservationPage() {
     setTimeSlotsLoading(true);
     setAvailability({});
     const params = new URLSearchParams({ restaurant_id: restaurantId, reservation_date: date, number_of_guests: String(guests) });
-    requestJson(`/api/customer/reservations/time-slots?${params}`).then((result) => {
+    const refreshAvailability = (initial = false) => requestJson(`/api/customer/reservations/time-slots?${params}`).then((result) => {
       if (!active) return;
       const nextAvailability = Object.fromEntries((result.slots || []).map((slot) => [slot.time, { loading: false, tables: slot.tables || [] }]));
       setAvailability(nextAvailability);
-      if (!nextAvailability[time] || !nextAvailability[time].tables.length) {
+      if (!nextAvailability[selectedTimeRef.current] || !nextAvailability[selectedTimeRef.current].tables.length) {
         const firstAvailable = Object.keys(nextAvailability).find((slot) => nextAvailability[slot].tables.length);
         if (firstAvailable) setTime(firstAvailable);
       }
-    }).catch((reason) => {
-      if (!active) return;
-      setAvailabilityError(reason.message);
-    }).finally(() => { if (active) setTimeSlotsLoading(false); });
-    return () => { active = false; };
+      setAvailabilityError("");
+    }).catch((reason) => { if (active) setAvailabilityError(reason.message); }).finally(() => { if (active && initial) setTimeSlotsLoading(false); });
+    refreshAvailability(true);
+    const timer = window.setInterval(() => refreshAvailability(false), 30000);
+    const onFocus = () => refreshAvailability(false);
+    window.addEventListener("focus", onFocus);
+    return () => { active = false; window.clearInterval(timer); window.removeEventListener("focus", onFocus); };
   }, [restaurantId, date, guests]);
 
   useEffect(() => {
@@ -232,6 +241,7 @@ export default function CustomerReservationPage() {
   const checkoutTotal = quotedFee;
   const amountDueNow = quotedFee;
   const monthTitle = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(month);
+  const selectedDateException = hoursExceptions.find((item) => item.start_date <= date && item.end_date >= date);
 
   function chooseDate(value) {
     setDate(value);
@@ -281,13 +291,13 @@ export default function CustomerReservationPage() {
           <section className="customer-booking-main">
             {step === 1 && <>
               <section className="booking-calendar-panel"><header><div><span className="booking-step-label">RESERVATION STEP 1 OF 3</span><h2>Select Date</h2></div><div className="booking-month-controls"><button type="button" aria-label="Previous month" onClick={() => setMonth((current) => new Date(current.getFullYear(), current.getMonth() - 1, 1))}><ArrowLeft size={16} /></button><strong>{monthTitle}</strong><button type="button" aria-label="Next month" onClick={() => setMonth((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1))}><ArrowRight size={16} /></button></div></header>
-                <div className="booking-calendar-grid">{["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => <span className="booking-calendar-weekday" key={day}>{day}</span>)}{calendarDays.map((day) => { const key = isoDate(day); const outside = day.getMonth() !== month.getMonth(); const past = key <= todayInRestaurantTimezone(); const closed = !hoursByDay[weekDays[day.getDay()]]?.enabled; return <button type="button" disabled={outside || past || closed} title={closed ? "Restaurant is closed" : undefined} key={key} className={`${outside ? "outside " : ""}${past ? "past " : ""}${closed ? "closed " : ""}${date === key ? "selected" : ""}`} onClick={() => chooseDate(key)}>{day.getDate()}</button>; })}</div>
+                <div className="booking-calendar-grid">{["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => <span className="booking-calendar-weekday" key={day}>{day}</span>)}{calendarDays.map((day) => { const key = isoDate(day); const outside = day.getMonth() !== month.getMonth(); const past = key <= todayInRestaurantTimezone(); const closed = hasConfiguredHours && !isOpenDate(key); return <button type="button" disabled={outside || past || closed} title={closed ? "Restaurant is closed" : undefined} key={key} className={`${outside ? "outside " : ""}${past ? "past " : ""}${closed ? "closed " : ""}${date === key ? "selected" : ""}`} onClick={() => chooseDate(key)}>{day.getDate()}</button>; })}</div>
                 {date <= todayInRestaurantTimezone() && <p className="booking-hours-message">Reservations must be made at least one day in advance. Please choose a future date.</p>}
                 {!hasConfiguredHours && <p className="booking-hours-message">This restaurant has not configured operating hours, so reservations are unavailable.</p>}
               </section>
               <section className="booking-guest-panel"><div><h3>Number of Guests</h3><p>For parties larger than 16, please contact the restaurant.</p></div><div className="booking-guest-stepper"><button type="button" aria-label="Remove guest" disabled={guests <= 1} onClick={() => setGuests((value) => Math.max(1, value - 1))}><Minus size={16} /></button><strong>{guests} {guests === 1 ? "Guest" : "Guests"}</strong><button type="button" aria-label="Add guest" disabled={guests >= 16} onClick={() => setGuests((value) => Math.min(16, value + 1))}><Plus size={16} /></button></div></section>
               <section className="booking-intent-panel"><h3>Reserve your table</h3><p>Choose your visit details and confirm your reservation. Food orders are handled by the restaurant manager at reception.</p></section>
-              <section className="booking-slots-panel"><h3>Available time slots</h3><p className="booking-hours-message">Choose a 30-minute reservation start time. Each slot reflects current table availability for {guests} {guests === 1 ? "guest" : "guests"}.</p>{timeSlotsLoading ? <p className="booking-hours-message">Checking available times…</p> : <div className="booking-time-slots" role="group" aria-label="Available reservation times">{Object.keys(availability).map((slot) => <SlotButton key={slot} slot={displayTime(slot)} selected={time === slot} availability={availability[slot]} onClick={() => { setTime(slot); setSelectedTableId(""); }} />)}</div>}{!timeSlotsLoading && !Object.keys(availability).length && <p className="reservation-page-error">{date <= todayInRestaurantTimezone() ? "No same-day reservations. Choose a future date." : "No reservation times are available for this date."}</p>}{availabilityError && <p className="reservation-page-error">{availabilityError}</p>}</section>
+              <section className="booking-slots-panel"><h3>Available time slots</h3><p className="booking-hours-message">Choose a 30-minute reservation start time. Each slot reflects current table availability for {guests} {guests === 1 ? "guest" : "guests"}.</p>{selectedDateException && <p className="booking-hours-message">Special schedule: {selectedDateException.is_closed ? "Closed" : selectedDateException.periods.map((period) => `${period.opens}–${period.closes}`).join(" · ")}{selectedDateException.reason ? ` · ${selectedDateException.reason}` : ""}</p>}{timeSlotsLoading ? <p className="booking-hours-message">Checking available times…</p> : <div className="booking-time-slots" role="group" aria-label="Available reservation times">{Object.keys(availability).map((slot) => <SlotButton key={slot} slot={displayTime(slot)} selected={time === slot} availability={availability[slot]} onClick={() => { setTime(slot); setSelectedTableId(""); }} />)}</div>}{!timeSlotsLoading && !Object.keys(availability).length && <p className="reservation-page-error">{selectedDateException?.is_closed ? `The restaurant is closed on this date.${selectedDateException.reason ? ` ${selectedDateException.reason}` : ""}` : date <= todayInRestaurantTimezone() ? "No same-day reservations. Choose a future date." : "No reservation times are available for this date."}</p>}{availabilityError && <p className="reservation-page-error">{availabilityError}</p>}</section>
             </>}
 
             {step === 2 && <section className="booking-table-panel"><span className="booking-step-label">RESERVATION STEP 2 OF 3</span><h2>Select Your Table Setup</h2><p>Suggested tables for {selectedDateLabel} at {displayTime(time)} · {guests} guests</p><div className="booking-table-legend"><span>Available</span><span>Selected</span><span>Unavailable</span></div><div className="booking-table-list">{availableTables.map((table) => <button type="button" key={table.id} className={selectedTableId === table.id ? "selected" : ""} onClick={() => setSelectedTableId(table.id)}><span className="booking-table-bullet">{selectedTableId === table.id ? <Check size={15} /> : null}</span><span><strong>{table.table_ids.length > 1 ? `${table.table_ids.length} tables together` : `Table ${table.table_number}`}</strong><small>{table.floor_name} · Tables {table.table_number} · Seats up to {table.capacity} · {table.table_type}</small></span><b>₹{Number(table.reservation_fee).toFixed(2)}</b></button>)}</div><button type="button" className="booking-back-button" onClick={() => setStep(1)}>Back to date & time</button></section>}
