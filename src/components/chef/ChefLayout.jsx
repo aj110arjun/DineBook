@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Bell, Check, ChefHat, ChartNoAxesColumn, LayoutDashboard, List, LogOut, Menu, Settings, ShoppingBag, Star, X } from "lucide-react";
+import { Bell, Check, ChefHat, ChartNoAxesColumn, Clock3, LayoutDashboard, List, LogOut, Menu, Settings, ShoppingBag, Star, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
 
 const navigation = [
   { label: "Dashboard", icon: LayoutDashboard, to: "/chef/dashboard" },
   { label: "Kitchen Orders", icon: Bell, to: "/chef/orders" },
+  { label: "Service Hours", icon: Clock3, to: "/chef/service-hours" },
   { label: "Reservations", icon: ShoppingBag },
   { label: "Menu", icon: List },
   { label: "Reviews", icon: Star },
