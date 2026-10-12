@@ -39,7 +39,10 @@ export async function requestJson(path, { fallbackMessage, ...options } = {}) {
       ...options,
       credentials: "include",
       headers: {
-        ...(options.body && !(typeof FormData !== "undefined" && options.body instanceof FormData) ? { "Content-Type": "application/json" } : {}),
+        ...(options.body &&
+        !(typeof FormData !== "undefined" && options.body instanceof FormData)
+          ? { "Content-Type": "application/json" }
+          : {}),
         ...options.headers,
       },
     });

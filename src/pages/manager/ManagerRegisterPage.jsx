@@ -684,17 +684,17 @@ export default function ManagerRegisterPage() {
     <ManagerAuthLayout>
       <div className="w-full">
         {/* Progress */}
-        <div className="mb-10 border-b border-stone-200 pb-7">
-          <div className="flex w-full items-start justify-between">
+        <div className="manager-registration-progress mb-10 border-b border-stone-200 pb-7">
+          <div className="manager-registration-steps flex w-full items-start justify-between">
             {steps.map((label, index) => {
               const stepNumber = index + 1;
               const active = stepNumber === step;
               const completed = stepNumber < step;
 
               return (
-                <div key={label} className="flex flex-1 items-start">
+                <div key={label} className="manager-registration-step flex flex-1 items-start">
                   {/* Step */}
-                  <div className="flex min-w-[90px] flex-col items-center">
+                  <div className="manager-registration-step-label flex min-w-[90px] flex-col items-center">
                     <button
                       type="button"
                       onClick={() => {

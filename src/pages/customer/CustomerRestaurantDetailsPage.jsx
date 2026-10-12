@@ -73,18 +73,10 @@ export default function CustomerRestaurantDetailsPage() {
   const [menuQuery, setMenuQuery] = useState("");
   const [menuSort, setMenuSort] = useState("name");
   const [menuPage, setMenuPage] = useState(1);
-  const [orderCart, setOrderCart] = useState([]);
-  const [selectedOrderReservationId, setSelectedOrderReservationId] = useState("");
-  const [offerCode, setOfferCode] = useState("");
-  const [orderPaymentMethod, setOrderPaymentMethod] = useState("PAY_AT_DESK");
-  const [orderBusy, setOrderBusy] = useState(false);
-  const [orderMessage, setOrderMessage] = useState("");
-  const [checkoutKey, setCheckoutKey] = useState(() => window.crypto.randomUUID());
   const activeSection = detailTabs.some((tab) => tab.id === section)
     ? section
     : "about";
   const restaurantReservations = myReservations.filter((item) => String(item.restaurant_id) === String(restaurantId));
-  const seatedReservations = restaurantReservations.filter((item) => item.status === "SEATED");
   const sortedReservations = restaurantReservations
     .filter((item) => reservationStatusFilter === "ALL" || item.status === reservationStatusFilter)
     .filter((item) => !reservationDateFilter || item.reservation_date === reservationDateFilter)
@@ -204,41 +196,6 @@ export default function CustomerRestaurantDetailsPage() {
   }
 
   function reservationStartTime() { return time; }
-  function addToOrderCart(variant) {
-    setOrderCart((current) => {
-      const existing = current.find((line) => line.variant_id === variant.id);
-      return existing
-        ? current.map((line) => line.variant_id === variant.id ? { ...line, quantity: Math.min(99, line.quantity + 1) } : line)
-        : [...current, { variant_id: variant.id, quantity: 1, name: `${variant.food_name} · ${variant.name}`, price: Number(variant.price) }];
-    });
-    setOrderMessage("");
-  }
-  async function submitFoodOrder(event) {
-    event.preventDefault();
-    if (!orderCart.length || orderBusy) return;
-    if (!selectedOrderReservationId) {
-      setOrderMessage("Choose a seated reservation at this restaurant before placing an order.");
-      return;
-    }
-    setOrderBusy(true);
-    setOrderMessage("");
-    try {
-      const order = await requestJson(`/api/customer/reservations/${selectedOrderReservationId}/orders`, { method: "POST", body: JSON.stringify({
-        idempotency_key: checkoutKey,
-        items: orderCart.map(({ variant_id, quantity }) => ({ variant_id, quantity })),
-        offer_code: offerCode.trim() || null,
-        payment_method: orderPaymentMethod,
-      }) });
-      setOrderCart([]);
-      setOfferCode("");
-      setCheckoutKey(window.crypto.randomUUID());
-      setOrderMessage(`Order ${order.id.slice(0, 8).toUpperCase()} placed. Total ₹${order.total.toFixed(2)}.`);
-    } catch (reason) {
-      setOrderMessage(reason.message);
-    } finally {
-      setOrderBusy(false);
-    }
-  }
   function displayTime(value) {
     const [hour, minute] = value.split(":").map(Number);
     return `${hour % 12 || 12}:${String(minute).padStart(2, "0")} ${hour >= 12 ? "PM" : "AM"}`;
@@ -530,7 +487,7 @@ export default function CustomerRestaurantDetailsPage() {
                                         {food.variants?.length > 0 && (
                                           <ul className="customer-menu-variants">
                                             {food.variants.filter((variant) => variant.is_available).map((variant) => (
-                                              <li key={variant.id}><span>{variant.name}</span><strong>₹{Number(variant.price).toFixed(2)}</strong><button type="button" onClick={() => addToOrderCart({ ...variant, food_name: food.name, food_image_url: food.image_url })}>Add</button></li>
+                                              <li key={variant.id}><span>{variant.name}</span><strong>₹{Number(variant.price).toFixed(2)}</strong><span className="customer-menu-service-note">Order at reception</span></li>
                                             ))}
                                           </ul>
                                         )}
@@ -542,19 +499,7 @@ export default function CustomerRestaurantDetailsPage() {
                               {filteredMenuFoods.length > menuPageSize && <Pagination page={menuPage} pageSize={menuPageSize} total={filteredMenuFoods.length} onPageChange={setMenuPage} label="menu items" className="customer-menu-pagination" />}
                             </div>
                           ))}
-                        <form className="customer-order-cart" onSubmit={submitFoodOrder}>
-                          <div className="customer-order-cart-heading"><h3>Your order</h3><Link to="/customer/profile/orders">Order history</Link></div>
-                          <label>Dining reservation<select value={selectedOrderReservationId} onChange={(event) => setSelectedOrderReservationId(event.target.value)}><option value="">Choose a seated reservation</option>{seatedReservations.map((reservation) => <option value={reservation.id} key={reservation.id}>{reservation.reservation_date} · {reservation.tables?.map((table) => `${table.floor_name} · ${table.table_number}`).join(", ") || "Table pending"}</option>)}</select></label>
-                          {!seatedReservations.length && <p>Orders become available after the manager marks your reservation as seated.</p>}
-                          {!orderCart.length ? <p>Your cart is empty. Add a menu option to get started.</p> : <>
-                          <ul>{orderCart.map((line) => <li key={line.variant_id}>{line.food_image_url && <img className="order-food-thumb" src={line.food_image_url} alt="" loading="lazy" />}<span>{line.name}</span><div><button type="button" aria-label={`Remove one ${line.name}`} onClick={() => setOrderCart((items) => items.flatMap((item) => item.variant_id !== line.variant_id ? [item] : item.quantity > 1 ? [{ ...item, quantity: item.quantity - 1 }] : []))}>−</button><b>{line.quantity}</b><button type="button" aria-label={`Add one ${line.name}`} onClick={() => setOrderCart((items) => items.map((item) => item.variant_id === line.variant_id ? { ...item, quantity: Math.min(99, item.quantity + 1) } : item))}>+</button><strong>₹{(line.price * line.quantity).toFixed(2)}</strong></div></li>)}</ul>
-                            <label>Offer code<input value={offerCode} onChange={(event) => setOfferCode(event.target.value)} placeholder="Enter a restaurant offer" /></label>
-                            <label>Payment<select value={orderPaymentMethod} onChange={(event) => setOrderPaymentMethod(event.target.value)}><option value="PAY_AT_DESK">Pay at restaurant</option><option value="WALLET">DineBook wallet</option></select></label>
-                            <p className="customer-order-cart-total">Subtotal: ₹{orderCart.reduce((total, line) => total + line.price * line.quantity, 0).toFixed(2)} <small>Discount is calculated at checkout.</small></p>
-                            <button className="customer-order-submit" type="submit" disabled={orderBusy}>{orderBusy ? "Placing order…" : "Place order"}</button>
-                          </>}
-                          {orderMessage && <p role="status">{orderMessage}</p>}
-                        </form>
+                        <p className="customer-menu-preorder-note">Food orders are placed with the restaurant manager at reception.</p>
                       </>
                     )}
                   </section>

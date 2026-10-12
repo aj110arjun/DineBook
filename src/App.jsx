@@ -38,6 +38,7 @@ import PortalGuestOnlyRoute from "./components/auth/PortalGuestOnlyRoute.jsx";
 import ThemeToggle from "./components/ThemeToggle.jsx";
 import OrdersPage from "./pages/shared/OrdersPage.jsx";
 import ManagerOrderDetailsPage from "./pages/manager/ManagerOrderDetailsPage.jsx";
+import ManagerSpotOrderPage from "./pages/manager/ManagerSpotOrderPage.jsx";
 
 export default function App() {
   return (
@@ -220,6 +221,7 @@ export default function App() {
         <Route path="/manager/tables" element={<ManagerProtectedRoute><ManagerFloorsPage /></ManagerProtectedRoute>} />
         <Route path="/manager/reservations" element={<ManagerProtectedRoute><ManagerReservationsPage /></ManagerProtectedRoute>} />
         <Route path="/manager/orders" element={<ManagerProtectedRoute><OrdersPage mode="manager" /></ManagerProtectedRoute>} />
+        <Route path="/manager/spot-order" element={<ManagerProtectedRoute><ManagerSpotOrderPage /></ManagerProtectedRoute>} />
         <Route path="/manager/orders/:orderId" element={<ManagerProtectedRoute><ManagerOrderDetailsPage /></ManagerProtectedRoute>} />
         <Route path="/manager/floors" element={<Navigate to="/manager/tables" replace />} />
         <Route

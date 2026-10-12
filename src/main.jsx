@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App.jsx";
 import "./index.css";
 import "./styles.css";
+import "./design-system.css";
 
 const savedTheme = window.localStorage.getItem("dinebook-theme");
 document.documentElement.dataset.theme = savedTheme === "dark" ? "dark" : "light";

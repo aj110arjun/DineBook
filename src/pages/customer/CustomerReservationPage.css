@@ -211,3 +211,17 @@
 :root[data-theme="dark"] .booking-download-pass { border-color:#b87781; color:#e7c5ca; }
 :root[data-theme="dark"] .booking-download-pass.ready { background:#4f101d; color:#d7b96c; }
 :root[data-theme="dark"] .booking-table-legend { background: #211d1f; color: #c6bab6; }
+.booking-preorder-variant .booking-add-preorder{display:inline-flex;width:auto;min-width:68px;height:30px;align-items:center;justify-content:center;gap:5px;padding:0 9px;border-color:#79323d;background:#79323d;color:#fff;font-size:var(--font-size-xs);font-weight:700}
+.booking-checkout-food-line>span{display:flex;min-width:0;align-items:center;justify-content:space-between;gap:12px;flex:1}
+.booking-checkout-food-name{display:grid;min-width:0;grid-template-columns:auto 1fr;gap:2px 6px;color:#584d48;font-size:var(--font-size-xs)}
+.booking-checkout-food-name>b{grid-column:1/-1;overflow-wrap:anywhere}
+.booking-checkout-food-name small{grid-column:1/-1;color:#968a81;font-size:var(--font-size-xs)}
+.booking-checkout-quantity{display:flex;flex:none;align-items:center;gap:6px}
+.booking-checkout-quantity button{display:grid;width:25px;height:25px;place-items:center;border:1px solid #e8deda;border-radius:7px;background:#fff;color:#79323d;font-size:var(--font-size-md);cursor:pointer}
+.booking-checkout-quantity button:disabled{opacity:.4;cursor:default}
+.booking-checkout-quantity b{min-width:12px;color:#413735;text-align:center}
+:root[data-theme="dark"] .booking-preorder-variant .booking-add-preorder{border-color:#79323d;background:#79323d;color:#fff}
+:root[data-theme="dark"] .booking-checkout-food-name{color:#eee4e2}
+:root[data-theme="dark"] .booking-checkout-food-name small{color:#b7aaab}
+:root[data-theme="dark"] .booking-checkout-quantity button{border-color:#514246;background:#292426;color:#e9c2c6}
+:root[data-theme="dark"] .booking-checkout-quantity b{color:#f1e9e8}

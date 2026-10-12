@@ -97,7 +97,7 @@ export default function ManagerStaffPage() {
         <PortalBreadcrumb home={{ label: "Home", to: "/manager/dashboard" }} items={[{ label: "Staff" }]} className="manager-breadcrumb" />
         <div className="manager-heading"><div><h2>Restaurant Staff</h2><p>Add and manage staff accounts for your restaurant.</p></div></div>
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+        <div className="manager-staff-layout grid gap-6 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
           <section className="manager-staff-panel rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
             <div className="mb-5 flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-lg bg-wine/10 text-wine"><ChefHat size={19} /></span><div><h3 className="font-semibold text-ink">Add a Chef</h3><p className="mt-1 text-xs text-stone-500">Sign-in credentials will be emailed to the chef.</p></div></div>
             <form onSubmit={handleAddChef} noValidate>

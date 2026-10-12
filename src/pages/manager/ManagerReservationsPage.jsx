@@ -300,6 +300,7 @@ export default function ManagerReservationsPage() {
         ...current,
         [item.id]: [...(current[item.id] || []).filter((entry) => entry.id !== order.id), order],
       }));
+      await loadReservationOrders(item.id);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -620,7 +621,7 @@ export default function ManagerReservationsPage() {
                             </div>
                           ))}
                           {item.status === "SEATED" && item.fulfillment_type === "PREORDER" && item.preorder_items?.length > 0 && !(reservationOrders[item.id] || []).some((order) => order.is_preorder) && <button type="button" disabled={busyId === item.id || ordersLoadingId === item.id} onClick={() => queueExistingPreorder(item)}>{busyId === item.id ? "Sending…" : "Send existing preorder to kitchen"}</button>}
-                          {item.status === "SEATED" && <button type="button" onClick={() => openDeskOrder(item)}>Order at desk</button>}
+                          {item.status === "SEATED" && !(item.fulfillment_type === "PREORDER" && item.preorder_items?.length > 0) && <button type="button" onClick={() => openDeskOrder(item)}>Order at desk</button>}
                         </div>
                         {item.special_request && <p>{item.special_request}</p>}
                         {["CONFIRMED", "SEATED"].includes(item.status) && item.preorder_payment_method === "PAY_AT_DESK" && item.preorder_payment_status === "PENDING" && <button type="button" disabled={busyId === item.id} onClick={() => confirmPreorderPayment(item)}>{busyId === item.id ? "Recording…" : "Record preorder payment received"}</button>}
