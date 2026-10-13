@@ -8329,6 +8329,189 @@ a:focus-visible,
   border-color: #40383a;
   background: #292426;
 }
+
+/* Keep the admin restaurant profile within its content area at every viewport. */
+.admin-restaurant-detail-layout,
+.admin-restaurant-detail-layout * {
+  box-sizing: border-box;
+}
+.admin-restaurant-detail-layout > *,
+.admin-restaurant-detail-layout .admin-restaurant-detail-heading > div,
+.admin-restaurant-detail-layout .admin-restaurant-detail-card,
+.admin-restaurant-detail-layout .admin-restaurant-detail-grid,
+.admin-restaurant-detail-layout .admin-restaurant-detail-item,
+.admin-restaurant-detail-layout .admin-restaurant-description,
+.admin-restaurant-detail-layout .admin-restaurant-hours,
+.admin-restaurant-detail-layout .admin-restaurant-documents,
+.admin-restaurant-detail-layout .admin-floor-list,
+.admin-restaurant-detail-layout .admin-floor-item,
+.admin-restaurant-detail-layout .admin-menu-inspection-grid {
+  min-width: 0;
+  max-width: 100%;
+}
+.admin-restaurant-detail-layout > .admin-restaurant-detail-card,
+.admin-restaurant-detail-layout > .admin-restaurant-detail-heading {
+  overflow-wrap: anywhere;
+}
+.admin-restaurant-detail-layout .admin-restaurant-detail-heading {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.admin-restaurant-detail-layout .admin-restaurant-detail-heading > div:first-child {
+  flex: 1 1 240px;
+}
+.admin-restaurant-detail-layout .admin-restaurant-detail-heading h2,
+.admin-restaurant-detail-layout .admin-restaurant-detail-heading p {
+  overflow-wrap: anywhere;
+}
+.admin-restaurant-detail-layout .admin-restaurant-status-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  gap: 9px;
+  max-width: 100%;
+}
+.admin-restaurant-detail-layout .admin-restaurant-status-actions button {
+  max-width: 100%;
+  white-space: normal;
+}
+.admin-restaurant-detail-layout .admin-restaurant-detail-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 205px), 1fr));
+}
+.admin-restaurant-detail-layout .admin-restaurant-detail-item {
+  align-items: flex-start;
+}
+.admin-restaurant-detail-layout .admin-restaurant-detail-item > div,
+.admin-restaurant-detail-layout .admin-restaurant-detail-item strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+.admin-restaurant-detail-layout .admin-restaurant-detail-item span {
+  overflow-wrap: anywhere;
+}
+.admin-restaurant-detail-layout .admin-restaurant-hours {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 225px), 1fr));
+}
+.admin-restaurant-detail-layout .admin-restaurant-hours > div {
+  display: grid;
+  grid-template-columns: minmax(5rem, 0.55fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  min-width: 0;
+}
+.admin-restaurant-detail-layout .admin-restaurant-hours strong,
+.admin-restaurant-detail-layout .operating-audit {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.admin-restaurant-detail-layout .operating-audit {
+  display: block;
+  margin-top: 3px;
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+}
+.admin-restaurant-detail-layout .operating-exception-list {
+  display: grid;
+  gap: 8px;
+  max-width: 100%;
+  padding: 0;
+  list-style: none;
+}
+.admin-restaurant-detail-layout .operating-exception-list li,
+.admin-restaurant-detail-layout .operating-exception-list li > div {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+.admin-restaurant-detail-layout .operating-exception-list li {
+  padding: 12px;
+  border: 1px solid #edf1f2;
+  border-radius: 10px;
+}
+.admin-restaurant-detail-layout .operating-exception-list li > div > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.admin-restaurant-detail-layout .operating-inspection-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr));
+  align-items: end;
+  gap: 10px;
+  margin: 14px 0;
+}
+.admin-restaurant-detail-layout .operating-inspection-form label {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+.admin-restaurant-detail-layout .operating-inspection-form input,
+.admin-restaurant-detail-layout .operating-inspection-form button {
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  max-width: 100%;
+}
+.admin-restaurant-detail-layout .operating-inspection-result {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 9px;
+  overflow-wrap: anywhere;
+}
+.admin-restaurant-detail-layout .admin-restaurant-documents a,
+.admin-restaurant-detail-layout .admin-restaurant-documents a span,
+.admin-restaurant-detail-layout .admin-restaurant-documents strong,
+.admin-restaurant-detail-layout .admin-restaurant-documents small {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.admin-restaurant-detail-layout .admin-floor-heading {
+  flex-wrap: wrap;
+}
+.admin-restaurant-detail-layout .admin-page-actions,
+.admin-restaurant-detail-layout .admin-page-actions > * {
+  min-width: 0;
+  max-width: 100%;
+}
+.admin-restaurant-detail-layout .admin-menu-inspection-grid > article,
+.admin-restaurant-detail-layout .admin-menu-inspection-grid > article > * {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .admin-restaurant-detail-layout {
+    grid-template-columns: minmax(0, 1fr);
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+  .admin-restaurant-detail-layout > .admin-restaurant-detail-heading,
+  .admin-restaurant-detail-layout > .admin-restaurant-detail-card {
+    grid-column: 1;
+  }
+  .admin-restaurant-detail-layout .admin-restaurant-status-actions {
+    justify-content: flex-start;
+  }
+}
+@media (max-width: 360px) {
+  .admin-restaurant-detail-layout {
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+  .admin-restaurant-detail-layout > .admin-restaurant-detail-heading,
+  .admin-restaurant-detail-layout > .admin-restaurant-detail-card {
+    padding: 13px;
+  }
+  .admin-restaurant-detail-layout .admin-restaurant-detail-card h3 {
+    align-items: flex-start;
+  }
+}
 :root[data-theme="dark"] .admin-floor-item {
   border-color: #40383a;
   background: #292426;

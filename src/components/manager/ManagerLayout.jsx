@@ -37,7 +37,7 @@ const navigation = [
   { label: "Offers", icon: Tag },
   { label: "Reviews", icon: MessageCircle },
   { label: "Analytics", icon: CircleDollarSign },
-  { label: "Payments", icon: ClipboardList },
+  { label: "Payments", icon: ClipboardList, to: "/manager/payments" },
   { label: "Notifications", icon: Bell },
   { label: "Settings", icon: Settings },
 ];
@@ -87,7 +87,7 @@ export default function ManagerLayout({ children, title = "Dashboard" }) {
             <button
               key={label}
               type="button"
-              className={`manager-nav-item ${to === pathname || (label === "Menu" && pathname.startsWith("/manager/menu")) ? "active" : ""}`}
+              className={`manager-nav-item ${to === pathname || (label === "Menu" && pathname.startsWith("/manager/menu")) || (label === "Payments" && pathname.startsWith("/manager/payments")) ? "active" : ""}`}
               onClick={() => {
                 if (to) navigate(to);
                 setSidebarOpen(false);
