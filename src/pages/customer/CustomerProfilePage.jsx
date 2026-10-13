@@ -57,14 +57,14 @@ export default function CustomerProfilePage() {
   function toggle(key, value) { setPrefs((current) => ({ ...current, [key]: current[key].includes(value) ? current[key].filter((x) => x !== value) : [...current[key], value] })); }
   function save() { localStorage.setItem("dinebook-profile-preferences", JSON.stringify(prefs)); setSaved(true); window.setTimeout(() => setSaved(false), 2200); }
 
-  const navItems = [{ label: "Personal Information", icon: UserRound, to: "/customer/profile#personal" }, { label: "Saved Restaurants", icon: Heart, to: "/customer/profile#saved" }, { label: "Booking History", icon: CalendarDays, to: "/customer/profile/reservations" }, { label: "Payment History", icon: CreditCard, to: "/customer/profile/wallet#activity" }, { label: "Notification Settings", icon: Bell, to: "/customer/profile#notifications" }, { label: "Wallet", icon: Wallet, to: "/customer/profile/wallet" }];
+  const navItems = [{ label: "Personal Information", icon: UserRound, to: "/customer/profile#personal" }, { label: "Saved Restaurants", icon: Heart, to: "/customer/profile#saved" }, { label: "Booking History", icon: CalendarDays, to: "/customer/profile/reservations" }, { label: "Payment Transactions", icon: CreditCard, to: "/customer/profile/transactions" }, { label: "Notification Settings", icon: Bell, to: "/customer/profile#notifications" }, { label: "Wallet", icon: Wallet, to: "/customer/profile/wallet" }];
   return <div className="customer-home profile-page"><CustomerHeader user={user} onLogout={() => navigate("/customer/login")} />
     <main className="profile-shell">
       <nav className="profile-crumb"><Link to="/customer">Home</Link><span>/</span><span>Account</span><span>/</span><strong>{section}</strong></nav>
       <div className="profile-layout">
         <aside className="profile-sidebar">
           <div className="profile-identity"><div className="profile-avatar"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=240&h=240&fit=crop&crop=faces" alt="Profile" /></div><strong>{user?.name || "Your Profile"}</strong><span>{user?.email || ""}</span></div>
-          <div className="profile-menu">{navItems.map(({ label, icon: Icon, to }) => <Link className={section === label || (label === "Wallet" && location.pathname.endsWith("/wallet") && location.hash !== "#activity") || (label === "Payment History" && location.hash === "#activity") ? "selected" : ""} key={label} to={to}><Icon size={17} />{label}</Link>)}</div>
+          <div className="profile-menu">{navItems.map(({ label, icon: Icon, to }) => <Link className={section === label || (label === "Wallet" && location.pathname.endsWith("/wallet") && location.hash !== "#activity") || (label === "Payment Transactions" && location.pathname.endsWith("/transactions")) ? "selected" : ""} key={label} to={to}><Icon size={17} />{label}</Link>)}</div>
           <button className="profile-logout" onClick={logout}><LogOut size={17} />Logout Account</button>
         </aside>
         <div className="profile-content">

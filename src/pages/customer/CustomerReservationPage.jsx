@@ -10,6 +10,21 @@ import { saveReservation } from "../../data/customerReservations.js";
 import "./CustomerReservationPage.css";
 
 const weekDays = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+function loadRazorpayCheckout() {
+  if (window.Razorpay) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    let script = document.querySelector("script[data-razorpay-checkout]");
+    if (!script) {
+      script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+      script.dataset.razorpayCheckout = "true";
+      document.body.appendChild(script);
+    }
+    script.addEventListener("load", resolve, { once: true });
+    script.addEventListener("error", reject, { once: true });
+  });
+}
 const isoDate = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 const todayInRestaurantTimezone = () => {
   const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
@@ -121,6 +136,7 @@ export default function CustomerReservationPage() {
   selectedTimeRef.current = time;
   const [walletBalance, setWalletBalance] = useState(0);
   const [walletLoading, setWalletLoading] = useState(true);
+  const [paymentMethod, setPaymentMethod] = useState("WALLET");
   const [availability, setAvailability] = useState({});
   const [timeSlotsLoading, setTimeSlotsLoading] = useState(false);
   const [availabilityError, setAvailabilityError] = useState("");
@@ -265,12 +281,44 @@ export default function CustomerReservationPage() {
     setBusy(true);
     setError("");
     try {
+      if (paymentMethod === "RAZORPAY") await loadRazorpayCheckout();
       const result = await requestJson("/api/customer/reservations", {
         method: "POST",
-        body: JSON.stringify({ restaurant_id: restaurantId, reservation_date: date, start_time: time, number_of_guests: guests, table_ids: selectedTable.table_ids, fulfillment_type: "TABLE_ONLY", payment_method: "WALLET", preorder_payment_method: null, preorder_items: [] }),
+        body: JSON.stringify({ restaurant_id: restaurantId, reservation_date: date, start_time: time, number_of_guests: guests, table_ids: selectedTable.table_ids, fulfillment_type: "TABLE_ONLY", payment_method: paymentMethod, preorder_payment_method: null, preorder_items: [] }),
       });
       setReservation(result);
       saveReservation(user?.email, { ...result, restaurant_name: restaurant?.name, restaurant_location: restaurant?.location || restaurant?.address });
+      if (result.payment_checkout) {
+        const checkout = new window.Razorpay({
+          key: result.payment_checkout.key_id,
+          amount: result.payment_checkout.amount,
+          currency: result.payment_checkout.currency,
+          name: result.payment_checkout.name,
+          description: result.payment_checkout.description,
+          order_id: result.payment_checkout.order_id,
+          prefill: { name: user?.name || "", email: user?.email || "" },
+          theme: { color: "#641d2c" },
+          handler: async (payment) => {
+            try {
+              const verified = await requestJson(`/api/customer/reservations/${result.id}/payment/verify`, {
+                method: "POST", body: JSON.stringify(payment),
+              });
+              setReservation(verified);
+              saveReservation(user?.email, { ...verified, restaurant_name: restaurant?.name, restaurant_location: restaurant?.location || restaurant?.address });
+              setError("");
+            } catch (reason) {
+              setError(reason.message || "Payment is still being confirmed. Refresh the reservation status shortly.");
+            } finally {
+              setStep(resultStep);
+              setBusy(false);
+            }
+          },
+          modal: { ondismiss: () => { setStep(resultStep); setBusy(false); } },
+        });
+        checkout.on("payment.failed", (response) => setError(response.error?.description || "Payment failed. The reservation remains pending."));
+        checkout.open();
+        return;
+      }
       setStep(resultStep);
     } catch (reason) {
       setError(reason.message);
@@ -306,8 +354,12 @@ export default function CustomerReservationPage() {
               <header className="booking-checkout-heading"><span className="booking-step-label">RESERVATION STEP {checkoutStep} OF 3</span><h2>Checkout</h2><p>Review your visit and payment details before confirming.</p></header>
               <section className="booking-checkout-payment" aria-labelledby="checkout-payment-title">
                 <div className="booking-checkout-section-heading"><div><span className="booking-checkout-kicker">PAYMENT</span><h3 id="checkout-payment-title">Reservation fee</h3></div><span className="booking-checkout-due">Required · Pay now</span></div>
-                <div className="booking-required-fee"><Wallet size={19} /><div><strong>Pay reservation fee from wallet</strong><small>{walletLoading ? "Checking wallet balance…" : `Wallet balance ₹${walletBalance.toFixed(2)} · This fee must be paid to confirm your reservation.`}</small></div><b>₹{quotedFee.toFixed(2)}</b></div>
-                {!walletLoading && walletBalance < amountDueNow && <p className="booking-wallet-warning">Add ₹{(amountDueNow - walletBalance).toFixed(2)} to your wallet to place this reservation.</p>}
+                <div className="booking-payment-methods" role="group" aria-label="Choose payment method">
+                  <button type="button" className={`booking-payment-option${paymentMethod === "WALLET" ? " selected" : ""}`} aria-pressed={paymentMethod === "WALLET"} onClick={() => setPaymentMethod("WALLET")}><Wallet size={19} /><span><strong>DineBook wallet</strong><small>{walletLoading ? "Checking balance…" : `Available balance ₹${walletBalance.toFixed(2)}`}</small></span></button>
+                  <button type="button" className={`booking-payment-option${paymentMethod === "RAZORPAY" ? " selected" : ""}`} aria-pressed={paymentMethod === "RAZORPAY"} onClick={() => setPaymentMethod("RAZORPAY")}><span><strong>Pay online</strong><small>Cards, UPI and net banking via Razorpay</small></span></button>
+                </div>
+                <div className="booking-required-fee"><div><strong>Reservation fee</strong><small>{paymentMethod === "WALLET" ? "Charged from your DineBook wallet" : "Secure checkout hosted by Razorpay"}</small></div><b>₹{quotedFee.toFixed(2)}</b></div>
+                {paymentMethod === "WALLET" && !walletLoading && walletBalance < amountDueNow && <p className="booking-wallet-warning">Add ₹{(amountDueNow - walletBalance).toFixed(2)} to your wallet to place this reservation.</p>}
 
               </section>
               <section className="booking-checkout-summary" aria-labelledby="checkout-summary-title">
@@ -320,15 +372,15 @@ export default function CustomerReservationPage() {
                 </div>
                 <div className="booking-checkout-costs">
                   <div className="booking-checkout-cost-line"><span>Table reservation fee</span><strong>₹{quotedFee.toFixed(2)}</strong></div>
-                  <div className="booking-checkout-grand-total"><span>Pay now from wallet<small>Reservation fee is required; food is included only if selected above</small></span><strong>₹{amountDueNow.toFixed(2)}</strong></div>
+                  <div className="booking-checkout-grand-total"><span>Pay now<small>Reservation fee is required</small></span><strong>₹{amountDueNow.toFixed(2)}</strong></div>
                 </div>
               </section>
               <div className="booking-checkout-actions"><button type="button" className="booking-back-button" onClick={() => setStep(2)}>Back</button></div>
             </section>}
-            {step === resultStep && reservation && <section className="booking-result-panel"><span className="booking-step-label">RESERVATION PASS</span><div className={`booking-result-icon ${reservation.status === "CONFIRMED" ? "paid" : "pending"}`}>{reservation.status === "CONFIRMED" ? "✓" : "!"}</div><h2>{reservation.status === "CONFIRMED" ? "Reservation Confirmed" : "Reservation Request Received"}</h2><p>{reservation.status === "CONFIRMED" ? "Your reservation fee is paid. Show this QR pass at the restaurant when you arrive. Food orders are handled by the manager at reception." : "Your reservation details were received."}</p><div className="booking-pass-layout"><div className="booking-review-lines"><ReviewLine label="Reservation ID" value={reservation.id.slice(0, 8).toUpperCase()} /><ReviewLine label="Date & time" value={`${reservation.reservation_date} · ${shortTime(reservation.start_time)}`} /><ReviewLine label="Table" value={reservation.tables?.map((table) => `${table.floor_name} · ${table.table_number}`).join(", ") || "Pending"} /><ReviewLine label="Guests" value={`${reservation.number_of_guests}`} /><ReviewLine label="Reservation fee · Paid" value={`₹${Number(reservation.fee_amount).toFixed(2)}`} /><ReviewLine label="Reservation payment" value="DineBook wallet · Paid" bold /></div><div className="booking-qr-card"><div className="booking-qr-caption"><span>RESERVATION ID</span><strong>{reservation.id.slice(0, 8).toUpperCase()}</strong></div>{qrCode ? <img src={qrCode} alt="QR code for reservation ID" /> : <span className="booking-qr-placeholder">{qrError || "Generating QR…"}</span>}<small>Scan to look up this reservation at the restaurant.</small><a className={`booking-download-pass${passDownload ? " ready" : ""}`} href={passDownload || undefined} download={`DineBook-pass-${reservation.id.slice(0, 8)}.png`} aria-disabled={!passDownload}>{passDownload ? "Download reservation pass" : "Preparing download…"}</a></div></div>{qrError && <p className="reservation-page-error">{qrError}</p>}<button type="button" className="booking-back-button" onClick={async () => { try { const latest = await requestJson(`/api/customer/reservations/${reservation.id}`); setReservation(latest); } catch (reason) { setError(reason.message); } }}>Refresh reservation status</button> <Link to={`/customer/restaurants/${restaurantId}`} className="booking-back-button">Back to restaurant</Link></section>}
+            {step === resultStep && reservation && <section className="booking-result-panel"><span className="booking-step-label">RESERVATION PASS</span><div className={`booking-result-icon ${reservation.status === "CONFIRMED" ? "paid" : "pending"}`}>{reservation.status === "CONFIRMED" ? "✓" : "!"}</div><h2>{reservation.status === "CONFIRMED" ? "Reservation Confirmed" : "Reservation Request Received"}</h2><p>{reservation.status === "CONFIRMED" ? "Your reservation fee is paid. Show this QR pass at the restaurant when you arrive. Food orders are handled by the manager at reception." : "Payment is awaiting confirmation. Refresh this page to check the latest status."}</p><div className="booking-pass-layout"><div className="booking-review-lines"><ReviewLine label="Reservation ID" value={reservation.id.slice(0, 8).toUpperCase()} /><ReviewLine label="Date & time" value={`${reservation.reservation_date} · ${shortTime(reservation.start_time)}`} /><ReviewLine label="Table" value={reservation.tables?.map((table) => `${table.floor_name} · ${table.table_number}`).join(", ") || "Pending"} /><ReviewLine label="Guests" value={`${reservation.number_of_guests}`} /><ReviewLine label={`Reservation fee · ${reservation.payment_status === "PAID" ? "Paid" : "Pending"}`} value={`₹${Number(reservation.fee_amount).toFixed(2)}`} /><ReviewLine label="Payment method" value={reservation.payment_method === "RAZORPAY" ? `Razorpay · ${reservation.payment_status}` : `DineBook wallet · ${reservation.payment_status}`} bold />{reservation.razorpay_payment_id && <ReviewLine label="Payment reference" value={reservation.razorpay_payment_id} />}</div><div className="booking-qr-card"><div className="booking-qr-caption"><span>RESERVATION ID</span><strong>{reservation.id.slice(0, 8).toUpperCase()}</strong></div>{qrCode ? <img src={qrCode} alt="QR code for reservation ID" /> : <span className="booking-qr-placeholder">{qrError || "Generating QR…"}</span>}<small>Scan to look up this reservation at the restaurant.</small><a className={`booking-download-pass${passDownload ? " ready" : ""}`} href={passDownload || undefined} download={`DineBook-pass-${reservation.id.slice(0, 8)}.png`} aria-disabled={!passDownload}>{passDownload ? "Download reservation pass" : "Preparing download…"}</a></div></div>{qrError && <p className="reservation-page-error">{qrError}</p>}<button type="button" className="booking-back-button" onClick={async () => { try { const latest = await requestJson(`/api/customer/reservations/${reservation.id}`); setReservation(latest); } catch (reason) { setError(reason.message); } }}>Refresh reservation status</button> <Link to={`/customer/restaurants/${restaurantId}`} className="booking-back-button">Back to restaurant</Link></section>}
           </section>
 
-          <aside className="booking-summary-column"><section className="booking-summary-card"><span className="booking-step-label">RESERVATION STEP {step} OF 3</span><h2>{step === 1 ? "Booking Summary" : step === 2 ? "Dine-in Details" : step === checkoutStep ? "Checkout Summary" : step === resultStep ? "Reservation Status" : "Reservation Summary"}</h2><div className="booking-summary-lines"><ReviewLine label="Selected date" value={selectedDateLabel} /><ReviewLine label="Guests" value={`${guests} ${guests === 1 ? "Guest" : "Guests"}`} /><ReviewLine label="Preferred time" value={displayTime(time)} />{step >= 2 && <ReviewLine label="Selected table" value={selectedTable ? `Table ${selectedTable.table_number}` : "Choose a table"} />}<ReviewLine label="Table reservation fee · pay now" value={selectedAvailability.loading && step === 1 ? "Checking…" : `₹${quotedFee.toFixed(2)}`} /><ReviewLine label={step >= checkoutStep ? "Pay now from wallet" : "Current total"} value={`₹${step >= checkoutStep ? amountDueNow.toFixed(2) : checkoutTotal.toFixed(2)}`} bold /></div>{step === 1 && <button type="button" className="booking-primary-action" disabled={selectedAvailability.loading || !availableTables.length} onClick={continueToTables}>{selectedAvailability.loading ? "Checking table availability…" : !availableTables.length ? "No tables available" : "Continue to Table Selection"}</button>}{step === 2 && <button type="button" className="booking-primary-action" disabled={!selectedTable} onClick={continueFromTable}>Continue</button>}{step === checkoutStep && <button type="button" className="booking-primary-action" disabled={busy || walletLoading || walletBalance < amountDueNow} onClick={submitReservation}>{busy ? "Submitting…" : "Confirm reservation"}</button>}{step === resultStep && <Link to="/customer/restaurants" className="booking-primary-action booking-link-action">Explore restaurants</Link>}</section><p className="booking-summary-footnote">The reservation fee is charged to your wallet when you confirm. </p>{error && step > 1 && <p className="reservation-page-error" role="alert">{error}</p>}</aside>
+          <aside className="booking-summary-column"><section className="booking-summary-card"><span className="booking-step-label">RESERVATION STEP {step} OF 3</span><h2>{step === 1 ? "Booking Summary" : step === 2 ? "Dine-in Details" : step === checkoutStep ? "Checkout Summary" : step === resultStep ? "Reservation Status" : "Reservation Summary"}</h2><div className="booking-summary-lines"><ReviewLine label="Selected date" value={selectedDateLabel} /><ReviewLine label="Guests" value={`${guests} ${guests === 1 ? "Guest" : "Guests"}`} /><ReviewLine label="Preferred time" value={displayTime(time)} />{step >= 2 && <ReviewLine label="Selected table" value={selectedTable ? `Table ${selectedTable.table_number}` : "Choose a table"} />}<ReviewLine label="Table reservation fee · pay now" value={selectedAvailability.loading && step === 1 ? "Checking…" : `₹${quotedFee.toFixed(2)}`} /><ReviewLine label={step >= checkoutStep ? "Payment method" : "Current total"} value={step >= checkoutStep ? `${paymentMethod === "WALLET" ? "Wallet" : "Razorpay"} · ₹${amountDueNow.toFixed(2)}` : `₹${checkoutTotal.toFixed(2)}`} bold /></div>{step === 1 && <button type="button" className="booking-primary-action" disabled={selectedAvailability.loading || !availableTables.length} onClick={continueToTables}>{selectedAvailability.loading ? "Checking table availability…" : !availableTables.length ? "No tables available" : "Continue to Table Selection"}</button>}{step === 2 && <button type="button" className="booking-primary-action" disabled={!selectedTable} onClick={continueFromTable}>Continue</button>}{step === checkoutStep && <button type="button" className="booking-primary-action" disabled={busy || (paymentMethod === "WALLET" && (walletLoading || walletBalance < amountDueNow))} onClick={submitReservation}>{busy ? "Submitting…" : paymentMethod === "RAZORPAY" ? "Continue to secure payment" : "Confirm reservation"}</button>}{step === resultStep && <Link to="/customer/restaurants" className="booking-primary-action booking-link-action">Explore restaurants</Link>}</section><p className="booking-summary-footnote">Choose wallet or securely pay online with Razorpay.</p>{error && step > 1 && <p className="reservation-page-error" role="alert">{error}</p>}</aside>
         </div>
       </>}
     </main><LandingFooter />

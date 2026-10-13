@@ -18,8 +18,8 @@ const timeText = (value) => { if (!value) return "—"; const [h, m] = value.spl
 export function ProfileFrame({ user, children, active = "Booking History", variant = "" }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const selected = location.hash === "#activity" ? "Payment History" : active;
-  const items = [["Personal Information", "/customer/profile#personal", UserRound], ["Saved Restaurants", "/customer/profile#saved", Heart], ["Booking History", "/customer/profile/reservations", CalendarDays], ["Payment History", "/customer/profile/wallet#activity", CreditCard], ["Notification Settings", "/customer/profile#notifications", Bell], ["Wallet", "/customer/profile/wallet", Wallet]];
+  const selected = location.pathname.endsWith("/transactions") ? "Payment Transactions" : location.hash === "#activity" ? "Payment History" : active;
+  const items = [["Personal Information", "/customer/profile#personal", UserRound], ["Saved Restaurants", "/customer/profile#saved", Heart], ["Booking History", "/customer/profile/reservations", CalendarDays], ["Payment Transactions", "/customer/profile/transactions", CreditCard], ["Notification Settings", "/customer/profile#notifications", Bell], ["Wallet", "/customer/profile/wallet", Wallet]];
   function logout() {
     if (import.meta.env.DEV && sessionStorage.getItem(demoSessionKey) === "active") {
       sessionStorage.removeItem(demoSessionKey);

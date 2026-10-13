@@ -6,6 +6,7 @@ import AdminLayout from "../../components/admin/AdminLayout.jsx";
 import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import Pagination from "../../components/Pagination.jsx";
+import AdminRestaurantPaymentsPanel from "./AdminRestaurantPaymentsPanel.jsx";
 
 function Detail({ label, value, icon: Icon }) {
   return (
@@ -163,6 +164,8 @@ export default function AdminRestaurantDetailsPage() {
               <h4>Availability inspection</h4><form className="operating-inspection-form" onSubmit={inspectAvailability}><label>Date<input type="date" value={inspectionDate} onChange={(event) => setInspectionDate(event.target.value)} /></label><label>Start time<input type="time" value={inspectionTime} onChange={(event) => setInspectionTime(event.target.value)} /></label><label>Guests<input type="number" min="1" max="16" value={inspectionGuests} onChange={(event) => setInspectionGuests(event.target.value)} /></label><button type="submit" disabled={inspectionBusy}>{inspectionBusy ? "Checking…" : "Inspect slot"}</button></form>
               {inspectionError && <p role="alert">{inspectionError}</p>}{inspection && <div className="operating-inspection-result"><strong>{inspection.available ? "Available" : "Unavailable"}</strong><span>{inspection.reason || `${inspection.tables.length} suitable table option(s)`}</span>{inspection.exception_reason && <small>Schedule exception: {inspection.exception_reason}</small>}</div>}
             </section>
+
+            <AdminRestaurantPaymentsPanel restaurantId={restaurant.id} />
 
             <section className="admin-restaurant-detail-card admin-restaurant-wide-card">
               <h3><FileText size={17} /> Submitted documents</h3>

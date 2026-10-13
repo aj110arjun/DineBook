@@ -12,6 +12,8 @@ import CustomerProfilePage from "./pages/customer/CustomerProfilePage.jsx";
 import CustomerWalletPage from "./pages/customer/CustomerWalletPage.jsx";
 import CustomerReservationsPage from "./pages/customer/CustomerReservationsPage.jsx";
 import CustomerReservationDetailsPage from "./pages/customer/CustomerReservationDetailsPage.jsx";
+import CustomerTransactionsPage from "./pages/customer/CustomerTransactionsPage.jsx";
+import CustomerTransactionDetailsPage from "./pages/customer/CustomerTransactionDetailsPage.jsx";
 import GuestOnlyRoute from "./components/auth/GuestOnlyRoute.jsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 import AdminProtectedRoute from "./components/auth/AdminProtectedRoute.jsx";
@@ -41,6 +43,7 @@ import ManagerOrderDetailsPage from "./pages/manager/ManagerOrderDetailsPage.jsx
 import ManagerSpotOrderPage from "./pages/manager/ManagerSpotOrderPage.jsx";
 import ManagerOperatingHoursPage from "./pages/manager/ManagerOperatingHoursPage.jsx";
 import ChefServiceHoursPage from "./pages/chef/ChefServiceHoursPage.jsx";
+import ManagerPaymentsPage from "./pages/manager/ManagerPaymentsPage.jsx";
 
 export default function App() {
   return (
@@ -50,6 +53,8 @@ export default function App() {
         <Route path="/customer" element={<CustomerLandingPage />} />
         <Route path="/customer/profile" element={<ProtectedRoute><CustomerProfilePage /></ProtectedRoute>} />
         <Route path="/customer/profile/wallet" element={<ProtectedRoute><CustomerWalletPage /></ProtectedRoute>} />
+        <Route path="/customer/profile/transactions" element={<ProtectedRoute><CustomerTransactionsPage /></ProtectedRoute>} />
+        <Route path="/customer/profile/transactions/:transactionType/:transactionId" element={<ProtectedRoute><CustomerTransactionDetailsPage /></ProtectedRoute>} />
         <Route path="/customer/profile/reservations" element={<ProtectedRoute><CustomerReservationsPage /></ProtectedRoute>} />
         <Route path="/customer/profile/reservations/:reservationId" element={<ProtectedRoute><CustomerReservationDetailsPage /></ProtectedRoute>} />
         <Route path="/customer/profile/orders" element={<ProtectedRoute><OrdersPage mode="customer" /></ProtectedRoute>} />
@@ -225,6 +230,8 @@ export default function App() {
         <Route path="/manager/operating-hours" element={<ManagerProtectedRoute><ManagerOperatingHoursPage /></ManagerProtectedRoute>} />
         <Route path="/manager/orders" element={<ManagerProtectedRoute><OrdersPage mode="manager" /></ManagerProtectedRoute>} />
         <Route path="/manager/spot-order" element={<ManagerProtectedRoute><ManagerSpotOrderPage /></ManagerProtectedRoute>} />
+        <Route path="/manager/payments" element={<ManagerProtectedRoute><ManagerPaymentsPage /></ManagerProtectedRoute>} />
+        <Route path="/manager/payments/:transactionId" element={<ManagerProtectedRoute><ManagerPaymentsPage /></ManagerProtectedRoute>} />
         <Route path="/manager/orders/:orderId" element={<ManagerProtectedRoute><ManagerOrderDetailsPage /></ManagerProtectedRoute>} />
         <Route path="/manager/floors" element={<Navigate to="/manager/tables" replace />} />
         <Route
