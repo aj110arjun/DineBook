@@ -3,6 +3,7 @@ import { ChevronDown, MapPin, Menu, Utensils, X } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { API_BASE } from "../../lib/authApi.js";
 import { demoSessionKey } from "../../data/demoCustomer.js";
+import NotificationBell from "../notifications/NotificationBell.jsx";
 
 export default function CustomerHeader({ user, onLogout }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -102,6 +103,7 @@ export default function CustomerHeader({ user, onLogout }) {
           <div className="account-nav">
             {user ? (
               <>
+                <NotificationBell role="customer" enabled={Boolean(user)} />
                 <button className="text-button" onClick={signOut}>
                   Sign out
                 </button>

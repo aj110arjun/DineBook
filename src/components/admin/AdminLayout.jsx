@@ -19,6 +19,7 @@ import {
   WalletCards,
   X,
 } from "lucide-react";
+import NotificationBell from "../notifications/NotificationBell.jsx";
 
 const navigation = [
   {
@@ -36,7 +37,7 @@ const navigation = [
   { label: "Offers", icon: ShieldCheck, path: "/admin/offers" },
   { label: "Reviews & Reports", icon: FileText, path: "/admin/reviews" },
   { label: "Analytics", icon: ChartNoAxesCombined },
-  { label: "Notifications", icon: Bell },
+  { label: "Notifications", icon: Bell, path: "/admin/notifications" },
   { label: "Activity Logs", icon: Activity },
   { label: "Settings", icon: Settings },
   { label: "Requests", icon: SlidersHorizontal, path: "/admin/requests" },
@@ -64,7 +65,7 @@ export default function AdminLayout({
   }
 
   return (
-    <main className="admin-dashboard">
+    <main className="admin-dashboard db-portal-shell">
       {sidebarOpen && <button className="admin-sidebar-scrim" type="button" aria-label="Close navigation" onClick={() => setSidebarOpen(false)} />}
       <aside className={`admin-sidebar${sidebarOpen ? " is-open" : ""}`}>
         <div className="admin-sidebar-brand">
@@ -111,8 +112,8 @@ export default function AdminLayout({
         </div>
       </aside>
 
-      <section className="admin-dashboard-main">
-        <header className="admin-topbar">
+      <section className="admin-dashboard-main db-portal-main">
+        <header className="admin-topbar db-portal-topbar">
           <button className="admin-mobile-nav-toggle" type="button" aria-label={sidebarOpen ? "Close navigation" : "Open navigation"} aria-expanded={sidebarOpen} aria-controls="admin-primary-nav" onClick={() => setSidebarOpen((open) => !open)}>
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -128,13 +129,7 @@ export default function AdminLayout({
               />
             </div>
 
-            <button
-              type="button"
-              className="admin-notification-button"
-              aria-label="Notifications"
-            >
-              <Bell size={18} />
-            </button>
+            <NotificationBell role="admin" />
           </div>
         </header>
 

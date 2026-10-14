@@ -50,6 +50,7 @@ import CustomerReviewsPage from "./pages/customer/CustomerReviewsPage.jsx";
 import ChefReviewsPage from "./pages/chef/ChefReviewsPage.jsx";
 import ManagerReviewsPage from "./pages/manager/ManagerReviewsPage.jsx";
 import AdminReviewModerationPage from "./pages/admin/AdminReviewModerationPage.jsx";
+import NotificationsPage from "./pages/shared/NotificationsPage.jsx";
 
 export default function App() {
   return (
@@ -65,6 +66,7 @@ export default function App() {
         <Route path="/customer/profile/reservations" element={<ProtectedRoute><CustomerReservationsPage /></ProtectedRoute>} />
         <Route path="/customer/profile/reservations/:reservationId" element={<ProtectedRoute><CustomerReservationDetailsPage /></ProtectedRoute>} />
         <Route path="/customer/profile/orders" element={<ProtectedRoute><OrdersPage mode="customer" /></ProtectedRoute>} />
+        <Route path="/customer/notifications" element={<ProtectedRoute><NotificationsPage role="customer" /></ProtectedRoute>} />
         <Route
           path="/customer/restaurants"
           element={<CustomerRestaurantListingPage />}
@@ -167,6 +169,7 @@ export default function App() {
         <Route path="/admin/orders" element={<AdminProtectedRoute><Navigate to="/admin/dashboard" replace /></AdminProtectedRoute>} />
         <Route path="/admin/offers" element={<AdminProtectedRoute><AdminOffersPage /></AdminProtectedRoute>} />
         <Route path="/admin/reviews" element={<AdminProtectedRoute><AdminReviewModerationPage /></AdminProtectedRoute>} />
+        <Route path="/admin/notifications" element={<AdminProtectedRoute><NotificationsPage role="admin" /></AdminProtectedRoute>} />
         <Route
           path="/admin/requests"
           element={
@@ -242,6 +245,7 @@ export default function App() {
         <Route path="/manager/payments" element={<ManagerProtectedRoute><ManagerPaymentsPage /></ManagerProtectedRoute>} />
         <Route path="/manager/offers" element={<ManagerProtectedRoute><ManagerOffersPage /></ManagerProtectedRoute>} />
         <Route path="/manager/reviews" element={<ManagerProtectedRoute><ManagerReviewsPage /></ManagerProtectedRoute>} />
+        <Route path="/manager/notifications" element={<ManagerProtectedRoute><NotificationsPage role="manager" /></ManagerProtectedRoute>} />
         <Route path="/manager/payments/:transactionId" element={<ManagerProtectedRoute><ManagerPaymentsPage /></ManagerProtectedRoute>} />
         <Route path="/manager/orders/:orderId" element={<ManagerProtectedRoute><ManagerOrderDetailsPage /></ManagerProtectedRoute>} />
         <Route path="/manager/floors" element={<Navigate to="/manager/tables" replace />} />
@@ -270,6 +274,7 @@ export default function App() {
           }
         />
         <Route path="/chef/orders" element={<ChefProtectedRoute><OrdersPage mode="chef" /></ChefProtectedRoute>} />
+        <Route path="/chef/notifications" element={<ChefProtectedRoute><NotificationsPage role="chef" /></ChefProtectedRoute>} />
         <Route path="/chef/reviews" element={<ChefProtectedRoute><ChefReviewsPage /></ChefProtectedRoute>} />
         <Route path="/chef/service-hours" element={<ChefProtectedRoute><ChefServiceHoursPage /></ChefProtectedRoute>} />
         <Route

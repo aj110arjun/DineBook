@@ -13,6 +13,91 @@ import "./CustomerProfilePage.css";
 const dateText = (value) => value ? new Intl.DateTimeFormat("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date(`${value}T12:00:00`)) : "—";
 const timeText = (value) => { if (!value) return "—"; const [h, m] = value.split(":").map(Number); return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`; };
 const title = (value) => (value || "").replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
+const paymentMethodText = (method) => method === "WALLET" ? "DineBook wallet" : method === "RAZORPAY" ? "Razorpay" : method === "PAY_AT_DESK" ? "Pay at restaurant" : "—";
+const reservationPaymentText = (reservation) => reservation.payment_status === "PAID"
+  ? `Paid via ${paymentMethodText(reservation.payment_method)}`
+  : reservation.payment_status === "FAILED" ? "Payment failed" : "Payment pending";
+const preorderPaymentText = (reservation) => {
+  if (reservation.fulfillment_type !== "PREORDER") return "Not applicable";
+  if (reservation.preorder_payment_status === "PAID") return `Paid via ${paymentMethodText(reservation.preorder_payment_method)}`;
+  if (reservation.preorder_payment_method === "PAY_AT_DESK" && reservation.preorder_payment_status === "PENDING") return "Pay at restaurant";
+  return reservation.preorder_payment_status === "FAILED" ? "Payment failed" : "Payment pending";
+};
+function reservationInvoice(reservation) {
+  const fee = Number(reservation.fee_amount || 0);
+  const hasPreorder = reservation.fulfillment_type === "PREORDER";
+  const preorderItems = hasPreorder ? reservation.preorder_items || [] : [];
+  const preorderNet = Number(reservation.preorder_total || 0);
+  const preorderDiscount = Number(reservation.preorder_discount || 0);
+  const preorderSubtotal = preorderItems.reduce((sum, item) => sum + Number(item.line_total || 0), 0) || preorderNet + preorderDiscount;
+  const amount = fee + preorderNet;
+  const reservationPaid = reservation.payment_status === "PAID" ? fee : 0;
+  const preorderPaid = hasPreorder && reservation.preorder_payment_status === "PAID" ? preorderNet : 0;
+  const paidAmount = reservationPaid + preorderPaid;
+  const outstandingBalance = Math.max(0, amount - paidAmount);
+  const invoiceStatus = reservation.payment_status !== "PAID"
+    ? reservation.payment_status
+    : hasPreorder && reservation.preorder_payment_status !== "PAID" ? "PARTIALLY PAID" : "PAID";
+  const tables = reservation.tables || [];
+  const tableFees = tables.reduce((sum, table) => sum + Number(table.reservation_fee || 0), 0);
+  const lineItems = tables.map((table) => ({
+    description: `Table ${table.table_number}${table.floor_name ? ` · ${table.floor_name}` : ""} · ${table.capacity || 0} seats`,
+    quantity: 1,
+    unitPrice: Number(table.reservation_fee || 0),
+    amount: Number(table.reservation_fee || 0),
+  }));
+  if (!lineItems.length) lineItems.push({ description: "Reservation table fee", quantity: 1, unitPrice: fee, amount: fee });
+  else if (Math.abs(tableFees - fee) > 0.009) lineItems.push({ description: "Reservation fee adjustment", quantity: 1, unitPrice: fee - tableFees, amount: fee - tableFees });
+  lineItems.push(...preorderItems.map((item) => ({
+    description: `Preorder · ${item.food_name}`,
+    variant_name: item.variant_name,
+    quantity: item.quantity,
+    unitPrice: item.unit_price,
+    amount: item.line_total,
+  })));
+  if (hasPreorder && preorderItems.length === 0 && preorderNet > 0) {
+    lineItems.push({ description: "Preorder", quantity: 1, unitPrice: preorderSubtotal, amount: preorderSubtotal });
+  }
+  const reservationMethod = paymentMethodText(reservation.payment_method);
+  const preorderMethod = hasPreorder ? paymentMethodText(reservation.preorder_payment_method) : "Not applicable";
+  const reservationCode = reservation.reservation_code || `RES-${String(reservation.id || "").replaceAll("-", "").slice(0, 8).toUpperCase()}`;
+  return {
+    transactionId: reservation.id,
+    transactionPrefix: "RES",
+    relatedId: null,
+    relatedLabel: "Reservation code",
+    relatedPrefix: "RES",
+    typeLabel: "Reservation and preorder",
+    documentTitle: "Reservation invoice",
+    description: `Reservation fee · ${dateText(reservation.reservation_date)} · ${timeText(reservation.start_time)}`,
+    lineItems,
+    subtotal: fee + preorderSubtotal,
+    discountAmount: preorderDiscount,
+    amount,
+    paidAmount: outstandingBalance > 0 ? paidAmount : undefined,
+    outstandingBalance: outstandingBalance > 0 ? outstandingBalance : undefined,
+    currency: "INR",
+    status: invoiceStatus,
+    paymentMethod: hasPreorder ? `Reservation: ${reservationMethod}; preorder: ${preorderMethod}` : reservationMethod,
+    provider: reservation.payment_method === "RAZORPAY" ? "Razorpay" : undefined,
+    providerReference: reservation.razorpay_payment_id,
+    providerOrderReference: reservation.razorpay_order_id,
+    paymentBreakdown: [
+      { label: "Booking reference", value: reservationCode },
+      { label: "Restaurant", value: reservation.restaurant_name || "Restaurant" },
+      { label: "Reservation", value: `${dateText(reservation.reservation_date)} · ${timeText(reservation.start_time)} · ${reservation.number_of_guests || 0} guests` },
+      { label: "Tables booked", value: `${tables.length} · ${tables.map((table) => table.table_number).join(", ") || "Assignment pending"}` },
+      { label: "Reservation fee payment", value: reservationPaymentText(reservation) },
+      { label: "Preorder", value: hasPreorder ? `₹${preorderNet.toFixed(2)}` : "Not ordered" },
+      ...(hasPreorder ? [{ label: "Preorder payment", value: preorderPaymentText(reservation) }] : []),
+      ...(reservation.preorder_offer_code ? [{ label: "Offer applied", value: `${reservation.preorder_offer_code} · discount ₹${preorderDiscount.toFixed(2)}` }] : []),
+    ],
+    createdAt: reservation.created_at,
+    merchantName: "DineBook",
+    customerName: reservation.customer_name,
+    customerEmail: reservation.customer_email,
+  };
+}
 
 export default function CustomerReservationDetailsPage() {
   const { reservationId } = useParams(); const navigate = useNavigate(); const [user, setUser] = useState(null); const [reservation, setReservation] = useState(null); const [loading, setLoading] = useState(true); const [error, setError] = useState(""); const [notice, setNotice] = useState(""); const [busy, setBusy] = useState(false); const [reloadKey, setReloadKey] = useState(0); const [confirmCancellation, setConfirmCancellation] = useState(false);
@@ -136,11 +221,12 @@ export default function CustomerReservationDetailsPage() {
               <div className="reservation-payment-label"><CreditCard size={18} /><div><span className="reservation-section-kicker">PAYMENT</span><h3>Reservation fee</h3></div></div>
               <strong className="reservation-payment-amount">₹{Number(reservation.fee_amount || 0).toFixed(2)}</strong>
               <span className={`reservation-payment-status ${reservation.payment_status?.toLowerCase()}`}>{title(reservation.payment_status)}</span>
-              <TransactionInvoiceButton invoice={{ transactionId: reservation.id, relatedId: reservation.id, relatedLabel: "Reservation ID", relatedPrefix: "RES", typeLabel: "Reservation fee", description: `Reservation fee · ${dateText(reservation.reservation_date)} · ${timeText(reservation.start_time)}`, lineItems: [{ description: `Reservation fee · ${dateText(reservation.reservation_date)} · ${timeText(reservation.start_time)}`, quantity: 1, unitPrice: reservation.fee_amount, amount: reservation.fee_amount }], subtotal: reservation.fee_amount, amount: reservation.fee_amount, currency: "INR", status: title(reservation.payment_status), paymentMethod: title(reservation.payment_method), provider: reservation.payment_method === "RAZORPAY" ? "Razorpay" : undefined, providerReference: reservation.razorpay_payment_id, providerOrderReference: reservation.razorpay_order_id, createdAt: reservation.created_at, merchantName: reservation.restaurant_name, merchantLocation: reservation.restaurant_location, merchantAddress: reservation.restaurant_address, merchantEmail: reservation.restaurant_email, merchantPhone: reservation.restaurant_phone, customerName: reservation.customer_name, customerEmail: reservation.customer_email }} />
+              <span className="reservation-payment-method">{reservationPaymentText(reservation)}</span>
+              <TransactionInvoiceButton invoice={reservationInvoice(reservation)} />
             </section>
           </section>
           {reservation.fulfillment_type === "PREORDER" && <section className="profile-card reservation-preorder-section">
-            <div className="reservation-preorder-heading"><div className="reservation-section-title"><Utensils size={18} /><div><span className="reservation-section-kicker">PREORDER</span><h2>Food ordered</h2></div></div><span>{reservation.preorder_payment_status === "PAID" ? "Paid from wallet" : "Due at desk"}</span></div>
+            <div className="reservation-preorder-heading"><div className="reservation-section-title"><Utensils size={18} /><div><span className="reservation-section-kicker">PREORDER</span><h2>Food ordered</h2></div></div><span>{preorderPaymentText(reservation)}</span></div>
             <div className="reservation-preorder-lines">{(reservation.preorder_items || []).map((item) => <div className="reservation-preorder-line" key={item.variant_id}>{item.image_url && <img className="order-food-thumb" src={item.image_url} alt="" loading="lazy" />}<span><b>{item.quantity} ×</b> {item.food_name} <small>· {item.variant_name}</small></span><strong>₹{Number(item.line_total).toFixed(2)}</strong></div>)}</div>
             {Number(reservation.preorder_discount || 0) > 0 && <><div className="reservation-preorder-total"><span>Food subtotal</span><strong>₹{(Number(reservation.preorder_total || 0) + Number(reservation.preorder_discount || 0)).toFixed(2)}</strong></div><div className="reservation-preorder-total"><span>Offer · {reservation.preorder_offer_code}</span><strong>−₹{Number(reservation.preorder_discount).toFixed(2)}</strong></div></>}
             <div className="reservation-preorder-total"><span>{Number(reservation.preorder_discount || 0) > 0 ? "Preorder total" : "Food subtotal"}</span><strong>₹{Number(reservation.preorder_total || 0).toFixed(2)}</strong></div>
