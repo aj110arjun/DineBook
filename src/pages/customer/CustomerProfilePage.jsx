@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Bell, CalendarDays, CreditCard, Heart, LogOut, UserRound, Wallet, Camera, Check, Search } from "lucide-react";
+import { Bell, CalendarDays, CreditCard, Heart, LogOut, UserRound, Wallet, Camera, Check, Search, Star } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
 import LandingFooter from "../../components/landing/LandingFooter.jsx";
@@ -57,7 +57,7 @@ export default function CustomerProfilePage() {
   function toggle(key, value) { setPrefs((current) => ({ ...current, [key]: current[key].includes(value) ? current[key].filter((x) => x !== value) : [...current[key], value] })); }
   function save() { localStorage.setItem("dinebook-profile-preferences", JSON.stringify(prefs)); setSaved(true); window.setTimeout(() => setSaved(false), 2200); }
 
-  const navItems = [{ label: "Personal Information", icon: UserRound, to: "/customer/profile#personal" }, { label: "Saved Restaurants", icon: Heart, to: "/customer/profile#saved" }, { label: "Booking History", icon: CalendarDays, to: "/customer/profile/reservations" }, { label: "Payment Transactions", icon: CreditCard, to: "/customer/profile/transactions" }, { label: "Notification Settings", icon: Bell, to: "/customer/profile#notifications" }, { label: "Wallet", icon: Wallet, to: "/customer/profile/wallet" }];
+  const navItems = [{ label: "Personal Information", icon: UserRound, to: "/customer/profile#personal" }, { label: "Saved Restaurants", icon: Heart, to: "/customer/profile#saved" }, { label: "Booking History", icon: CalendarDays, to: "/customer/profile/reservations" }, { label: "My Reviews", icon: Star, to: "/customer/profile/reviews" }, { label: "Payment Transactions", icon: CreditCard, to: "/customer/profile/transactions" }, { label: "Notification Settings", icon: Bell, to: "/customer/profile#notifications" }, { label: "Wallet", icon: Wallet, to: "/customer/profile/wallet" }];
   return <div className="customer-home profile-page"><CustomerHeader user={user} onLogout={() => navigate("/customer/login")} />
     <main className="profile-shell">
       <nav className="profile-crumb"><Link to="/customer">Home</Link><span>/</span><span>Account</span><span>/</span><strong>{section}</strong></nav>

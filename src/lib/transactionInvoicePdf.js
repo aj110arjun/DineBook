@@ -184,6 +184,7 @@ export function createTransactionInvoicePdf(invoice = {}) {
     ["Refund reference", invoice.refundReference],
     ["Refund date", invoice.refundDate ? formatDate(invoice.refundDate) : null],
     ["Original payment reference", invoice.originalPaymentReference],
+    ...(invoice.paymentBreakdown || []).map(({ label, value }) => [label, value]),
   ].filter(([, value]) => value);
   const paymentRows = [];
   for (let index = 0; index < paymentFields.length; index += 2) {

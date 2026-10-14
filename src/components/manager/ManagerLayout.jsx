@@ -23,6 +23,7 @@ import {
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
+import NotificationBell from "../notifications/NotificationBell.jsx";
 
 const navigation = [
   { label: "Dashboard", icon: Grid2X2, to: "/manager/dashboard" },
@@ -35,10 +36,10 @@ const navigation = [
   { label: "Spot Order", icon: ClipboardList, to: "/manager/spot-order" },
   { label: "Staff", icon: Users, to: "/manager/staff" },
   { label: "Offers", icon: Tag, to: "/manager/offers" },
-  { label: "Reviews", icon: MessageCircle },
+  { label: "Reviews", icon: MessageCircle, to: "/manager/reviews" },
   { label: "Analytics", icon: CircleDollarSign },
   { label: "Payments", icon: ClipboardList, to: "/manager/payments" },
-  { label: "Notifications", icon: Bell },
+  { label: "Notifications", icon: Bell, to: "/manager/notifications" },
   { label: "Settings", icon: Settings },
 ];
 
@@ -56,7 +57,7 @@ export default function ManagerLayout({ children, title = "Dashboard" }) {
   }
 
   return (
-    <main className="manager-dashboard">
+    <main className="manager-dashboard db-portal-shell">
       {sidebarOpen && (
         <button
           className="manager-sidebar-overlay"
@@ -111,8 +112,8 @@ export default function ManagerLayout({ children, title = "Dashboard" }) {
         </div>
       </aside>
 
-      <section className="manager-dashboard-main">
-        <header className="manager-topbar">
+      <section className="manager-dashboard-main db-portal-main">
+        <header className="manager-topbar db-portal-topbar">
           <div className="manager-topbar-left">
             <button
               className="manager-menu-button"
@@ -132,13 +133,7 @@ export default function ManagerLayout({ children, title = "Dashboard" }) {
               <Search size={15} />
               <input type="text" placeholder="Search transactions, tables..." />
             </div>
-            <button
-              className="manager-notification-button"
-              aria-label="Notifications"
-            >
-              <Bell size={18} />
-              <span>3</span>
-            </button>
+            <NotificationBell role="manager" />
             <button className="manager-profile" type="button">
               <div className="manager-profile-avatar">MB</div>
               <div>

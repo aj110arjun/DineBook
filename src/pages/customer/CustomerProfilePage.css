@@ -176,6 +176,7 @@
 .reservation-payment-label h3 { margin: 0; color: #44373a; font-size: var(--font-size-sm); }
 .reservation-payment-amount { color: #36141d; font-size: var(--font-size-lg); }
 .reservation-payment-status { font-size: var(--font-size-xs); }
+.reservation-payment-method { color: #766d6c; font-size: var(--font-size-xs); }
 .reservation-payment-status.pending { background: #f4ead5; color: #80652f; }
 .reservation-payment-status.failed { background: #fbe9e8; color: #a53f3a; }
 .reservation-payment-status.refunded { background: #e7eff8; color: #416a93; }
@@ -205,6 +206,7 @@
 :root[data-theme="dark"] .reservation-details-page .reservation-back { border-color: #494044; background: #292426; color: #e7c5ca; }
 :root[data-theme="dark"] .reservation-details-page .reservation-detail-section > h3,:root[data-theme="dark"] .reservation-details-page .reservation-payment-label h3 { color: #f1e9e8; }
 :root[data-theme="dark"] .reservation-details-page .reservation-detail-section .reservation-detail-grid strong,:root[data-theme="dark"] .reservation-details-page .reservation-payment-amount { color: #f1e9e8; }
+:root[data-theme="dark"] .reservation-details-page .reservation-payment-method { color: #c4b9b8; }
 :root[data-theme="dark"] .reservation-details-page .reservation-detail-section .reservation-detail-grid > div,:root[data-theme="dark"] .reservation-details-page .reservation-detail-heading { border-color: #40383a; }
 :root[data-theme="dark"] .reservation-details-page .reservation-payment-section { border-color: #494044; background: #292426; }
 :root[data-theme="dark"] .reservation-details-page .reservation-preorder-total { border-color: #52452c; }

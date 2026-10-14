@@ -4736,10 +4736,10 @@ a:focus-visible,
 .customer-menu-pagination button:disabled { opacity:.45; cursor:not-allowed; }
 .customer-menu-category-title { margin: 0 0 14px; }
 .customer-menu-category-title h3 { margin: 0; color: #551321; font-family: var(--font-display); font-size: var(--font-size-xl); }
-.customer-menu-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.customer-menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 300px)); justify-content: start; gap: 14px; }
 .customer-menu-card { display: block; overflow: hidden; border: 1px solid #eee7e3; border-radius: 12px; background: #fff; }
 .customer-menu-card.unavailable { opacity: .72; }
-.customer-menu-card-image { width: 128px; height: 100%; min-height: 160px; object-fit: cover; background: #f4efec; }
+.customer-menu-image { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
 .customer-menu-image-placeholder { background: linear-gradient(135deg, #f5eeea, #e8ded8); }
 .customer-menu-card-content { min-width: 0; padding: 14px; }
 .customer-menu-card-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -4747,8 +4747,8 @@ a:focus-visible,
 .customer-veg-mark { display: grid; flex: 0 0 auto; width: 21px; height: 21px; place-items: center; border: 1px solid #52a565; border-radius: 4px; color: #39834b; }
 .customer-menu-description { margin: 7px 0 0; color: #827875; font-size: var(--font-size-xs); line-height: 1.55; }
 .customer-menu-prep { display: flex; align-items: center; gap: 4px; margin: 8px 0 0; color: #8c7c76; font-size: var(--font-size-xs); }
-.customer-menu-variants { display: grid; gap: 5px; margin-top: 12px; border-top: 1px solid #f0eae7; padding-top: 8px; }
-.customer-menu-variants > div { display: flex; align-items: center; gap: 8px; color: #6e625e; font-size: var(--font-size-xs); }
+.customer-menu-variants { display: grid; gap: 5px; margin: 12px 0 0; border-top: 1px solid #f0eae7; padding: 8px 0 0; list-style: none; }
+.customer-menu-variants > li { display: flex; align-items: center; gap: 8px; color: #6e625e; font-size: var(--font-size-xs); }
 .customer-menu-variants strong { margin-left: auto; color: #422f34; font-size: var(--font-size-xs); }
 .customer-menu-variants em { color: #a45555; font-size: var(--font-size-xs); font-style: normal; }
 .customer-menu-message, .customer-menu-empty { padding: 26px 12px; color: #817773; text-align: center; font-size: var(--font-size-xs); }
@@ -4776,9 +4776,7 @@ a:focus-visible,
 :root[data-theme="dark"] .customer-menu-empty { border-color: #494044; }
 
 @media (max-width: 760px) {
-  .customer-menu-grid { grid-template-columns: 1fr; }
-  .customer-menu-card { grid-template-columns: 108px minmax(0, 1fr); }
-  .customer-menu-card-image { width: 108px; min-height: 145px; }
+  .customer-menu-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); }
 }
 
 .manager-quick-actions {
@@ -8837,7 +8835,7 @@ a:focus-visible,
 :root[data-theme="dark"] .demo-login-button:hover { background:#45391e; }
 :root[data-theme="dark"] .admin-auth-shell { background:#171516; color:#f1e9e8; }
 :root[data-theme="dark"] .admin-form-side { background:#171516; color:#f1e9e8; }
-:root[data-theme="dark"] .customer-menu-card-image,:root[data-theme="dark"] .customer-menu-image-placeholder { background:#292426; color:#bdb2b3; }
+:root[data-theme="dark"] .customer-menu-image,:root[data-theme="dark"] .customer-menu-image-placeholder { background:#292426; color:#bdb2b3; }
 :root[data-theme="dark"] .orders-search { color:#c0b5b1; }
 :root[data-theme="dark"] .orders-empty,:root[data-theme="dark"] .orders-notice { background:#292426; color:#c0b5b1; }
 :root[data-theme="dark"] .orders-error { background:#382429; color:#ffb7ad; }

@@ -120,8 +120,10 @@ export default function ManagerReservationsPage() {
     load();
   }, [load]);
   useEffect(() => {
-    if (!query) return;
-    const match = items.find((item) => item.id.replaceAll("-", "").toLowerCase() === query.replaceAll("-", "").toLowerCase());
+    const normalizedQuery = query.trim().replaceAll("-", "").toLowerCase();
+    if (normalizedQuery.length < 6) return;
+    const matches = items.filter((item) => item.id.replaceAll("-", "").toLowerCase().startsWith(normalizedQuery));
+    const match = matches.length === 1 ? matches[0] : null;
     if (match) {
       setSelectedDate(match.reservation_date);
       setMonth(new Date(`${match.reservation_date}T12:00:00`));
