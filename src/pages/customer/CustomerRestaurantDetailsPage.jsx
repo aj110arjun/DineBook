@@ -26,6 +26,7 @@ import { requestJson } from "../../lib/authApi.js";
 import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
 import { mergeReservations, saveReservation } from "../../data/customerReservations.js";
 import { photo } from "../../data/landingData.js";
+import "./CustomerRestaurantReviews.css";
 
 const detailTabs = [
   { id: "about", label: "About" },
@@ -54,6 +55,19 @@ export default function CustomerRestaurantDetailsPage() {
   const [bookingMessage, setBookingMessage] = useState("");
   const [bookingBusy, setBookingBusy] = useState(false);
   const [myReservations, setMyReservations] = useState([]);
+  const [selectedOrderReservationId, setSelectedOrderReservationId] = useState("");
+  const [eligibleOrders, setEligibleOrders] = useState([]);
+  const [restaurantReviews, setRestaurantReviews] = useState([]);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewError, setReviewError] = useState("");
+  const [reviewMessage, setReviewMessage] = useState("");
+  const [reviewBusy, setReviewBusy] = useState(false);
+  const [reviewForm, setReviewForm] = useState({ order_id: "", rating: 5, content: "" });
+  const [hoverRating, setHoverRating] = useState(0);
+  const [editingReviewId, setEditingReviewId] = useState(null);
+  const [flaggingReviewId, setFlaggingReviewId] = useState(null);
+  const [flagReason, setFlagReason] = useState("SPAM");
+  const [flagExplanation, setFlagExplanation] = useState("");
   const [reservationStatusFilter, setReservationStatusFilter] = useState("ALL");
   const [reservationDateFilter, setReservationDateFilter] = useState("");
   const [reservationSort, setReservationSort] = useState("NEWEST");
@@ -190,6 +204,62 @@ export default function CustomerRestaurantDetailsPage() {
       .catch(() => setMyReservations(mergeReservations([], user.email)));
   }, [user, restaurantId]);
 
+  useEffect(() => {
+    if (activeSection !== "reviews") return undefined;
+    let mounted = true;
+    setReviewLoading(true);
+    setReviewError("");
+    requestJson(`/api/reviews/restaurants/${restaurantId}?limit=50&offset=0`)
+      .then((data) => mounted && setRestaurantReviews(data.items || []))
+      .catch((reason) => mounted && setReviewError(reason.message))
+      .finally(() => mounted && setReviewLoading(false));
+    return () => { mounted = false; };
+  }, [activeSection, restaurantId]);
+
+  useEffect(() => {
+    if (activeSection !== "reviews" || !user) return undefined;
+    let mounted = true;
+    Promise.all([requestJson("/api/customer/orders"), requestJson("/api/customer/reviews")])
+      .then(([orders, mine]) => {
+        if (!mounted) return;
+        setRestaurantReviews((current) => {
+          const ownReviews = (mine || []).filter((review) => String(review.restaurant_id) === String(restaurantId));
+          const ownIds = new Set(ownReviews.map((review) => review.id));
+          return [...ownReviews, ...current.filter((review) => !ownIds.has(review.id))];
+        });
+        setEligibleOrders((current) => {
+          const completed = (orders || []).filter((order) => order.status === "COMPLETED" && String(order.restaurant_id) === String(restaurantId));
+          const hasRestaurantReview = (mine || []).some((review) => String(review.restaurant_id) === String(restaurantId));
+          return hasRestaurantReview ? [] : completed;
+        });
+      })
+      .catch((reason) => { if (mounted) setReviewError(reason.message); });
+    return () => { mounted = false; };
+  }, [activeSection, user, restaurantId]);
+
+  async function submitRestaurantReview(event) {
+    event.preventDefault();
+    setReviewBusy(true); setReviewError(""); setReviewMessage("");
+    try {
+      const saved = await requestJson(editingReviewId ? `/api/customer/reviews/${editingReviewId}` : "/api/customer/reviews", {
+        method: editingReviewId ? "PATCH" : "POST",
+        body: JSON.stringify({ ...reviewForm, food_id: null }),
+      });
+      setRestaurantReviews((current) => [saved, ...current.filter((review) => review.id !== saved.id)]);
+      setEligibleOrders((current) => current.filter((order) => order.id !== saved.order_id));
+      setReviewForm({ order_id: "", rating: 5, content: "" }); setEditingReviewId(null);
+      setReviewMessage(editingReviewId ? "Your review was updated." : "Thanks, your review was submitted.");
+    } catch (reason) { setReviewError(reason.message); }
+    finally { setReviewBusy(false); }
+  }
+
+  async function flagRestaurantReview(reviewId) {
+    try {
+      await requestJson(`/api/customer/reviews/${reviewId}/flags`, { method: "POST", body: JSON.stringify({ reason: flagReason, explanation: flagExplanation || null }) });
+      setFlaggingReviewId(null); setFlagExplanation(""); setReviewMessage("Your report was submitted to the moderation team.");
+    } catch (reason) { setReviewError(reason.message); }
+  }
+
   const gallery = restaurant?.images?.length
     ? restaurant.images
     : restaurant?.image
@@ -258,6 +328,8 @@ export default function CustomerRestaurantDetailsPage() {
       setCancellingReservation(false);
     }
   }
+
+  const hasPublishedOwnReview = restaurantReviews.some((review) => review.is_mine && review.status === "PUBLISHED");
 
   return (
     <div className="customer-home">
@@ -509,17 +581,34 @@ export default function CustomerRestaurantDetailsPage() {
                               {filteredMenuFoods.length > menuPageSize && <Pagination page={menuPage} pageSize={menuPageSize} total={filteredMenuFoods.length} onPageChange={setMenuPage} label="menu items" className="customer-menu-pagination" />}
                             </div>
                           ))}
-                        <p className="customer-menu-preorder-note">Food orders are placed with the restaurant manager at reception.</p>
                       </>
                     )}
                   </section>
                 )}
                 {activeSection === "reviews" && (
-                  <section className="restaurant-detail-section">
-                    <h2>
-                      <Star size={18} /> Customer Reviews
-                    </h2>
-                    <p>Customer reviews are not available yet.</p>
+                  <section className="restaurant-detail-section restaurant-reviews-section">
+                    <header className="customer-review-heading">
+                      <div><span className="customer-menu-eyebrow">GUEST FEEDBACK</span><h2><Star size={18} /> Customer Reviews</h2></div>
+                      <span>{restaurantReviews.filter((review) => !review.status || review.status === "PUBLISHED").length} reviews · {restaurantReviews.filter((review) => !review.status || review.status === "PUBLISHED").length ? (restaurantReviews.filter((review) => !review.status || review.status === "PUBLISHED").reduce((sum, review) => sum + review.rating, 0) / restaurantReviews.filter((review) => !review.status || review.status === "PUBLISHED").length).toFixed(1) : "—"} average</span>
+                    </header>
+                    {reviewError && <p className="customer-review-alert" role="alert">{reviewError}</p>}
+                    {reviewMessage && <p className="customer-review-success" role="status">{reviewMessage}</p>}
+                    {user && (!hasPublishedOwnReview || editingReviewId) ? <form className="customer-review-form" onSubmit={submitRestaurantReview}>
+                      <h3>{editingReviewId ? "Edit your review" : "Share your experience"}</h3>
+                      <label>Completed order<select required value={reviewForm.order_id} disabled={!!editingReviewId} onChange={(event) => setReviewForm({ ...reviewForm, order_id: event.target.value })}><option value="">Select an eligible order</option>{editingReviewId && reviewForm.order_id && <option value={reviewForm.order_id}>Your original completed order</option>}{eligibleOrders.map((order) => <option key={order.id} value={order.id}>{order.restaurant_name || restaurant.name} · {new Date(order.created_at).toLocaleDateString()}</option>)}</select></label>
+                      <fieldset className="customer-review-rating"><legend>Your rating</legend><div className="customer-review-star-picker" aria-label="Choose a rating from one to five stars" onMouseLeave={() => setHoverRating(0)}>{[1,2,3,4,5].map((rating) => <button key={rating} type="button" aria-pressed={reviewForm.rating === rating} aria-label={`${rating} ${rating === 1 ? "star" : "stars"}`} className={(hoverRating || reviewForm.rating) >= rating ? "selected" : ""} onMouseEnter={() => setHoverRating(rating)} onFocus={() => setHoverRating(rating)} onBlur={() => setHoverRating(0)} onClick={() => setReviewForm({ ...reviewForm, rating })}>★</button>)}</div><span aria-live="polite">{(hoverRating || reviewForm.rating)} out of 5 stars</span></fieldset>
+                      <label>Your review<textarea required minLength={3} maxLength={5000} value={reviewForm.content} onChange={(event) => setReviewForm({ ...reviewForm, content: event.target.value })} placeholder={`How was your visit to ${restaurant.name}?`} /></label>
+                      <div className="customer-review-actions"><button type="submit" disabled={reviewBusy || !reviewForm.order_id}>{reviewBusy ? "Saving…" : editingReviewId ? "Save changes" : "Submit review"}</button>{editingReviewId && <button type="button" className="secondary" onClick={() => { setEditingReviewId(null); setReviewForm({ order_id: "", rating: 5, content: "" }); }}>Cancel</button>}</div>
+                      {!eligibleOrders.length && !editingReviewId && <small>A completed food order at this restaurant is required to review it. Reservations alone do not count as completed orders.</small>}
+                    </form> : !user ? <p><Link to="/customer/login">Sign in</Link> to write a review after a completed order.</p> : null}
+                    <div className="customer-review-list">
+                      {reviewLoading ? <p role="status">Loading reviews…</p> : restaurantReviews.length === 0 ? <p>No reviews yet. Be the first to share your experience after a completed order.</p> : restaurantReviews.map((review) => <article className="customer-review-card" key={review.id}>
+                        <div className="customer-review-card-heading"><strong>{"★".repeat(review.rating)}{"☆".repeat(5-review.rating)} <span>{review.food_name ? `· ${review.food_name}` : "Restaurant review"}</span></strong><small>{new Date(review.created_at).toLocaleDateString()}</small></div>
+                        <p>{review.content}</p>{review.reply && <div className="customer-review-reply"><strong>Restaurant response</strong><p>{review.reply.content}</p></div>}
+                        <div className="customer-review-actions">{review.is_mine && review.status === "PUBLISHED" && <button type="button" className="secondary" onClick={() => { setEditingReviewId(review.id); setReviewForm({ order_id: review.order_id, rating: review.rating, content: review.content }); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Edit your review</button>}{user && !review.is_mine && !review.status && flaggingReviewId !== review.id && <button type="button" className="secondary" onClick={() => setFlaggingReviewId(review.id)}>Report review</button>}</div>
+                        {flaggingReviewId === review.id && <div className="customer-review-flag"><label>Reason<select value={flagReason} onChange={(event) => setFlagReason(event.target.value)}>{[["SPAM","Spam"],["ABUSIVE","Abusive language"],["HARASSMENT","Harassment"],["MISLEADING","Misleading content"],["OTHER","Other"]].map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label><label>Explanation (optional)<textarea maxLength={1000} value={flagExplanation} onChange={(event) => setFlagExplanation(event.target.value)} /></label><div className="customer-review-actions"><button type="button" onClick={() => flagRestaurantReview(review.id)}>Submit report</button><button type="button" className="secondary" onClick={() => setFlaggingReviewId(null)}>Cancel</button></div></div>}
+                      </article>)}
+                    </div>
                   </section>
                 )}
                 {activeSection === "reservations" && (

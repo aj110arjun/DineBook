@@ -35,7 +35,7 @@ const navigation = [
   { label: "Spot Order", icon: ClipboardList, to: "/manager/spot-order" },
   { label: "Staff", icon: Users, to: "/manager/staff" },
   { label: "Offers", icon: Tag, to: "/manager/offers" },
-  { label: "Reviews", icon: MessageCircle },
+  { label: "Reviews", icon: MessageCircle, to: "/manager/reviews" },
   { label: "Analytics", icon: CircleDollarSign },
   { label: "Payments", icon: ClipboardList, to: "/manager/payments" },
   { label: "Notifications", icon: Bell },

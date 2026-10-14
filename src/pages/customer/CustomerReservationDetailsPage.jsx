@@ -5,6 +5,7 @@ import { requestJson } from "../../lib/authApi.js";
 import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
 import TransactionInvoiceButton from "../../components/TransactionInvoice.jsx";
 import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
+import "./CustomerRestaurantReviews.css";
 import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
 import { ProfileFrame } from "./CustomerReservationsPage.jsx";
 import "./CustomerProfilePage.css";
@@ -16,6 +17,7 @@ const title = (value) => (value || "").replaceAll("_", " ").toLowerCase().replac
 export default function CustomerReservationDetailsPage() {
   const { reservationId } = useParams(); const navigate = useNavigate(); const [user, setUser] = useState(null); const [reservation, setReservation] = useState(null); const [loading, setLoading] = useState(true); const [error, setError] = useState(""); const [notice, setNotice] = useState(""); const [busy, setBusy] = useState(false); const [reloadKey, setReloadKey] = useState(0); const [confirmCancellation, setConfirmCancellation] = useState(false);
   const [orderMenu, setOrderMenu] = useState([]); const [availableOffers, setAvailableOffers] = useState([]); const [cart, setCart] = useState([]); const [offerCode, setOfferCode] = useState(""); const [offerResult, setOfferResult] = useState(null); const [orderError, setOrderError] = useState("");
+  const [myReviews, setMyReviews] = useState([]); const [reviewForm, setReviewForm] = useState({ order_id: "", rating: 5, content: "" }); const [editingReviewId, setEditingReviewId] = useState(null); const [reviewBusy, setReviewBusy] = useState(false); const [reviewError, setReviewError] = useState(""); const [reviewMessage, setReviewMessage] = useState(""); const [hoverRating, setHoverRating] = useState(0);
   async function load(signal, onSettled) {
     setLoading(true); setError("");
     try {
@@ -61,6 +63,25 @@ export default function CustomerReservationDetailsPage() {
     Promise.all([requestJson(`/api/customer/restaurants/${reservation.restaurant_id}/menu`), requestJson(`/api/customer/orders/offers?restaurant_id=${reservation.restaurant_id}`)]).then(([menu, offers]) => { if(active){setOrderMenu(menu);setAvailableOffers(offers);} }).catch((reason) => active && setOrderError(reason.message));
     return () => { active = false; };
   }, [reservation?.restaurant_id, reservation?.status]);
+  useEffect(() => {
+    if (!user || !reservation?.restaurant_id) return undefined;
+    let active = true;
+    requestJson("/api/customer/reviews").then((reviews) => {
+      if (active) setMyReviews((reviews || []).filter((review) => String(review.restaurant_id) === String(reservation.restaurant_id)));
+    }).catch((reason) => { if (active) setReviewError(reason.message); });
+    return () => { active = false; };
+  }, [user, reservation?.restaurant_id, reloadKey]);
+  async function saveOrderReview(event) {
+    event.preventDefault(); setReviewBusy(true); setReviewError(""); setReviewMessage("");
+    try {
+      const orderId = editingReviewId ? reviewForm.order_id : event.currentTarget.dataset.orderId;
+      const saved = await requestJson(editingReviewId ? `/api/customer/reviews/${editingReviewId}` : "/api/customer/reviews", { method: editingReviewId ? "PATCH" : "POST", body: JSON.stringify({ ...reviewForm, order_id: orderId, food_id: null }) });
+      setMyReviews((current) => [saved, ...current.filter((review) => review.id !== saved.id)]);
+      setReviewMessage(editingReviewId ? "Your review was updated." : "Thanks, your review was submitted.");
+      setReviewForm({ order_id: "", rating: 5, content: "" }); setEditingReviewId(null); setHoverRating(0);
+    } catch (reason) { setReviewError(reason.message); }
+    finally { setReviewBusy(false); }
+  }
   const availableVariants = orderMenu.flatMap((category) => category.foods || []).flatMap((food) => food.variants || []).filter((variant) => variant.is_available);
   const cartSubtotal = cart.reduce((sum, line) => sum + Number(availableVariants.find((variant) => variant.id === line.variant_id)?.price || 0) * line.quantity, 0);
   const cartFoodIds = new Set(cart.flatMap((line) => orderMenu.flatMap((category) => category.foods || []).filter((food) => food.variants?.some((variant) => variant.id === line.variant_id)).map((food) => food.id)));
@@ -144,6 +165,30 @@ export default function CustomerReservationDetailsPage() {
               {order.completed_at && <small>Completed {new Date(order.completed_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</small>}
               {order.status_reason && <p className="reservation-notice">Status note: {order.status_reason}</p>}
             </article>)}</div>
+          </section>}
+          {reservation.food_orders?.some((order) => order.status === "COMPLETED") && <section className="profile-card reservation-order-reviews" aria-labelledby="reservation-reviews-heading">
+            <div className="reservation-food-orders-heading"><div className="reservation-section-title"><Utensils size={18} /><div><span className="reservation-section-kicker">YOUR EXPERIENCE</span><h2 id="reservation-reviews-heading">Reviews for completed orders</h2></div></div></div>
+            {reviewError && <p className="customer-review-alert" role="alert">{reviewError}</p>}{reviewMessage && <p className="customer-review-success" role="status">{reviewMessage}</p>}
+            <div className="customer-review-list">{reservation.food_orders.filter((order) => order.status === "COMPLETED").map((order) => {
+              const review = myReviews.find((item) => item.order_id === order.id);
+              const existingReview = myReviews[0];
+              const firstCompletedOrder = reservation.food_orders.find((item) => item.status === "COMPLETED");
+              const canReview = !existingReview && user && firstCompletedOrder?.id === order.id;
+              const editingThisOrder = reviewForm.order_id === order.id && (!editingReviewId || editingReviewId === review?.id);
+              return <article className="customer-review-card" key={`review-${order.id}`}>
+                <div className="customer-review-card-heading"><strong>Order #{order.id.slice(0, 8).toUpperCase()}</strong><small>{order.completed_at ? `Completed ${new Date(order.completed_at).toLocaleDateString("en-IN")}` : "Completed order"}</small></div>
+                {review ? editingReviewId === review.id ? <form className="customer-review-form" data-order-id={order.id} onSubmit={saveOrderReview}>
+                    <h3>Edit your review</h3><fieldset className="customer-review-rating"><legend>Your rating</legend><div className="customer-review-star-picker" onMouseLeave={() => setHoverRating(0)}>{[1,2,3,4,5].map((rating) => <button key={rating} type="button" aria-pressed={reviewForm.rating === rating} aria-label={`${rating} ${rating === 1 ? "star" : "stars"}`} className={(hoverRating || reviewForm.rating) >= rating ? "selected" : ""} onMouseEnter={() => setHoverRating(rating)} onFocus={() => setHoverRating(rating)} onBlur={() => setHoverRating(0)} onClick={() => setReviewForm({ ...reviewForm, rating })}>★</button>)}</div><span>{(hoverRating || reviewForm.rating)} out of 5 stars</span></fieldset>
+                    <label>Your review<textarea required minLength={3} maxLength={5000} value={reviewForm.content} onChange={(event) => setReviewForm({ ...reviewForm, content: event.target.value })} /></label><div className="customer-review-actions"><button type="submit" disabled={reviewBusy}>{reviewBusy ? "Saving…" : "Save changes"}</button><button type="button" className="secondary" onClick={() => { setEditingReviewId(null); setReviewForm({ order_id: "", rating: 5, content: "" }); }}>Cancel</button></div>
+                  </form> : <><p><strong>{"★".repeat(review.rating)}{"☆".repeat(5-review.rating)}</strong> · {review.content}</p><small>{review.status === "PUBLISHED" ? "Published" : title(review.status)}</small>{review.status === "PUBLISHED" && <div className="customer-review-actions"><button type="button" className="secondary" onClick={() => { setEditingReviewId(review.id); setReviewForm({ order_id: review.order_id, rating: review.rating, content: review.content }); setReviewError(""); setReviewMessage(""); }}>Edit review</button></div>}</>
+                  : canReview ? <form className="customer-review-form" data-order-id={order.id} onSubmit={saveOrderReview}>
+                    <h3>Share your experience</h3>
+                    <fieldset className="customer-review-rating"><legend>Your rating</legend><div className="customer-review-star-picker" aria-label="Choose a rating from one to five stars" onMouseLeave={() => setHoverRating(0)}>{[1,2,3,4,5].map((rating) => <button key={rating} type="button" aria-pressed={reviewForm.rating === rating} aria-label={`${rating} ${rating === 1 ? "star" : "stars"}`} className={(hoverRating || reviewForm.rating) >= rating ? "selected" : ""} onMouseEnter={() => setHoverRating(rating)} onFocus={() => setHoverRating(rating)} onBlur={() => setHoverRating(0)} onClick={() => setReviewForm({ order_id: order.id, rating, content: reviewForm.content })}>★</button>)}</div><span aria-live="polite">{(hoverRating || reviewForm.rating)} out of 5 stars</span></fieldset>
+                    <label>Your review<textarea required minLength={3} maxLength={5000} value={editingThisOrder ? reviewForm.content : ""} onChange={(event) => setReviewForm({ order_id: order.id, rating: reviewForm.rating, content: event.target.value })} placeholder={`How was your order from ${reservation.restaurant_name || "this restaurant"}?`} /></label>
+                    <div className="customer-review-actions"><button type="submit" disabled={reviewBusy}>{reviewBusy ? "Saving…" : "Submit review"}</button>{editingReviewId && <button type="button" className="secondary" onClick={() => { setEditingReviewId(null); setReviewForm({ order_id: "", rating: 5, content: "" }); }}>Cancel</button>}</div>
+                  </form> : <small>A review for this restaurant has already been submitted.</small>}
+              </article>;
+            })}</div>
           </section>}
           {reservation.special_request && <section className="profile-card reservation-special-request"><span className="reservation-section-kicker">SPECIAL REQUEST</span><p>{reservation.special_request}</p></section>}
           <div className="reservation-detail-actions"><Link to={`/customer/restaurants/${reservation.restaurant_id}`}>View restaurant</Link>{["PENDING_PAYMENT", "CONFIRMED"].includes(reservation.status) && <button disabled={busy} onClick={() => setConfirmCancellation(true)}>{busy ? "Cancelling…" : "Cancel reservation"}</button>}</div>

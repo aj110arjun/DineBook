@@ -34,7 +34,7 @@ const navigation = [
   { label: "Users", icon: Users },
   { label: "Payments", icon: WalletCards },
   { label: "Offers", icon: ShieldCheck, path: "/admin/offers" },
-  { label: "Reviews & Reports", icon: FileText },
+  { label: "Reviews & Reports", icon: FileText, path: "/admin/reviews" },
   { label: "Analytics", icon: ChartNoAxesCombined },
   { label: "Notifications", icon: Bell },
   { label: "Activity Logs", icon: Activity },

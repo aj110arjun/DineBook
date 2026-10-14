@@ -9,7 +9,7 @@ const navigation = [
   { label: "Service Hours", icon: Clock3, to: "/chef/service-hours" },
   { label: "Reservations", icon: ShoppingBag },
   { label: "Menu", icon: List },
-  { label: "Reviews", icon: Star },
+  { label: "Reviews", icon: Star, to: "/chef/reviews" },
   { label: "Analytics", icon: ChartNoAxesColumn },
   { label: "Profile", icon: ChefHat },
   { label: "Settings", icon: Settings },
