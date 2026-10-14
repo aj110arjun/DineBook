@@ -23,6 +23,7 @@ import AdminRestaurantsPage from "./pages/admin/AdminRestaurantsPage.jsx";
 import AdminRestaurantDetailsPage from "./pages/admin/AdminRestaurantDetailsPage.jsx";
 import AdminRequestsPage from "./pages/admin/AdminRequestsPage.jsx";
 import AdminManagerRequestDetailsPage from "./pages/admin/AdminManagerRequestDetailsPage.jsx";
+import AdminOffersPage from "./pages/admin/AdminOffersPage.jsx";
 import ManagerRegisterPage from "./pages/manager/ManagerRegisterPage.jsx";
 import ManagerLoginPage from "./pages/manager/ManagerLoginPage.jsx";
 import ManagerDashboardPage from "./pages/manager/ManagerDashboardPage.jsx";
@@ -42,6 +43,7 @@ import OrdersPage from "./pages/shared/OrdersPage.jsx";
 import ManagerOrderDetailsPage from "./pages/manager/ManagerOrderDetailsPage.jsx";
 import ManagerSpotOrderPage from "./pages/manager/ManagerSpotOrderPage.jsx";
 import ManagerOperatingHoursPage from "./pages/manager/ManagerOperatingHoursPage.jsx";
+import ManagerOffersPage from "./pages/manager/ManagerOffersPage.jsx";
 import ChefServiceHoursPage from "./pages/chef/ChefServiceHoursPage.jsx";
 import ManagerPaymentsPage from "./pages/manager/ManagerPaymentsPage.jsx";
 
@@ -158,6 +160,7 @@ export default function App() {
           }
         />
         <Route path="/admin/orders" element={<AdminProtectedRoute><Navigate to="/admin/dashboard" replace /></AdminProtectedRoute>} />
+        <Route path="/admin/offers" element={<AdminProtectedRoute><AdminOffersPage /></AdminProtectedRoute>} />
         <Route
           path="/admin/requests"
           element={
@@ -231,6 +234,7 @@ export default function App() {
         <Route path="/manager/orders" element={<ManagerProtectedRoute><OrdersPage mode="manager" /></ManagerProtectedRoute>} />
         <Route path="/manager/spot-order" element={<ManagerProtectedRoute><ManagerSpotOrderPage /></ManagerProtectedRoute>} />
         <Route path="/manager/payments" element={<ManagerProtectedRoute><ManagerPaymentsPage /></ManagerProtectedRoute>} />
+        <Route path="/manager/offers" element={<ManagerProtectedRoute><ManagerOffersPage /></ManagerProtectedRoute>} />
         <Route path="/manager/payments/:transactionId" element={<ManagerProtectedRoute><ManagerPaymentsPage /></ManagerProtectedRoute>} />
         <Route path="/manager/orders/:orderId" element={<ManagerProtectedRoute><ManagerOrderDetailsPage /></ManagerProtectedRoute>} />
         <Route path="/manager/floors" element={<Navigate to="/manager/tables" replace />} />

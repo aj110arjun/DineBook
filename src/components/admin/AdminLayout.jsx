@@ -33,7 +33,7 @@ const navigation = [
   },
   { label: "Users", icon: Users },
   { label: "Payments", icon: WalletCards },
-  { label: "Offers", icon: ShieldCheck },
+  { label: "Offers", icon: ShieldCheck, path: "/admin/offers" },
   { label: "Reviews & Reports", icon: FileText },
   { label: "Analytics", icon: ChartNoAxesCombined },
   { label: "Notifications", icon: Bell },

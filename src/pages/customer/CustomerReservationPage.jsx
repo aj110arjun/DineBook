@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, CalendarDays, Check, Clock3, MapPin, Minus, Plus, Users, Wallet } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarDays, Check, Clock3, CreditCard, MapPin, Minus, Plus, Users, Utensils, Wallet } from "lucide-react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import QRCode from "qrcode";
 import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
@@ -137,6 +137,15 @@ export default function CustomerReservationPage() {
   const [walletBalance, setWalletBalance] = useState(0);
   const [walletLoading, setWalletLoading] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState("WALLET");
+  const [fulfillmentType, setFulfillmentType] = useState("TABLE_ONLY");
+  const [preorderPaymentMethod, setPreorderPaymentMethod] = useState("PAY_AT_DESK");
+  const [menuCategories, setMenuCategories] = useState([]);
+  const [menuLoading, setMenuLoading] = useState(true);
+  const [preorderCart, setPreorderCart] = useState([]);
+  const [availableOffers, setAvailableOffers] = useState([]);
+  const [offerCode, setOfferCode] = useState("");
+  const [offerPreview, setOfferPreview] = useState(null);
+  const [offerBusy, setOfferBusy] = useState(false);
   const [availability, setAvailability] = useState({});
   const [timeSlotsLoading, setTimeSlotsLoading] = useState(false);
   const [availabilityError, setAvailabilityError] = useState("");
@@ -169,6 +178,20 @@ export default function CustomerReservationPage() {
     requestJson("/api/customer/me").then((value) => active && setUser(value)).catch(() => active && navigate("/customer/login", { replace: true }));
     return () => { active = false; };
   }, [restaurantId, navigate]);
+
+  useEffect(() => {
+    let active = true;
+    setMenuLoading(true);
+    Promise.all([
+      requestJson(`/api/customer/restaurants/${restaurantId}/menu`),
+      requestJson(`/api/customer/orders/offers?restaurant_id=${encodeURIComponent(restaurantId)}`),
+    ]).then(([menu, offers]) => {
+      if (active) { setMenuCategories(menu); setAvailableOffers(offers); }
+    }).catch(() => {
+      if (active) { setMenuCategories([]); setAvailableOffers([]); }
+    }).finally(() => active && setMenuLoading(false));
+    return () => { active = false; };
+  }, [restaurantId]);
 
   useEffect(() => {
     let active = true;
@@ -253,9 +276,18 @@ export default function CustomerReservationPage() {
   const selectedAvailability = availability[time] || { loading: timeSlotsLoading, tables: [] };
   const availableTables = selectedAvailability.tables || [];
   const selectedTable = availableTables.find((table) => table.id === selectedTableId);
+  const preorderVariants = menuCategories.flatMap((category) => (category.foods || []).filter((food) => food.is_available).flatMap((food) => (food.variants || []).filter((variant) => variant.is_available).map((variant) => ({ ...variant, food_id: food.id, food_name: food.name, category_id: food.category_id || category.id, category_name: category.name }))));
+  const preorderSubtotal = preorderCart.reduce((sum, line) => sum + Number(preorderVariants.find((variant) => variant.id === line.variant_id)?.price || 0) * line.quantity, 0);
+  const preorderNet = Math.max(0, preorderSubtotal - (offerPreview?.valid ? Number(offerPreview.discount_amount) : 0));
+  const preorderFoodIds = new Set(preorderCart.map((line) => preorderVariants.find((variant) => variant.id === line.variant_id)?.food_id).filter(Boolean));
+  const preorderCategoryIds = new Set(preorderCart.map((line) => preorderVariants.find((variant) => variant.id === line.variant_id)?.category_id).filter(Boolean));
+  const relevantOffers = availableOffers.filter((offer) => offer.status === "ACTIVE" && (offer.applicability === "RESTAURANT" || (offer.applicability === "ITEMS" && (offer.eligible_food_ids || []).some((id) => preorderFoodIds.has(id))) || (offer.applicability === "CATEGORIES" && (offer.eligible_category_ids || []).some((id) => preorderCategoryIds.has(id)))));
   const quotedFee = step === 1 ? Math.min(...(availableTables.length ? availableTables.map((table) => Number(table.reservation_fee)) : [250])) : Number(selectedTable?.reservation_fee || reservation?.fee_amount || 0);
-  const checkoutTotal = quotedFee;
-  const amountDueNow = quotedFee;
+  const checkoutTotal = quotedFee + (fulfillmentType === "PREORDER" ? preorderNet : 0);
+  const summaryCheckoutTotal = step === resultStep && reservation?.payment_status === "PAID"
+    ? Number(reservation.preorder_total || 0)
+    : checkoutTotal;
+  const walletRequired = (paymentMethod === "WALLET" ? quotedFee : 0) + (fulfillmentType === "PREORDER" && preorderPaymentMethod === "WALLET" ? preorderNet : 0);
   const monthTitle = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(month);
   const selectedDateException = hoursExceptions.find((item) => item.start_date <= date && item.end_date >= date);
 
@@ -273,7 +305,33 @@ export default function CustomerReservationPage() {
 
 
   function continueFromTable() {
+    if (fulfillmentType === "PREORDER" && preorderCart.length === 0) {
+      setError("Add at least one menu item to your preorder.");
+      return;
+    }
+    setError("");
     setStep(checkoutStep);
+  }
+
+  function changePreorderQuantity(variantId, delta) {
+    setOfferPreview(null);
+    setPreorderCart((current) => {
+      const existing = current.find((line) => line.variant_id === variantId);
+      if (!existing && delta > 0) return [...current, { variant_id: variantId, quantity: 1 }];
+      return current.map((line) => line.variant_id === variantId ? { ...line, quantity: Math.min(99, line.quantity + delta) } : line).filter((line) => line.quantity > 0);
+    });
+  }
+
+  async function previewPreorderOffer(code = offerCode) {
+    if (!code.trim() || preorderCart.length === 0) { setError("Add preorder items and enter an offer code first."); return; }
+    setOfferBusy(true); setError(""); setOfferPreview(null);
+    const normalizedCode = code.trim().toUpperCase(); setOfferCode(normalizedCode);
+    try {
+      const result = await requestJson("/api/customer/orders/offers/preview", { method: "POST", body: JSON.stringify({ restaurant_id: restaurantId, offer_code: normalizedCode, items: preorderCart }) });
+      setOfferPreview(result);
+      if (!result.valid) setError(result.reason || "This offer cannot be applied.");
+    } catch (reason) { setError(reason.message); }
+    finally { setOfferBusy(false); }
   }
 
   async function submitReservation() {
@@ -284,7 +342,7 @@ export default function CustomerReservationPage() {
       if (paymentMethod === "RAZORPAY") await loadRazorpayCheckout();
       const result = await requestJson("/api/customer/reservations", {
         method: "POST",
-        body: JSON.stringify({ restaurant_id: restaurantId, reservation_date: date, start_time: time, number_of_guests: guests, table_ids: selectedTable.table_ids, fulfillment_type: "TABLE_ONLY", payment_method: paymentMethod, preorder_payment_method: null, preorder_items: [] }),
+        body: JSON.stringify({ restaurant_id: restaurantId, reservation_date: date, start_time: time, number_of_guests: guests, table_ids: selectedTable.table_ids, fulfillment_type: fulfillmentType, payment_method: paymentMethod, preorder_payment_method: fulfillmentType === "PREORDER" ? preorderPaymentMethod : null, preorder_items: fulfillmentType === "PREORDER" ? preorderCart : [], offer_code: fulfillmentType === "PREORDER" && offerPreview?.valid ? offerCode : null }),
       });
       setReservation(result);
       saveReservation(user?.email, { ...result, restaurant_name: restaurant?.name, restaurant_location: restaurant?.location || restaurant?.address });
@@ -344,7 +402,9 @@ export default function CustomerReservationPage() {
                 {!hasConfiguredHours && <p className="booking-hours-message">This restaurant has not configured operating hours, so reservations are unavailable.</p>}
               </section>
               <section className="booking-guest-panel"><div><h3>Number of Guests</h3><p>For parties larger than 16, please contact the restaurant.</p></div><div className="booking-guest-stepper"><button type="button" aria-label="Remove guest" disabled={guests <= 1} onClick={() => setGuests((value) => Math.max(1, value - 1))}><Minus size={16} /></button><strong>{guests} {guests === 1 ? "Guest" : "Guests"}</strong><button type="button" aria-label="Add guest" disabled={guests >= 16} onClick={() => setGuests((value) => Math.min(16, value + 1))}><Plus size={16} /></button></div></section>
-              <section className="booking-intent-panel"><h3>Reserve your table</h3><p>Choose your visit details and confirm your reservation. Food orders are handled by the restaurant manager at reception.</p></section>
+              <section className="booking-intent-panel"><h3>Choose your booking option</h3><p>Reserve a table only, or preorder food so the restaurant can prepare it for your visit.</p><div className="booking-intent-options" role="group" aria-label="Booking option"><button type="button" className={fulfillmentType === "PREORDER" ? "selected" : ""} aria-pressed={fulfillmentType === "PREORDER"} onClick={() => { setFulfillmentType("PREORDER"); setError(""); }}><span className="booking-intent-icon"><Utensils size={18}/></span><strong>Preorder food</strong><small>Choose menu items now and select how to pay for them.</small></button><button type="button" className={fulfillmentType === "TABLE_ONLY" ? "selected" : ""} aria-pressed={fulfillmentType === "TABLE_ONLY"} onClick={() => { setFulfillmentType("TABLE_ONLY"); setError(""); setOfferPreview(null); }}><span className="booking-intent-icon"><CalendarDays size={18}/></span><strong>Reservation only</strong><small>Book a table and order food at the restaurant.</small></button></div>
+                {fulfillmentType === "PREORDER" && <div className="booking-preorder-panel"><h3>Choose preorder items</h3>{menuLoading ? <p>Loading menu…</p> : menuCategories.length === 0 ? <p>The restaurant menu is unavailable for preorder right now.</p> : menuCategories.map((category) => { const foods = (category.foods || []).filter((food) => food.is_available && (food.variants || []).some((variant) => variant.is_available)); return foods.length ? <div className="booking-preorder-category" key={category.id}><h4>{category.name}</h4>{foods.map((food) => <article className="booking-preorder-food" key={food.id}>{food.image_url && <img src={food.image_url} alt=""/>}<div className="booking-preorder-food-copy"><strong>{food.name}</strong>{food.description && <small>{food.description}</small>}{(food.variants || []).filter((variant) => variant.is_available).map((variant) => { const quantity = preorderCart.find((line) => line.variant_id === variant.id)?.quantity || 0; return <div className="booking-preorder-variant" key={variant.id}><span>{variant.name} · ₹{Number(variant.price).toFixed(2)}</span><div>{quantity > 0 && <button type="button" aria-label={`Remove one ${food.name}`} onClick={() => changePreorderQuantity(variant.id, -1)}><Minus size={13}/></button>}<strong>{quantity || ""}</strong><button type="button" aria-label={`Add one ${food.name}`} onClick={() => changePreorderQuantity(variant.id, 1)}><Plus size={13}/></button></div></div>; })}</div></article>)}</div> : null; })}</div>}
+              </section>
               <section className="booking-slots-panel"><h3>Available time slots</h3><p className="booking-hours-message">Choose a 30-minute reservation start time. Each slot reflects current table availability for {guests} {guests === 1 ? "guest" : "guests"}.</p>{selectedDateException && <p className="booking-hours-message">Special schedule: {selectedDateException.is_closed ? "Closed" : selectedDateException.periods.map((period) => `${period.opens}–${period.closes}`).join(" · ")}{selectedDateException.reason ? ` · ${selectedDateException.reason}` : ""}</p>}{timeSlotsLoading ? <p className="booking-hours-message">Checking available times…</p> : <div className="booking-time-slots" role="group" aria-label="Available reservation times">{Object.keys(availability).map((slot) => <SlotButton key={slot} slot={displayTime(slot)} selected={time === slot} availability={availability[slot]} onClick={() => { setTime(slot); setSelectedTableId(""); }} />)}</div>}{!timeSlotsLoading && !Object.keys(availability).length && <p className="reservation-page-error">{selectedDateException?.is_closed ? `The restaurant is closed on this date.${selectedDateException.reason ? ` ${selectedDateException.reason}` : ""}` : date <= todayInRestaurantTimezone() ? "No same-day reservations. Choose a future date." : "No reservation times are available for this date."}</p>}{availabilityError && <p className="reservation-page-error">{availabilityError}</p>}</section>
             </>}
 
@@ -356,14 +416,17 @@ export default function CustomerReservationPage() {
                 <div className="booking-checkout-section-heading"><div><span className="booking-checkout-kicker">PAYMENT</span><h3 id="checkout-payment-title">Reservation fee</h3></div><span className="booking-checkout-due">Required · Pay now</span></div>
                 <div className="booking-payment-methods" role="group" aria-label="Choose payment method">
                   <button type="button" className={`booking-payment-option${paymentMethod === "WALLET" ? " selected" : ""}`} aria-pressed={paymentMethod === "WALLET"} onClick={() => setPaymentMethod("WALLET")}><Wallet size={19} /><span><strong>DineBook wallet</strong><small>{walletLoading ? "Checking balance…" : `Available balance ₹${walletBalance.toFixed(2)}`}</small></span></button>
-                  <button type="button" className={`booking-payment-option${paymentMethod === "RAZORPAY" ? " selected" : ""}`} aria-pressed={paymentMethod === "RAZORPAY"} onClick={() => setPaymentMethod("RAZORPAY")}><span><strong>Pay online</strong><small>Cards, UPI and net banking via Razorpay</small></span></button>
+                  <button type="button" className={`booking-payment-option${paymentMethod === "RAZORPAY" ? " selected" : ""}`} aria-pressed={paymentMethod === "RAZORPAY"} onClick={() => setPaymentMethod("RAZORPAY")}><CreditCard size={19} /><span><strong>Pay online</strong><small>Cards, UPI and net banking via Razorpay</small></span></button>
                 </div>
                 <div className="booking-required-fee"><div><strong>Reservation fee</strong><small>{paymentMethod === "WALLET" ? "Charged from your DineBook wallet" : "Secure checkout hosted by Razorpay"}</small></div><b>₹{quotedFee.toFixed(2)}</b></div>
-                {paymentMethod === "WALLET" && !walletLoading && walletBalance < amountDueNow && <p className="booking-wallet-warning">Add ₹{(amountDueNow - walletBalance).toFixed(2)} to your wallet to place this reservation.</p>}
+                {fulfillmentType === "PREORDER" && <div className="booking-preorder-payment"><strong>Preorder payment</strong><p>Choose whether to pay the food total from your wallet now or at the restaurant.</p><div className="booking-payment-methods" role="group" aria-label="Preorder payment method"><button type="button" className={`booking-payment-option booking-payment-option-desk${preorderPaymentMethod === "PAY_AT_DESK" ? " selected" : ""}`} aria-pressed={preorderPaymentMethod === "PAY_AT_DESK"} onClick={() => setPreorderPaymentMethod("PAY_AT_DESK")}><span><strong>Pay at restaurant</strong><small>Food total due when you dine</small></span></button><button type="button" className={`booking-payment-option${preorderPaymentMethod === "WALLET" ? " selected" : ""}`} aria-pressed={preorderPaymentMethod === "WALLET"} onClick={() => setPreorderPaymentMethod("WALLET")}><Wallet size={19}/><span><strong>Pay from wallet</strong><small>Charge the discounted food total now</small></span></button></div></div>}
+                {fulfillmentType === "PREORDER" && <div className="booking-offers-checkout"><strong>Offers for your preorder</strong>{relevantOffers.length ? relevantOffers.map((offer) => <article key={offer.id}><div><b>{offer.title}</b><span>{offer.discount_type === "PERCENTAGE" ? `${offer.discount_percent}% off${offer.max_discount ? ` up to ₹${Number(offer.max_discount).toFixed(2)}` : ""}` : `₹${Number(offer.discount_percent).toFixed(2)} off`}</span><small>{offer.code} · Minimum ₹{Number(offer.minimum_subtotal).toFixed(2)}</small></div><button type="button" disabled={offerBusy} onClick={() => previewPreorderOffer(offer.code)}>{offerPreview?.valid && offerPreview.offer.id === offer.id ? "Applied" : "Apply"}</button></article>) : <small>No active offers match the selected preorder items.</small>}<div className="booking-offer-code"><input aria-label="Offer code" placeholder="Enter offer code" value={offerCode} onChange={(event) => { setOfferCode(event.target.value.toUpperCase()); setOfferPreview(null); }} /><button type="button" disabled={offerBusy} onClick={() => previewPreorderOffer()}>{offerBusy ? "Checking…" : "Apply code"}</button></div>{offerPreview?.valid && <small className="booking-offer-success">{offerPreview.offer.title} applied · save ₹{Number(offerPreview.discount_amount).toFixed(2)}</small>}</div>}
+                <div className="booking-required-fee"><div><strong>Reservation fee</strong><small>{paymentMethod === "WALLET" ? "Charged from your DineBook wallet" : "Secure checkout hosted by Razorpay"}</small></div><b>₹{quotedFee.toFixed(2)}</b></div>
+                {walletRequired > 0 && !walletLoading && walletBalance < walletRequired && <p className="booking-wallet-warning">Add ₹{(walletRequired - walletBalance).toFixed(2)} to your wallet to cover the selected wallet payments.</p>}
 
               </section>
               <section className="booking-checkout-summary" aria-labelledby="checkout-summary-title">
-                <div className="booking-checkout-section-heading"><div><span className="booking-checkout-kicker">YOUR VISIT</span><h3 id="checkout-summary-title">Reservation details</h3></div><span className="booking-detail-step">TABLE ONLY</span></div>
+                <div className="booking-checkout-section-heading"><div><span className="booking-checkout-kicker">YOUR VISIT</span><h3 id="checkout-summary-title">Reservation details</h3></div><span className="booking-detail-step">{fulfillmentType === "PREORDER" ? "WITH PREORDER" : "TABLE ONLY"}</span></div>
                 <div className="booking-checkout-visit-grid">
                   <div><CalendarDays /><span>Date</span><strong>{selectedDateLabel}</strong></div>
                   <div><Clock3 /><span>Time</span><strong>{displayTime(time)}</strong></div>
@@ -372,7 +435,8 @@ export default function CustomerReservationPage() {
                 </div>
                 <div className="booking-checkout-costs">
                   <div className="booking-checkout-cost-line"><span>Table reservation fee</span><strong>₹{quotedFee.toFixed(2)}</strong></div>
-                  <div className="booking-checkout-grand-total"><span>Pay now<small>Reservation fee is required</small></span><strong>₹{amountDueNow.toFixed(2)}</strong></div>
+                  {fulfillmentType === "PREORDER" && <><div className="booking-checkout-cost-line"><span>Preorder subtotal</span><strong>₹{preorderSubtotal.toFixed(2)}</strong></div>{offerPreview?.valid && <div className="booking-checkout-cost-line"><span>Offer discount · {offerCode}</span><strong>−₹{Number(offerPreview.discount_amount).toFixed(2)}</strong></div>}<div className="booking-checkout-cost-line"><span>Preorder total · {preorderPaymentMethod === "WALLET" ? "wallet" : "pay at restaurant"}</span><strong>₹{preorderNet.toFixed(2)}</strong></div></>}
+                  <div className="booking-checkout-grand-total"><span>Booking total<small>{paymentMethod === "WALLET" ? "Reservation fee paid from wallet" : "Reservation fee paid online"}{fulfillmentType === "PREORDER" ? ` · food ${preorderPaymentMethod === "WALLET" ? "paid from wallet" : "due at restaurant"}` : ""}</small></span><strong>₹{checkoutTotal.toFixed(2)}</strong></div>
                 </div>
               </section>
               <div className="booking-checkout-actions"><button type="button" className="booking-back-button" onClick={() => setStep(2)}>Back</button></div>
@@ -380,7 +444,7 @@ export default function CustomerReservationPage() {
             {step === resultStep && reservation && <section className="booking-result-panel"><span className="booking-step-label">RESERVATION PASS</span><div className={`booking-result-icon ${reservation.status === "CONFIRMED" ? "paid" : "pending"}`}>{reservation.status === "CONFIRMED" ? "✓" : "!"}</div><h2>{reservation.status === "CONFIRMED" ? "Reservation Confirmed" : "Reservation Request Received"}</h2><p>{reservation.status === "CONFIRMED" ? "Your reservation fee is paid. Show this QR pass at the restaurant when you arrive. Food orders are handled by the manager at reception." : "Payment is awaiting confirmation. Refresh this page to check the latest status."}</p><div className="booking-pass-layout"><div className="booking-review-lines"><ReviewLine label="Reservation ID" value={reservation.id.slice(0, 8).toUpperCase()} /><ReviewLine label="Date & time" value={`${reservation.reservation_date} · ${shortTime(reservation.start_time)}`} /><ReviewLine label="Table" value={reservation.tables?.map((table) => `${table.floor_name} · ${table.table_number}`).join(", ") || "Pending"} /><ReviewLine label="Guests" value={`${reservation.number_of_guests}`} /><ReviewLine label={`Reservation fee · ${reservation.payment_status === "PAID" ? "Paid" : "Pending"}`} value={`₹${Number(reservation.fee_amount).toFixed(2)}`} /><ReviewLine label="Payment method" value={reservation.payment_method === "RAZORPAY" ? `Razorpay · ${reservation.payment_status}` : `DineBook wallet · ${reservation.payment_status}`} bold />{reservation.razorpay_payment_id && <ReviewLine label="Payment reference" value={reservation.razorpay_payment_id} />}</div><div className="booking-qr-card"><div className="booking-qr-caption"><span>RESERVATION ID</span><strong>{reservation.id.slice(0, 8).toUpperCase()}</strong></div>{qrCode ? <img src={qrCode} alt="QR code for reservation ID" /> : <span className="booking-qr-placeholder">{qrError || "Generating QR…"}</span>}<small>Scan to look up this reservation at the restaurant.</small><a className={`booking-download-pass${passDownload ? " ready" : ""}`} href={passDownload || undefined} download={`DineBook-pass-${reservation.id.slice(0, 8)}.png`} aria-disabled={!passDownload}>{passDownload ? "Download reservation pass" : "Preparing download…"}</a></div></div>{qrError && <p className="reservation-page-error">{qrError}</p>}<button type="button" className="booking-back-button" onClick={async () => { try { const latest = await requestJson(`/api/customer/reservations/${reservation.id}`); setReservation(latest); } catch (reason) { setError(reason.message); } }}>Refresh reservation status</button> <Link to={`/customer/restaurants/${restaurantId}`} className="booking-back-button">Back to restaurant</Link></section>}
           </section>
 
-          <aside className="booking-summary-column"><section className="booking-summary-card"><span className="booking-step-label">RESERVATION STEP {step} OF 3</span><h2>{step === 1 ? "Booking Summary" : step === 2 ? "Dine-in Details" : step === checkoutStep ? "Checkout Summary" : step === resultStep ? "Reservation Status" : "Reservation Summary"}</h2><div className="booking-summary-lines"><ReviewLine label="Selected date" value={selectedDateLabel} /><ReviewLine label="Guests" value={`${guests} ${guests === 1 ? "Guest" : "Guests"}`} /><ReviewLine label="Preferred time" value={displayTime(time)} />{step >= 2 && <ReviewLine label="Selected table" value={selectedTable ? `Table ${selectedTable.table_number}` : "Choose a table"} />}<ReviewLine label="Table reservation fee · pay now" value={selectedAvailability.loading && step === 1 ? "Checking…" : `₹${quotedFee.toFixed(2)}`} /><ReviewLine label={step >= checkoutStep ? "Payment method" : "Current total"} value={step >= checkoutStep ? `${paymentMethod === "WALLET" ? "Wallet" : "Razorpay"} · ₹${amountDueNow.toFixed(2)}` : `₹${checkoutTotal.toFixed(2)}`} bold /></div>{step === 1 && <button type="button" className="booking-primary-action" disabled={selectedAvailability.loading || !availableTables.length} onClick={continueToTables}>{selectedAvailability.loading ? "Checking table availability…" : !availableTables.length ? "No tables available" : "Continue to Table Selection"}</button>}{step === 2 && <button type="button" className="booking-primary-action" disabled={!selectedTable} onClick={continueFromTable}>Continue</button>}{step === checkoutStep && <button type="button" className="booking-primary-action" disabled={busy || (paymentMethod === "WALLET" && (walletLoading || walletBalance < amountDueNow))} onClick={submitReservation}>{busy ? "Submitting…" : paymentMethod === "RAZORPAY" ? "Continue to secure payment" : "Confirm reservation"}</button>}{step === resultStep && <Link to="/customer/restaurants" className="booking-primary-action booking-link-action">Explore restaurants</Link>}</section><p className="booking-summary-footnote">Choose wallet or securely pay online with Razorpay.</p>{error && step > 1 && <p className="reservation-page-error" role="alert">{error}</p>}</aside>
+          <aside className="booking-summary-column"><section className="booking-summary-card"><span className="booking-step-label">RESERVATION STEP {step} OF 3</span><h2>{step === 1 ? "Booking Summary" : step === 2 ? "Dine-in Details" : step === checkoutStep ? "Checkout Summary" : step === resultStep ? "Reservation Status" : "Reservation Summary"}</h2><div className="booking-summary-lines"><ReviewLine label="Selected date" value={selectedDateLabel} /><ReviewLine label="Guests" value={`${guests} ${guests === 1 ? "Guest" : "Guests"}`} /><ReviewLine label="Preferred time" value={displayTime(time)} />{step >= 2 && <ReviewLine label="Selected table" value={selectedTable ? `Table ${selectedTable.table_number}` : "Choose a table"} />}<ReviewLine label={step === resultStep && reservation?.payment_status === "PAID" ? "Table reservation fee · Paid" : "Table reservation fee"} value={selectedAvailability.loading && step === 1 ? "Checking…" : `₹${quotedFee.toFixed(2)}`} />{fulfillmentType === "PREORDER" && <>{offerPreview?.valid && <><ReviewLine label="Original preorder amount" value={`₹${preorderSubtotal.toFixed(2)}`} /><ReviewLine label={`Offer discount · ${offerPreview.offer.title}`} value={`−₹${Number(offerPreview.discount_amount).toFixed(2)}`} /></>}<ReviewLine label="Preorder total" value={`₹${preorderNet.toFixed(2)}`} /></>}<ReviewLine label={step >= checkoutStep ? "Checkout total" : "Current total"} value={`₹${summaryCheckoutTotal.toFixed(2)}`} bold /></div>{step === 1 && <button type="button" className="booking-primary-action" disabled={selectedAvailability.loading || !availableTables.length || (fulfillmentType === "PREORDER" && (menuLoading || preorderCart.length === 0))} onClick={continueToTables}>{selectedAvailability.loading ? "Checking table availability…" : fulfillmentType === "PREORDER" && preorderCart.length === 0 ? "Add preorder items to continue" : !availableTables.length ? "No tables available" : "Continue to Table Selection"}</button>}{step === 2 && <button type="button" className="booking-primary-action" disabled={!selectedTable || (fulfillmentType === "PREORDER" && preorderCart.length === 0)} onClick={continueFromTable}>Continue</button>}{step === checkoutStep && <button type="button" className="booking-primary-action" disabled={busy || (walletRequired > 0 && (walletLoading || walletBalance < walletRequired)) || (fulfillmentType === "PREORDER" && preorderCart.length === 0) || offerBusy} onClick={submitReservation}>{busy ? "Submitting…" : paymentMethod === "RAZORPAY" ? "Continue to secure payment" : "Confirm reservation"}</button>}{step === resultStep && <Link to="/customer/restaurants" className="booking-primary-action booking-link-action">Explore restaurants</Link>}</section><p className="booking-summary-footnote">Choose wallet or securely pay online with Razorpay. Preorder food can be paid now or at the restaurant.</p>{error && step > 1 && <p className="reservation-page-error" role="alert">{error}</p>}</aside>
         </div>
       </>}
     </main><LandingFooter />

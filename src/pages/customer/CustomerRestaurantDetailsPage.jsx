@@ -66,6 +66,7 @@ export default function CustomerRestaurantDetailsPage() {
   const [selectedTableId, setSelectedTableId] = useState("");
   const [reservationResult, setReservationResult] = useState(null);
   const [menuCategories, setMenuCategories] = useState([]);
+  const [restaurantOffers, setRestaurantOffers] = useState([]);
   const [floors, setFloors] = useState([]);
   const [menuLoading, setMenuLoading] = useState(false);
   const [menuError, setMenuError] = useState("");
@@ -127,6 +128,14 @@ export default function CustomerRestaurantDetailsPage() {
     requestJson(`/api/customer/restaurants/${restaurantId}/floors`)
       .then(setFloors)
       .catch(() => setFloors([]));
+  }, [restaurantId]);
+
+  useEffect(() => {
+    let mounted = true;
+    requestJson(`/api/customer/orders/offers?restaurant_id=${encodeURIComponent(restaurantId)}`)
+      .then((data) => mounted && setRestaurantOffers(data))
+      .catch(() => mounted && setRestaurantOffers([]));
+    return () => { mounted = false; };
   }, [restaurantId]);
 
   useEffect(() => {
@@ -366,6 +375,7 @@ export default function CustomerRestaurantDetailsPage() {
                       <h2>About {restaurant.name}</h2>
                       <p>{restaurant.description || "More information about this restaurant will be available soon."}</p>
                     </header>
+                    {restaurantOffers.length > 0 && <section className="customer-offers-panel" aria-label="Available offers"><div><span>DINING OFFERS</span><h2>Restaurant offers</h2></div><div className="customer-offers-list">{restaurantOffers.map((offer) => <article key={offer.id}><b>{offer.title}</b><span>{offer.discount_type === "PERCENTAGE" ? `${offer.discount_percent}% off` : `₹${Number(offer.discount_percent).toFixed(2)} off`} <i className={`offer-status ${offer.status.toLowerCase()}`}>{offer.status}</i></span><small>{offer.description || `Use code ${offer.code}`} · Minimum ₹{Number(offer.minimum_subtotal).toFixed(2)}{offer.max_discount ? ` · Maximum discount ₹${Number(offer.max_discount).toFixed(2)}` : ""}</small><small>Code: <strong>{offer.code}</strong> · {offer.applicability === "RESTAURANT" ? "Entire order" : `${offer.applicability === "ITEMS" ? "Items" : "Categories"}: ${(offer.applicable_names||[]).join(", ")}`}</small><small>{offer.per_customer_limit ? `${offer.per_customer_limit} use(s) per customer` : "No per-customer limit"}{offer.starts_at ? ` · Starts ${new Date(offer.starts_at).toLocaleString()}` : ""}{offer.ends_at ? ` · Ends ${new Date(offer.ends_at).toLocaleString()}` : ""}</small></article>)}</div></section>}
                     <div className={`restaurant-about-info-grid${floors.length ? " has-floors" : ""}`}>
                       {floors.length > 0 && <section className="restaurant-about-card"><div className="restaurant-about-card-heading"><div><span>SEATING</span><h3>Floor & table availability</h3></div><Armchair size={18} /></div><div className="restaurant-about-floor-list">{floors.map((floor) => {
                         const tables = floor.tables || [];
