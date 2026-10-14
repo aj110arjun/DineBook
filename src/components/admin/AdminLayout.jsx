@@ -34,6 +34,7 @@ const navigation = [
   },
   { label: "Users", icon: Users },
   { label: "Payments", icon: WalletCards },
+  { label: "Revenue & Wallet", icon: WalletCards, path: "/admin/revenue" },
   { label: "Offers", icon: ShieldCheck, path: "/admin/offers" },
   { label: "Reviews & Reports", icon: FileText, path: "/admin/reviews" },
   { label: "Analytics", icon: ChartNoAxesCombined },

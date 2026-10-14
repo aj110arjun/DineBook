@@ -7,6 +7,7 @@ import Notice from "../../components/auth/Notice.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import Pagination from "../../components/Pagination.jsx";
 import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
+import ManagerChefWalletTransfers from "./ManagerChefWalletTransfers.jsx";
 
 export default function ManagerStaffPage() {
   const [staff, setStaff] = useState([]);
@@ -124,6 +125,7 @@ export default function ManagerStaffPage() {
             )}{matchingStaff.length > 0 && <Pagination page={page} pageSize={pageSize} total={matchingStaff.length} onPageChange={setPage} onPageSizeChange={setPageSize} label="staff members" />}</>
           </section>
         </div>
+        <ManagerChefWalletTransfers />
       </div>
       {chefToDeactivate && <ConfirmActionDialog action="deactivate" resourceType="chef account" resourceName={chefToDeactivate.name} title="Deactivate this chef account?" description={`${chefToDeactivate.name} will lose chef portal access. Their staff record and order history will be preserved.`} busy={deactivating} onCancel={() => { if (!deactivating) setChefToDeactivate(null); }} onConfirm={handleRemoveChef} />}
     </ManagerLayout>

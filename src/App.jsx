@@ -51,6 +51,7 @@ import ChefReviewsPage from "./pages/chef/ChefReviewsPage.jsx";
 import ManagerReviewsPage from "./pages/manager/ManagerReviewsPage.jsx";
 import AdminReviewModerationPage from "./pages/admin/AdminReviewModerationPage.jsx";
 import NotificationsPage from "./pages/shared/NotificationsPage.jsx";
+import { AdminRevenuePage, ChefRevenuePage, ManagerRevenuePage } from "./pages/shared/RevenueWalletPage.jsx";
 
 export default function App() {
   return (
@@ -168,6 +169,7 @@ export default function App() {
         />
         <Route path="/admin/orders" element={<AdminProtectedRoute><Navigate to="/admin/dashboard" replace /></AdminProtectedRoute>} />
         <Route path="/admin/offers" element={<AdminProtectedRoute><AdminOffersPage /></AdminProtectedRoute>} />
+        <Route path="/admin/revenue" element={<AdminProtectedRoute><AdminRevenuePage /></AdminProtectedRoute>} />
         <Route path="/admin/reviews" element={<AdminProtectedRoute><AdminReviewModerationPage /></AdminProtectedRoute>} />
         <Route path="/admin/notifications" element={<AdminProtectedRoute><NotificationsPage role="admin" /></AdminProtectedRoute>} />
         <Route
@@ -240,9 +242,10 @@ export default function App() {
         <Route path="/manager/tables" element={<ManagerProtectedRoute><ManagerFloorsPage /></ManagerProtectedRoute>} />
         <Route path="/manager/reservations" element={<ManagerProtectedRoute><ManagerReservationsPage /></ManagerProtectedRoute>} />
         <Route path="/manager/operating-hours" element={<ManagerProtectedRoute><ManagerOperatingHoursPage /></ManagerProtectedRoute>} />
-        <Route path="/manager/orders" element={<ManagerProtectedRoute><OrdersPage mode="manager" /></ManagerProtectedRoute>} />
+        <Route path="/manager/orders" element={<ManagerProtectedRoute><Navigate to="/manager/reservations" replace /></ManagerProtectedRoute>} />
         <Route path="/manager/spot-order" element={<ManagerProtectedRoute><ManagerSpotOrderPage /></ManagerProtectedRoute>} />
         <Route path="/manager/payments" element={<ManagerProtectedRoute><ManagerPaymentsPage /></ManagerProtectedRoute>} />
+        <Route path="/manager/revenue" element={<ManagerProtectedRoute><ManagerRevenuePage /></ManagerProtectedRoute>} />
         <Route path="/manager/offers" element={<ManagerProtectedRoute><ManagerOffersPage /></ManagerProtectedRoute>} />
         <Route path="/manager/reviews" element={<ManagerProtectedRoute><ManagerReviewsPage /></ManagerProtectedRoute>} />
         <Route path="/manager/notifications" element={<ManagerProtectedRoute><NotificationsPage role="manager" /></ManagerProtectedRoute>} />
@@ -275,6 +278,7 @@ export default function App() {
         />
         <Route path="/chef/orders" element={<ChefProtectedRoute><OrdersPage mode="chef" /></ChefProtectedRoute>} />
         <Route path="/chef/notifications" element={<ChefProtectedRoute><NotificationsPage role="chef" /></ChefProtectedRoute>} />
+        <Route path="/chef/revenue" element={<ChefProtectedRoute><ChefRevenuePage /></ChefProtectedRoute>} />
         <Route path="/chef/reviews" element={<ChefProtectedRoute><ChefReviewsPage /></ChefProtectedRoute>} />
         <Route path="/chef/service-hours" element={<ChefProtectedRoute><ChefServiceHoursPage /></ChefProtectedRoute>} />
         <Route
