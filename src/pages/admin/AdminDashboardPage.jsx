@@ -32,6 +32,7 @@ const navigation = [
   { label: "Restaurants", icon: Store, path: "/admin/restaurants" },
   { label: "Users", icon: Users },
   { label: "Payments", icon: WalletCards },
+  { label: "Revenue & Wallet", icon: WalletCards, path: "/admin/revenue" },
   { label: "Offers", icon: SlidersHorizontal },
   { label: "Reviews & Reports", icon: FileText },
   { label: "Analytics", icon: ChartNoAxesCombined },

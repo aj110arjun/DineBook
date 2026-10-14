@@ -12,7 +12,7 @@ const navigation = [
   { label: "Menu", icon: List },
   { label: "Reviews", icon: Star, to: "/chef/reviews" },
   { label: "Notifications", icon: Bell, to: "/chef/notifications" },
-  { label: "Analytics", icon: ChartNoAxesColumn },
+  { label: "Revenue & Wallet", icon: ChartNoAxesColumn, to: "/chef/revenue" },
   { label: "Profile", icon: ChefHat },
   { label: "Settings", icon: Settings },
 ];

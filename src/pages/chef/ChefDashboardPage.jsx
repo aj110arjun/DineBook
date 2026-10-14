@@ -15,7 +15,7 @@ const chefNav = [
   { label: "Reservations", icon: ShoppingBag },
   { label: "Menu", icon: List },
   { label: "Reviews", icon: Star },
-  { label: "Analytics", icon: ChartNoAxesColumn },
+  { label: "Revenue & Wallet", icon: ChartNoAxesColumn },
   { label: "Profile", icon: ChefHat },
   { label: "Settings", icon: Settings },
 ];
@@ -128,7 +128,7 @@ export default function ChefDashboardPage() {
         </div>
         <nav className="chef-sidebar-nav" aria-label="Chef portal">
           {chefNav.map(({ label, icon: Icon }) => (
-            <button key={label} type="button" className={`chef-nav-item ${activeNav === label ? "active" : ""}`} onClick={() => { setActiveNav(label); setSidebarOpen(false); if (label === "Kitchen Orders") navigate("/chef/orders"); if (label === "Menu") document.getElementById("chef-menu")?.scrollIntoView({ behavior: "smooth" }); }}>
+            <button key={label} type="button" className={`chef-nav-item ${activeNav === label ? "active" : ""}`} onClick={() => { setActiveNav(label); setSidebarOpen(false); if (label === "Kitchen Orders") navigate("/chef/orders"); if (label === "Revenue & Wallet") navigate("/chef/revenue"); if (label === "Menu") document.getElementById("chef-menu")?.scrollIntoView({ behavior: "smooth" }); }}>
               <Icon size={18} /><span>{label}</span>
             </button>
           ))}

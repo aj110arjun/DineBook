@@ -11,7 +11,6 @@ import {
   Search,
   Settings,
   Clock3,
-  ShoppingBasket,
   Star,
   Store,
   Table2,
@@ -28,16 +27,15 @@ import NotificationBell from "../notifications/NotificationBell.jsx";
 const navigation = [
   { label: "Dashboard", icon: Grid2X2, to: "/manager/dashboard" },
   { label: "Restaurant", icon: Store },
-  { label: "Reservations", icon: CalendarDays, to: "/manager/reservations" },
+  { label: "Reservations & Orders", icon: CalendarDays, to: "/manager/reservations" },
   { label: "Operating Hours", icon: Clock3, to: "/manager/operating-hours" },
   { label: "Tables", icon: Table2, to: "/manager/tables" },
   { label: "Menu", icon: Utensils, to: "/manager/menu" },
-  { label: "Orders", icon: ShoppingBasket, to: "/manager/orders" },
   { label: "Spot Order", icon: ClipboardList, to: "/manager/spot-order" },
   { label: "Staff", icon: Users, to: "/manager/staff" },
   { label: "Offers", icon: Tag, to: "/manager/offers" },
   { label: "Reviews", icon: MessageCircle, to: "/manager/reviews" },
-  { label: "Analytics", icon: CircleDollarSign },
+  { label: "Revenue & Wallet", icon: CircleDollarSign, to: "/manager/revenue" },
   { label: "Payments", icon: ClipboardList, to: "/manager/payments" },
   { label: "Notifications", icon: Bell, to: "/manager/notifications" },
   { label: "Settings", icon: Settings },
@@ -88,7 +86,7 @@ export default function ManagerLayout({ children, title = "Dashboard" }) {
             <button
               key={label}
               type="button"
-              className={`manager-nav-item ${to === pathname || (label === "Menu" && pathname.startsWith("/manager/menu")) || (label === "Payments" && pathname.startsWith("/manager/payments")) || (label === "Offers" && pathname.startsWith("/manager/offers")) ? "active" : ""}`}
+              className={`manager-nav-item ${to === pathname || (label === "Reservations & Orders" && (pathname.startsWith("/manager/reservations") || pathname.startsWith("/manager/orders"))) || (label === "Menu" && pathname.startsWith("/manager/menu")) || (label === "Payments" && pathname.startsWith("/manager/payments")) || (label === "Offers" && pathname.startsWith("/manager/offers")) ? "active" : ""}`}
               onClick={() => {
                 if (to) navigate(to);
                 setSidebarOpen(false);

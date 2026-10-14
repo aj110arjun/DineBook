@@ -49,9 +49,13 @@
   font-weight: 700;
 }
 
+.manager-payments-tabs { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 2px; border-bottom: 1px solid #eee5e0; }
+.manager-payments-tabs button { min-height: 38px; padding: 8px 14px; border: 1px solid #eee5e0; border-radius: 9px 9px 0 0; background: #fff; color: #756864; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.manager-payments-tabs button.is-active { border-color: #702d3a; background: #702d3a; color: #fff; }
+
 .manager-payments-filters {
   display: grid;
-  grid-template-columns: minmax(220px, 1.6fr) repeat(4, minmax(112px, 1fr)) repeat(2, minmax(130px, .85fr)) minmax(145px, 1fr);
+  grid-template-columns: minmax(240px, 1.5fr) minmax(140px, .8fr) repeat(2, minmax(150px, .8fr));
   gap: 11px;
   padding: 16px;
   border: 1px solid #eee5e0;
@@ -59,6 +63,11 @@
   background: #fff;
   box-shadow: 0 4px 16px rgb(54 31 24 / 4%);
 }
+
+.manager-payments-advanced { grid-column: 1 / -1; border-top: 1px solid #f0eae7; padding-top: 12px; }
+.manager-payments-advanced summary { width: fit-content; color: #702d3a; cursor: pointer; font-size: 12px; font-weight: 750; }
+.manager-payments-advanced-grid { display: grid; grid-template-columns: repeat(4, minmax(130px, 1fr)); gap: 11px; padding-top: 12px; }
+.manager-payments-advanced-grid > label { display: grid; align-content: end; gap: 6px; min-width: 0; color: #746965; font-size: 11px; font-weight: 750; }
 
 .manager-payments-filters > label {
   display: grid;
@@ -124,7 +133,7 @@
 
 .manager-payments-table {
   width: 100%;
-  min-width: 1040px;
+  min-width: 1160px;
   border-collapse: collapse;
   text-align: left;
   font-size: 13px;
@@ -154,6 +163,8 @@
 .manager-payment-id { color: #702d3a; font-weight: 750; text-decoration: none; white-space: nowrap; }
 .manager-payment-id:hover, .manager-payment-view-link:hover { text-decoration: underline; }
 .manager-payment-related-id { display: inline-block; max-width: 150px; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; white-space: nowrap; }
+.manager-payment-type { display: block; font-weight: 650; }
+.manager-payment-related-id { display: block; margin-top: 3px; color: #8b7973; font-size: 11px; }
 .manager-payment-amount { color: #302a28 !important; font-weight: 750; white-space: nowrap; }
 .manager-payment-reference { display: block; max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .manager-payment-view-link { color: #702d3a; font-weight: 750; text-decoration: none; }
@@ -261,15 +272,22 @@
 :root[data-theme="dark"] .manager-payments-filters input,
 :root[data-theme="dark"] .manager-payments-filters select,
 :root[data-theme="dark"] .manager-payments-search { border-color: #51474a; background: #211e20; color: #eee4e2; }
+:root[data-theme="dark"] .manager-payments-tabs { border-color: #494044; }
+:root[data-theme="dark"] .manager-payments-tabs button { border-color: #494044; background: #292426; color: #d8ccca; }
+:root[data-theme="dark"] .manager-payments-tabs button.is-active { border-color: #86535b; background: #702d3a; color: #fff; }
+:root[data-theme="dark"] .manager-payments-advanced { border-color: #494044; }
+:root[data-theme="dark"] .manager-payments-advanced summary { color: #e7c5ca; }
 :root[data-theme="dark"] .manager-payments-table th { border-color: #494044; background: #342e31; color: #c5b6b2; }
 :root[data-theme="dark"] .manager-payments-table td { border-color: #40383b; color: #d8ccca; }
 :root[data-theme="dark"] .manager-payments-table tbody tr:hover { background: #342e31; }
 :root[data-theme="dark"] .manager-payment-detail-card h3 svg { color: #d5aab0; }
+:root[data-theme="dark"] .manager-payment-related-id { color: #b7a9a5; }
 :root[data-theme="dark"] .manager-payment-state.is-error { border-color: #684044; background: #38282a; color: #f0aaaa; }
 
 @media (max-width: 1200px) {
-  .manager-payments-filters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .manager-payments-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .manager-payments-filters .manager-payments-search { grid-column: span 2; }
+  .manager-payments-advanced-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 760px) {
@@ -277,6 +295,8 @@
   .manager-payment-detail-actions { align-items: flex-start; }
   .manager-payments-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px; }
   .manager-payments-filters .manager-payments-search { grid-column: 1 / -1; }
+  .manager-payments-advanced { grid-column: 1 / -1; }
+  .manager-payments-advanced-grid { grid-template-columns: 1fr; }
   .manager-payment-detail-grid { grid-template-columns: minmax(0, 1fr); }
   .manager-payment-timestamps { grid-column: auto; }
 }
