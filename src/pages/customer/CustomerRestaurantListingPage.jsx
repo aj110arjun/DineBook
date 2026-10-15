@@ -25,6 +25,9 @@ export default function CustomerRestaurantListingPage() {
   const [page, setPage] = useState(1);
   const [guestCount, setGuestCount] = useState("4");
   const [toast, setToast] = useState("");
+  const [customerLocation, setCustomerLocation] = useState(null);
+  const [locationBusy, setLocationBusy] = useState(false);
+  const [locationError, setLocationError] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -34,7 +37,21 @@ export default function CustomerRestaurantListingPage() {
     locations.forEach((value) => params.append("location", value));
     setLoading(true);
     setError("");
-    requestJson(`/api/customer/restaurants?${params.toString()}`)
+    const request = sort === "distance" && customerLocation
+      ? requestJson("/api/customer/restaurants/nearby", {
+          method: "POST",
+          body: JSON.stringify({
+            latitude: customerLocation.latitude,
+            longitude: customerLocation.longitude,
+            search: query.trim() || null,
+            cuisine: cuisines,
+            location: locations,
+            page,
+            page_size: PAGE_SIZE,
+          }),
+        })
+      : requestJson(`/api/customer/restaurants?${params.toString()}`);
+    request
       .then((data) => {
         if (!mounted) return;
         setRestaurants(Array.isArray(data?.items) ? data.items : []);
@@ -45,7 +62,7 @@ export default function CustomerRestaurantListingPage() {
       .catch((reason) => mounted && setError(reason.message))
       .finally(() => mounted && setLoading(false));
     return () => { mounted = false; };
-  }, [page, query, cuisines, locations, sort]);
+  }, [page, query, cuisines, locations, sort, customerLocation]);
 
   useEffect(() => {
     if (import.meta.env.DEV && sessionStorage.getItem(demoSessionKey) === "active") {
@@ -71,7 +88,33 @@ export default function CustomerRestaurantListingPage() {
     setCuisines([]);
     setLocations([]);
     setSort("newest");
+    setCustomerLocation(null);
+    setLocationError("");
     setPage(1);
+  }
+
+  function findNearbyRestaurants() {
+    setLocationError("");
+    if (!navigator.geolocation) {
+      setLocationError("Location is not available in this browser.");
+      return;
+    }
+    setLocationBusy(true);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setCustomerLocation({ latitude: coords.latitude, longitude: coords.longitude });
+        setSort("distance");
+        setPage(1);
+        setLocationBusy(false);
+      },
+      (reason) => {
+        setLocationBusy(false);
+        setLocationError(reason.code === 1
+          ? "Allow location access to see nearby restaurants."
+          : "Could not get your location. Please try again.");
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
+    );
   }
 
   function notifyReservation(restaurant) {
@@ -91,6 +134,12 @@ export default function CustomerRestaurantListingPage() {
             <label className="restaurant-guest-select"><Users size={17} /><select value={guestCount} onChange={(event) => setGuestCount(event.target.value)} aria-label="Guests">{[2, 4, 6, 8].map((count) => <option key={count} value={count}>{count} Guests</option>)}</select></label>
             <button type="button" onClick={() => setPage(1)}>Search</button>
           </div>
+          <div className="restaurant-nearby-controls">
+            <button type="button" onClick={findNearbyRestaurants} disabled={locationBusy}>
+              <MapPin size={15} />{locationBusy ? "Finding location…" : sort === "distance" ? "Refresh nearby results" : "Find restaurants near me"}
+            </button>
+            {locationError && <span role="alert">{locationError}</span>}
+          </div>
         </div>
       </section>
 
@@ -104,8 +153,8 @@ export default function CustomerRestaurantListingPage() {
           </aside>
 
           <section className="restaurant-listing-results" aria-live="polite">
-            <div className="restaurant-listing-toolbar"><h2>{loading ? "Loading restaurants…" : `Showing ${totalRestaurants} restaurant${totalRestaurants === 1 ? "" : "s"}`}</h2><label>Sort by:<select value={sort} onChange={(event) => { setSort(event.target.value); setPage(1); }}><option value="newest">Recently added</option><option value="name">Name A–Z</option><option value="name-desc">Name Z–A</option></select></label></div>
-            {error ? <div className="empty-state" role="alert">{error}</div> : loading ? <div className="empty-state" role="status">Loading approved restaurants…</div> : visibleRestaurants.length ? <div className="restaurant-grid">{visibleRestaurants.map((restaurant) => <RestaurantCard key={restaurant.id} restaurant={restaurant} onReserve={notifyReservation} />)}</div> : <div className="empty-state">{totalRestaurants ? "No restaurants match these filters." : "No approved restaurants are available yet."}</div>}
+            <div className="restaurant-listing-toolbar"><h2>{loading ? "Loading restaurants…" : `Showing ${totalRestaurants} restaurant${totalRestaurants === 1 ? "" : "s"}`}</h2><label>Sort by:<select value={sort} onChange={(event) => { setSort(event.target.value); setPage(1); }}><option value="newest">Recently added</option><option value="name">Name A–Z</option><option value="name-desc">Name Z–A</option><option value="distance" disabled={!customerLocation}>Nearest to me</option></select></label></div>
+            {error ? <div className="empty-state" role="alert">{error}</div> : loading ? <div className="empty-state" role="status">Loading approved restaurants…</div> : visibleRestaurants.length ? <div className="restaurant-grid">{visibleRestaurants.map((restaurant) => <RestaurantCard key={restaurant.id} restaurant={restaurant} onReserve={notifyReservation} />)}</div> : <div className="empty-state">{sort === "distance" ? "No restaurants with a saved map location match your nearby search yet." : totalRestaurants ? "No restaurants match these filters." : "No approved restaurants are available yet."}</div>}
             {!loading && !error && totalRestaurants > 0 && <Pagination page={page} pageSize={PAGE_SIZE} total={totalRestaurants} onPageChange={setPage} label="restaurants" className="restaurant-pagination" showPageNumbers />}
           </section>
         </div>

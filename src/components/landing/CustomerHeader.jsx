@@ -89,6 +89,8 @@ export default function CustomerHeader({ user, onLogout }) {
               Restaurants
             </Link>
 
+            {user && <Link className={location.pathname === "/customer/saved-restaurants" ? "active" : ""} to="/customer/saved-restaurants" onClick={closeMenu}>Saved</Link>}
+
             <Link to="/customer#offers" onClick={closeMenu}>
               Offers
             </Link>

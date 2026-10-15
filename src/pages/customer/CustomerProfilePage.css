@@ -280,3 +280,4 @@
 .realtime-reconnecting { color: #c18b32; }
 /* Keep the sticky account rail below the sticky customer navigation. */
 .profile-page .profile-sidebar{top:102px}
+.profile-saved{scroll-margin-top:120px}.profile-empty button{display:block;margin-top:12px;border:1px solid #8c555d;border-radius:7px;background:#fff;padding:8px 12px;color:#561621;font:600 12px inherit;cursor:pointer}

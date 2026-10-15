@@ -26,7 +26,7 @@ import NotificationBell from "../notifications/NotificationBell.jsx";
 
 const navigation = [
   { label: "Dashboard", icon: Grid2X2, to: "/manager/dashboard" },
-  { label: "Restaurant", icon: Store },
+  { label: "Restaurant", icon: Store, to: "/manager/restaurant-location" },
   { label: "Reservations & Orders", icon: CalendarDays, to: "/manager/reservations" },
   { label: "Operating Hours", icon: Clock3, to: "/manager/operating-hours" },
   { label: "Tables", icon: Table2, to: "/manager/tables" },
