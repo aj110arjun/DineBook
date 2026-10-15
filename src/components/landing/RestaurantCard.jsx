@@ -25,7 +25,7 @@ export default function RestaurantCard({ restaurant, onReserve }) {
       </div>
       <div className="restaurant-info">
         <div className="restaurant-title"><div><h3><Link className="restaurant-name-link" to={`/customer/restaurants/${restaurant.id}`}>{restaurant.name}</Link></h3><p>{restaurant.cuisine} <span>·</span> ₹₹₹</p></div>{restaurant.rating && <span className="rating"><Star size={13} fill="currentColor" />{restaurant.rating}</span>}</div>
-        <p className="restaurant-location"><MapPin size={12} />{restaurant.location}</p>
+        <p className="restaurant-location"><MapPin size={12} />{restaurant.location}{Number.isFinite(Number(restaurant.distance_km)) && <span> · {Number(restaurant.distance_km).toFixed(1)} km away</span>}</p>
         <div className="restaurant-card-actions">
           <Link className="restaurant-menu-link" to={`/customer/restaurants/${restaurant.id}/menu-preview`}>View Menu</Link>
           <button className="reserve-button" onClick={() => onReserve(restaurant)}>Reserve Table</button>

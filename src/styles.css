@@ -891,6 +891,29 @@ a:focus-visible,
   font-weight: 700;
   cursor: pointer;
 }
+.restaurant-nearby-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  color: #a64a40;
+  font-size: var(--font-size-xs);
+}
+.restaurant-nearby-controls button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid #eadbd7;
+  border-radius: 9px;
+  background: #fff;
+  color: var(--wine-dark);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+.restaurant-nearby-controls button:disabled { opacity: .6; cursor: wait; }
 .restaurant-listing-page {
   max-width: 1440px;
   margin: 0 auto;

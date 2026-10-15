@@ -35,6 +35,8 @@ const initialApplication = {
   city: "",
   state: "",
   pinCode: "",
+  latitude: "",
+  longitude: "",
 };
 
 const steps = [
@@ -331,6 +333,9 @@ export default function ManagerRegisterPage() {
     setApplication((current) => ({
       ...current,
       [field]: value,
+      ...( ["address", "city", "state", "pinCode"].includes(field)
+        ? { latitude: "", longitude: "" }
+        : {}),
     }));
     if (["address", "city", "state", "pinCode"].includes(field)) {
       setAddressSuggestions([]);
@@ -353,6 +358,8 @@ export default function ManagerRegisterPage() {
       city: properties.city || properties.district || properties.county || current.city,
       state: properties.state || current.state,
       pinCode: properties.postcode || current.pinCode,
+      latitude: feature.geometry?.coordinates?.[1]?.toString() || "",
+      longitude: feature.geometry?.coordinates?.[0]?.toString() || "",
     }));
     setAddressSuggestions([]);
     setAddressLookupQuery("");
@@ -615,6 +622,10 @@ export default function ManagerRegisterPage() {
       formData.append("city", application.city);
       formData.append("state", application.state);
       formData.append("pin_code", application.pinCode);
+      if (application.latitude && application.longitude) {
+        formData.append("latitude", application.latitude);
+        formData.append("longitude", application.longitude);
+      }
 
       // Restaurant capacity
       formData.append("capacity", capacity);
@@ -1079,7 +1090,9 @@ export default function ManagerRegisterPage() {
                 </div>
 
                 <p className="mt-2 text-xs leading-5 text-stone-400">
-                  The map preview follows your restaurant address. You can add precise map coordinates later.
+                  {application.latitude && application.longitude
+                    ? "Restaurant location selected. Customers can find your restaurant in nearby searches."
+                    : "Choose a suggested address above to set your restaurant pin so customers can find you nearby."}
                 </p>
               </div>
 
