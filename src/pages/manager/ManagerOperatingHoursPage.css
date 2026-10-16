@@ -1,26 +1,211 @@
-.manager-dashboard-content .operating-hours-day{display:grid;grid-template-columns:120px minmax(220px,1fr) auto;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid #eee5e1}
-.manager-dashboard-content .operating-period-list{display:grid;gap:8px}
-.manager-dashboard-content .operating-period{display:flex;align-items:end;gap:8px}
-.manager-dashboard-content .operating-period label,.operating-exception-form label,.operating-inspection-form label{display:grid;gap:5px;color:#766a67;font-size:12px;font-weight:700}
-.manager-dashboard-content .operating-period input,.operating-exception-form input,.operating-exception-form select,.operating-inspection-form input{min-height:38px;padding:7px 9px;border:1px solid #e5dbd5;border-radius:8px;background:#fff;color:#302a28;font:inherit}
-.manager-dashboard-content .operating-period button,.operating-exception-list button{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:0 9px;border:1px solid #e5dbd5;border-radius:8px;background:#fff;color:#54202a;cursor:pointer}
-.manager-dashboard-content .operating-hours-day>button,.operating-exception-form>button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:38px;padding:0 12px;border:1px solid #e5dbd5;border-radius:8px;background:#fff;color:#54202a;cursor:pointer}
-.manager-dashboard-content .operating-exception-form,.operating-inspection-form{display:flex;flex-wrap:wrap;align-items:end;gap:12px;margin:16px 0}
-.manager-dashboard-content .exception-periods{display:grid;gap:8px;min-width:100%}
-.operating-exception-list{display:grid;gap:8px;padding:0;list-style:none}
-.operating-exception-list li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid #eee5e1;border-radius:10px}
-.operating-exception-list li>div{display:grid;gap:4px}
-.operating-exception-list small{color:#766a67}
-.chef-service-hours{display:grid;gap:18px}
-.chef-service-today,.chef-service-card{padding:20px;border:1px solid #e7e1dc;border-radius:14px;background:#fff}
-.chef-service-today{display:flex;align-items:center;gap:14px;color:#54202a}
-.chef-service-today div{display:grid;gap:5px;flex:1}.chef-service-today span,.chef-service-today small{color:#766a67;font-size:12px}.chef-service-today strong{font-size:19px}
-.chef-service-card h2{margin:0 0 15px;font-size:18px}
-.chef-service-week{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px}
-.chef-service-week article{display:grid;gap:7px;padding:12px;border-radius:10px;background:#f8f5f2}.chef-service-week article span,.chef-service-card li span{font-size:13px}.chef-service-week .closed{color:#827875}
-.chef-service-card ul{display:grid;gap:9px;margin:0;padding:0;list-style:none}.chef-service-card li{display:grid;gap:4px;padding:10px 0;border-bottom:1px solid #eee5e1}.chef-service-card li small{color:#766a67}
-.operating-inspection-result{display:grid;gap:5px;padding:12px;border-radius:9px;background:#f7f4ef}.operating-inspection-result small{color:#766a67}
-.operating-audit{display:block;margin-top:3px;color:#827875;font-size:10px;font-weight:400}
-@media(max-width:700px){.manager-dashboard-content .operating-hours-day{grid-template-columns:1fr}.manager-dashboard-content .operating-period{flex-wrap:wrap}.manager-dashboard-content .operating-period-list{width:100%}}
-:root[data-theme="dark"] .chef-service-today,:root[data-theme="dark"] .chef-service-card,:root[data-theme="dark"] .manager-dashboard-content .operating-period input,:root[data-theme="dark"] .operating-exception-form input,:root[data-theme="dark"] .operating-exception-form select,:root[data-theme="dark"] .operating-inspection-form input{background:#292426;color:#eee4e2;border-color:#494044}
-:root[data-theme="dark"] .chef-service-week article,:root[data-theme="dark"] .operating-inspection-result{background:#211d1f}
+.manager-dashboard-content .operating-hours-day {
+  display: grid;
+  grid-template-columns: 120px minmax(220px, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid #eee5e1;
+}
+.manager-dashboard-content .operating-period-list {
+  display: grid;
+  gap: 8px;
+}
+.manager-dashboard-content .operating-period {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+}
+.manager-dashboard-content .operating-period label,
+.operating-exception-form label,
+.operating-inspection-form label {
+  display: grid;
+  gap: 5px;
+  color: #766a67;
+  font-size: 12px;
+  font-weight: 700;
+}
+.manager-dashboard-content .operating-period input,
+.operating-exception-form input,
+.operating-exception-form select,
+.operating-inspection-form input {
+  min-height: 38px;
+  padding: 7px 9px;
+  border: 1px solid #e5dbd5;
+  border-radius: 8px;
+  background: #fff;
+  color: #302a28;
+  font: inherit;
+}
+.manager-dashboard-content .operating-period button,
+.operating-exception-list button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 9px;
+  border: 1px solid #e5dbd5;
+  border-radius: 8px;
+  background: #fff;
+  color: #54202a;
+  cursor: pointer;
+}
+.manager-dashboard-content .operating-hours-day > button,
+.operating-exception-form > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid #e5dbd5;
+  border-radius: 8px;
+  background: #fff;
+  color: #54202a;
+  cursor: pointer;
+}
+.manager-dashboard-content .operating-exception-form,
+.operating-inspection-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  margin: 16px 0;
+}
+.manager-dashboard-content .exception-periods {
+  display: grid;
+  gap: 8px;
+  min-width: 100%;
+}
+.operating-exception-list {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+.operating-exception-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #eee5e1;
+  border-radius: 10px;
+}
+.operating-exception-list li > div {
+  display: grid;
+  gap: 4px;
+}
+.operating-exception-list small {
+  color: #766a67;
+}
+.chef-service-hours {
+  display: grid;
+  gap: 18px;
+}
+.chef-service-today,
+.chef-service-card {
+  padding: 20px;
+  border: 1px solid #e7e1dc;
+  border-radius: 14px;
+  background: #fff;
+}
+.chef-service-today {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: #54202a;
+}
+.chef-service-today div {
+  display: grid;
+  gap: 5px;
+  flex: 1;
+}
+.chef-service-today span,
+.chef-service-today small {
+  color: #766a67;
+  font-size: 12px;
+}
+.chef-service-today strong {
+  font-size: 19px;
+}
+.chef-service-card h2 {
+  margin: 0 0 15px;
+  font-size: 18px;
+}
+.chef-service-week {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  gap: 10px;
+}
+.chef-service-week article {
+  display: grid;
+  gap: 7px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f8f5f2;
+}
+.chef-service-week article span,
+.chef-service-card li span {
+  font-size: 13px;
+}
+.chef-service-week .closed {
+  color: #827875;
+}
+.chef-service-card ul {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.chef-service-card li {
+  display: grid;
+  gap: 4px;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee5e1;
+}
+.chef-service-card li small {
+  color: #766a67;
+}
+.operating-inspection-result {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border-radius: 9px;
+  background: #f7f4ef;
+}
+.operating-inspection-result small {
+  color: #766a67;
+}
+.operating-audit {
+  display: block;
+  margin-top: 3px;
+  color: #827875;
+  font-size: 10px;
+  font-weight: 400;
+}
+@media (max-width: 700px) {
+  .manager-dashboard-content .operating-hours-day {
+    grid-template-columns: 1fr;
+  }
+  .manager-dashboard-content .operating-period {
+    flex-wrap: wrap;
+  }
+  .manager-dashboard-content .operating-period-list {
+    width: 100%;
+  }
+}
+:root[data-theme="dark"] .chef-service-today,
+:root[data-theme="dark"] .chef-service-card,
+:root[data-theme="dark"] .manager-dashboard-content .operating-period input,
+:root[data-theme="dark"] .operating-exception-form input,
+:root[data-theme="dark"] .operating-exception-form select,
+:root[data-theme="dark"] .operating-inspection-form input {
+  background: #292426;
+  color: #eee4e2;
+  border-color: #494044;
+}
+:root[data-theme="dark"] .chef-service-week article,
+:root[data-theme="dark"] .operating-inspection-result {
+  background: #211d1f;
+}

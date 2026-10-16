@@ -1,23 +1,24 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Bell, ChartNoAxesColumn, Check, CheckCheck, ChefHat, CircleHelp,
+  Bell, ChartNoAxesColumn, Check, CheckCheck,
   CirclePlus, Clock3, LayoutDashboard, List, LogOut, Menu, Package,
-  Search, Settings, ShoppingBag, Soup, Star, Timer, X,
+  Settings, ShoppingBag, Soup, Star, Timer, X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
 import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
 import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
+import NotificationBell from "../../components/notifications/NotificationBell.jsx";
 
 const chefNav = [
   { label: "Dashboard", icon: LayoutDashboard },
-  { label: "Kitchen Orders", icon: Bell },
-  { label: "Reservations", icon: ShoppingBag },
-  { label: "Menu", icon: List },
-  { label: "Reviews", icon: Star },
-  { label: "Revenue & Wallet", icon: ChartNoAxesColumn },
-  { label: "Profile", icon: ChefHat },
-  { label: "Settings", icon: Settings },
+  { label: "Kitchen orders", icon: Bell, to: "/chef/orders" },
+  { label: "Reservations", icon: ShoppingBag, section: "chef-reservations" },
+  { label: "Menu", icon: List, section: "chef-menu" },
+  { label: "Service hours", icon: Clock3, to: "/chef/service-hours" },
+  { label: "Reviews", icon: Star, to: "/chef/reviews" },
+  { label: "Notifications", icon: Bell, to: "/chef/notifications" },
+  { label: "Revenue & wallet", icon: ChartNoAxesColumn, to: "/chef/revenue" },
 ];
 
 export default function ChefDashboardPage() {
@@ -126,9 +127,9 @@ export default function ChefDashboardPage() {
           <div className="chef-avatar-large">{avatarLetters}</div>
           <div className="chef-identity-copy"><strong>{chef?.name || "Chef"}</strong><span>{chef?.restaurant_name || "Kitchen Team"}</span></div>
         </div>
-        <nav className="chef-sidebar-nav" aria-label="Chef portal">
-          {chefNav.map(({ label, icon: Icon }) => (
-            <button key={label} type="button" className={`chef-nav-item ${activeNav === label ? "active" : ""}`} onClick={() => { setActiveNav(label); setSidebarOpen(false); if (label === "Kitchen Orders") navigate("/chef/orders"); if (label === "Revenue & Wallet") navigate("/chef/revenue"); if (label === "Menu") document.getElementById("chef-menu")?.scrollIntoView({ behavior: "smooth" }); }}>
+        <nav id="chef-primary-nav" className="chef-sidebar-nav" aria-label="Chef portal">
+          {chefNav.map(({ label, icon: Icon, to, section }) => (
+            <button key={label} type="button" className={`chef-nav-item ${activeNav === label ? "active" : ""}`} onClick={() => { setActiveNav(label); setSidebarOpen(false); if (to) navigate(to); if (section) document.getElementById(section)?.scrollIntoView({ behavior: "smooth" }); }}>
               <Icon size={18} /><span>{label}</span>
             </button>
           ))}
@@ -138,15 +139,10 @@ export default function ChefDashboardPage() {
 
       <section className="chef-dashboard-main">
         <header className="chef-topbar">
-          <button type="button" className="chef-menu-toggle" onClick={() => setSidebarOpen(true)} aria-label="Open menu"><Menu size={21} /></button>
+          <button type="button" className="chef-menu-toggle" onClick={() => setSidebarOpen(true)} aria-label="Open menu" aria-expanded={sidebarOpen} aria-controls="chef-primary-nav"><Menu size={21} /></button>
           <div className="chef-topbar-title"><h1>Chef Dashboard</h1><p>{chef?.restaurant_name || "The Saffron Table"}<span>•</span>Today, {dateLabel}</p></div>
           <div className="chef-topbar-actions">
-            <span className="chef-online-badge"><i /> ONLINE</span>
-            <button className="chef-icon-button" aria-label="Search"><Search size={20} /></button>
-            <button className="chef-icon-button chef-bell-button" aria-label="8 notifications"><Bell size={20} /><b>8</b></button>
-            <button type="button" className="chef-account-button" onClick={handleLogout} title="Sign out">
-              <span className="chef-avatar-small">{avatarLetters}</span><strong>{`Chef ${firstName}`}</strong><span className="chef-account-chevron">⌄</span>
-            </button>
+            <NotificationBell role="chef" enabled={Boolean(chef)} />
           </div>
         </header>
 
@@ -155,7 +151,7 @@ export default function ChefDashboardPage() {
           <PortalBreadcrumb home={{ label: "Home", to: "/chef/dashboard" }} items={[{ label: activeNav }]} className="chef-breadcrumb" />
           <div className="chef-page-heading"><h2>Good Morning, Chef {firstName}</h2><p>Here's what's happening in your kitchen today.</p></div>
 
-          <section className="chef-panel">
+          <section className="chef-panel" id="chef-reservations">
             <div className="chef-panel-heading"><h3>Upcoming reservations</h3><span>{upcomingReservations.length} confirmed</span></div>
             {reservationsLoading ? <p className="chef-menu-empty" role="status">Loading reservations…</p> : reservationError ? <p className="chef-menu-empty" role="alert">{reservationError}</p> : !upcomingReservations.length ? <p className="chef-menu-empty">No upcoming confirmed reservations.</p> : <div className="chef-activity-list">{upcomingReservations.map((item) => <article className="chef-activity-item" key={item.id}><i className="green" /><div><p><strong>{item.customer_name}</strong> · {item.number_of_guests} guests</p><span>{item.reservation_date} at {item.start_time} · {item.tables.map((table) => `${table.floor_name}, Table ${table.table_number}`).join(", ")}</span></div></article>)}</div>}
           </section>
@@ -183,7 +179,7 @@ export default function ChefDashboardPage() {
           </div>
 
           <section className="chef-panel chef-orders-panel">
-            <div className="chef-panel-heading"><h3>Recent Orders Today</h3><button type="button" onClick={() => setActiveNav("Kitchen Orders")}>View kitchen orders</button></div>
+            <div className="chef-panel-heading"><h3>Recent orders today</h3><button type="button" onClick={() => navigate("/chef/orders")}>View all kitchen orders</button></div>
             <div className="chef-orders-scroll"><table className="chef-orders-table"><thead><tr><th>Order ID</th><th>Customer</th><th>Time</th><th>Table</th><th>Items</th><th>Status</th><th>Action</th></tr></thead><tbody>{recentOrders.map((order) => <tr key={order.id}><td className="chef-order-id">#{order.id.slice(0, 8).toUpperCase()}</td><td>{order.customer_name}</td><td className="chef-muted-cell">{new Date(order.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</td><td>{order.reservation?.tables?.map((table) => table.table_number).join(", ") || "—"}</td><td>{order.items.reduce((sum, item) => sum + Number(item.quantity || 0), 0)} items</td><td><span className={`chef-order-status ${order.status.toLowerCase()}`}>{order.status.replaceAll("_", " ")}</span></td><td><button className="chef-view-order" type="button" onClick={() => navigate("/chef/orders")}>View</button></td></tr>)}{recentOrders.length === 0 && <tr><td colSpan="7">{ordersLoading ? "Loading kitchen orders…" : ordersError || "No orders today."}</td></tr>}</tbody></table></div>
           </section>
 
@@ -207,7 +203,7 @@ export default function ChefDashboardPage() {
               </section>
             ))}
           </section>
-          <footer className="chef-dashboard-footer"><span><Clock3 size={14} /> Kitchen dashboard</span><button type="button" onClick={() => setActiveNav("Settings")}><CircleHelp size={14} /> Help & support</button></footer>
+          <footer className="chef-dashboard-footer"><span><Clock3 size={14} /> Kitchen dashboard</span><button type="button" onClick={() => navigate("/chef/change-password")}><Settings size={14} /> Change password</button></footer>
         </div>
       </section>
     </main>

@@ -49,12 +49,12 @@ export default function AuthLayout({ view, children }) {
 
   return (
     <main className="min-h-screen bg-cream font-sans text-ink lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(440px,0.82fr)]">
-      <section className="relative flex min-h-[300px] flex-col justify-between overflow-hidden bg-ink px-7 py-8 text-white sm:px-12 sm:py-10 lg:min-h-screen lg:px-[12%] lg:py-12">
+      <section className="auth-story relative flex min-h-[300px] flex-col justify-between overflow-hidden bg-ink px-7 py-8 text-white sm:px-12 sm:py-10 lg:min-h-screen lg:px-[12%] lg:py-12">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(198,166,107,.2),transparent_55%),linear-gradient(135deg,rgba(87,46,53,.55),transparent_65%)]" />
         <div className="relative z-10">
           <Brand />
         </div>
-        <div className="relative z-10 my-12 max-w-xl lg:my-0">
+        <div className="auth-story-copy relative z-10 my-12 max-w-xl lg:my-0">
           <span className="text-[11px] font-semibold uppercase tracking-[0.25em] text-gold">
             {story.tag}
           </span>

@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import {
+  Accessibility,
   Armchair,
   ArrowLeft,
+  Baby,
   CalendarDays,
+  CarFront,
   ChevronLeft,
   ChevronRight,
   X,
@@ -13,6 +16,7 @@ import {
   Star,
   Utensils,
   Users,
+  Wifi,
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
@@ -27,6 +31,7 @@ import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
 import { mergeReservations, saveReservation } from "../../data/customerReservations.js";
 import { photo } from "../../data/landingData.js";
 import "./CustomerRestaurantReviews.css";
+import "./CustomerRestaurantAmenities.css";
 
 const detailTabs = [
   { id: "about", label: "About" },
@@ -461,9 +466,29 @@ export default function CustomerRestaurantDetailsPage() {
                 )}
 
                 {activeSection === "amenities" && (
-                  <section className="restaurant-detail-section">
+                  <section className="restaurant-detail-section restaurant-amenities-section">
+                    <span className="restaurant-about-eyebrow">PLAN YOUR VISIT</span>
                     <h2>Amenities</h2>
-                    <p>Amenities have not been added by this restaurant yet.</p>
+                    <p className="restaurant-amenities-intro">
+                      Amenities are the facilities and services that can make a meal more comfortable. Checking them before you book helps you choose a restaurant that suits your needs.
+                    </p>
+                    <div className="restaurant-amenities-notice">
+                      <strong>What’s available at {restaurant.name}?</strong>
+                      <p>This restaurant hasn’t shared its amenities yet. The examples below are things you may want to ask about; they are not confirmed at this location.</p>
+                      {(restaurant.phone || restaurant.email) && (
+                        <div className="restaurant-amenities-contact">
+                          {restaurant.phone && <a href={`tel:${restaurant.phone}`}><Phone size={16} /> Call restaurant</a>}
+                          {restaurant.email && <a href={`mailto:${restaurant.email}`}><Mail size={16} /> Email restaurant</a>}
+                        </div>
+                      )}
+                    </div>
+                    <h3>Helpful things to check before visiting</h3>
+                    <div className="restaurant-amenities-grid">
+                      <article><Accessibility size={22} /><h4>Accessibility</h4><p>Ask about step-free entry, accessible seating, and restrooms.</p></article>
+                      <article><CarFront size={22} /><h4>Parking</h4><p>Check whether parking or valet service is available nearby.</p></article>
+                      <article><Wifi size={22} /><h4>Connectivity</h4><p>Find out if guests can use Wi-Fi during their visit.</p></article>
+                      <article><Baby size={22} /><h4>Family needs</h4><p>Ask about high chairs or space for strollers.</p></article>
+                    </div>
                   </section>
                 )}
                 {activeSection === "menu-preview" && (

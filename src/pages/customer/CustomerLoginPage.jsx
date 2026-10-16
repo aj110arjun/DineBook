@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowRight, Mail } from "lucide-react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import AuthLayout from "../../components/auth/AuthLayout.jsx";
 import { FormField, PasswordField } from "../../components/auth/FormField.jsx";
 import Notice from "../../components/auth/Notice.jsx";
@@ -11,6 +11,8 @@ import DevQuickLogin from "../../components/auth/DevQuickLogin.jsx";
 
 export default function CustomerLoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = location.state?.from || "/customer";
   const [searchParams] = useSearchParams();
   const [error, setError] = useState(() =>
     searchParams.get("google") === "failed"
@@ -23,7 +25,7 @@ export default function CustomerLoginPage() {
   const [busy, setBusy] = useState(false);
   function enterDemoCustomer() {
     sessionStorage.setItem(demoSessionKey, "active");
-    navigate("/customer");
+    navigate(returnTo, { replace: true });
   }
 
   async function handleSubmit(event) {
@@ -46,7 +48,7 @@ export default function CustomerLoginPage() {
       setSuccess(
         `Welcome back, ${user.name || "DineBook guest"}. Your sign-in was successful.`,
       );
-      window.setTimeout(() => navigate("/customer"), 500);
+      window.setTimeout(() => navigate(returnTo, { replace: true }), 500);
     } catch (reason) {
       setError(reason.message);
     } finally {
@@ -106,11 +108,11 @@ export default function CustomerLoginPage() {
           <span className="h-px flex-1 bg-stone-200" />
         </div>
         <GoogleSignInButton
-          onSuccess={() => navigate("/customer", { replace: true })}
+          onSuccess={() => navigate(returnTo, { replace: true })}
           onError={setError}
         />
       </form>
-      <DevQuickLogin portal="customer" onSuccess={() => navigate("/customer", { replace: true })} />
+      <DevQuickLogin portal="customer" onSuccess={() => navigate(returnTo, { replace: true })} />
       <p className="mt-7 border-t border-stone-100 pt-5 text-center text-sm text-stone-500">
         New to DineBook?{" "}
         <Link
