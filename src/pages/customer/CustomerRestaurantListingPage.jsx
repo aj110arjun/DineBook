@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { MapPin, Search, Users } from "lucide-react";
+import { MapPin, Search, SlidersHorizontal, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
 import LandingFooter from "../../components/landing/LandingFooter.jsx";
@@ -24,10 +24,11 @@ export default function CustomerRestaurantListingPage() {
   const [sort, setSort] = useState("newest");
   const [page, setPage] = useState(1);
   const [guestCount, setGuestCount] = useState("4");
-  const [toast, setToast] = useState("");
   const [customerLocation, setCustomerLocation] = useState(null);
   const [locationBusy, setLocationBusy] = useState(false);
   const [locationError, setLocationError] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -62,7 +63,7 @@ export default function CustomerRestaurantListingPage() {
       .catch((reason) => mounted && setError(reason.message))
       .finally(() => mounted && setLoading(false));
     return () => { mounted = false; };
-  }, [page, query, cuisines, locations, sort, customerLocation]);
+  }, [page, query, cuisines, locations, sort, customerLocation, refreshKey]);
 
   useEffect(() => {
     if (import.meta.env.DEV && sessionStorage.getItem(demoSessionKey) === "active") {
@@ -117,17 +118,12 @@ export default function CustomerRestaurantListingPage() {
     );
   }
 
-  function notifyReservation(restaurant) {
-    setToast(`Table reservations for ${guestCount} guests at ${restaurant.name} are coming soon.`);
-    window.setTimeout(() => setToast(""), 3600);
-  }
-
   return (
     <div className="customer-home">
       <CustomerHeader user={user} onLogout={() => setUser(null)} />
       <section className="restaurant-listing-search">
         <div className="restaurant-listing-search-inner">
-          <h1>Find your perfect table{restaurants[0]?.location ? ` in ${restaurants[0].location.split(",")[0]}` : ""}</h1>
+          <h1>Find a restaurant{restaurants[0]?.location ? ` in ${restaurants[0].location.split(",")[0]}` : ""}</h1>
           <div className="restaurant-search-bar">
             <Search size={18} />
             <input type="search" value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="Search restaurants, cuisines, or locations…" aria-label="Search restaurants" />
@@ -147,20 +143,21 @@ export default function CustomerRestaurantListingPage() {
         <nav className="restaurant-listing-breadcrumb" aria-label="Breadcrumb"><Link to="/customer">Home</Link><span aria-hidden="true">/</span><strong aria-current="page">Restaurants</strong></nav>
         <div className="restaurant-listing-layout">
           <aside className="restaurant-filter-panel">
-            <div className="restaurant-filter-title"><h2>Filters</h2><button type="button" onClick={clearFilters}>Clear All</button></div>
-            <section className="restaurant-filter-group"><h3>Cuisine</h3>{cuisineOptions.length ? cuisineOptions.map((cuisine) => <label key={cuisine}><input type="checkbox" checked={cuisines.includes(cuisine)} onChange={() => toggleFilter(cuisine, setCuisines)} />{cuisine}</label>) : <p>Cuisine filters will appear when restaurants are listed.</p>}</section>
-            <section className="restaurant-filter-group"><h3>Location</h3>{locationOptions.map((location) => <label key={location}><input type="checkbox" checked={locations.includes(location)} onChange={() => toggleFilter(location, setLocations)} /><MapPin size={13} />{location}</label>)}</section>
+            <div className="restaurant-filter-title"><h2>Filters{cuisines.length + locations.length > 0 ? ` · ${cuisines.length + locations.length}` : ""}</h2><div className="restaurant-filter-actions"><button type="button" onClick={clearFilters}>Clear All</button><button className="restaurant-filter-toggle" type="button" aria-expanded={filtersOpen} aria-controls="restaurant-filter-fields" onClick={() => setFiltersOpen((open) => !open)}><SlidersHorizontal size={17} />{filtersOpen ? "Hide" : "Show"}</button></div></div>
+            <div id="restaurant-filter-fields" className={`restaurant-filter-fields${filtersOpen ? " is-open" : ""}`}>
+              <section className="restaurant-filter-group"><h3>Cuisine</h3>{cuisineOptions.length ? cuisineOptions.map((cuisine) => <label key={cuisine}><input type="checkbox" checked={cuisines.includes(cuisine)} onChange={() => toggleFilter(cuisine, setCuisines)} />{cuisine}</label>) : <p>Cuisine filters will appear when restaurants are listed.</p>}</section>
+              <section className="restaurant-filter-group"><h3>Location</h3>{locationOptions.map((location) => <label key={location}><input type="checkbox" checked={locations.includes(location)} onChange={() => toggleFilter(location, setLocations)} /><MapPin size={13} />{location}</label>)}</section>
+            </div>
           </aside>
 
           <section className="restaurant-listing-results" aria-live="polite">
-            <div className="restaurant-listing-toolbar"><h2>{loading ? "Loading restaurants…" : `Showing ${totalRestaurants} restaurant${totalRestaurants === 1 ? "" : "s"}`}</h2><label>Sort by:<select value={sort} onChange={(event) => { setSort(event.target.value); setPage(1); }}><option value="newest">Recently added</option><option value="name">Name A–Z</option><option value="name-desc">Name Z–A</option><option value="distance" disabled={!customerLocation}>Nearest to me</option></select></label></div>
-            {error ? <div className="empty-state" role="alert">{error}</div> : loading ? <div className="empty-state" role="status">Loading approved restaurants…</div> : visibleRestaurants.length ? <div className="restaurant-grid">{visibleRestaurants.map((restaurant) => <RestaurantCard key={restaurant.id} restaurant={restaurant} onReserve={notifyReservation} />)}</div> : <div className="empty-state">{sort === "distance" ? "No restaurants with a saved map location match your nearby search yet." : totalRestaurants ? "No restaurants match these filters." : "No approved restaurants are available yet."}</div>}
+            <div className="restaurant-listing-toolbar"><h2>{loading ? "Finding restaurants…" : `${totalRestaurants} restaurant${totalRestaurants === 1 ? "" : "s"} found`}</h2><label>Sort by:<select value={sort} onChange={(event) => { setSort(event.target.value); setPage(1); }}><option value="newest">Recently added</option><option value="name">Name A–Z</option><option value="name-desc">Name Z–A</option><option value="distance" disabled={!customerLocation}>Nearest to me</option></select></label></div>
+            {error ? <div className="empty-state" role="alert"><p>{error}</p><button type="button" onClick={() => setRefreshKey((value) => value + 1)}>Try again</button></div> : loading ? <div className="empty-state" role="status">Finding restaurants for you…</div> : visibleRestaurants.length ? <div className="restaurant-grid">{visibleRestaurants.map((restaurant) => <RestaurantCard key={restaurant.id} restaurant={restaurant} guests={guestCount} />)}</div> : <div className="empty-state">{sort === "distance" ? "No restaurants with a saved map location match your nearby search yet. Try another area or clear your filters." : totalRestaurants ? "No restaurants match these filters. Try changing or clearing your filters." : "No approved restaurants are available yet. Check back soon."}</div>}
             {!loading && !error && totalRestaurants > 0 && <Pagination page={page} pageSize={PAGE_SIZE} total={totalRestaurants} onPageChange={setPage} label="restaurants" className="restaurant-pagination" showPageNumbers />}
           </section>
         </div>
       </main>
       <LandingFooter />
-      {toast && <div className="landing-toast" role="status">{toast}</div>}
     </div>
   );
 }

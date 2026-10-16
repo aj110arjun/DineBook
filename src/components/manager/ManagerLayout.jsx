@@ -1,15 +1,12 @@
 import {
   Bell,
   CalendarDays,
-  ChevronDown,
   CircleDollarSign,
   ClipboardList,
   Grid2X2,
   LogOut,
   Menu,
   MessageCircle,
-  Search,
-  Settings,
   Clock3,
   Star,
   Store,
@@ -24,21 +21,36 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
 import NotificationBell from "../notifications/NotificationBell.jsx";
 
-const navigation = [
-  { label: "Dashboard", icon: Grid2X2, to: "/manager/dashboard" },
-  { label: "Restaurant", icon: Store, to: "/manager/restaurant-location" },
-  { label: "Reservations & Orders", icon: CalendarDays, to: "/manager/reservations" },
-  { label: "Operating Hours", icon: Clock3, to: "/manager/operating-hours" },
-  { label: "Tables", icon: Table2, to: "/manager/tables" },
-  { label: "Menu", icon: Utensils, to: "/manager/menu" },
-  { label: "Spot Order", icon: ClipboardList, to: "/manager/spot-order" },
-  { label: "Staff", icon: Users, to: "/manager/staff" },
-  { label: "Offers", icon: Tag, to: "/manager/offers" },
-  { label: "Reviews", icon: MessageCircle, to: "/manager/reviews" },
-  { label: "Revenue & Wallet", icon: CircleDollarSign, to: "/manager/revenue" },
-  { label: "Payments", icon: ClipboardList, to: "/manager/payments" },
-  { label: "Notifications", icon: Bell, to: "/manager/notifications" },
-  { label: "Settings", icon: Settings },
+const navigationGroups = [
+  {
+    label: "Today’s work",
+    items: [
+      { label: "Dashboard", icon: Grid2X2, to: "/manager/dashboard" },
+      { label: "Reservations", icon: CalendarDays, to: "/manager/reservations" },
+      { label: "Orders", icon: ClipboardList, to: "/manager/orders" },
+      { label: "New walk-in order", icon: ClipboardList, to: "/manager/spot-order" },
+      { label: "Notifications", icon: Bell, to: "/manager/notifications" },
+    ],
+  },
+  {
+    label: "Restaurant setup",
+    items: [
+      { label: "Restaurant details", icon: Store, to: "/manager/restaurant-location" },
+      { label: "Opening hours", icon: Clock3, to: "/manager/operating-hours" },
+      { label: "Tables & floors", icon: Table2, to: "/manager/tables" },
+      { label: "Menu", icon: Utensils, to: "/manager/menu" },
+      { label: "Staff", icon: Users, to: "/manager/staff" },
+    ],
+  },
+  {
+    label: "Grow your business",
+    items: [
+      { label: "Offers", icon: Tag, to: "/manager/offers" },
+      { label: "Reviews", icon: MessageCircle, to: "/manager/reviews" },
+      { label: "Revenue & wallet", icon: CircleDollarSign, to: "/manager/revenue" },
+      { label: "Payments", icon: ClipboardList, to: "/manager/payments" },
+    ],
+  },
 ];
 
 export default function ManagerLayout({ children, title = "Dashboard" }) {
@@ -81,21 +93,30 @@ export default function ManagerLayout({ children, title = "Dashboard" }) {
           <strong>Restaurant</strong>
           <span>Owner Console</span>
         </div>
-        <nav className="manager-nav">
-          {navigation.map(({ label, icon: Icon, to }) => (
-            <button
-              key={label}
-              type="button"
-              className={`manager-nav-item ${to === pathname || (label === "Reservations & Orders" && (pathname.startsWith("/manager/reservations") || pathname.startsWith("/manager/orders"))) || (label === "Menu" && pathname.startsWith("/manager/menu")) || (label === "Payments" && pathname.startsWith("/manager/payments")) || (label === "Offers" && pathname.startsWith("/manager/offers")) ? "active" : ""}`}
-              onClick={() => {
-                if (to) navigate(to);
-                setSidebarOpen(false);
-              }}
-              aria-current={to === pathname ? "page" : undefined}
-            >
-              <Icon size={16} />
-              <span>{label}</span>
-            </button>
+        <nav id="manager-primary-nav" className="manager-nav" aria-label="Restaurant workspace">
+          {navigationGroups.map((group) => (
+            <div className="manager-nav-group" key={group.label}>
+              <h2 className="manager-nav-group-title">{group.label}</h2>
+              {group.items.map(({ label, icon: Icon, to }) => {
+                const active = to === pathname || pathname.startsWith(`${to}/`) ||
+                  (to === "/manager/tables" && pathname.startsWith("/manager/floors"));
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    className={`manager-nav-item ${active ? "active" : ""}`}
+                    onClick={() => {
+                      navigate(to);
+                      setSidebarOpen(false);
+                    }}
+                    aria-current={active ? "page" : undefined}
+                  >
+                    <Icon size={16} />
+                    <span>{label}</span>
+                  </button>
+                );
+              })}
+            </div>
           ))}
         </nav>
         <div className="manager-sidebar-bottom">
@@ -117,29 +138,15 @@ export default function ManagerLayout({ children, title = "Dashboard" }) {
               className="manager-menu-button"
               onClick={() => setSidebarOpen(true)}
               aria-label="Open menu"
+              aria-expanded={sidebarOpen}
+              aria-controls="manager-primary-nav"
             >
               <Menu size={21} />
             </button>
             <h1>{title}</h1>
-            <span className="manager-order-status-badge">
-              <span />
-              Accepting Orders
-            </span>
           </div>
           <div className="manager-topbar-right">
-            <div className="manager-search">
-              <Search size={15} />
-              <input type="text" placeholder="Search transactions, tables..." />
-            </div>
             <NotificationBell role="manager" />
-            <button className="manager-profile" type="button">
-              <div className="manager-profile-avatar">MB</div>
-              <div>
-                <strong>Manager</strong>
-                <span>Owner Partner</span>
-              </div>
-              <ChevronDown size={15} />
-            </button>
           </div>
         </header>
         {children}

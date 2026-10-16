@@ -34,7 +34,6 @@ export default function CustomerLandingPage() {
   const [restaurantsError, setRestaurantsError] = useState("");
   const [restaurantRefresh, setRestaurantRefresh] = useState(0);
   const [selectedCuisine, setSelectedCuisine] = useState("");
-  const [toast, setToast] = useState("");
   const isDemoSession = import.meta.env.DEV && sessionStorage.getItem(demoSessionKey) === "active";
 
   useEffect(() => {
@@ -109,11 +108,6 @@ export default function CustomerLandingPage() {
     return restaurants.filter(matches);
   }, [restaurants, selectedCuisine]);
 
-  function notifyReservation(restaurant) {
-    setToast(`Table reservations at ${restaurant.name} are coming soon.`);
-    window.setTimeout(() => setToast(""), 3600);
-  }
-
   if (loading)
     return (
       <main className="landing-loading">
@@ -138,7 +132,6 @@ export default function CustomerLandingPage() {
           loading={restaurantsLoading}
           error={restaurantsError}
           onRetry={() => setRestaurantRefresh((value) => value + 1)}
-          onReserve={notifyReservation}
           actionLabel="Explore Nearby"
           actionHref="#restaurants-near-you"
         />
@@ -148,11 +141,6 @@ export default function CustomerLandingPage() {
         <Testimonials testimonials={testimonials} />
       </main>
       <LandingFooter />
-      {toast && (
-        <div className="landing-toast" role="status">
-          {toast}
-        </div>
-      )}
     </div>
   );
 }

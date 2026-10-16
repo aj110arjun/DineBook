@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { photo } from '../../data/landingData.js';
 import { isRestaurantSaved, subscribeToSavedRestaurants, toggleSavedRestaurant } from '../../lib/savedRestaurants.js';
 
-export default function RestaurantCard({ restaurant, onReserve }) {
+export default function RestaurantCard({ restaurant, guests = 2 }) {
   const [saved, setSaved] = useState(() => isRestaurantSaved(restaurant.id));
   useEffect(() => {
     const sync = () => setSaved(isRestaurantSaved(restaurant.id));
@@ -28,7 +28,7 @@ export default function RestaurantCard({ restaurant, onReserve }) {
         <p className="restaurant-location"><MapPin size={12} />{restaurant.location}{Number.isFinite(Number(restaurant.distance_km)) && <span> · {Number(restaurant.distance_km).toFixed(1)} km away</span>}</p>
         <div className="restaurant-card-actions">
           <Link className="restaurant-menu-link" to={`/customer/restaurants/${restaurant.id}/menu-preview`}>View Menu</Link>
-          <button className="reserve-button" onClick={() => onReserve(restaurant)}>Reserve Table</button>
+          <Link className="reserve-button" to={`/customer/restaurants/${restaurant.id}/booking`} state={{ guests: Number(guests) }}>Reserve a table</Link>
         </div>
       </div>
     </article>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { CalendarDays, CircleDollarSign, Plus, ShoppingBasket, Star, Table2, Tag } from "lucide-react";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
@@ -60,6 +61,7 @@ const popularItems = [
 ];
 
 export default function ManagerDashboardPage() {
+  const navigate = useNavigate();
   const [managerName, setManagerName] = useState("");
   const [restaurantName, setRestaurantName] = useState("");
   useEffect(() => {
@@ -89,43 +91,43 @@ export default function ManagerDashboardPage() {
 
           {/* Quick actions */}
           <div className="manager-quick-actions">
-            <button>
+            <button type="button" onClick={() => navigate("/manager/menu")}>
               <span className="manager-action-icon">
                 <Plus size={17} />
               </span>
               <span>
-                <strong>Add Food Item</strong>
-                <small>Instantly list new culinary arrivals</small>
+                  <strong>Add a menu item</strong>
+                  <small>Add a dish guests can order</small>
               </span>
             </button>
 
-            <button>
+            <button type="button" onClick={() => navigate("/manager/offers")}>
               <span className="manager-action-icon">
                 <Tag size={17} />
               </span>
               <span>
-                <strong>Add Offer</strong>
-                <small>Create discount campaigns & promotions</small>
+                  <strong>Create an offer</strong>
+                  <small>Share a deal with guests</small>
               </span>
             </button>
 
-            <button>
+            <button type="button" onClick={() => navigate("/manager/tables")}>
               <span className="manager-action-icon">
                 <Table2 size={17} />
               </span>
               <span>
-                <strong>Manage Tables</strong>
-                <small>Configure floor plans & online booking</small>
+                  <strong>Set up tables</strong>
+                  <small>Arrange floors and seating</small>
               </span>
             </button>
 
-            <button>
+            <button type="button" onClick={() => navigate("/manager/reservations")}>
               <span className="manager-action-icon">
                 <CalendarDays size={17} />
               </span>
               <span>
-                <strong>View Reservations</strong>
-                <small>Check upcoming party bookings</small>
+                  <strong>View reservations</strong>
+                  <small>See upcoming guest bookings</small>
               </span>
             </button>
           </div>
