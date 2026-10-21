@@ -5,6 +5,7 @@ import App from "./App.jsx";
 import "./index.css";
 import "./styles.css";
 import "./design-system.css";
+import "./layout-refresh.css";
 
 const savedTheme = window.localStorage.getItem("dinebook-theme");
 document.documentElement.dataset.theme = savedTheme === "dark" ? "dark" : "light";

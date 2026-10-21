@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { demoSessionKey } from "../../data/demoCustomer.js";
 import { requestJson } from "../../lib/authApi.js";
 
 export default function ProtectedRoute({ children }) {
+  const location = useLocation();
   const [signedIn, setSignedIn] = useState(false);
   const [checking, setChecking] = useState(true);
 
@@ -56,7 +57,7 @@ export default function ProtectedRoute({ children }) {
   }
 
   if (!signedIn) {
-    return <Navigate to="/customer/login" replace />;
+    return <Navigate to="/customer/login" replace state={{ from: location }} />;
   }
 
   return children;

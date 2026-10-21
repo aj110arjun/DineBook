@@ -5,6 +5,9 @@ const REALTIME_EVENT_TYPES = [
   "order.status_changed",
   "booking.updated",
   "payment.status_changed",
+  "wallet.transfer_sent",
+  "wallet.transfer_received",
+  "notification.created",
 ];
 
 /** Cookie-authenticated SSE client with cursor recovery and jittered reconnects. */

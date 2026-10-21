@@ -1,0 +1,185 @@
+/* Shared sizing and responsive rhythm for customer and staff pages. */
+:root {
+  --font-size-xs: .8125rem;
+  --font-size-sm: .9375rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.625rem;
+  --font-size-2xl: 2rem;
+  --font-size-3xl: 2.375rem;
+  --content-width: 1680px;
+}
+
+html { font-size: 16px; }
+body { line-height: 1.5; }
+:where(.customer-home, .manager-dashboard, .admin-dashboard, .chef-dashboard-shell) {
+  font-family: var(--font-sans);
+}
+:where(.customer-home, .manager-dashboard, .admin-dashboard, .chef-dashboard-shell)
+  :where(h1, h2, h3) {
+  line-height: 1.18;
+  letter-spacing: -.025em;
+}
+:where(.customer-home, .manager-dashboard, .admin-dashboard, .chef-dashboard-shell)
+  :where(button, input, select, textarea) { font-family: inherit; }
+
+/* Customer discovery: larger cards, tighter section spacing and wider content. */
+.customer-home .header-inner,
+.customer-home .hero-content,
+.customer-home .content-section,
+.customer-home .restaurant-listing-search-inner,
+.customer-home .restaurant-listing-page {
+  max-width: var(--content-width);
+}
+.customer-home .content-section { padding: clamp(38px, 4vw, 60px) clamp(18px, 3vw, 48px) 0; }
+.customer-home .cuisine-section,
+.customer-home .restaurant-section { padding-top: clamp(38px, 4vw, 60px); }
+.customer-home .section-heading { margin-bottom: 20px; }
+.customer-home .hero-banner { min-height: clamp(440px, 58vh, 620px); }
+.customer-home .hero-content { padding-inline: clamp(18px, 3vw, 48px); }
+.customer-home .cuisine-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 14px; }
+.customer-home .cuisine-card { min-height: 104px; height: auto; padding: 14px; font-size: var(--font-size-sm); }
+.customer-home .restaurant-grid,
+.customer-home .dish-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr)); gap: 18px; }
+.customer-home .restaurant-card,
+.customer-home .dish-card { min-width: 0; height: 100%; }
+.customer-home .restaurant-listing-search h1 { color: #fff; font-size: clamp(1.75rem, 3vw, 2.5rem); }
+.customer-home .restaurant-listing-search-inner { padding: 26px clamp(18px, 3vw, 48px) 28px; }
+.customer-home .restaurant-listing-page { padding: 0 clamp(18px, 3vw, 48px) 48px; }
+.customer-home .restaurant-listing-layout { grid-template-columns: minmax(210px, 265px) minmax(0, 1fr); gap: clamp(16px, 2vw, 28px); margin-top: 18px; }
+.customer-home .restaurant-listing-toolbar { flex-wrap: wrap; }
+.customer-home .restaurant-filter-title { padding-bottom: 0; }
+.customer-home .restaurant-filter-actions { display: flex; align-items: center; gap: 12px; }
+.customer-home .restaurant-filter-toggle { display: none; align-items: center; gap: 6px; }
+.customer-home .restaurant-search-bar > input,
+.customer-home .restaurant-guest-select select,
+.customer-home .restaurant-search-bar > button { font-size: var(--font-size-sm); }
+
+/* Account pages use the same content width and a shorter header-to-content gap. */
+.profile-page .profile-shell { max-width: var(--content-width); padding: 28px clamp(18px, 3vw, 48px) 64px; }
+.profile-page .profile-crumb { margin: 0 0 22px; }
+.profile-page .profile-layout { grid-template-columns: minmax(230px, 270px) minmax(0, 1fr); gap: 24px; }
+.profile-page .profile-content { gap: 20px; }
+.profile-page .profile-card { padding: clamp(18px, 2vw, 28px); }
+.profile-page .profile-sidebar { top: 94px; }
+.customer-reservation-page { max-width: var(--content-width); min-height: 0; padding-bottom: 48px; }
+
+/* Keep the guest auth message readable on its dark story panel. */
+.auth-story h1 { color: #fff; }
+@media (max-width: 1023px) {
+  .auth-story { min-height: 0; padding-block: 24px; }
+  .auth-story-copy { margin-block: 28px; }
+  .auth-story h1 { font-size: clamp(2rem, 5vw, 2.625rem); }
+}
+
+/* Staff dashboards share content edges, card sizing and readable headings. */
+.admin-dashboard { grid-template-columns: 248px minmax(0, 1fr); }
+.admin-dashboard-main,
+.manager-dashboard-main,
+.chef-dashboard-main { min-width: 0; }
+.admin-dashboard-content,
+.manager-dashboard-content,
+.chef-dashboard-content {
+  box-sizing: border-box;
+  width: min(100%, var(--content-width));
+  max-width: var(--content-width);
+  margin-inline: auto;
+  padding: clamp(18px, 2vw, 32px);
+}
+.chef-kitchen-content { min-width: 0; width: 100%; }
+.admin-breadcrumb { width: min(100%, var(--content-width)); box-sizing: border-box; padding: 16px clamp(18px, 2vw, 32px) 0; }
+.admin-topbar,
+.manager-topbar,
+.chef-topbar { min-height: 70px; }
+.admin-topbar h1,
+.manager-topbar-left h1,
+.chef-topbar-title h1 { font-size: clamp(1.375rem, 1.8vw, 1.875rem); font-weight: 700; }
+.admin-dashboard-heading h2,
+.chef-page-heading h2 { font-size: clamp(1.75rem, 2.4vw, 2.375rem); font-weight: 700; }
+.admin-dashboard-heading,
+.chef-page-heading { margin-bottom: 18px; }
+.manager-summary-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); gap: 14px; }
+.admin-stat-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 205px), 1fr)); gap: 14px; margin-top: 18px; }
+.chef-stat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.chef-overview-grid { gap: 18px; margin-top: 18px; }
+.chef-dish-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 14px; }
+:where(.manager-summary-card, .admin-stat-card, .chef-stat-card) { min-height: 112px; padding: 18px; }
+:where(.manager-panel, .admin-panel, .chef-panel) { min-width: 0; }
+:where(.manager-dashboard, .admin-dashboard, .chef-dashboard-shell)
+  :where(.manager-panel, .admin-panel, .chef-panel, .manager-summary-card, .admin-stat-card, .chef-stat-card) {
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+:where(.manager-dashboard, .admin-dashboard, .chef-dashboard-shell)
+  :where(.manager-panel, .admin-panel, .chef-panel, .manager-summary-card, .admin-stat-card, .chef-stat-card)
+  :where(p, small) { line-height: 1.5; }
+
+@media (min-width: 801px) {
+  .admin-sidebar { width: 248px; }
+}
+@media (min-width: 761px) {
+  .chef-sidebar { width: 260px; }
+  .chef-dashboard-main { width: calc(100% - 260px); margin-left: 260px; }
+}
+@media (max-width: 1100px) {
+  .chef-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .customer-home .restaurant-grid,
+  .customer-home .dish-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 235px), 1fr)); }
+}
+@media (max-width: 900px) {
+  .customer-home .header-inner { height: 66px; justify-content: space-between; gap: 12px; padding-inline: 18px; }
+  .customer-home .mobile-menu-toggle { display: grid; place-items: center; padding: 8px; border: 0; background: transparent; color: #fff; }
+  .customer-home .main-nav { display: none; position: absolute; top: 66px; right: 0; left: 0; z-index: 25; padding: 18px 20px 22px; background: var(--wine); box-shadow: 0 10px 16px #260b1244; }
+  .customer-home .main-nav.open { display: flex; flex-direction: column; align-items: stretch; }
+  .customer-home .location-select { width: max-content; }
+  .customer-home .nav-links,
+  .customer-home .account-nav { justify-content: space-between; }
+  .profile-page .profile-layout { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .profile-page .profile-sidebar { position: static; }
+  .profile-page .profile-identity { display: grid; grid-template-columns: 52px minmax(0, 1fr); column-gap: 12px; justify-items: start; padding-bottom: 16px; }
+  .profile-page .profile-identity .profile-avatar { grid-row: span 2; width: 52px; height: 52px; margin: 0; }
+  .profile-page .profile-menu { grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 14px 0; }
+  .customer-home .restaurant-listing-layout { grid-template-columns: minmax(0, 1fr); }
+  .customer-home .restaurant-filter-panel { padding: 16px; }
+  .customer-home .restaurant-filter-toggle { display: inline-flex; }
+  .customer-home .restaurant-filter-fields { display: none; }
+  .customer-home .restaurant-filter-fields.is-open { display: block; }
+}
+@media (max-width: 760px) {
+  .admin-dashboard-content,
+  .manager-dashboard-content,
+  .chef-dashboard-content { padding: 18px 16px 28px; }
+  .admin-dashboard-content :where(table),
+  .manager-dashboard-content :where(table),
+  .chef-kitchen-content :where(table) { display: block; max-width: 100%; overflow-x: auto; }
+  .admin-stat-grid,
+  .manager-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .customer-home .hero-banner { min-height: 440px; }
+  .customer-home .hero-content { padding-block: 48px; }
+}
+@media (max-width: 560px) {
+  .customer-home .content-section { padding: 34px 16px 0; }
+  .customer-home .hero-banner { min-height: 390px; }
+  .customer-home .hero-content { padding: 42px 18px; }
+  .customer-home .hero-content h1 { font-size: clamp(2.25rem, 10vw, 3.5rem); }
+  .customer-home .hero-actions { flex-wrap: wrap; gap: 10px; }
+  .customer-home .cuisine-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .customer-home .restaurant-grid,
+  .customer-home .dish-grid { grid-template-columns: minmax(0, 1fr); }
+  .customer-home .restaurant-listing-search-inner,
+  .customer-home .restaurant-listing-page { padding-inline: 16px; }
+  .customer-home .restaurant-search-bar { flex-wrap: wrap; padding: 10px; }
+  .customer-home .restaurant-search-bar > input { flex: 1 1 calc(100% - 35px); }
+  .customer-home .restaurant-guest-select { flex: 1 1 auto; border-left: 0; padding-left: 0; }
+  .customer-home .restaurant-search-bar > button { flex: 1 1 auto; }
+  .profile-page .profile-shell { padding: 18px 14px 40px; }
+  .profile-page .profile-crumb { margin-bottom: 16px; }
+  .profile-page .profile-menu { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .profile-page .profile-content { gap: 14px; }
+  .admin-stat-grid,
+  .manager-summary-grid,
+  .chef-stat-grid { grid-template-columns: minmax(0, 1fr); }
+  .admin-topbar .admin-search,
+  .manager-topbar .manager-search { display: none; }
+}

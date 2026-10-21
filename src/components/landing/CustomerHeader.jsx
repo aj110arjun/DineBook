@@ -3,6 +3,7 @@ import { ChevronDown, MapPin, Menu, Utensils, X } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { API_BASE } from "../../lib/authApi.js";
 import { demoSessionKey } from "../../data/demoCustomer.js";
+import NotificationBell from "../notifications/NotificationBell.jsx";
 
 export default function CustomerHeader({ user, onLogout }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -80,28 +81,30 @@ export default function CustomerHeader({ user, onLogout }) {
 
           {/* Navigation links */}
           <div className="nav-links">
-            <Link className={location.pathname === "/customer" ? "active" : ""} to="/customer" onClick={closeMenu}>
+            <Link className={location.pathname === "/customer" ? "active" : ""} aria-current={location.pathname === "/customer" ? "page" : undefined} to="/customer" onClick={closeMenu}>
               Discover
             </Link>
 
-            <Link className={location.pathname.startsWith("/customer/restaurants") ? "active" : ""} to="/customer/restaurants" onClick={closeMenu}>
+            <Link className={location.pathname.startsWith("/customer/restaurants") ? "active" : ""} aria-current={location.pathname.startsWith("/customer/restaurants") ? "page" : undefined} to="/customer/restaurants" onClick={closeMenu}>
               Restaurants
             </Link>
+
+            {user && <Link className={location.pathname === "/customer/saved-restaurants" ? "active" : ""} aria-current={location.pathname === "/customer/saved-restaurants" ? "page" : undefined} to="/customer/saved-restaurants" onClick={closeMenu}>Saved places</Link>}
 
             <Link to="/customer#offers" onClick={closeMenu}>
               Offers
             </Link>
 
-            <Link to="/customer#how-it-works" onClick={closeMenu}>
-              Wallet
-            </Link>
-            {user && <Link className={location.pathname === "/customer/profile/orders" ? "active" : ""} to="/customer/profile/orders" onClick={closeMenu}>Orders</Link>}
+            {user && <Link className={location.pathname.startsWith("/customer/profile/reservations") ? "active" : ""} aria-current={location.pathname.startsWith("/customer/profile/reservations") ? "page" : undefined} to="/customer/profile/reservations" onClick={closeMenu}>Reservations</Link>}
+            {user && <Link className={location.pathname.startsWith("/customer/profile/orders") ? "active" : ""} aria-current={location.pathname.startsWith("/customer/profile/orders") ? "page" : undefined} to="/customer/profile/orders" onClick={closeMenu}>Orders</Link>}
+            {user && <Link className={location.pathname.startsWith("/customer/profile/wallet") ? "active" : ""} aria-current={location.pathname.startsWith("/customer/profile/wallet") ? "page" : undefined} to="/customer/profile/wallet" onClick={closeMenu}>Wallet</Link>}
           </div>
 
           {/* Account */}
           <div className="account-nav">
             {user ? (
               <>
+                <NotificationBell role="customer" enabled={Boolean(user)} />
                 <button className="text-button" onClick={signOut}>
                   Sign out
                 </button>

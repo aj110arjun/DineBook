@@ -38,9 +38,29 @@ const statusLabel = {
   COMPLETED: "Completed",
   SEATED: "Seated",
 };
+const activityStatusLabels = {
+  ...statusLabel,
+  PLACED: "Sent to kitchen",
+  ACCEPTED: "Accepted by kitchen",
+  PREPARING: "Being prepared",
+  READY: "Ready to serve",
+};
 const weekDays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 const dayKey = (date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+const orderTone = (status) => ({
+  PLACED: "pending", ACCEPTED: "confirmed", PREPARING: "confirmed",
+  READY: "completed", COMPLETED: "completed", CANCELLED: "cancelled", REJECTED: "cancelled",
+}[status] || "pending");
+const orderStatusLabel = (status) => ({
+  PLACED: "Sent to kitchen",
+  ACCEPTED: "Accepted by kitchen",
+  PREPARING: "Being prepared",
+  READY: "Ready to serve",
+  COMPLETED: "Served",
+  CANCELLED: "Removed",
+  REJECTED: "Declined by kitchen",
+}[status] || "Order update pending");
 const shortTime = (value) => {
   if (!value) return "";
   const [h, m] = value.slice(0, 5).split(":").map(Number);
@@ -57,6 +77,13 @@ const consolidateDeskOrderLines = (lines) => {
 
 export default function ManagerReservationsPage() {
   const [items, setItems] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [calendarDays, setCalendarDays] = useState({});
+  const [tables, setTables] = useState([]);
+  const [reservationTotal, setReservationTotal] = useState(0);
+  const [reservationGuestCount, setReservationGuestCount] = useState(0);
+  const [ordersTotal, setOrdersTotal] = useState(0);
+  const [calendarLoading, setCalendarLoading] = useState(true);
   const [workingDays, setWorkingDays] = useState(null);
   const [selectedDate, setSelectedDate] = useState(dayKey(new Date()));
   const [month, setMonth] = useState(() => {
@@ -68,12 +95,15 @@ export default function ManagerReservationsPage() {
   const [guestFilter, setGuestFilter] = useState("all");
   const [reservationSort, setReservationSort] = useState("time");
   const [listPage, setListPage] = useState(1);
+  const [orderPage, setOrderPage] = useState(1);
   const [listPageSize, setListPageSize] = useState(10);
   const [query, setQuery] = useState(() => new URLSearchParams(window.location.search).get("reservationId") || "");
+  const [debouncedQuery, setDebouncedQuery] = useState(() => new URLSearchParams(window.location.search).get("reservationId") || "");
   const [expandedId, setExpandedId] = useState("");
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState("");
   const [pendingAction, setPendingAction] = useState(null);
+  const [pendingOrderRemoval, setPendingOrderRemoval] = useState(null);
   const [actionReason, setActionReason] = useState("");
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scanValue, setScanValue] = useState("");
@@ -101,33 +131,100 @@ export default function ManagerReservationsPage() {
     cameraRef.current = null;
     setCameraActive(false);
   }, [scannerOpen]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedQuery(query), 250);
+    return () => window.clearTimeout(timer);
+  }, [query]);
 
-  const load = useCallback(
-    () => Promise.all([
-      requestJson("/api/manager/reservations"),
-      requestJson("/api/auth/manager/me"),
-    ])
-        .then(([data, manager]) => {
-          setItems(data);
-          setWorkingDays(Array.isArray(manager.restaurant_hours) ? manager.restaurant_hours : []);
-          setError("");
-        })
-        .catch((e) => setError(e.message)),
-    [],
-  );
-  const realtimeStatus = useRealtimeEvents({ enabled: true, onEvent: load, onReconnect: load });
-  useEffect(() => {
-    load();
-  }, [load]);
-  useEffect(() => {
-    if (!query) return;
-    const match = items.find((item) => item.id.replaceAll("-", "").toLowerCase() === query.replaceAll("-", "").toLowerCase());
-    if (match) {
-      setSelectedDate(match.reservation_date);
-      setMonth(new Date(`${match.reservation_date}T12:00:00`));
-      setExpandedId(match.id);
+  const loadCalendarSummary = useCallback(async () => {
+    const startDate = dayKey(new Date(month.getFullYear(), month.getMonth(), 1));
+    const endDate = dayKey(new Date(month.getFullYear(), month.getMonth() + 1, 0));
+    try {
+      const result = await requestJson(`/api/manager/calendar/summary?${new URLSearchParams({ start_date: startDate, end_date: endDate })}`);
+      setCalendarDays(result.days || {});
+      setTables(result.tables || []);
+    } catch (e) {
+      setError(e.message);
     }
-  }, [items, query]);
+  }, [month]);
+
+  const loadCalendarActivities = useCallback(async (signal) => {
+    setCalendarLoading(true);
+    const params = new URLSearchParams({
+      day: selectedDate,
+      page: String(listPage),
+      order_page: String(orderPage),
+      page_size: String(listPageSize),
+      sort: reservationSort,
+    });
+    if (debouncedQuery.trim()) params.set("search", debouncedQuery.trim());
+    if (statusFilter !== "all") params.set("status", statusFilter);
+    if (tableFilter !== "all") params.set("table_id", tableFilter);
+    if (guestFilter !== "all") params.set("guest_filter", guestFilter);
+    try {
+      const result = await requestJson(`/api/manager/calendar/activities?${params}`, { signal });
+      setItems(result.reservations.items || []);
+      setOrders(result.orders.items || []);
+      setReservationTotal(result.reservations.total || 0);
+      setReservationGuestCount(result.reservations.guest_count || 0);
+      setOrdersTotal(result.orders.total || 0);
+      if (result.reservation_lookup_date) {
+        setSelectedDate(result.reservation_lookup_date);
+        setMonth(new Date(`${result.reservation_lookup_date}T12:00:00`));
+        setExpandedId(result.reservations.items?.[0]?.id || "");
+      }
+      setError("");
+    } catch (e) {
+      if (!signal?.aborted) setError(e.message);
+    } finally {
+      if (!signal?.aborted) setCalendarLoading(false);
+    }
+  }, [selectedDate, listPage, orderPage, listPageSize, reservationSort, debouncedQuery, statusFilter, tableFilter, guestFilter]);
+
+  const realtimeStatus = useRealtimeEvents({
+    enabled: true,
+    onEvent: (event) => {
+      if (["booking.updated", "order.status_changed", "payment.status_changed"].includes(event?.event_type)) {
+        loadCalendarActivities();
+        loadCalendarSummary();
+      }
+    },
+    onReconnect: () => {
+      loadCalendarActivities();
+      loadCalendarSummary();
+    },
+  });
+  useEffect(() => { loadCalendarSummary(); }, [loadCalendarSummary]);
+  const calendarFilterKey = JSON.stringify([selectedDate, tableFilter, debouncedQuery, statusFilter, guestFilter, reservationSort, listPageSize]);
+  const previousCalendarFilterKey = useRef(calendarFilterKey);
+  useEffect(() => {
+    const filtersChanged = previousCalendarFilterKey.current !== calendarFilterKey;
+    previousCalendarFilterKey.current = calendarFilterKey;
+    if (filtersChanged && (listPage !== 1 || orderPage !== 1)) {
+      setListPage(1);
+      setOrderPage(1);
+      return;
+    }
+    const controller = new AbortController();
+    loadCalendarActivities(controller.signal);
+    return () => controller.abort();
+  }, [calendarFilterKey, listPage, orderPage, loadCalendarActivities]);
+  useEffect(() => {
+    requestJson("/api/auth/manager/me")
+      .then((manager) => setWorkingDays(Array.isArray(manager.restaurant_hours) ? manager.restaurant_hours : []))
+      .catch((e) => setError(e.message));
+  }, []);
+  useEffect(() => {
+    setListPage((current) => Math.min(current, Math.max(1, Math.ceil(reservationTotal / listPageSize))));
+    setOrderPage((current) => Math.min(current, Math.max(1, Math.ceil(ordersTotal / listPageSize))));
+  }, [reservationTotal, ordersTotal, listPageSize]);
+  const reservationIdQuery = query.trim().replaceAll("-", "").toLowerCase();
+  const isReservationIdLookup = reservationIdQuery.length >= 6 && [...reservationIdQuery].every((char) => "0123456789abcdef".includes(char));
+  const selectedItems = items;
+  const selectedStandaloneOrders = orders;
+  const selectedDateOrderCount = calendarDays[selectedDate]?.orders_count || 0;
+  const visibleSelectedItems = selectedItems;
+  const dayGuestCount = reservationGuestCount;
 
   const monthCells = useMemo(() => {
     const first = new Date(month.getFullYear(), month.getMonth(), 1);
@@ -147,41 +244,6 @@ export default function ManagerReservationsPage() {
     );
   }, [month]);
 
-  const tables = useMemo(
-    () =>
-      Array.from(
-        new Map(
-          items.flatMap((item) =>
-            item.tables.map((table) => [table.id, table]),
-          ),
-        ).values(),
-      ),
-    [items],
-  );
-  const reservationIdQuery = query.trim().toLowerCase();
-  const idMatches = reservationIdQuery.length >= 6
-    ? items.filter((item) => item.id.toLowerCase().replaceAll("-", "").startsWith(reservationIdQuery.replaceAll("-", "")))
-    : [];
-  const isReservationIdLookup = idMatches.length > 0;
-  const selectedItems = useMemo(() => {
-    return items.filter((item) => {
-      if (!isReservationIdLookup && item.reservation_date !== selectedDate) return false;
-      if (tableFilter !== "all" && !item.tables.some((table) => table.id === tableFilter)) return false;
-      if (statusFilter !== "all" && item.status !== statusFilter) return false;
-      if (guestFilter !== "all" && (guestFilter === "6+" ? item.number_of_guests < 6 : item.number_of_guests !== Number(guestFilter))) return false;
-      if (isReservationIdLookup) return item.id.toLowerCase().replaceAll("-", "").startsWith(reservationIdQuery.replaceAll("-", ""));
-      const haystack = `${item.id} ${item.customer_name} ${item.customer_email || ""} ${item.tables.map((table) => table.table_number).join(" ")}`.toLowerCase();
-      return haystack.includes(reservationIdQuery);
-    }).sort((left, right) => reservationSort === "guests" ? left.number_of_guests - right.number_of_guests : `${left.start_time || ""}`.localeCompare(`${right.start_time || ""}`));
-  }, [items, selectedDate, tableFilter, reservationIdQuery, isReservationIdLookup, statusFilter, guestFilter, reservationSort]);
-  const visibleSelectedItems = selectedItems.slice((listPage - 1) * listPageSize, listPage * listPageSize);
-  useEffect(() => { setListPage(1); }, [selectedDate, tableFilter, query, statusFilter, guestFilter, reservationSort, listPageSize]);
-  useEffect(() => { setListPage((current) => Math.min(current, Math.max(1, Math.ceil(selectedItems.length / listPageSize)))); }, [selectedItems.length, listPageSize]);
-  const dayGuestCount = selectedItems.reduce(
-    (total, item) => total + item.number_of_guests,
-    0,
-  );
-
   async function update(item, action, reason = "") {
     setBusyId(item.id);
     try {
@@ -189,7 +251,7 @@ export default function ManagerReservationsPage() {
         method: "POST",
         ...(action === "cancel" ? { body: JSON.stringify({ reason: reason.trim() || null }) } : {}),
       });
-      await load();
+      await Promise.all([loadCalendarActivities(), loadCalendarSummary()]);
       return true;
     } catch (e) {
       setError(e.message);
@@ -206,7 +268,7 @@ export default function ManagerReservationsPage() {
         method: "PATCH",
         body: JSON.stringify({ status, reason: reason.trim() || null }),
       });
-      await load();
+      await Promise.all([loadCalendarActivities(), loadCalendarSummary()]);
       return true;
     } catch (e) {
       setError(e.message);
@@ -233,7 +295,6 @@ export default function ManagerReservationsPage() {
     setScanError("");
     try {
       const reservation = await requestJson(`/api/manager/reservations/${encodeURIComponent(id)}`);
-      setItems((current) => [reservation, ...current.filter((entry) => entry.id !== reservation.id)]);
       setQuery(reservation.id);
       setSelectedDate(reservation.reservation_date);
       const date = new Date(`${reservation.reservation_date}T12:00:00`);
@@ -267,11 +328,11 @@ export default function ManagerReservationsPage() {
     if (!foodReservation || !variantId) return;
     setBusyId(foodReservation.id);
     try {
-      const updated = await requestJson(`/api/manager/reservations/${foodReservation.id}/preorder-items`, {
+      await requestJson(`/api/manager/reservations/${foodReservation.id}/preorder-items`, {
         method: "POST",
         body: JSON.stringify({ variant_id: variantId, quantity: Number(foodQuantity) }),
       });
-      setItems((current) => current.map((entry) => entry.id === updated.id ? updated : entry));
+      await Promise.all([loadCalendarActivities(), loadCalendarSummary()]);
       setFoodReservation(null);
     } catch (e) {
       setError(e.message);
@@ -289,6 +350,29 @@ export default function ManagerReservationsPage() {
       setError(e.message);
     } finally {
       setOrdersLoadingId("");
+    }
+  }
+
+  async function removeManagerAddedOrder() {
+    if (!pendingOrderRemoval) return;
+    const { order, reservationId } = pendingOrderRemoval;
+    setBusyId(order.id);
+    setError("");
+    try {
+      const updated = await requestJson(`/api/manager/orders/${encodeURIComponent(order.id)}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: "CANCELLED", reason: "Removed by manager because it was added by mistake." }),
+      });
+      setReservationOrders((current) => ({
+        ...current,
+        [reservationId]: (current[reservationId] || []).map((entry) => entry.id === updated.id ? updated : entry),
+      }));
+      await loadCalendarSummary();
+      setPendingOrderRemoval(null);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusyId("");
     }
   }
 
@@ -343,6 +427,7 @@ export default function ManagerReservationsPage() {
         ...current,
         [deskOrderReservation.id]: [...(current[deskOrderReservation.id] || []).filter((entry) => entry.id !== order.id), order],
       }));
+      await loadCalendarSummary();
       setDeskOrderReservation(null);
     } catch (e) {
       setError(e.message);
@@ -354,8 +439,8 @@ export default function ManagerReservationsPage() {
   async function confirmPreorderPayment(item) {
     setBusyId(item.id);
     try {
-      const updated = await requestJson(`/api/manager/reservations/${item.id}/confirm-preorder-payment`, { method: "POST" });
-      setItems((current) => current.map((entry) => entry.id === updated.id ? updated : entry));
+      await requestJson(`/api/manager/reservations/${item.id}/confirm-preorder-payment`, { method: "POST" });
+      await Promise.all([loadCalendarActivities(), loadCalendarSummary()]);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -392,10 +477,10 @@ export default function ManagerReservationsPage() {
         <div className="reservation-page-heading">
           <div>
             <div className="reservation-breadcrumb">
-              Home <span>/</span> <strong>Reservations</strong>
+              Home <span>/</span> <strong>Reservations &amp; Orders</strong>
             </div>
-            <h2>Reservations Calendar</h2>
-            <p>View and manage all table reservations · {realtimeStatus === "connected" ? "Live updates connected" : realtimeStatus === "reconnecting" ? "Reconnecting to live updates…" : realtimeStatus === "disconnected" ? "Live updates disconnected · Refresh to sync" : "Connecting to live updates…"}</p>
+            <h2>Reservations &amp; Orders</h2>
+            <p>View reservations, preorders, and kitchen orders together by date · {realtimeStatus === "connected" ? "Live updates connected" : realtimeStatus === "reconnecting" ? "Reconnecting to live updates…" : realtimeStatus === "disconnected" ? "Live updates disconnected · Refresh to sync" : "Connecting to live updates…"}</p>
           </div>
           <div className="reservation-toolbar">
             <button type="button" className="reservation-scan-trigger" onClick={() => { setScannerOpen(true); setScanError(""); }}><QrCode size={16} /> Scan pass</button>
@@ -411,7 +496,7 @@ export default function ManagerReservationsPage() {
                 </option>
               ))}
             </select>
-            <select aria-label="Filter by reservation status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option value="all">All statuses</option>{Object.entries(statusLabel).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
+            <select aria-label="Filter by reservation or order status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option value="all">All statuses</option>{Object.entries(activityStatusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
             <select aria-label="Filter by party size" value={guestFilter} onChange={(event) => setGuestFilter(event.target.value)}><option value="all">All party sizes</option>{[1, 2, 3, 4, 5].map((count) => <option key={count} value={String(count)}>{count} guests</option>)}<option value="6+">6+ guests</option></select>
             <select aria-label="Sort reservations" value={reservationSort} onChange={(event) => setReservationSort(event.target.value)}><option value="time">Time: earliest first</option><option value="guests">Party size: smallest first</option></select>
             <div className="reservation-search">
@@ -419,7 +504,7 @@ export default function ManagerReservationsPage() {
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search reservation ID, guests, tables…"
+                placeholder="Search reservations, orders, guests, items…"
               />
             </div>
           </div>
@@ -478,9 +563,9 @@ export default function ManagerReservationsPage() {
                 ))}
                 {monthCells.map((day) => {
                   const key = dayKey(day);
-                  const dayItems = items.filter(
-                    (item) => item.reservation_date === key,
-                  );
+                  const daySummary = calendarDays[key] || {};
+                  const reservationCount = daySummary.reservations_count || 0;
+                  const orderCount = daySummary.orders_count || 0;
                   const currentMonth = day.getMonth() === month.getMonth();
                   const schedule = workingDays?.find((entry) =>
                     String(entry.day_of_week).toLowerCase() === day.toLocaleDateString("en", { weekday: "long" }).toLowerCase(),
@@ -488,7 +573,7 @@ export default function ManagerReservationsPage() {
                   const workingDay = workingDays === null
                     ? false
                     : workingDays.length === 0 || Boolean(schedule?.enabled && schedule.open_time && schedule.close_time);
-                  const disabled = !currentMonth || !workingDay;
+                  const disabled = !currentMonth || (!workingDay && reservationCount === 0 && orderCount === 0);
                   const selected = key === selectedDate;
                   return (
                     <button
@@ -503,19 +588,13 @@ export default function ManagerReservationsPage() {
                       <span className="reservation-day-number">
                         {day.getDate()}
                       </span>
-                      {dayItems.length > 0 && (
+                      {reservationCount + orderCount > 0 && (
                         <span className="reservation-day-count">
-                          {dayItems.length}
+                          {reservationCount + orderCount}
                         </span>
                       )}
                       <span className="reservation-day-dots">
-                        {[
-                          ...new Set(
-                            dayItems.map(
-                              (item) => statusClass[item.status] || "pending",
-                            ),
-                          ),
-                        ].map((tone) => (
+                        {(daySummary.tones || []).map((tone) => (
                           <i className={tone} key={tone} />
                         ))}
                       </span>
@@ -528,23 +607,26 @@ export default function ManagerReservationsPage() {
 
           <aside className="reservation-list-column">
             <header className="reservation-list-summary">
-              <h3>{isReservationIdLookup ? "Reservation ID lookup" : `Reservations – ${selectedLabel}`}</h3>
+              <h3>{isReservationIdLookup ? "Reservation ID lookup" : `Reservations & Orders – ${selectedLabel}`}</h3>
               <span className="booking-count">
-                {selectedItems.length} Bookings
+                {reservationTotal} Reservations
               </span>
+              <span className="booking-count">{selectedDateOrderCount} Orders</span>
               <span className="guest-count">{dayGuestCount} Guests</span>
             </header>
             <div className="reservation-list-scroll">
-              {selectedItems.length === 0 ? (
+              {calendarLoading && selectedItems.length === 0 && selectedStandaloneOrders.length === 0 ? (
+                <div className="reservation-empty"><CalendarDays size={28} /><strong>Loading this date…</strong></div>
+              ) : selectedItems.length === 0 && selectedStandaloneOrders.length === 0 ? (
                 <div className="reservation-empty">
                   <CalendarDays size={28} />
-                  <strong>No reservations on this date</strong>
+                  <strong>No reservations or orders on this date</strong>
                   <span>
                     Choose another date or adjust the table or search filters.
                   </span>
                 </div>
-              ) : (
-                visibleSelectedItems.map((item) => (
+              ) : <>
+                {visibleSelectedItems.map((item) => (
                   <article
                     className={`reservation-guest-card${expandedId === item.id ? " expanded" : ""}`}
                     key={item.id}
@@ -613,13 +695,28 @@ export default function ManagerReservationsPage() {
                         {Number(item.preorder_due_at_desk || 0) > 0 && <strong>Food due at desk · ₹{Number(item.preorder_due_at_desk).toFixed(2)}</strong>}
                         {item.preorder_items?.length > 0 && <ul>{item.preorder_items.map((food) => <li key={food.variant_id}>{food.quantity} × {food.food_name} · {food.variant_name} — ₹{Number(food.line_total).toFixed(2)}</li>)}</ul>}
                         <div className="reservation-linked-orders">
-                          <strong>Kitchen orders</strong>
-                          {ordersLoadingId === item.id ? <span>Loading orders…</span> : (reservationOrders[item.id] || []).length === 0 ? <span>No kitchen orders yet.</span> : (reservationOrders[item.id] || []).map((order) => (
-                            <div className="reservation-linked-order" key={order.id}>
-                              <span><Link to={`/manager/orders/${order.id}`}>{order.is_preorder ? "Preorder" : "Desk order"} #{order.id.slice(0, 8).toUpperCase()}</Link> · {order.status}{order.items?.length ? ` · ${order.items.map((food) => `${food.quantity} × ${food.food_name}`).join(", ")}` : ""}</span>
-                              <strong>₹{Number(order.total).toFixed(2)} · {order.payment_status === "PAID" ? "Paid" : "Due at desk"}</strong>
-                            </div>
-                          ))}
+                          <strong>Food orders for this visit</strong>
+                          {ordersLoadingId === item.id ? <span>Loading orders…</span> : (reservationOrders[item.id] || []).length === 0 ? <span>No food orders have been sent to the kitchen yet.</span> : (reservationOrders[item.id] || []).map((order) => {
+                            const managerAdded = order.customer_note === "Manager desk order";
+                            const canRemove = managerAdded && ["PLACED", "ACCEPTED", "PREPARING"].includes(order.status);
+                            return <article className="reservation-linked-order" key={order.id}>
+                              <div className="reservation-linked-order-content">
+                                <div className="reservation-linked-order-heading">
+                                  <strong>{managerAdded ? "Added by manager" : order.is_preorder ? "Customer preorder" : "Reservation order"}</strong>
+                                  <span className={`reservation-order-progress ${orderTone(order.status)}`}>{orderStatusLabel(order.status)}</span>
+                                </div>
+                                <ul>{(order.items || []).map((food, index) => <li key={`${food.variant_id || food.food_name}-${index}`}><span>{food.quantity} × {food.food_name}{food.variant_name ? ` · ${food.variant_name}` : ""}</span><strong>₹{Number(food.line_total).toFixed(2)}</strong></li>)}</ul>
+                                <div className="reservation-linked-order-footer">
+                                  <strong>Order total · ₹{Number(order.total).toFixed(2)}</strong>
+                                  <span>{order.payment_status === "PAID" ? "Paid" : "Payment due at desk"}</span>
+                                </div>
+                              </div>
+                              <div className="reservation-linked-order-actions">
+                                <Link to={`/manager/orders/${order.id}`}>View details</Link>
+                                {canRemove && <button type="button" onClick={() => setPendingOrderRemoval({ order, reservationId: item.id })}>Remove order</button>}
+                              </div>
+                            </article>;
+                          })}
                           {item.status === "SEATED" && item.fulfillment_type === "PREORDER" && item.preorder_items?.length > 0 && !(reservationOrders[item.id] || []).some((order) => order.is_preorder) && <button type="button" disabled={busyId === item.id || ordersLoadingId === item.id} onClick={() => queueExistingPreorder(item)}>{busyId === item.id ? "Sending…" : "Send existing preorder to kitchen"}</button>}
                           {item.status === "SEATED" && !(item.fulfillment_type === "PREORDER" && item.preorder_items?.length > 0) && <button type="button" onClick={() => openDeskOrder(item)}>Order at desk</button>}
                         </div>
@@ -655,9 +752,18 @@ export default function ManagerReservationsPage() {
                       </div>
                     )}
                   </article>
-                ))
-              )}
-              {selectedItems.length > 0 && <Pagination page={listPage} pageSize={listPageSize} total={selectedItems.length} onPageChange={setListPage} onPageSizeChange={setListPageSize} pageSizes={[5, 10, 20]} label="reservations" />}
+                ))}
+                {selectedStandaloneOrders.length > 0 && <section className="reservation-standalone-orders">
+                  <h4>Walk-in &amp; spot orders</h4>
+                  {selectedStandaloneOrders.map((order) => <Link className="reservation-standalone-order" key={order.id} to={`/manager/orders/${order.id}?returnTo=${encodeURIComponent("/manager/reservations")}`}>
+                    <span className="reservation-standalone-order-main"><strong>{order.customer_name || "Guest order"}</strong><small>{order.is_preorder ? "Preorder" : order.order_source === "SPOT" ? "Spot order" : "Walk-in order"} · {shortTime(new Date(order.created_at).toTimeString())} · {order.items?.map((food) => `${food.quantity} × ${food.food_name}`).join(", ")}</small></span>
+                    <span className={`reservation-status ${orderTone(order.status)}`}>{orderStatusLabel(order.status)}</span>
+                    <strong>₹{Number(order.total).toFixed(2)}</strong>
+                  </Link>)}
+                  {ordersTotal > 0 && <Pagination page={orderPage} pageSize={listPageSize} total={ordersTotal} onPageChange={setOrderPage} onPageSizeChange={setListPageSize} pageSizes={[5, 10, 20]} label="orders" />}
+                </section>}
+              </>}
+              {reservationTotal > 0 && <Pagination page={listPage} pageSize={listPageSize} total={reservationTotal} onPageChange={setListPage} onPageSizeChange={setListPageSize} pageSizes={[5, 10, 20]} label="reservations" />}
             </div>
           </aside>
         </div>
@@ -760,7 +866,19 @@ export default function ManagerReservationsPage() {
       )}
       {scannerOpen && <div className="manager-reservation-confirm-backdrop" role="presentation"><section className="manager-reservation-confirm reservation-pass-dialog" role="dialog" aria-modal="true" aria-labelledby="reservation-pass-title"><button type="button" className="manager-reservation-confirm-close" onClick={() => setScannerOpen(false)} aria-label="Close scanner"><X size={18}/></button><div className="manager-reservation-confirm-icon success"><QrCode size={21}/></div><h3 id="reservation-pass-title">Verify reservation pass</h3><p>Scan the customer’s QR pass, upload a pass image, or enter its reservation ID.</p><video ref={videoRef} className={`reservation-camera-preview${cameraActive ? " active" : ""}`} muted playsInline /> <div className="reservation-pass-controls"><button type="button" onClick={async () => { setScanError(""); try { const detector = "BarcodeDetector" in window ? new window.BarcodeDetector({ formats: ["qr_code"] }) : null; const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }); cameraRef.current = stream; scanActiveRef.current = true; videoRef.current.srcObject = stream; await videoRef.current.play(); setCameraActive(true); const canvas = document.createElement("canvas"); const context = canvas.getContext("2d", { willReadFrequently: true }); const scanFrame = async () => { if (!scanActiveRef.current) return; try { let value = ""; if (detector) value = (await detector.detect(videoRef.current))[0]?.rawValue || ""; else if (videoRef.current.videoWidth) { canvas.width = videoRef.current.videoWidth; canvas.height = videoRef.current.videoHeight; context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height); value = jsQR(context.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height, { inversionAttempts: "attemptBoth" })?.data || ""; } if (value) { scanActiveRef.current = false; stream.getTracks().forEach((track) => track.stop()); cameraRef.current = null; setCameraActive(false); verifyPass(value); return; } } catch { /* Wait for the next camera frame. */ } window.setTimeout(scanFrame, 450); }; scanFrame(); } catch (e) { setScanError(e.message || "Camera access failed. Upload the pass image or enter its ID."); } }}><QrCode size={16}/> Use camera</button><label><Upload size={16}/> Upload pass<input type="file" accept="image/*" onChange={async (event) => { const file = event.target.files?.[0]; if (!file) return; try { const bitmap = await createImageBitmap(file); const canvas = document.createElement("canvas"); canvas.width = bitmap.width; canvas.height = bitmap.height; const context = canvas.getContext("2d", { willReadFrequently: true }); context.drawImage(bitmap, 0, 0); const code = jsQR(context.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height, { inversionAttempts: "attemptBoth" }); if (!code?.data) throw new Error("No reservation QR code was found in that image."); await verifyPass(code.data); } catch (e) { setScanError(e.message); } finally { event.target.value = ""; } }}/></label></div><form onSubmit={(event) => { event.preventDefault(); verifyPass(scanValue); }} className="reservation-pass-id-form"><input value={scanValue} onChange={(event) => setScanValue(event.target.value)} placeholder="Reservation ID" aria-label="Reservation ID"/><button type="submit" disabled={scanBusy || !scanValue.trim()}>{scanBusy ? "Verifying…" : "Verify ID"}</button></form>{scanError && <div className="reservation-error" role="alert">{scanError}</div>}</section></div>}
       {foodReservation && <div className="manager-reservation-confirm-backdrop" role="presentation"><section className="manager-reservation-confirm reservation-food-dialog" role="dialog" aria-modal="true" aria-labelledby="reservation-food-title"><button type="button" className="manager-reservation-confirm-close" onClick={() => setFoodReservation(null)} aria-label="Close food editor"><X size={18}/></button><h3 id="reservation-food-title">Add preorder food</h3><p>Add dishes to this reservation before confirming. The updated total will appear in reservation details.</p>{menuBusy ? <p>Loading menu…</p> : availableVariants.length === 0 ? <p>No available menu items right now.</p> : <form onSubmit={addFood} className="reservation-food-form"><label>Menu item<select value={variantId} onChange={(event) => setVariantId(event.target.value)} required><option value="">Choose a dish</option>{availableVariants.map((variant) => <option key={variant.id} value={variant.id}>{variant.foodName} · {variant.name} — ₹{Number(variant.price).toFixed(2)}</option>)}</select></label><label>Quantity<input type="number" min="1" max="99" value={foodQuantity} onChange={(event) => setFoodQuantity(event.target.value)} required/></label><div className="manager-reservation-confirm-actions"><button type="button" className="confirm-dismiss" onClick={() => setFoodReservation(null)}>Cancel</button><button type="submit" className="confirm-success" disabled={!variantId || busyId === foodReservation.id}>{busyId === foodReservation.id ? "Adding…" : "Add to reservation"}</button></div></form>}</section></div>}
-      {deskOrderReservation && <div className="manager-reservation-confirm-backdrop" role="presentation"><section className="manager-reservation-confirm reservation-food-dialog" role="dialog" aria-modal="true" aria-labelledby="desk-order-title"><button type="button" className="manager-reservation-confirm-close" onClick={() => setDeskOrderReservation(null)} aria-label="Close desk order"><X size={18}/></button><h3 id="desk-order-title">Order at desk</h3><p>Create another order for {deskOrderReservation.customer_name}. It will appear in the Chef kitchen queue and be payable at the desk.</p>{menuBusy ? <p>Loading menu…</p> : availableVariants.length === 0 ? <p>No available menu items right now.</p> : <form onSubmit={createDeskOrder} className="reservation-food-form"><div className="desk-order-lines">{deskOrderLines.map((line) => <div className="desk-order-line" key={line.key}><label>Menu item<select value={line.variant_id} onChange={(event) => setDeskOrderLines((current) => current.map((entry) => entry.key === line.key ? { ...entry, variant_id: event.target.value } : entry))} required><option value="">Choose a dish</option>{availableVariants.map((variant) => <option key={variant.id} value={variant.id}>{variant.foodName} · {variant.name} — ₹{Number(variant.price).toFixed(2)}</option>)}</select></label><label>Quantity<input type="number" min="1" max="99" value={line.quantity} onChange={(event) => setDeskOrderLines((current) => current.map((entry) => entry.key === line.key ? { ...entry, quantity: event.target.value } : entry))} required/></label>{deskOrderLines.length > 1 && <button type="button" className="desk-order-remove" onClick={() => setDeskOrderLines((current) => current.filter((entry) => entry.key !== line.key))}>Remove item</button>}</div>)}</div><button type="button" className="desk-order-add" disabled={deskOrderLines.length >= 50} onClick={() => setDeskOrderLines((current) => [...current, { key: window.crypto.randomUUID(), variant_id: "", quantity: 1 }])}>Add another item</button><div className="manager-reservation-confirm-actions"><button type="button" className="confirm-dismiss" onClick={() => setDeskOrderReservation(null)}>Cancel</button><button type="submit" className="confirm-success" disabled={deskOrderLines.some((line) => !line.variant_id || !Number.isInteger(Number(line.quantity)) || Number(line.quantity) < 1 || Number(line.quantity) > 99) || consolidateDeskOrderLines(deskOrderLines).some((line) => line.quantity > 99) || busyId === deskOrderReservation.id}>{busyId === deskOrderReservation.id ? "Creating…" : "Create order"}</button></div></form>}</section></div>}
+      {pendingOrderRemoval && <ConfirmActionDialog
+        action="cancel"
+        resourceType="manager-added food order"
+        resourceName={`Order for ${pendingOrderRemoval.order.customer_name || "this guest"}`}
+        title="Remove this order from the kitchen?"
+        description="The kitchen will no longer prepare this order. Its record will stay in the visit history."
+        confirmLabel="Remove order"
+        busy={busyId === pendingOrderRemoval.order.id}
+        showReason={false}
+        onCancel={() => { if (busyId !== pendingOrderRemoval.order.id) setPendingOrderRemoval(null); }}
+        onConfirm={removeManagerAddedOrder}
+      />}
+      {deskOrderReservation && <div className="manager-reservation-confirm-backdrop" role="presentation"><section className="manager-reservation-confirm reservation-food-dialog" role="dialog" aria-modal="true" aria-labelledby="desk-order-title"><button type="button" className="manager-reservation-confirm-close" onClick={() => setDeskOrderReservation(null)} aria-label="Close desk order"><X size={18}/></button><h3 id="desk-order-title">Add food order</h3><p>Choose the dishes and quantities, then review before sending the order to the kitchen. Payment will be due at the desk for {deskOrderReservation.customer_name}.</p>{menuBusy ? <p>Loading menu…</p> : availableVariants.length === 0 ? <p>No available menu items right now.</p> : <form onSubmit={createDeskOrder} className="reservation-food-form"><div className="desk-order-lines">{deskOrderLines.map((line) => <div className="desk-order-line" key={line.key}><label>Dish<select value={line.variant_id} onChange={(event) => setDeskOrderLines((current) => current.map((entry) => entry.key === line.key ? { ...entry, variant_id: event.target.value } : entry))} required><option value="">Choose a dish</option>{availableVariants.map((variant) => <option key={variant.id} value={variant.id}>{variant.foodName} · {variant.name} — ₹{Number(variant.price).toFixed(2)}</option>)}</select></label><label>Quantity<input type="number" min="1" max="99" value={line.quantity} onChange={(event) => setDeskOrderLines((current) => current.map((entry) => entry.key === line.key ? { ...entry, quantity: event.target.value } : entry))} required/></label>{deskOrderLines.length > 1 && <button type="button" className="desk-order-remove" onClick={() => setDeskOrderLines((current) => current.filter((entry) => entry.key !== line.key))}>Remove item</button>}</div>)}</div><button type="button" className="desk-order-add" disabled={deskOrderLines.length >= 50} onClick={() => setDeskOrderLines((current) => [...current, { key: window.crypto.randomUUID(), variant_id: "", quantity: 1 }])}>Add another dish</button><div className="manager-reservation-confirm-actions"><button type="button" className="confirm-dismiss" onClick={() => setDeskOrderReservation(null)}>Go back</button><button type="submit" className="confirm-success" disabled={deskOrderLines.some((line) => !line.variant_id || !Number.isInteger(Number(line.quantity)) || Number(line.quantity) < 1 || Number(line.quantity) > 99) || consolidateDeskOrderLines(deskOrderLines).some((line) => line.quantity > 99) || busyId === deskOrderReservation.id}>{busyId === deskOrderReservation.id ? "Sending…" : "Send order to kitchen"}</button></div></form>}</section></div>}
     </ManagerLayout>
   );
 }

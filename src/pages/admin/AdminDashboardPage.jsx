@@ -1,46 +1,20 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import AdminPrimaryNav from "../../components/admin/AdminPrimaryNav.jsx";
+import NotificationBell from "../../components/notifications/NotificationBell.jsx";
 import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import {
   Activity,
-  Bell,
   CalendarDays,
-  ChartNoAxesCombined,
-  FileText,
-  LayoutDashboard,
   LogOut,
   Menu,
-  Settings,
-  SlidersHorizontal,
   Store,
   Users,
-  WalletCards,
-  Utensils,
   CreditCard,
   Clock3,
   X,
 } from "lucide-react";
-
-const navigation = [
-  {
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    active: true,
-    path: "/admin/dashboard",
-  },
-  { label: "Restaurants", icon: Store, path: "/admin/restaurants" },
-  { label: "Users", icon: Users },
-  { label: "Payments", icon: WalletCards },
-  { label: "Offers", icon: SlidersHorizontal },
-  { label: "Reviews & Reports", icon: FileText },
-  { label: "Analytics", icon: ChartNoAxesCombined },
-  { label: "Notifications", icon: Bell },
-  { label: "Activity Logs", icon: Activity },
-  { label: "Settings", icon: Settings },
-  { label: "Requests", icon: SlidersHorizontal, path: "/admin/requests" },
-  { label: "Profile", icon: Users },
-];
 
 const reservationData = [
   { month: "Apr", value: 48 },
@@ -110,19 +84,8 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        <nav id="admin-primary-nav" className="admin-nav" aria-label="Administrator navigation">
-          {navigation.map(({ label, icon: Icon, active, path }) => (
-            <button
-              key={label}
-              type="button"
-              className={`admin-nav-item ${active ? "active" : ""}`}
-              onClick={() => { if (path) navigate(path); setSidebarOpen(false); }}
-            >
-              <Icon size={16} />
-              <span>{label}</span>
-            </button>
-          ))}
-
+        <div id="admin-primary-nav">
+          <AdminPrimaryNav onNavigate={() => setSidebarOpen(false)} />
           <button
             type="button"
             className="admin-nav-item"
@@ -131,7 +94,7 @@ export default function AdminDashboardPage() {
             <LogOut size={16} />
             <span>Logout</span>
           </button>
-        </nav>
+        </div>
 
         <div className="admin-sidebar-user">
           <div className="admin-avatar">MC</div>
@@ -153,23 +116,7 @@ export default function AdminDashboardPage() {
           <h1>Dashboard</h1>
 
           <div className="admin-topbar-actions">
-            <div className="admin-search">
-              <span className="admin-search-icon">⌕</span>
-
-              <input
-                type="search"
-                placeholder="Search platform..."
-                aria-label="Search platform"
-              />
-            </div>
-
-            <button
-              type="button"
-              className="admin-notification-button"
-              aria-label="Notifications"
-            >
-              <Bell size={18} />
-            </button>
+            <NotificationBell role="admin" />
           </div>
         </header>
 

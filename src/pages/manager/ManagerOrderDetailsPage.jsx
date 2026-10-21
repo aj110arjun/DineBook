@@ -21,7 +21,7 @@ export default function ManagerOrderDetailsPage() {
   const [notice, setNotice] = useState("");
   const [confirmAction, setConfirmAction] = useState("");
   const [actionReason, setActionReason] = useState("");
-  const backToOrders = location.state?.returnTo || new URLSearchParams(location.search).get("returnTo") || "/manager/orders";
+  const backToOrders = location.state?.returnTo || new URLSearchParams(location.search).get("returnTo") || "/manager/reservations";
 
   const loadOrder = useCallback(async (signal) => {
     setLoading(true);

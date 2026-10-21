@@ -6,6 +6,7 @@ import AdminLayout from "../../components/admin/AdminLayout.jsx";
 import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import Pagination from "../../components/Pagination.jsx";
+import AdminRestaurantPaymentsPanel from "./AdminRestaurantPaymentsPanel.jsx";
 
 function Detail({ label, value, icon: Icon }) {
   return (
@@ -38,6 +39,13 @@ export default function AdminRestaurantDetailsPage() {
   const [actionError, setActionError] = useModalState("");
   const [restaurant, setRestaurant] = useState(null);
   const [floorData, setFloorData] = useState([]);
+  const [operatingSchedule, setOperatingSchedule] = useState(null);
+  const [inspectionDate, setInspectionDate] = useState(new Date().toISOString().slice(0, 10));
+  const [inspectionTime, setInspectionTime] = useState("19:00");
+  const [inspectionGuests, setInspectionGuests] = useState("2");
+  const [inspection, setInspection] = useState(null);
+  const [inspectionError, setInspectionError] = useState("");
+  const [inspectionBusy, setInspectionBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [tableQuery, setTableQuery] = useState("");
@@ -77,6 +85,20 @@ export default function AdminRestaurantDetailsPage() {
   useEffect(() => {
     requestJson(`/api/admin/restaurants/${restaurantId}/floors`).then(setFloorData).catch(() => setFloorData([]));
   }, [restaurantId]);
+
+  useEffect(() => {
+    requestJson(`/api/admin/restaurants/${restaurantId}/operating-hours?day=${inspectionDate}`)
+      .then(setOperatingSchedule).catch(() => setOperatingSchedule(null));
+  }, [restaurantId, inspectionDate]);
+
+  async function inspectAvailability(event) {
+    event.preventDefault(); setInspectionBusy(true); setInspectionError("");
+    try {
+      const query = new URLSearchParams({ reservation_date: inspectionDate, start_time: inspectionTime, number_of_guests: inspectionGuests });
+      setInspection(await requestJson(`/api/admin/restaurants/${restaurantId}/availability-inspection?${query}`));
+    } catch (reason) { setInspection(null); setInspectionError(reason.message); }
+    finally { setInspectionBusy(false); }
+  }
 
   async function confirmStatusChange() {
     setBusy(true); setActionError("");
@@ -136,8 +158,14 @@ export default function AdminRestaurantDetailsPage() {
 
             <section className="admin-restaurant-detail-card">
               <h3><Clock3 size={17} /> Operating hours</h3>
-              {restaurant.hours?.length ? <div className="admin-restaurant-hours">{restaurant.hours.map((hour) => <div key={hour.day}><span>{hour.day}</span><strong>{hour.enabled ? `${hour.opens || "—"} – ${hour.closes || "—"}` : "Closed"}</strong></div>)}</div> : <p className="admin-restaurant-empty">No operating hours have been provided.</p>}
+              {operatingSchedule?.days?.length ? <div className="admin-restaurant-hours">{operatingSchedule.days.map((day) => <div key={day.day}><span>{day.day}</span><strong>{day.periods.length ? day.periods.map((period) => `${period.opens} – ${period.closes}`).join(" · ") : "Closed"}{day.updated_at && <small className="operating-audit">Updated {new Date(day.updated_at).toLocaleString()}{day.updated_by ? ` · user ${day.updated_by}` : ""}</small>}</strong></div>)}</div> : <p className="admin-restaurant-empty">{restaurant.hours?.length ? "Loading current schedule…" : "No operating hours have been provided."}</p>}
+              <small>Schedule time zone: {operatingSchedule?.timezone || "Asia/Kolkata"}</small>
+              <h4>Schedule exceptions and history</h4>{operatingSchedule?.exceptions?.length ? <ul className="operating-exception-list">{operatingSchedule.exceptions.map((item) => <li key={item.id}><div><strong>{item.start_date}{item.end_date !== item.start_date ? ` – ${item.end_date}` : ""}</strong><span>{item.is_closed ? "Closed" : item.periods.map((period) => `${period.opens}–${period.closes}`).join(" · ")}</span>{item.reason && <small>{item.reason}</small>}{item.updated_at && <small>Updated {new Date(item.updated_at).toLocaleString()}{item.created_by ? ` · user ${item.created_by}` : ""}</small>}</div></li>)}</ul> : <p>No exceptions have been recorded.</p>}
+              <h4>Availability inspection</h4><form className="operating-inspection-form" onSubmit={inspectAvailability}><label>Date<input type="date" value={inspectionDate} onChange={(event) => setInspectionDate(event.target.value)} /></label><label>Start time<input type="time" value={inspectionTime} onChange={(event) => setInspectionTime(event.target.value)} /></label><label>Guests<input type="number" min="1" max="16" value={inspectionGuests} onChange={(event) => setInspectionGuests(event.target.value)} /></label><button type="submit" disabled={inspectionBusy}>{inspectionBusy ? "Checking…" : "Inspect slot"}</button></form>
+              {inspectionError && <p role="alert">{inspectionError}</p>}{inspection && <div className="operating-inspection-result"><strong>{inspection.available ? "Available" : "Unavailable"}</strong><span>{inspection.reason || `${inspection.tables.length} suitable table option(s)`}</span>{inspection.exception_reason && <small>Schedule exception: {inspection.exception_reason}</small>}</div>}
             </section>
+
+            <AdminRestaurantPaymentsPanel restaurantId={restaurant.id} />
 
             <section className="admin-restaurant-detail-card admin-restaurant-wide-card">
               <h3><FileText size={17} /> Submitted documents</h3>
