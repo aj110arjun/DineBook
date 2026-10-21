@@ -28,7 +28,7 @@ export default function CustomerChangePasswordPage() {
   }, [navigate]);
 
   const hasLength = newPassword.length >= 10;
-  const hasMix = /[A-Za-z]/.test(newPassword) && /[\d\W]/.test(newPassword);
+  const hasMix = /\p{L}/u.test(newPassword) && /[^\p{L}\s]/u.test(newPassword);
   const strength = !newPassword ? 0 : Number(hasLength) + Number(hasMix) + Number(newPassword.length >= 14);
 
   async function handleSubmit(event) {
@@ -76,14 +76,14 @@ export default function CustomerChangePasswordPage() {
       <h2 className="font-display text-3xl font-semibold text-ink">Change Password</h2>
       <p className="mb-7 mt-2 text-sm leading-6 text-stone-500">Please verify your current credentials and choose a strong new password.</p>
       <form onSubmit={handleSubmit}>
-        <PasswordField id="currentPassword" label="Current Password" placeholder="Enter current password" autoComplete="current-password" minLength={10} />
-        <PasswordField id="newPassword" label="New Password" placeholder="At least 10 characters" autoComplete="new-password" minLength={10} value={newPassword} onChange={event => setNewPassword(event.target.value)} />
+        <PasswordField id="currentPassword" label="Current Password" placeholder="Enter current password" autoComplete="current-password" minLength={1} maxLength={128} required />
+        <PasswordField id="newPassword" label="New Password" placeholder="At least 10 characters" autoComplete="new-password" minLength={10} maxLength={128} required value={newPassword} onChange={event => setNewPassword(event.target.value)} />
         <div className="mb-2 flex gap-1.5" data-level={strength} aria-label={`Password strength ${strength} of 3`}>{[0, 1, 2].map(level => <i key={level} className={`h-1.5 flex-1 rounded-full ${strength > level ? 'bg-emerald-500' : 'bg-stone-200'}`} />)}</div>
         <ul className="mb-5 space-y-1 text-xs text-stone-500">
           <li className={hasLength ? 'text-emerald-700' : ''}>At least 10 characters long</li>
           <li className={hasMix ? 'text-emerald-700' : ''}>Includes letters and a number or symbol</li>
         </ul>
-        <PasswordField id="confirmPassword" label="Confirm New Password" placeholder="Enter your new password again" autoComplete="new-password" minLength={10} />
+        <PasswordField id="confirmPassword" label="Confirm New Password" placeholder="Enter your new password again" autoComplete="new-password" minLength={10} maxLength={128} required />
         <Notice message={error} />
         <Notice message={success} type="success" />
         <button className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-wine px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-ink focus:outline-none focus:ring-4 focus:ring-wine/20 disabled:cursor-wait disabled:opacity-60" type="submit" disabled={busy}>
