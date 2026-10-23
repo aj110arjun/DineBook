@@ -1,3 +1,5 @@
+import axios from "axios";
+
 // In development, use Vite's same-origin /api proxy so localhost and ngrok
 // visitors both reach the backend. Set VITE_API_URL for separate deployments.
 export const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
@@ -32,28 +34,35 @@ function getErrorMessage(detail, fallbackMessage) {
   );
 }
 
-export async function requestJson(path, { fallbackMessage, ...options } = {}) {
+export async function requestJson(path, { fallbackMessage, body, ...options } = {}) {
   let response;
   try {
-    response = await fetch(`${API_BASE}${path}`, {
+    response = await axios.request({
+      url: `${API_BASE}${path}`,
       ...options,
-      credentials: "include",
+      withCredentials: true,
+      validateStatus: () => true,
+      data: body,
       headers: {
-        ...(options.body &&
-        !(typeof FormData !== "undefined" && options.body instanceof FormData)
+        ...(body &&
+        !(typeof FormData !== "undefined" && body instanceof FormData)
           ? { "Content-Type": "application/json" }
           : {}),
         ...options.headers,
       },
     });
-  } catch {
+  } catch (reason) {
+    if (axios.isCancel(reason)) {
+      reason.name = "AbortError";
+      throw reason;
+    }
     throw new Error(
       "Can’t reach DineBook right now. Check that the service is running and try again.",
     );
   }
 
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
+  const data = response.data || {};
+  if (response.status < 200 || response.status >= 300) {
     throw new Error(getErrorMessage(data?.detail, fallbackMessage));
   }
   return data;

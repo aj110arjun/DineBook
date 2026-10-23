@@ -127,7 +127,6 @@ export default function CustomerRestaurantListingPage() {
           <div className="restaurant-search-bar">
             <Search size={18} />
             <input type="search" value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="Search restaurants, cuisines, or locations…" aria-label="Search restaurants" />
-            <label className="restaurant-guest-select"><Users size={17} /><select value={guestCount} onChange={(event) => setGuestCount(event.target.value)} aria-label="Guests">{[2, 4, 6, 8].map((count) => <option key={count} value={count}>{count} Guests</option>)}</select></label>
             <button type="button" onClick={() => setPage(1)}>Search</button>
           </div>
           <div className="restaurant-nearby-controls">
@@ -145,8 +144,8 @@ export default function CustomerRestaurantListingPage() {
           <aside className="restaurant-filter-panel">
             <div className="restaurant-filter-title"><h2>Filters{cuisines.length + locations.length > 0 ? ` · ${cuisines.length + locations.length}` : ""}</h2><div className="restaurant-filter-actions"><button type="button" onClick={clearFilters}>Clear All</button><button className="restaurant-filter-toggle" type="button" aria-expanded={filtersOpen} aria-controls="restaurant-filter-fields" onClick={() => setFiltersOpen((open) => !open)}><SlidersHorizontal size={17} />{filtersOpen ? "Hide" : "Show"}</button></div></div>
             <div id="restaurant-filter-fields" className={`restaurant-filter-fields${filtersOpen ? " is-open" : ""}`}>
-              <section className="restaurant-filter-group"><h3>Cuisine</h3>{cuisineOptions.length ? cuisineOptions.map((cuisine) => <label key={cuisine}><input type="checkbox" checked={cuisines.includes(cuisine)} onChange={() => toggleFilter(cuisine, setCuisines)} />{cuisine}</label>) : <p>Cuisine filters will appear when restaurants are listed.</p>}</section>
-              <section className="restaurant-filter-group"><h3>Location</h3>{locationOptions.map((location) => <label key={location}><input type="checkbox" checked={locations.includes(location)} onChange={() => toggleFilter(location, setLocations)} /><MapPin size={13} />{location}</label>)}</section>
+              <section className="restaurant-filter-group"><h3>Cuisine</h3>{cuisineOptions.length ? cuisineOptions.map((cuisine) => <label key={cuisine}><input type="checkbox" checked={cuisines.includes(cuisine)} onChange={() => toggleFilter(cuisine, setCuisines)} /><span>{cuisine}</span></label>) : <p>Cuisine filters will appear when restaurants are listed.</p>}</section>
+              <section className="restaurant-filter-group"><h3>Location</h3>{locationOptions.map((location) => <label key={location}><input type="checkbox" checked={locations.includes(location)} onChange={() => toggleFilter(location, setLocations)} /><MapPin size={14} aria-hidden="true" /><span>{location}</span></label>)}</section>
             </div>
           </aside>
 

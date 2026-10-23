@@ -127,16 +127,16 @@ export default function CustomerLandingPage() {
           id="restaurants-near-you"
           eyebrow="DISCOVER YOUR NEXT TABLE"
           title="Restaurants to Explore"
-          restaurants={matchingRestaurants}
+          restaurants={matchingRestaurants.slice(0, 4)}
           emptyMessage={selectedCuisine ? `No approved ${selectedCuisine} restaurants are available yet. Choose another cuisine to explore.` : "No approved restaurants are available yet."}
           loading={restaurantsLoading}
           error={restaurantsError}
           onRetry={() => setRestaurantRefresh((value) => value + 1)}
-          actionLabel="Explore Nearby"
-          actionHref="#restaurants-near-you"
+          actionLabel="View All Restaurants"
+          actionHref="/customer/restaurants"
         />
-        <DishSection dishes={signatureDishes} />
-        <PromoBanner />
+        {/* <DishSection dishes={signatureDishes} /> */}
+        {/* <PromoBanner /> */}
         <HowItWorks />
         <Testimonials testimonials={testimonials} />
       </main>

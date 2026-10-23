@@ -3,6 +3,7 @@ import { ArrowLeft, Image as ImageIcon, Pencil, Plus, Search, Trash2, Utensils, 
 import { useNavigate, useParams } from "react-router-dom";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import ImageUploadField from "../../components/manager/ImageUploadField.jsx";
+import ImageCropDialog from "../../components/manager/ImageCropDialog.jsx";
 import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
 import Notice from "../../components/auth/Notice.jsx";
 import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
@@ -70,6 +71,7 @@ function FoodExtras({ food, onChanged, defaultOpen = false }) {
   const [imageMessage, setImageMessage] = useState("");
   const [editing, setEditing] = useState(null);
   const [confirmation, setConfirmation] = useState(null);
+  const [cropFile, setCropFile] = useState(null);
   async function saveVariant(event) {
     event.preventDefault();
     const formElement = event.currentTarget;
@@ -88,11 +90,11 @@ function FoodExtras({ food, onChanged, defaultOpen = false }) {
     return true;
   }
   async function uploadImage(image) {
-    if (!image) return;
+    if (!image) return false;
     const body = new FormData(); body.append("image", image);
     setBusy(true); setError(""); setImageMessage("");
-    try { await requestJson(`/api/manager/menu/food/${food.id}/images`, { method: "POST", body, fallbackMessage: "Unable to upload image." }); setImageMessage("Food image updated successfully."); await onChanged(); }
-    catch (reason) { setError(reason.message); } finally { setBusy(false); }
+    try { await requestJson(`/api/manager/menu/food/${food.id}/images`, { method: "POST", body, fallbackMessage: "Unable to upload image." }); setCropFile(null); setImageMessage("Food image updated successfully."); await onChanged(); return true; }
+    catch (reason) { setError(reason.message); return false; } finally { setBusy(false); }
   }
   async function removeImage() {
     if (!food.image_id) return;
@@ -115,12 +117,13 @@ function FoodExtras({ food, onChanged, defaultOpen = false }) {
       <section className="manager-menu-asset-card">
         <header className="manager-menu-asset-heading"><div><h6>Food image</h6><p>One image is shared across menus and all variants.</p></div><span>{food.image_url ? "1 / 1" : "0 / 1"}</span></header>
         {food.image_url ? <figure className="manager-menu-primary-image"><img src={food.image_url} alt={`${food.name} food item`} /><figcaption><span>Primary food image</span><button type="button" disabled={busy} onClick={() => setConfirmation({ type: "image", item: food })} aria-label={`Remove image for ${food.name}`}>Remove</button></figcaption></figure> : <p className="manager-menu-assets-empty">No food image uploaded yet.</p>}
-        <ImageUploadField key={`${food.image_id || "none"}-${food.image_url || "empty"}`} id={`food-image-${food.id}`} accept="image/jpeg,image/png,image/webp" prompt={food.image_url ? "Replace the food image" : "Upload a food image"} hint="JPEG, PNG, or WebP · up to 10 MB" onSelect={uploadImage} disabled={busy} compact />
+        <ImageUploadField key={`${food.image_id || "none"}-${food.image_url || "empty"}`} id={`food-image-${food.id}`} accept="image/jpeg,image/png,image/webp" prompt={food.image_url ? "Replace the food image" : "Upload a food image"} hint="JPEG, PNG, or WebP · up to 10 MB" onSelect={(image) => { setCropFile(image); return false; }} disabled={busy} compact />
         {(busy || imageMessage) && <p className="manager-menu-image-message" role="status">{busy ? "Uploading food image…" : imageMessage}</p>}
       </section>
     </div>}
     {open && <Notice message={error} />}
     {confirmation && <ConfirmActionDialog action="delete" resourceType={confirmation.type === "image" ? "food image" : "menu variant"} resourceName={confirmation.type === "image" ? food.name : confirmation.item.name} title={confirmation.type === "image" ? "Remove this food image?" : "Move this variant to deleted items?"} description={confirmation.type === "image" ? `The primary image for ${food.name} will be permanently removed.` : `${confirmation.item.name} will be moved out of the active menu and can no longer be ordered.`} confirmLabel={confirmation.type === "image" ? "Remove image" : "Delete variant"} onCancel={() => setConfirmation(null)} onConfirm={async () => { const done = confirmation.type === "image" ? await removeImage() : await removeVariant(confirmation.item); if (done) setConfirmation(null); }} />}
+    <ImageCropDialog file={cropFile} title={`Crop ${food.name} image`} description="Drag to position the dish image. The menu uses a 4:3 crop." aspectRatio={4 / 3} outputWidth={1200} outputHeight={900} outputName="food-image.jpg" confirmLabel="Use this image" onCancel={() => setCropFile(null)} onCropped={uploadImage} />
   </div>;
 }
 

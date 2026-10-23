@@ -1,5 +1,4 @@
 import {
-  Bell,
   CalendarDays,
   CircleDollarSign,
   ClipboardList,
@@ -29,7 +28,6 @@ const navigationGroups = [
       { label: "Reservations", icon: CalendarDays, to: "/manager/reservations" },
       { label: "Orders", icon: ClipboardList, to: "/manager/orders" },
       { label: "New walk-in order", icon: ClipboardList, to: "/manager/spot-order" },
-      { label: "Notifications", icon: Bell, to: "/manager/notifications" },
     ],
   },
   {

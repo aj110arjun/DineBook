@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { API_BASE } from "../../lib/authApi.js";
@@ -15,15 +16,16 @@ export default function AdminDocumentPreviewModal({ managerId, document, onClose
       setLoading(true);
       setError("");
       try {
-        const response = await fetch(
-          `${API_BASE}/api/admin/managers/requests/${managerId}/documents/${document.id}/preview`,
-          { credentials: "include" },
-        );
-        if (!response.ok) {
-          const data = await response.json().catch(() => ({}));
+        const response = await axios.request({
+          url: `${API_BASE}/api/admin/managers/requests/${managerId}/documents/${document.id}/preview`,
+          validateStatus: () => true,
+          withCredentials: true, responseType: "blob",
+        });
+        if (response.status < 200 || response.status >= 300) {
+          const data = await response.data.text().then(JSON.parse).catch(() => ({}));
           throw new Error(data?.detail || "Unable to load this document.");
         }
-        objectUrl = URL.createObjectURL(await response.blob());
+        objectUrl = URL.createObjectURL(response.data);
         if (active) setPreviewUrl(objectUrl);
       } catch (reason) {
         if (active) setError(reason.message || "Unable to load this document.");

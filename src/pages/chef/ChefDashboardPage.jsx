@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Bell, ChartNoAxesColumn, Check, CheckCheck,
   CirclePlus, Clock3, LayoutDashboard, List, LogOut, Menu, Package,
-  Settings, ShoppingBag, Soup, Star, Timer, X,
+  Settings, ShoppingBag, Soup, Timer, X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
@@ -13,11 +13,8 @@ import NotificationBell from "../../components/notifications/NotificationBell.js
 const chefNav = [
   { label: "Dashboard", icon: LayoutDashboard },
   { label: "Kitchen orders", icon: Bell, to: "/chef/orders" },
-  { label: "Reservations", icon: ShoppingBag, section: "chef-reservations" },
-  { label: "Menu", icon: List, section: "chef-menu" },
+  { label: "Menu", icon: List, to: "/chef/menu" },
   { label: "Service hours", icon: Clock3, to: "/chef/service-hours" },
-  { label: "Reviews", icon: Star, to: "/chef/reviews" },
-  { label: "Notifications", icon: Bell, to: "/chef/notifications" },
   { label: "Revenue & wallet", icon: ChartNoAxesColumn, to: "/chef/revenue" },
 ];
 
@@ -25,10 +22,6 @@ export default function ChefDashboardPage() {
   const navigate = useNavigate();
   const [chef, setChef] = useState(null);
   const [menuCategories, setMenuCategories] = useState([]);
-  const [diningFloors, setDiningFloors] = useState([]);
-  const [upcomingReservations, setUpcomingReservations] = useState([]);
-  const [reservationsLoading, setReservationsLoading] = useState(true);
-  const [reservationError, setReservationError] = useState("");
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [ordersError, setOrdersError] = useState("");
@@ -69,10 +62,6 @@ export default function ChefDashboardPage() {
     };
   }, []);
 
-  useEffect(() => {
-    requestJson("/api/chef/floors").then(setDiningFloors).catch(() => setDiningFloors([]));
-  }, []);
-
   const loadOrders = useCallback(async () => {
     try {
       setOrders(await requestJson("/api/chef/orders"));
@@ -83,19 +72,8 @@ export default function ChefDashboardPage() {
       setOrdersLoading(false);
     }
   }, []);
-  const loadUpcomingReservations = useCallback(async () => {
-    try {
-      setUpcomingReservations(await requestJson("/api/chef/reservations/upcoming"));
-      setReservationError("");
-    } catch (error) {
-      setReservationError(error.message || "Could not refresh upcoming reservations.");
-    } finally {
-      setReservationsLoading(false);
-    }
-  }, []);
-  const refreshLiveData = useCallback(() => Promise.all([loadOrders(), loadUpcomingReservations()]), [loadOrders, loadUpcomingReservations]);
+  const refreshLiveData = useCallback(() => loadOrders(), [loadOrders]);
   useRealtimeEvents({ enabled: Boolean(chef), onEvent: refreshLiveData, onReconnect: refreshLiveData });
-  useEffect(() => { loadUpcomingReservations(); }, [loadUpcomingReservations]);
   useEffect(() => {
     loadOrders();
     const timer = window.setInterval(loadOrders, 60000);
@@ -140,21 +118,15 @@ export default function ChefDashboardPage() {
       <section className="chef-dashboard-main">
         <header className="chef-topbar">
           <button type="button" className="chef-menu-toggle" onClick={() => setSidebarOpen(true)} aria-label="Open menu" aria-expanded={sidebarOpen} aria-controls="chef-primary-nav"><Menu size={21} /></button>
-          <div className="chef-topbar-title"><h1>Chef Dashboard</h1><p>{chef?.restaurant_name || "The Saffron Table"}<span>•</span>Today, {dateLabel}</p></div>
+          <div className="chef-topbar-title"><h1>Chef Dashboard</h1><p><span className="chef-context-name">{chef?.restaurant_name || "The Saffron Table"}</span><span className="chef-context-separator" aria-hidden="true">•</span><span className="chef-context-date">Today, {dateLabel}</span></p></div>
           <div className="chef-topbar-actions">
             <NotificationBell role="chef" enabled={Boolean(chef)} />
           </div>
         </header>
 
         <div className="chef-dashboard-content">
-          {diningFloors.length > 0 && <section className="chef-panel"><div className="chef-panel-heading"><h3>Floor service context</h3></div>{diningFloors.map(floor => <p key={floor.id}><strong>{floor.name}</strong>: {floor.tables.map(table => `Table ${table.table_number} (${table.status})`).join(" · ") || "No tables assigned"}</p>)}</section>}
           <PortalBreadcrumb home={{ label: "Home", to: "/chef/dashboard" }} items={[{ label: activeNav }]} className="chef-breadcrumb" />
           <div className="chef-page-heading"><h2>Good Morning, Chef {firstName}</h2><p>Here's what's happening in your kitchen today.</p></div>
-
-          <section className="chef-panel" id="chef-reservations">
-            <div className="chef-panel-heading"><h3>Upcoming reservations</h3><span>{upcomingReservations.length} confirmed</span></div>
-            {reservationsLoading ? <p className="chef-menu-empty" role="status">Loading reservations…</p> : reservationError ? <p className="chef-menu-empty" role="alert">{reservationError}</p> : !upcomingReservations.length ? <p className="chef-menu-empty">No upcoming confirmed reservations.</p> : <div className="chef-activity-list">{upcomingReservations.map((item) => <article className="chef-activity-item" key={item.id}><i className="green" /><div><p><strong>{item.customer_name}</strong> · {item.number_of_guests} guests</p><span>{item.reservation_date} at {item.start_time} · {item.tables.map((table) => `${table.floor_name}, Table ${table.table_number}`).join(", ")}</span></div></article>)}</div>}
-          </section>
 
           <section className="chef-stat-grid" aria-label="Today's kitchen stats">
             <StatCard title="Today's Orders" value={todayOrders.length} icon={Package} tone="wine" />

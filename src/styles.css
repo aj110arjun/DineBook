@@ -1211,14 +1211,22 @@ a:focus-visible,
   outline-offset: 3px;
 }
 .restaurant-card-actions .reserve-button {
+  box-sizing: border-box;
+  display: inline-flex;
   width: 100%;
-  height: 39px;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
   border: 1px solid #9e6d75;
   border-radius: 9px;
   background: #fff;
   color: #672432;
   font-size: var(--font-size-xs);
   font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
   transition:
     background 0.16s,
     color 0.16s;
@@ -4005,6 +4013,12 @@ a:focus-visible,
 
 .admin-request-reject,
 .admin-request-approve {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+  line-height: 1;
   height: 34px;
   padding: 0 13px;
   border-radius: 8px;
@@ -4012,6 +4026,11 @@ a:focus-visible,
   font-size: var(--font-size-xs);
   font-weight: 600;
   cursor: pointer;
+}
+
+.admin-request-reject svg,
+.admin-request-approve svg {
+  flex-shrink: 0;
 }
 
 .admin-request-reject {
@@ -7103,6 +7122,85 @@ a:focus-visible,
   --chef-ink: #f1e9e8;
   --chef-muted: #b0a5a5;
 }
+
+/* Chef menu listing and food detail */
+.chef-menu-page { max-width: 1440px; margin: 0 auto; padding: 28px 38px 42px; color: var(--chef-ink); }
+.chef-menu-page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin-bottom: 24px; }
+.chef-menu-page-heading > div > span { color: var(--chef-wine); font-size: 11px; font-weight: 800; letter-spacing: .12em; }
+.chef-menu-page-heading h2 { margin: 5px 0 3px; color: var(--chef-ink); font-size: clamp(25px, 3vw, 34px); line-height: 1.2; }
+.chef-menu-page-heading p { margin: 0; color: var(--chef-muted); font-size: 14px; }
+.chef-menu-page-heading button { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; border: 1px solid #e5dcda; border-radius: 10px; background: white; color: var(--chef-ink); font: inherit; font-weight: 650; cursor: pointer; }
+.chef-menu-listing-controls { display: flex; gap: 12px; margin-bottom: 26px; }
+.chef-menu-listing-controls label { min-width: 0; flex: 1; display: flex; align-items: center; gap: 10px; padding: 0 13px; border: 1px solid #e8e1df; border-radius: 11px; background: white; color: var(--chef-muted); }
+.chef-menu-listing-controls input { width: 100%; min-height: 44px; padding: 0; border: 0; outline: 0; background: transparent; color: var(--chef-ink); font: inherit; }
+.chef-menu-listing-controls select { min-width: 190px; min-height: 46px; padding: 0 13px; border: 1px solid #e8e1df; border-radius: 11px; background: white; color: var(--chef-ink); font: inherit; }
+.chef-menu-list-category { margin-top: 26px; }
+.chef-menu-list-category h3 { display: flex; align-items: center; gap: 9px; margin: 0 0 13px; color: var(--chef-ink); font-size: 18px; }
+.chef-menu-list-category h3 span { display: grid; min-width: 24px; height: 24px; place-items: center; padding: 0 6px; border-radius: 999px; background: #f3e8e7; color: #7b2635; font-size: 12px; }
+.chef-menu-list-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; }
+.chef-menu-list-card { min-width: 0; overflow: hidden; display: flex; flex-direction: column; border: 1px solid #eee8e5; border-radius: 15px; background: white; color: var(--chef-ink); text-decoration: none; transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease; }
+.chef-menu-list-card:hover { transform: translateY(-2px); border-color: #d9c4c4; box-shadow: 0 8px 24px rgba(40,20,20,.08); }
+.chef-menu-list-card > img,.chef-menu-list-placeholder { width: 100%; height: 165px; object-fit: cover; }
+.chef-menu-list-placeholder { display: grid; place-items: center; background: #f8f3f0; color: #a58e8a; }
+.chef-menu-list-card-content { min-width: 0; display: grid; gap: 9px; padding: 14px 15px 16px; }
+.chef-menu-list-card-title { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.chef-menu-list-card-title strong { overflow: hidden; color: var(--chef-ink); font-size: 15px; text-overflow: ellipsis; white-space: nowrap; }
+.chef-menu-list-card-title i,.chef-food-detail-meta strong { flex: 0 0 auto; padding: 4px 8px; border-radius: 999px; font-size: 11px; font-style: normal; font-weight: 700; }
+.chef-menu-list-card-title .available,.chef-food-detail-meta .available { background: #e1f5e8; color: #168243; }
+.chef-menu-list-card-title .unavailable,.chef-food-detail-meta .unavailable { background: #f0eeee; color: #777174; }
+.chef-menu-list-description { display: -webkit-box; overflow: hidden; min-height: 38px; color: var(--chef-muted); font-size: 13px; line-height: 1.5; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.chef-menu-list-price { color: #7b2635; font-size: 13px; font-weight: 750; }
+.chef-menu-page-message { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 19px; border: 1px dashed #ded5d2; border-radius: 13px; color: var(--chef-muted); }
+.chef-menu-page-message button,.chef-menu-page-message a { color: var(--chef-wine); font-weight: 700; }
+.chef-food-detail-card { overflow: hidden; display: grid; grid-template-columns: minmax(280px,.8fr) minmax(0,1.2fr); border: 1px solid #eee8e5; border-radius: 17px; background: white; }
+.chef-food-detail-image { width: 100%; height: 100%; min-height: 360px; object-fit: cover; }
+.chef-food-detail-placeholder { display: grid; place-items: center; background: #f8f3f0; color: #a58e8a; }
+.chef-food-detail-content { min-width: 0; padding: 25px; }
+.chef-food-detail-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.chef-food-detail-meta > span { color: var(--chef-muted); font-size: 13px; font-weight: 700; }
+.chef-food-detail-content h3 { margin: 15px 0 8px; color: var(--chef-ink); font-size: 27px; }
+.chef-food-detail-description { margin: 0; color: var(--chef-muted); line-height: 1.65; }
+.chef-food-variants { margin-top: 25px; }
+.chef-food-variants h4 { margin: 0 0 10px; color: var(--chef-ink); font-size: 15px; }
+.chef-food-variants ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.chef-food-variants li { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 14px; border: 1px solid #eee8e5; border-radius: 10px; }
+.chef-food-variants li span { display: grid; gap: 3px; color: var(--chef-ink); font-weight: 650; }
+.chef-food-variants li small { color: var(--chef-muted); font-size: 11px; font-weight: 500; }
+.chef-food-variants li strong { color: var(--chef-ink); white-space: nowrap; }
+.chef-food-variants > p { color: var(--chef-muted); }
+:root[data-theme="dark"] .chef-menu-page-heading button,
+:root[data-theme="dark"] .chef-menu-listing-controls label,
+:root[data-theme="dark"] .chef-menu-listing-controls select,
+:root[data-theme="dark"] .chef-menu-list-card,
+:root[data-theme="dark"] .chef-food-detail-card { border-color: var(--dark-line); background: var(--surface); color: var(--dark-text); }
+:root[data-theme="dark"] .chef-menu-listing-controls input { color: var(--dark-text); }
+:root[data-theme="dark"] .chef-menu-list-card-title strong,
+:root[data-theme="dark"] .chef-menu-page-heading h2,
+:root[data-theme="dark"] .chef-menu-list-category h3,
+:root[data-theme="dark"] .chef-food-detail-content h3,
+:root[data-theme="dark"] .chef-food-variants h4,
+:root[data-theme="dark"] .chef-food-variants li span,
+:root[data-theme="dark"] .chef-food-variants li strong { color: var(--dark-text); }
+:root[data-theme="dark"] .chef-menu-list-category h3 span { background: #473338; color: #f0c8cd; }
+:root[data-theme="dark"] .chef-menu-list-price { color: #e5bf78; }
+:root[data-theme="dark"] .chef-menu-page-heading button,
+:root[data-theme="dark"] .chef-food-variants li { border-color: var(--dark-line); background: var(--surface-raised); color: var(--dark-text); }
+@media (max-width: 1050px) { .chef-menu-list-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width: 760px) {
+  .chef-menu-page { padding: 21px 16px 30px; }
+  .chef-menu-page-heading { align-items: flex-start; flex-direction: column; }
+  .chef-menu-listing-controls { flex-direction: column; }
+  .chef-menu-listing-controls select { width: 100%; }
+  .chef-menu-list-grid { grid-template-columns: 1fr; gap: 12px; }
+  .chef-menu-list-card { display: grid; grid-template-columns: 112px minmax(0,1fr); }
+  .chef-menu-list-card > img,.chef-menu-list-placeholder { height: 100%; min-height: 132px; }
+  .chef-menu-list-card-content { justify-content: center; padding: 11px; }
+  .chef-menu-list-card-title { align-items: flex-start; flex-direction: column; gap: 5px; }
+  .chef-food-detail-card { grid-template-columns: 1fr; }
+  .chef-food-detail-image { min-height: 210px; max-height: 280px; }
+  .chef-food-detail-content { padding: 19px; }
+  .chef-food-detail-content h3 { font-size: 23px; }
+}
 :root[data-theme="dark"] .chef-orders-table th,
 :root[data-theme="dark"] .chef-pipeline-item,
 :root[data-theme="dark"] .chef-view-order:hover {
@@ -7207,9 +7305,10 @@ a:focus-visible,
   pointer-events: none;
 }
 .image-crop-preview img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  max-width: none;
   transform-origin: center;
   pointer-events: none;
   user-select: none;

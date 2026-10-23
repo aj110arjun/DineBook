@@ -229,3 +229,6 @@
 :root[data-theme="dark"] .booking-checkout-quantity b{color:#f1e9e8}
 .booking-preorder-payment .booking-payment-option-desk{grid-template-columns:minmax(0,1fr)}
 .booking-preorder-payment .booking-payment-option-desk>span{grid-column:1;min-width:0}
+
+.booking-offers-checkout .booking-offer-scope { color: var(--color-text-secondary); line-height: 1.45; }
+:root[data-theme="dark"] .booking-offers-checkout .booking-offer-scope { color: #c0b5b1; }

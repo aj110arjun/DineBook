@@ -1,10 +1,8 @@
 import {
-  Bell,
   FileText,
   LayoutDashboard,
   SlidersHorizontal,
   Store,
-  Tag,
   WalletCards,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
@@ -21,9 +19,7 @@ const groups = [
     items: [
       { label: "Restaurants", icon: Store, path: "/admin/restaurants" },
       { label: "Restaurant requests", icon: SlidersHorizontal, path: "/admin/requests" },
-      { label: "Offers", icon: Tag, path: "/admin/offers" },
       { label: "Reviews & reports", icon: FileText, path: "/admin/reviews" },
-      { label: "Notifications", icon: Bell, path: "/admin/notifications" },
     ],
   },
   {

@@ -71,7 +71,7 @@
   border-radius: 9px;
   background: #79323d;
   color: white;
-  font: 600 13px inherit;
+  font-family: inherit; font-size: 13px; font-weight: 600;
   cursor: pointer;
 }
 .spot-order-add-row button:disabled,

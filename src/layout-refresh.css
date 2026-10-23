@@ -1,5 +1,7 @@
 /* Shared sizing and responsive rhythm for customer and staff pages. */
-:root {
+:root,
+:root[data-theme="light"],
+:root[data-theme="dark"] {
   --font-size-xs: .8125rem;
   --font-size-sm: .9375rem;
   --font-size-md: 1rem;
@@ -74,6 +76,21 @@ body { line-height: 1.5; }
 
 /* Staff dashboards share content edges, card sizing and readable headings. */
 .admin-dashboard { grid-template-columns: 248px minmax(0, 1fr); }
+.admin-sidebar-user {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  margin-top: auto;
+  padding: 12px;
+  gap: 11px;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 6%);
+}
+.admin-sidebar-user > div:last-child { min-width: 0; }
+.admin-sidebar-user strong,
+.admin-sidebar-user span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-sidebar-user .admin-avatar { background: var(--color-accent); color: #342719; }
 .admin-dashboard-main,
 .manager-dashboard-main,
 .chef-dashboard-main { min-width: 0; }
@@ -182,4 +199,377 @@ body { line-height: 1.5; }
   .chef-stat-grid { grid-template-columns: minmax(0, 1fr); }
   .admin-topbar .admin-search,
   .manager-topbar .manager-search { display: none; }
+}
+
+/* Keep dialog actions reachable with a phone keyboard or a short viewport. */
+.admin-confirm-backdrop { overflow-y: auto; overscroll-behavior: contain; }
+.admin-confirm-modal,
+.action-confirm-dialog { max-height: calc(100dvh - 40px); overflow-y: auto; }
+.admin-confirm-actions,
+.action-confirm-actions { flex-wrap: wrap; }
+.chef-topbar-title { min-width: 0; }
+.chef-topbar-title p { flex-wrap: wrap; row-gap: 2px; }
+.chef-topbar-title p .chef-context-name,
+.chef-topbar-title p .chef-context-date { font-size: inherit; line-height: 1.5; }
+.chef-topbar-actions,
+.chef-menu-toggle { flex-shrink: 0; }
+@media (max-width: 560px) {
+  .chef-topbar-title { flex: 1; }
+  .chef-topbar-title p { display: block; }
+  .chef-topbar-title p .chef-context-separator { display: none; }
+  .chef-context-name,
+  .chef-context-date { display: block; }
+  .chef-topbar-title h1 { font-size: 19px; overflow-wrap: anywhere; }
+}
+
+/* Header popovers must paint above sticky reservation panels. */
+.manager-topbar,
+.admin-topbar,
+.chef-topbar { position: relative; z-index: 40; }
+
+/* Keep the heading and its filters on separate rows at every desktop width. */
+.reservation-page .reservation-page-heading { flex-direction: column; align-items: stretch; }
+.reservation-page .reservation-toolbar { flex: none; width: 100%; flex-wrap: wrap; justify-content: flex-start; }
+.reservation-page .reservation-toolbar .reservation-scan-trigger {
+  flex: 0 0 auto;
+  min-width: 116px;
+  white-space: nowrap;
+  background: var(--color-primary);
+  color: var(--color-surface);
+  border-color: var(--color-primary);
+}
+.reservation-page .reservation-scan-trigger svg { flex-shrink: 0; }
+.reservation-page .reservation-list-summary { flex-wrap: wrap; }
+.reservation-page .reservation-list-summary h3 { flex: 1 1 190px; }
+:root[data-theme="dark"] .reservation-page .reservation-list-summary .booking-count {
+  background: var(--db-status-info-bg);
+  color: var(--db-status-info-text);
+}
+:root[data-theme="dark"] .reservation-page .reservation-list-summary .guest-count {
+  background: var(--db-status-success-bg);
+  color: var(--db-status-success-text);
+}
+
+/* Keep the manager header and its notification menu above sticky reservations. */
+.manager-dashboard .manager-topbar.db-portal-topbar { z-index: 2000; isolation: isolate; }
+.manager-dashboard .db-notification-popover { z-index: 2001; }
+
+.reservation-page .reservation-toolbar .reservation-scan-trigger {
+  width: 120px;
+  min-width: 120px;
+  white-space: nowrap;
+}
+
+/* Give reservation and order pagination a readable, predictable two-row layout. */
+.reservation-page .reservation-list-scroll .admin-pagination {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+}
+.reservation-page .reservation-list-scroll .admin-pagination-summary {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.reservation-page .reservation-list-scroll .admin-pagination-controls {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.reservation-page .reservation-list-scroll .admin-pagination-controls > label {
+  grid-column: 1 / 2;
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.reservation-page .reservation-list-scroll .admin-pagination-controls > button[aria-label="Previous page"] {
+  grid-column: 1;
+  grid-row: 1;
+}
+.reservation-page .reservation-list-scroll .admin-pagination-controls > .admin-pagination-page {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: center;
+  min-width: 0;
+  text-align: center;
+  white-space: nowrap;
+}
+.reservation-page .reservation-list-scroll .admin-pagination-controls > button[aria-label="Next page"] {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+}
+.reservation-page .reservation-list-scroll .admin-pagination-controls > button {
+  min-width: 0;
+  padding-inline: 9px;
+  white-space: nowrap;
+}
+:root[data-theme="dark"] .reservation-page .reservation-list-summary .booking-count {
+  color: #245b8b !important;
+}
+:root[data-theme="dark"] .reservation-page .reservation-list-summary .guest-count {
+  color: #12623f !important;
+}
+
+/* Match the six-result page to three balanced columns at desktop widths. */
+.customer-home .restaurant-listing-results {
+  container-type: inline-size;
+  container-name: restaurant-results;
+  min-width: 0;
+}
+.customer-home .restaurant-listing-results .restaurant-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+}
+.customer-home .restaurant-pagination.shared-pagination {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px;
+}
+.restaurant-pagination .admin-pagination-controls {
+  width: auto;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.restaurant-pagination .admin-pagination-controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  white-space: nowrap;
+}
+.restaurant-pagination .admin-pagination-controls button:last-child {
+  margin-left: 0;
+}
+.restaurant-pagination .pagination-page-numbers {
+  display: flex;
+  gap: 6px;
+}
+.restaurant-pagination .pagination-page-numbers button {
+  min-width: 40px;
+}
+.restaurant-pagination .admin-pagination-page {
+  white-space: nowrap;
+}
+@container restaurant-results (max-width: 900px) {
+  .customer-home .restaurant-listing-results .restaurant-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .customer-home .restaurant-pagination.shared-pagination {
+    flex-direction: column;
+    align-items: center;
+  }
+  .restaurant-pagination .admin-pagination-controls {
+    justify-content: center;
+  }
+}
+@container restaurant-results (max-width: 580px) {
+  .customer-home .restaurant-listing-results .restaurant-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .restaurant-pagination .admin-pagination-controls {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    width: 100%;
+  }
+  .restaurant-pagination .pagination-page-numbers {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .restaurant-pagination .admin-pagination-page {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    text-align: center;
+  }
+  .restaurant-pagination .admin-pagination-controls > button:last-child {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+
+
+/* Restaurant filters: comfortable rows and consistent light/dark surfaces. */
+.customer-home .restaurant-filter-panel {
+  display: block;
+  min-width: 0;
+  padding: 20px 16px;
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+.customer-home .restaurant-filter-title {
+  gap: 12px;
+  padding: 0 4px 16px;
+}
+.customer-home .restaurant-filter-title h2 {
+  font-size: var(--font-size-md);
+}
+.customer-home .restaurant-filter-actions {
+  flex-shrink: 0;
+  gap: 8px;
+}
+.customer-home .restaurant-filter-title button {
+  min-height: 36px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  color: var(--color-link);
+}
+.customer-home .restaurant-filter-title button:hover {
+  background: var(--color-surface-raised);
+}
+.customer-home .restaurant-filter-group {
+  gap: 4px;
+  padding: 16px 0;
+  border-color: var(--color-border);
+}
+.customer-home .restaurant-filter-group:last-child {
+  padding-bottom: 0;
+}
+.customer-home .restaurant-filter-group h3 {
+  margin: 0 8px 8px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  letter-spacing: .06em;
+}
+.customer-home .restaurant-filter-group label {
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px;
+  gap: 10px;
+  border-radius: 8px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+.customer-home .restaurant-filter-group label:hover,
+.customer-home .restaurant-filter-group label:has(input:checked) {
+  background: var(--color-surface-raised);
+  color: var(--color-text-primary);
+}
+.customer-home .restaurant-filter-group label:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+.customer-home .restaurant-filter-group input {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+.customer-home .restaurant-filter-group label > svg {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+.customer-home .restaurant-filter-group label > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+@media (min-width: 561px) and (max-width: 900px) {
+  .customer-home .restaurant-filter-fields.is-open {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+}
+
+/* Keep brand-header controls stable when the page theme changes. */
+.customer-home .site-header {
+  background: #641b2b;
+  color: #fff;
+}
+.customer-home .site-header .db-notification-bell {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-color: rgb(255 255 255 / 24%);
+  background: rgb(255 255 255 / 10%);
+  color: #fff;
+}
+.customer-home .site-header .db-notification-bell:hover {
+  background: rgb(255 255 255 / 20%);
+}
+.customer-home .site-header .profile-button {
+  background: #d2ad5e;
+  color: #35240e;
+}
+.profile-page .profile-fields label {
+  align-content: start;
+}
+.profile-page .profile-fields label > small {
+  text-transform: none;
+  font-weight: 400;
+  letter-spacing: normal;
+}
+
+.customer-home #restaurants-near-you .restaurant-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+#restaurants-near-you .section-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-link);
+  font-size: var(--font-size-xs);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+  .customer-home #restaurants-near-you .restaurant-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .customer-home #restaurants-near-you .restaurant-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Booking history: result count left, Clear filters right. */
+.profile-page .reservation-list-card .reservation-result-count {
+  grid-column: 1 / -2;
+  align-self: center;
+  justify-self: start;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+
+.profile-page .reservation-list-card .reservation-toolbar > button {
+  grid-column: -2 / -1;
+  align-self: center;
+  justify-self: end;
+  width: auto;
+  min-height: 42px;
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+@media (max-width: 600px) {
+  .profile-page .reservation-list-card .reservation-result-count,
+  .profile-page .reservation-list-card .reservation-toolbar > button {
+    grid-column: 1 / -1;
+  }
+
+  .profile-page .reservation-list-card .reservation-toolbar > button {
+    justify-self: start;
+  }
 }

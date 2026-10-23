@@ -24,7 +24,7 @@ export default function RestaurantCard({ restaurant, guests = 2 }) {
         <button type="button" className={`save-button${saved ? ' saved' : ''}`} aria-pressed={saved} aria-label={saved ? `Remove ${restaurant.name} from saved` : `Save ${restaurant.name}`} onClick={() => setSaved(toggleSavedRestaurant(restaurant.id))}><Heart size={17} fill={saved ? 'currentColor' : 'none'} /></button>
       </div>
       <div className="restaurant-info">
-        <div className="restaurant-title"><div><h3><Link className="restaurant-name-link" to={`/customer/restaurants/${restaurant.id}`}>{restaurant.name}</Link></h3><p>{restaurant.cuisine} <span>·</span> ₹₹₹</p></div>{restaurant.rating && <span className="rating"><Star size={13} fill="currentColor" />{restaurant.rating}</span>}</div>
+        <div className="restaurant-title"><div><h3><Link className="restaurant-name-link" to={`/customer/restaurants/${restaurant.id}`}>{restaurant.name}</Link></h3><p>{restaurant.cuisine} <span>·</span> ₹₹₹</p></div>{restaurant.review_count > 0 && restaurant.rating != null && <span className="rating" aria-label={`${restaurant.rating} average from ${restaurant.review_count} reviews`}><Star size={13} fill="currentColor" />{Number(restaurant.rating).toFixed(1)} <span>({restaurant.review_count})</span></span>}</div>
         <p className="restaurant-location"><MapPin size={12} />{restaurant.location}{Number.isFinite(Number(restaurant.distance_km)) && <span> · {Number(restaurant.distance_km).toFixed(1)} km away</span>}</p>
         <div className="restaurant-card-actions">
           <Link className="restaurant-menu-link" to={`/customer/restaurants/${restaurant.id}/menu-preview`}>View Menu</Link>
