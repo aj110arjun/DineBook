@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useState } from "react";
 import { ChevronDown, MapPin, Menu, Utensils, X } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -23,9 +24,9 @@ export default function CustomerHeader({ user, onLogout }) {
       }
 
       // Real backend logout
-      await fetch(`${API_BASE}/api/auth/logout`, {
+      await axios.request({ url: `${API_BASE}/api/auth/logout`, validateStatus: () => true,
         method: "POST",
-        credentials: "include",
+        withCredentials: true,
       });
     } catch (error) {
       console.error("Logout failed:", error);
@@ -94,10 +95,6 @@ export default function CustomerHeader({ user, onLogout }) {
             <Link to="/customer#offers" onClick={closeMenu}>
               Offers
             </Link>
-
-            {user && <Link className={location.pathname.startsWith("/customer/profile/reservations") ? "active" : ""} aria-current={location.pathname.startsWith("/customer/profile/reservations") ? "page" : undefined} to="/customer/profile/reservations" onClick={closeMenu}>Reservations</Link>}
-            {user && <Link className={location.pathname.startsWith("/customer/profile/orders") ? "active" : ""} aria-current={location.pathname.startsWith("/customer/profile/orders") ? "page" : undefined} to="/customer/profile/orders" onClick={closeMenu}>Orders</Link>}
-            {user && <Link className={location.pathname.startsWith("/customer/profile/wallet") ? "active" : ""} aria-current={location.pathname.startsWith("/customer/profile/wallet") ? "page" : undefined} to="/customer/profile/wallet" onClick={closeMenu}>Wallet</Link>}
           </div>
 
           {/* Account */}
@@ -105,9 +102,6 @@ export default function CustomerHeader({ user, onLogout }) {
             {user ? (
               <>
                 <NotificationBell role="customer" enabled={Boolean(user)} />
-                <button className="text-button" onClick={signOut}>
-                  Sign out
-                </button>
 
                 <button
                   className="profile-button"

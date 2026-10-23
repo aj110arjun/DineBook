@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useEffect, useState } from 'react';
 import { Check } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -16,12 +17,12 @@ export default function CustomerChangePasswordPage() {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`${API_BASE}/api/customer/me`, { credentials: 'include', signal: controller.signal })
+    axios.request({ url: `${API_BASE}/api/customer/me`, validateStatus: () => true, withCredentials: true, signal: controller.signal })
       .then(response => {
-        if (!response.ok) navigate('/customer/login', { replace: true });
+        if (response.status < 200 || response.status >= 300) navigate('/customer/login', { replace: true });
       })
       .catch(reason => {
-        if (reason.name !== 'AbortError') navigate('/customer/login', { replace: true });
+        if (!axios.isCancel(reason)) navigate('/customer/login', { replace: true });
       })
       .finally(() => setChecking(false));
     return () => controller.abort();
@@ -52,7 +53,7 @@ export default function CustomerChangePasswordPage() {
     try {
       await requestJson('/api/auth/customer/change-password', {
         method: 'POST',
-        body: JSON.stringify({
+        data: JSON.stringify({
           current_password: form.get('currentPassword'),
           new_password: form.get('newPassword'),
           confirm_password: form.get('confirmPassword'),

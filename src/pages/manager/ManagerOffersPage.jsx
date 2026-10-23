@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Tag, Plus, Search, RefreshCw } from "lucide-react";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
+import CustomDatePicker from "../../components/CustomDatePicker.jsx";
 import { requestJson } from "../../lib/authApi.js";
 
 const blank = {
@@ -20,12 +21,14 @@ const blank = {
   eligible_category_ids: [],
 };
 const money = (n) => `₹${Number(n || 0).toFixed(2)}`;
+const localDateToday = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+};
 const localDateInput = (value) => {
   if (!value) return "";
   const date = new Date(value);
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-    .toISOString()
-    .slice(0, 16);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 };
 
 export default function ManagerOffersPage() {
@@ -102,6 +105,18 @@ export default function ManagerOffersPage() {
   const update = (key, value) => setForm((f) => ({ ...f, [key]: value }));
   async function save(event) {
     event.preventDefault();
+    if (form.starts_at && form.starts_at < localDateToday()) {
+      setError("The offer start date cannot be in the past.");
+      return;
+    }
+    if (form.ends_at && form.ends_at < localDateToday()) {
+      setError("The offer end date cannot be in the past.");
+      return;
+    }
+    if (form.starts_at && form.ends_at && form.ends_at < form.starts_at) {
+      setError("The end date must be the same as or later than the start date.");
+      return;
+    }
     setBusy(true);
     setError("");
     setNotice("");
@@ -114,8 +129,9 @@ export default function ManagerOffersPage() {
       per_customer_limit: form.per_customer_limit
         ? Number(form.per_customer_limit)
         : null,
-      starts_at: form.starts_at ? new Date(form.starts_at).toISOString() : null,
-      ends_at: form.ends_at ? new Date(form.ends_at).toISOString() : null,
+      starts_at: form.starts_at ? new Date(`${form.starts_at}T00:00:00`).toISOString() : null,
+      ends_at: form.ends_at ? new Date(`${form.ends_at}T23:59:59.999`).toISOString() : null,
+      timezone_name: Intl.DateTimeFormat().resolvedOptions().timeZone,
     };
     try {
       await requestJson(
@@ -468,19 +484,21 @@ export default function ManagerOffersPage() {
                 />
               </label>
               <label>
-                Starts at
-                <input
-                  type="datetime-local"
+                Start date
+                <CustomDatePicker
+                  label="Choose offer start date"
                   value={form.starts_at}
-                  onChange={(e) => update("starts_at", e.target.value)}
+                  minDate={localDateToday()}
+                  onChange={(value) => setForm((current) => ({ ...current, starts_at: value, ends_at: current.ends_at && current.ends_at < value ? "" : current.ends_at }))}
                 />
               </label>
               <label>
-                Expires at
-                <input
-                  type="datetime-local"
+                End date
+                <CustomDatePicker
+                  label="Choose offer end date"
                   value={form.ends_at}
-                  onChange={(e) => update("ends_at", e.target.value)}
+                  minDate={form.starts_at || localDateToday()}
+                  onChange={(value) => update("ends_at", value)}
                 />
               </label>
               <label>

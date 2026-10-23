@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { MapPin, Save } from "lucide-react";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
@@ -47,15 +48,16 @@ export default function ManagerRestaurantLocationPage() {
     const timer = window.setTimeout(async () => {
       setBusy(true);
       try {
-        const response = await fetch(
-          `https://photon.komoot.io/api/?q=${encodeURIComponent(search)}&limit=5&lang=en`,
-          { signal: controller.signal },
-        );
-        if (!response.ok) throw new Error("Location search is unavailable.");
-        const data = await response.json();
+        const response = await axios.request({
+          url: `https://photon.komoot.io/api/?q=${encodeURIComponent(search)}&limit=5&lang=en`,
+          validateStatus: () => true,
+          signal: controller.signal,
+        });
+        if (response.status < 200 || response.status >= 300) throw new Error("Location search is unavailable.");
+        const data = response.data;
         if (!controller.signal.aborted) setSuggestions(data.features || []);
       } catch (reason) {
-        if (reason.name !== "AbortError")
+        if (!axios.isCancel(reason))
           setError("Could not search locations right now. Please try again.");
       } finally {
         if (!controller.signal.aborted) setBusy(false);
@@ -97,7 +99,7 @@ export default function ManagerRestaurantLocationPage() {
     try {
       await requestJson("/api/auth/manager/restaurant/location", {
         method: "PUT",
-        body: JSON.stringify(pin),
+        data: JSON.stringify(pin),
       });
       setMessage(
         "Restaurant map pin saved. Customers can now find you in nearby searches.",

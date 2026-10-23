@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import axios from "axios";
+import { useEffect, useRef, useState } from "react";
 import { API_BASE } from "../../lib/authApi.js";
 import {
   ArrowRight,
@@ -232,12 +233,117 @@ export default function ManagerRegisterPage() {
   const [addressSuggestions, setAddressSuggestions] = useState([]);
   const [addressLookupBusy, setAddressLookupBusy] = useState(false);
   const [addressLookupError, setAddressLookupError] = useState("");
+  const [pinLookupMessage, setPinLookupMessage] = useState("");
+  const [pinToLookup, setPinToLookup] = useState("");
+  const [locationBusy, setLocationBusy] = useState(false);
+  const [locationMessage, setLocationMessage] = useState("");
+  const locationRequest = useRef(0);
+  useEffect(() => () => { locationRequest.current += 1; }, []);
+
+  async function useCurrentLocation() {
+    if (!window.isSecureContext || !navigator.geolocation) {
+      setLocationMessage("Current location requires HTTPS (or localhost) and a browser that supports location access.");
+      return;
+    }
+    const request = ++locationRequest.current;
+    setLocationBusy(true);
+    setLocationMessage("Finding your current location…");
+    setPinToLookup("");
+    setAddressLookupQuery("");
+    setAddressSuggestions([]);
+    try {
+      const position = await new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true, timeout: 20000, maximumAge: 0,
+      }));
+      if (request !== locationRequest.current) return;
+      const { latitude, longitude, accuracy } = position.coords;
+      setApplication((current) => ({ ...current, latitude: String(latitude), longitude: String(longitude) }));
+      setLocationMessage(`Location captured (approximately ${Math.round(accuracy)} m accuracy). Looking up address…`);
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 10000);
+      try {
+        const response = await axios.request({ url: `https://photon.komoot.io/reverse?lat=${latitude}&lon=${longitude}&lang=en`, validateStatus: () => true, signal: controller.signal });
+        if (response.status < 200 || response.status >= 300) throw new Error("Address lookup failed");
+        const result = response.data;
+        if (request !== locationRequest.current) return;
+        const details = result.features?.[0]?.properties;
+        if (!details) throw new Error("Address not found");
+        const address = [details.housenumber, details.street, details.locality || details.suburb || details.district].filter(Boolean).join(", ") || details.name || "";
+        const city = details.city || details.town || details.village || details.county || "";
+        setApplication((current) => ({ ...current,
+          address, city, state: details.state || "", pinCode: details.postcode || "",
+          latitude: String(latitude), longitude: String(longitude),
+        }));
+        setFieldErrors((current) => ({ ...current, address: "", city: "", state: "", pinCode: "" }));
+        setLocationMessage(`Location captured (approximately ${Math.round(accuracy)} m accuracy). Review the address and complete any missing details.`);
+      } catch {
+        if (request === locationRequest.current) setLocationMessage("Your location pin was saved, but the address couldn’t be found. Enter the address details below.");
+      } finally {
+        window.clearTimeout(timeout);
+      }
+    } catch (reason) {
+      if (request === locationRequest.current) setLocationMessage(reason.code === 1
+        ? "Location permission was denied. Allow location access in your browser and try again, or enter your address below."
+        : "Couldn’t determine your location. Try again near the restaurant or enter the address below.");
+    } finally {
+      if (request === locationRequest.current) setLocationBusy(false);
+    }
+  }
+
+  useEffect(() => {
+    const pin = pinToLookup.trim();
+    if (!/^[1-9]\d{5}$/.test(pin)) {
+      setPinLookupMessage("");
+      return;
+    }
+    let active = true;
+    const controller = new AbortController();
+    let requestTimeout;
+    setPinLookupMessage("Looking up city and state…");
+    const debounce = window.setTimeout(async () => {
+      requestTimeout = window.setTimeout(() => controller.abort(), 10000);
+      try {
+        const response = await axios.request({ url: `https://api.postalpincode.in/pincode/${pin}`, validateStatus: () => true, signal: controller.signal });
+        if (response.status < 200 || response.status >= 300) throw new Error("Lookup unavailable");
+        const result = response.data;
+        if (!active) return;
+        const offices = result?.[0]?.Status === "Success" ? result[0].PostOffice : [];
+        const matches = (offices || []).filter((office) => office.Pincode === pin && office.District && office.State);
+        const office = matches.find((item) => item.DeliveryStatus === "Delivery") || matches[0];
+        if (!office) {
+          setPinLookupMessage("PIN code not found. Check it or enter city and state manually.");
+          return;
+        }
+        setApplication((current) => current.pinCode.trim() === pin ? {
+          ...current,
+          city: office.District.trim(),
+          state: office.State.trim(),
+          latitude: "",
+          longitude: "",
+        } : current);
+        setFieldErrors((current) => ({ ...current, city: "", state: "" }));
+        setPinLookupMessage("City and state filled from postal district details. You can edit them if needed.");
+      } catch {
+        if (active) setPinLookupMessage("Couldn’t look up this PIN code. Enter city and state manually.");
+      } finally {
+        window.clearTimeout(requestTimeout);
+      }
+    }, 400);
+    return () => {
+      active = false;
+      window.clearTimeout(debounce);
+      window.clearTimeout(requestTimeout);
+      controller.abort();
+    };
+  }, [pinToLookup]);
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      setMapQuery([application.address, application.city, application.state, application.pinCode].filter(Boolean).join(", "));
+      setMapQuery(application.latitude && application.longitude
+        ? `${application.latitude},${application.longitude}`
+        : [application.address, application.city, application.state, application.pinCode].filter(Boolean).join(", "));
     }, 500);
     return () => window.clearTimeout(timeoutId);
-  }, [application.address, application.city, application.state, application.pinCode]);
+  }, [application.address, application.city, application.state, application.pinCode, application.latitude, application.longitude]);
 
   useEffect(() => {
     const query = addressLookupQuery.trim();
@@ -253,12 +359,12 @@ export default function ManagerRegisterPage() {
       setAddressLookupBusy(true);
       setAddressLookupError("");
       try {
-        const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lang=en`, { signal: controller.signal });
-        if (!response.ok) throw new Error("Address search is temporarily unavailable.");
-        const result = await response.json();
+        const response = await axios.request({ url: `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lang=en`, validateStatus: () => true, signal: controller.signal });
+        if (response.status < 200 || response.status >= 300) throw new Error("Address search is temporarily unavailable.");
+        const result = response.data;
         setAddressSuggestions(result.features || []);
       } catch (reason) {
-        if (reason.name !== "AbortError") {
+        if (!axios.isCancel(reason)) {
           setAddressSuggestions([]);
           setAddressLookupError("Couldn’t look up addresses right now. You can still enter the coordinates manually.");
         }
@@ -323,6 +429,15 @@ export default function ManagerRegisterPage() {
   const [tables, setTables] = useState("");
   const [interiorMedia, setInteriorMedia] = useState(null);
   function updateField(field, value) {
+    if (["address", "city", "state", "pinCode"].includes(field)) {
+      locationRequest.current += 1;
+      setLocationBusy(false);
+      setLocationMessage("");
+    }
+    if (field === "pinCode") setPinToLookup(value);
+    if (field === "city" || field === "state") {
+      setPinToLookup("");
+    }
     setFieldErrors((current) => ({ ...current, [field]: "" }));
     if (field === "email") {
       setEmailCode("");
@@ -349,6 +464,10 @@ export default function ManagerRegisterPage() {
   }
 
   function selectRestaurantAddress(feature) {
+    locationRequest.current += 1;
+    setLocationBusy(false);
+    setLocationMessage("");
+    setPinToLookup("");
     const properties = feature.properties || {};
     const streetAddress = [properties.housenumber, properties.street].filter(Boolean).join(" ");
     const address = streetAddress || properties.name || properties.street || properties.city || "";
@@ -507,12 +626,12 @@ export default function ManagerRegisterPage() {
     setEmailBusy(true);
     setError("");
     try {
-      const response = await fetch(`${API_BASE}/api/auth/manager/send-verification`, {
-        method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+      const response = await axios.request({ url: `${API_BASE}/api/auth/manager/send-verification`, validateStatus: () => true,
+        method: "POST", withCredentials: true, headers: { "Content-Type": "application/json" },
+        data: JSON.stringify({ email }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data?.detail || "Unable to send a confirmation code.");
+      const data = response.data;
+      if (response.status < 200 || response.status >= 300) throw new Error(data?.detail || "Unable to send a confirmation code.");
       setEmailCodeSent(true);
       setEmailVerified(false);
     } catch (reason) {
@@ -526,12 +645,12 @@ export default function ManagerRegisterPage() {
     setEmailBusy(true);
     setError("");
     try {
-      const response = await fetch(`${API_BASE}/api/auth/manager/verify-email`, {
-        method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: application.email.trim().toLowerCase(), code: emailCode }),
+      const response = await axios.request({ url: `${API_BASE}/api/auth/manager/verify-email`, validateStatus: () => true,
+        method: "POST", withCredentials: true, headers: { "Content-Type": "application/json" },
+        data: JSON.stringify({ email: application.email.trim().toLowerCase(), code: emailCode }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data?.detail || "Unable to verify this email.");
+      const data = response.data;
+      if (response.status < 200 || response.status >= 300) throw new Error(data?.detail || "Unable to verify this email.");
       setEmailVerified(true);
       setError("");
     } catch (reason) {
@@ -664,15 +783,15 @@ export default function ManagerRegisterPage() {
         formData.append("interior_media", interiorMedia);
       }
 
-      const response = await fetch(`${API_BASE}/api/auth/manager/register`, {
+      const response = await axios.request({ url: `${API_BASE}/api/auth/manager/register`, validateStatus: () => true,
         method: "POST",
-        body: formData,
-        credentials: "include",
+        data: formData,
+        withCredentials: true,
       });
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (!response.ok) {
+      if (response.status < 200 || response.status >= 300) {
         throw new Error(
           data?.detail || "Unable to submit manager registration.",
         );
@@ -988,6 +1107,16 @@ export default function ManagerRegisterPage() {
               </div>
 
               {/* Address */}
+              <div className="mb-5 rounded-lg border border-stone-200 bg-stone-50 p-4">
+                <button type="button" onClick={useCurrentLocation} disabled={locationBusy}
+                  className="flex items-center gap-2 rounded-lg bg-wine px-4 py-3 text-sm font-semibold text-white disabled:opacity-60">
+                  <MapPin size={16} />
+                  {locationBusy ? "Getting your location…" : "Use current restaurant location"}
+                </button>
+                <p className="mt-2 text-xs leading-5 text-stone-500">Use this while at your restaurant. Allow browser location access to save your location pin and fill available address details.</p>
+                <p className="mt-2 text-sm text-stone-600" role="status" aria-live="polite">{locationMessage}</p>
+                <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs text-stone-500 underline">Address data © OpenStreetMap contributors</a>
+              </div>
               <div className="relative">
                 <FormField
                   id="address"
@@ -1030,6 +1159,17 @@ export default function ManagerRegisterPage() {
               {/* City / State / PIN */}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <FormField
+                  id="pinCode"
+                  label="PIN / ZIP Code"
+                  type="text"
+                  placeholder="PIN / ZIP"
+                  autoComplete="postal-code"
+                  required
+                  value={application.pinCode}
+                  onChange={(event) => updateField("pinCode", event.target.value)}
+                />
+
+                <FormField
                   id="city"
                   label="City"
                   type="text"
@@ -1051,19 +1191,11 @@ export default function ManagerRegisterPage() {
                   onChange={(event) => updateField("state", event.target.value)}
                 />
 
-                <FormField
-                  id="pinCode"
-                  label="PIN / ZIP Code"
-                  type="text"
-                  placeholder="PIN / ZIP"
-                  autoComplete="postal-code"
-                  required
-                  value={application.pinCode}
-                  onChange={(event) =>
-                    updateField("pinCode", event.target.value)
-                  }
-                />
+
               </div>
+              <p className="-mt-2 mb-4 text-xs text-stone-500" role="status" aria-live="polite">
+                {pinLookupMessage || "Enter a 6-digit Indian PIN code to automatically fill city and state."}
+              </p>
 
               {/* Live Google Maps location preview */}
               <div className="mb-6">
@@ -1092,7 +1224,7 @@ export default function ManagerRegisterPage() {
                 <p className="mt-2 text-xs leading-5 text-stone-400">
                   {application.latitude && application.longitude
                     ? "Restaurant location selected. Customers can find your restaurant in nearby searches."
-                    : "Choose a suggested address above to set your restaurant pin so customers can find you nearby."}
+                    : "Use your current location or choose a suggested address above to set your restaurant pin."}
                 </p>
               </div>
 

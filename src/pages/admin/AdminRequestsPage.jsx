@@ -1,22 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
 import {
-  Activity,
-  Bell,
-  ChartNoAxesCombined,
-  FileText,
-  LayoutDashboard,
-  LogOut,
-  MapPin,
   Search,
-  Settings,
-  ShieldCheck,
-  SlidersHorizontal,
-  Store,
   UserCheck,
-  Users,
-  WalletCards,
   Check,
   X,
   RefreshCw,
@@ -25,30 +11,7 @@ import {
 import { requestJson } from "../../lib/authApi.js";
 import AdminActionConfirmModal from "../../components/admin/AdminActionConfirmModal.jsx";
 import Pagination from "../../components/Pagination.jsx";
-
-const navigation = [
-  {
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    path: "/admin/dashboard",
-  },
-  { label: "Restaurants", icon: Store, path: "/admin/restaurants" },
-  { label: "Users", icon: Users },
-  { label: "Payments", icon: WalletCards },
-  { label: "Offers", icon: ShieldCheck },
-  { label: "Reviews & Reports", icon: FileText },
-  { label: "Analytics", icon: ChartNoAxesCombined },
-  { label: "Notifications", icon: Bell },
-  { label: "Activity Logs", icon: Activity },
-  { label: "Settings", icon: Settings },
-  {
-    label: "Requests",
-    icon: SlidersHorizontal,
-    path: "/admin/requests",
-    active: true,
-  },
-  { label: "Profile", icon: Users },
-];
+import AdminLayout from "../../components/admin/AdminLayout.jsx";
 
 const requestStatuses = ["ALL", "PENDING", "APPROVED", "REJECTED"];
 
@@ -130,17 +93,6 @@ export default function AdminRequestsPage() {
     }
   }
 
-  async function handleLogout() {
-    try {
-      await requestJson("/api/auth/admin/logout", {
-        method: "POST",
-        fallbackMessage: "Unable to sign out.",
-      });
-    } finally {
-      navigate("/admin/login", { replace: true });
-    }
-  }
-
   const statusCounts = {
     ALL: managerRequests.length,
     PENDING: managerRequests.filter((manager) => (manager.restaurant?.status || manager.status) === "PENDING").length,
@@ -161,80 +113,8 @@ export default function AdminRequestsPage() {
   useEffect(() => { if (page > pageCount) setPage(pageCount); }, [page, pageCount]);
 
   return (
-    <main className="admin-dashboard">
-      <aside className="admin-sidebar">
-        <div className="admin-sidebar-brand">
-          <div className="admin-brand-mark">
-            <UtensilsIcon />
-          </div>
-
-          <div>
-            <strong>DineBook</strong>
-            <span>PLATFORM ADMIN</span>
-          </div>
-        </div>
-
-        <nav className="admin-nav">
-          {navigation.map(({ label, icon: Icon, active, path }) => (
-            <button
-              key={label}
-              type="button"
-              className={`admin-nav-item ${active ? "active" : ""}`}
-              onClick={() => path && navigate(path)}
-            >
-              <Icon size={16} />
-              <span>{label}</span>
-            </button>
-          ))}
-
-          <button
-            type="button"
-            className="admin-nav-item"
-            onClick={handleLogout}
-          >
-            <LogOut size={16} />
-            <span>Logout</span>
-          </button>
-        </nav>
-
-        <div className="admin-sidebar-user">
-          <div className="admin-avatar">MC</div>
-
-          <div>
-            <strong>Maya Chen</strong>
-            <span>Super Admin</span>
-          </div>
-        </div>
-      </aside>
-
-      <section className="admin-dashboard-main">
-        <header className="admin-topbar">
-          <h1>Requests</h1>
-
-          <div className="admin-topbar-actions">
-            <div className="admin-search">
-              <MapPin size={15} />
-              <input
-                type="search"
-                placeholder="Search platform..."
-                aria-label="Search platform"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-              />
-            </div>
-
-            <button
-              type="button"
-              className="admin-notification-button"
-              aria-label="Notifications"
-            >
-              <Bell size={18} />
-            </button>
-          </div>
-        </header>
-
+    <AdminLayout title="Restaurant Requests">
         <div className="admin-dashboard-content">
-          <PortalBreadcrumb home={{ label: "Admin", to: "/admin/dashboard" }} items={[{ label: "Requests" }]} className="admin-breadcrumb" />
           <div className="admin-dashboard-heading">
             <div>
               <h2>Manager Requests</h2>
@@ -351,7 +231,6 @@ export default function AdminRequestsPage() {
           )}
           {!loading && filteredRequests.length > 0 && <Pagination page={page} pageSize={pageSize} total={filteredRequests.length} onPageChange={setPage} onPageSizeChange={setPageSize} label="requests" />}
         </div>
-      </section>
       <AdminActionConfirmModal
         action={confirmation?.action}
         subject={confirmation?.manager?.restaurant?.name || confirmation?.manager?.name || "this manager application"}
@@ -361,16 +240,6 @@ export default function AdminRequestsPage() {
           ? handleApprove(confirmation.manager.id)
           : handleReject(confirmation.manager.id)}
       />
-    </main>
-  );
-}
-
-function UtensilsIcon() {
-  return (
-    <span className="admin-utensils-icon">
-      <span />
-      <span />
-      <span />
-    </span>
+    </AdminLayout>
   );
 }

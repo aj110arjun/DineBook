@@ -37,8 +37,8 @@ export default function ImageUploadField({
       setLocalError("Image must be 10 MB or smaller.");
       return;
     }
-    setLocalFile(nextFile);
-    onSelect?.(nextFile);
+    const selectionAccepted = onSelect?.(nextFile);
+    if (selectionAccepted !== false) setLocalFile(nextFile);
   }
 
   function clearFile() {

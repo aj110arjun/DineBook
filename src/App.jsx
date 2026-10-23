@@ -37,6 +37,7 @@ import ManagerFloorsPage from "./pages/manager/ManagerFloorsPage.jsx";
 import ManagerReservationsPage from "./pages/manager/ManagerReservationsPage.jsx";
 import ChefLoginPage from "./pages/chef/ChefLoginPage.jsx";
 import ChefDashboardPage from "./pages/chef/ChefDashboardPage.jsx";
+import ChefMenuPage from "./pages/chef/ChefMenuPage.jsx";
 import ChefChangePasswordPage from "./pages/chef/ChefChangePasswordPage.jsx";
 import ChefProtectedRoute from "./components/auth/ChefProtectedRoute.jsx";
 import PortalGuestOnlyRoute from "./components/auth/PortalGuestOnlyRoute.jsx";
@@ -48,10 +49,8 @@ import ManagerOperatingHoursPage from "./pages/manager/ManagerOperatingHoursPage
 import ManagerOffersPage from "./pages/manager/ManagerOffersPage.jsx";
 import ChefServiceHoursPage from "./pages/chef/ChefServiceHoursPage.jsx";
 import ManagerPaymentsPage from "./pages/manager/ManagerPaymentsPage.jsx";
-import ChefReviewsPage from "./pages/chef/ChefReviewsPage.jsx";
 import ManagerReviewsPage from "./pages/manager/ManagerReviewsPage.jsx";
 import AdminReviewModerationPage from "./pages/admin/AdminReviewModerationPage.jsx";
-import NotificationsPage from "./pages/shared/NotificationsPage.jsx";
 import {
   AdminRevenuePage,
   ChefRevenuePage,
@@ -126,14 +125,6 @@ export default function App() {
           element={
             <ProtectedRoute>
               <OrdersPage mode="customer" />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/customer/notifications"
-          element={
-            <ProtectedRoute>
-              <NotificationsPage role="customer" />
             </ProtectedRoute>
           }
         />
@@ -265,14 +256,6 @@ export default function App() {
           element={
             <AdminProtectedRoute>
               <AdminReviewModerationPage />
-            </AdminProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/notifications"
-          element={
-            <AdminProtectedRoute>
-              <NotificationsPage role="admin" />
             </AdminProtectedRoute>
           }
         />
@@ -424,14 +407,6 @@ export default function App() {
           }
         />
         <Route
-          path="/manager/notifications"
-          element={
-            <ManagerProtectedRoute>
-              <NotificationsPage role="manager" />
-            </ManagerProtectedRoute>
-          }
-        />
-        <Route
           path="/manager/payments/:transactionId"
           element={
             <ManagerProtectedRoute>
@@ -483,27 +458,13 @@ export default function App() {
             </ChefProtectedRoute>
           }
         />
-        <Route
-          path="/chef/notifications"
-          element={
-            <ChefProtectedRoute>
-              <NotificationsPage role="chef" />
-            </ChefProtectedRoute>
-          }
-        />
+        <Route path="/chef/menu" element={<ChefProtectedRoute><ChefMenuPage /></ChefProtectedRoute>} />
+        <Route path="/chef/menu/:foodId" element={<ChefProtectedRoute><ChefMenuPage /></ChefProtectedRoute>} />
         <Route
           path="/chef/revenue"
           element={
             <ChefProtectedRoute>
               <ChefRevenuePage />
-            </ChefProtectedRoute>
-          }
-        />
-        <Route
-          path="/chef/reviews"
-          element={
-            <ChefProtectedRoute>
-              <ChefReviewsPage />
             </ChefProtectedRoute>
           }
         />

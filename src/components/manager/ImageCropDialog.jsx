@@ -1,10 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import { Image as ImageIcon, X } from "lucide-react";
 
-const OUTPUT_WIDTH = 1600;
-const OUTPUT_HEIGHT = 900;
+const BANNER_WIDTH = 1600;
+const BANNER_HEIGHT = 900;
 
-export default function ImageCropDialog({ file, onCancel, onCropped }) {
+export default function ImageCropDialog({
+  file,
+  onCancel,
+  onCropped,
+  title = "Crop restaurant banner",
+  description = "Drag to position the image. The banner uses a 16:9 crop.",
+  aspectRatio = 16 / 9,
+  outputWidth = BANNER_WIDTH,
+  outputHeight = BANNER_HEIGHT,
+  outputName = "restaurant-banner.jpg",
+  confirmLabel = "Use this banner",
+}) {
   const previewRef = useRef(null);
   const imageRef = useRef(null);
   const dragRef = useRef(null);
@@ -84,7 +95,7 @@ export default function ImageCropDialog({ file, onCancel, onCropped }) {
     });
   }
 
-  function handleCrop() {
+  async function handleCrop() {
     if (!dimensions || !imageRef.current) return;
     setIsSaving(true);
     setCropError("");
@@ -104,43 +115,35 @@ export default function ImageCropDialog({ file, onCancel, onCropped }) {
       dimensions.height - sourceHeight,
       Math.max(0, (dimensions.height - sourceHeight) / 2 - offset.y / scale),
     );
-    const canvas = document.createElement("canvas");
-    canvas.width = OUTPUT_WIDTH;
-    canvas.height = OUTPUT_HEIGHT;
-    const context = canvas.getContext("2d");
-    context.drawImage(
-      imageRef.current,
-      sourceX,
-      sourceY,
-      sourceWidth,
-      sourceHeight,
-      0,
-      0,
-      OUTPUT_WIDTH,
-      OUTPUT_HEIGHT,
-    );
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        setCropError("Could not crop this image. Please try another file.");
-        setIsSaving(false);
-        return;
-      }
-      onCropped(new File([blob], "restaurant-banner.jpg", { type: "image/jpeg" }));
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = outputWidth;
+      canvas.height = outputHeight;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Could not prepare the cropped image.");
+      context.drawImage(imageRef.current, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, outputWidth, outputHeight);
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.9));
+      if (!blob) throw new Error("Could not crop this image. Please try another file.");
+      const accepted = await onCropped(new File([blob], outputName, { type: "image/jpeg" }));
+      if (accepted === false) throw new Error("The image could not be uploaded. Please try again.");
+    } catch (error) {
+      setCropError(error.message || "Could not crop this image. Please try another file.");
+    } finally {
       setIsSaving(false);
-    }, "image/jpeg", 0.9);
+    }
   }
 
   if (!file) return null;
 
   return (
     <div className="image-crop-backdrop" role="presentation">
-      <section className="image-crop-dialog" role="dialog" aria-modal="true" aria-labelledby="banner-crop-title">
+      <section className="image-crop-dialog" role="dialog" aria-modal="true" aria-labelledby="image-crop-title">
         <header className="image-crop-header">
           <div>
-            <h2 id="banner-crop-title">Crop restaurant banner</h2>
-            <p>Drag to position the image. The banner uses a 16:9 crop.</p>
+            <h2 id="image-crop-title">{title}</h2>
+            <p>{description}</p>
           </div>
-          <button type="button" onClick={onCancel} aria-label="Close image cropper" className="image-crop-close"><X size={19} /></button>
+          <button type="button" onClick={onCancel} disabled={isSaving} aria-label="Close image cropper" className="image-crop-close"><X size={19} /></button>
         </header>
 
         <div
@@ -150,7 +153,7 @@ export default function ImageCropDialog({ file, onCancel, onCropped }) {
           onPointerMove={handlePointerMove}
           onPointerUp={() => { dragRef.current = null; }}
           onPointerCancel={() => { dragRef.current = null; }}
-          style={{ cursor: dragRef.current ? "grabbing" : "grab" }}
+          style={{ cursor: dragRef.current ? "grabbing" : "grab", aspectRatio }}
         >
           {imageUrl ? (
             <img
@@ -159,7 +162,11 @@ export default function ImageCropDialog({ file, onCancel, onCropped }) {
               alt="Restaurant banner crop preview"
               onLoad={handleImageLoad}
               draggable="false"
-              style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})` }}
+              style={{
+                width: dimensions ? `${dimensions.width * Math.max(dimensions.previewWidth / dimensions.width, dimensions.previewHeight / dimensions.height)}px` : "100%",
+                height: dimensions ? `${dimensions.height * Math.max(dimensions.previewWidth / dimensions.width, dimensions.previewHeight / dimensions.height)}px` : "100%",
+                transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px)) scale(${zoom})`,
+              }}
             />
           ) : <ImageIcon aria-hidden="true" />}
         </div>
@@ -172,9 +179,9 @@ export default function ImageCropDialog({ file, onCancel, onCropped }) {
         {cropError && <p className="image-crop-error" role="alert">{cropError}</p>}
 
         <footer className="image-crop-actions">
-          <button type="button" onClick={onCancel} className="image-crop-cancel">Cancel</button>
+          <button type="button" onClick={onCancel} disabled={isSaving} className="image-crop-cancel">Cancel</button>
           <button type="button" onClick={handleCrop} disabled={!dimensions || isSaving} className="image-crop-confirm">
-            {isSaving ? "Preparing image…" : "Use this banner"}
+            {isSaving ? "Preparing image…" : confirmLabel}
           </button>
         </footer>
       </section>

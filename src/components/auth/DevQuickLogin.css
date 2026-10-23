@@ -1,0 +1,9 @@
+.db-quick-login{margin-top:24px;padding:16px;border:1px solid var(--color-border);border-radius:14px;background:var(--color-surface-raised);color:var(--color-text-primary)}
+.db-quick-login-title{margin:0;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--color-primary)}
+.db-quick-login-description{margin:7px 0 12px;font-size:12px;color:var(--color-text-muted)}
+.db-quick-login-accounts{display:grid;gap:8px;max-height:280px;overflow:auto}
+.db-quick-login-account{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:10px 12px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface);color:var(--color-text-primary);text-align:left;font:inherit;font-size:13px;cursor:pointer}
+.db-quick-login-account:hover{border-color:var(--color-accent);background:var(--color-surface-raised)}
+.db-quick-login-account:disabled{opacity:.6;cursor:wait}
+.db-quick-login-action{flex-shrink:0;font-size:12px;font-weight:600;color:var(--color-primary)}
+.db-quick-login-error{margin:12px 0 0;font-size:13px;color:var(--color-danger)}

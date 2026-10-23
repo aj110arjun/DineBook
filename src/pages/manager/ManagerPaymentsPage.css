@@ -309,3 +309,7 @@
   .manager-payment-detail-card dd { margin-bottom: 8px; }
   .manager-payment-amount-card { padding: 18px; }
 }
+
+/* A single scroll container keeps the wide ledger inside its card. */
+.manager-payments-table-wrap { max-width: 100%; contain: inline-size layout paint; }
+.manager-payments-page .manager-payments-table { display: table; max-width: none; overflow: visible; }
