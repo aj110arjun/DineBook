@@ -70,7 +70,14 @@ export default function AdminDashboardPage() {
 
   return (
     <main className="admin-dashboard">
-      {sidebarOpen && <button className="admin-sidebar-scrim" type="button" aria-label="Close navigation" onClick={() => setSidebarOpen(false)} />}
+      {sidebarOpen && (
+        <button
+          className="admin-sidebar-scrim"
+          type="button"
+          aria-label="Close navigation"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
       {/* Sidebar */}
       <aside className={`admin-sidebar${sidebarOpen ? " is-open" : ""}`}>
         <div className="admin-sidebar-brand">
@@ -110,7 +117,14 @@ export default function AdminDashboardPage() {
       <section className="admin-dashboard-main">
         {/* Topbar */}
         <header className="admin-topbar">
-          <button className="admin-mobile-nav-toggle" type="button" aria-label={sidebarOpen ? "Close navigation" : "Open navigation"} aria-expanded={sidebarOpen} aria-controls="admin-primary-nav" onClick={() => setSidebarOpen((open) => !open)}>
+          <button
+            className="admin-mobile-nav-toggle"
+            type="button"
+            aria-label={sidebarOpen ? "Close navigation" : "Open navigation"}
+            aria-expanded={sidebarOpen}
+            aria-controls="admin-primary-nav"
+            onClick={() => setSidebarOpen((open) => !open)}
+          >
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
           <h1>Dashboard</h1>
@@ -122,7 +136,11 @@ export default function AdminDashboardPage() {
 
         {/* Dashboard content */}
         <div className="admin-dashboard-content">
-          <PortalBreadcrumb home={{ label: "Admin", to: "/admin/dashboard" }} items={[{ label: "Dashboard" }]} className="admin-breadcrumb" />
+          <PortalBreadcrumb
+            home={{ label: "Admin", to: "/admin/dashboard" }}
+            items={[{ label: "Dashboard" }]}
+            className="admin-breadcrumb"
+          />
           {/* Heading */}
           <div className="admin-dashboard-heading">
             <div>

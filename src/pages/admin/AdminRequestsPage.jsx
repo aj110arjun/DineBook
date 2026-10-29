@@ -1,12 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Search,
-  UserCheck,
-  Check,
-  X,
-  RefreshCw,
-} from "lucide-react";
+import { Search, UserCheck, Check, X, RefreshCw } from "lucide-react";
 
 import { requestJson } from "../../lib/authApi.js";
 import AdminActionConfirmModal from "../../components/admin/AdminActionConfirmModal.jsx";
@@ -61,9 +55,17 @@ export default function AdminRequestsPage() {
         fallbackMessage: "Unable to approve manager.",
       });
 
-      setManagerRequests((current) => current.map((manager) => manager.id === managerId
-        ? { ...manager, status: "ACTIVE", restaurant: { ...manager.restaurant, status: "APPROVED" } }
-        : manager));
+      setManagerRequests((current) =>
+        current.map((manager) =>
+          manager.id === managerId
+            ? {
+                ...manager,
+                status: "ACTIVE",
+                restaurant: { ...manager.restaurant, status: "APPROVED" },
+              }
+            : manager,
+        ),
+      );
       setConfirmation(null);
     } catch (err) {
       setError(err.message || "Unable to approve manager.");
@@ -82,9 +84,17 @@ export default function AdminRequestsPage() {
         fallbackMessage: "Unable to reject manager.",
       });
 
-      setManagerRequests((current) => current.map((manager) => manager.id === managerId
-        ? { ...manager, status: "REJECTED", restaurant: { ...manager.restaurant, status: "REJECTED" } }
-        : manager));
+      setManagerRequests((current) =>
+        current.map((manager) =>
+          manager.id === managerId
+            ? {
+                ...manager,
+                status: "REJECTED",
+                restaurant: { ...manager.restaurant, status: "REJECTED" },
+              }
+            : manager,
+        ),
+      );
       setConfirmation(null);
     } catch (err) {
       setError(err.message || "Unable to reject manager.");
@@ -95,110 +105,181 @@ export default function AdminRequestsPage() {
 
   const statusCounts = {
     ALL: managerRequests.length,
-    PENDING: managerRequests.filter((manager) => (manager.restaurant?.status || manager.status) === "PENDING").length,
-    APPROVED: managerRequests.filter((manager) => (manager.restaurant?.status || manager.status) === "APPROVED").length,
-    REJECTED: managerRequests.filter((manager) => (manager.restaurant?.status || manager.status) === "REJECTED").length,
+    PENDING: managerRequests.filter(
+      (manager) => (manager.restaurant?.status || manager.status) === "PENDING",
+    ).length,
+    APPROVED: managerRequests.filter(
+      (manager) =>
+        (manager.restaurant?.status || manager.status) === "APPROVED",
+    ).length,
+    REJECTED: managerRequests.filter(
+      (manager) =>
+        (manager.restaurant?.status || manager.status) === "REJECTED",
+    ).length,
   };
-  const filteredRequests = managerRequests.filter((manager) => {
-    const status = manager.restaurant?.status || manager.status;
-    const haystack = `${manager.id} ${manager.name || ""} ${manager.email || ""} ${manager.restaurant?.name || ""} ${manager.restaurant?.city || ""} ${manager.restaurant?.cuisine_type || ""}`.toLowerCase();
-    return (activeStatus === "ALL" || status === activeStatus) && (!query.trim() || haystack.includes(query.trim().toLowerCase()));
-  }).sort((left, right) => {
-    const createdDelta = (Date.parse(left.created_at || 0) || 0) - (Date.parse(right.created_at || 0) || 0);
-    return sort === "oldest" ? createdDelta : -createdDelta;
-  });
-  const visibleRequests = filteredRequests.slice((page - 1) * pageSize, page * pageSize);
+  const filteredRequests = managerRequests
+    .filter((manager) => {
+      const status = manager.restaurant?.status || manager.status;
+      const haystack =
+        `${manager.id} ${manager.name || ""} ${manager.email || ""} ${manager.restaurant?.name || ""} ${manager.restaurant?.city || ""} ${manager.restaurant?.cuisine_type || ""}`.toLowerCase();
+      return (
+        (activeStatus === "ALL" || status === activeStatus) &&
+        (!query.trim() || haystack.includes(query.trim().toLowerCase()))
+      );
+    })
+    .sort((left, right) => {
+      const createdDelta =
+        (Date.parse(left.created_at || 0) || 0) -
+        (Date.parse(right.created_at || 0) || 0);
+      return sort === "oldest" ? createdDelta : -createdDelta;
+    });
+  const visibleRequests = filteredRequests.slice(
+    (page - 1) * pageSize,
+    page * pageSize,
+  );
   const pageCount = Math.max(1, Math.ceil(filteredRequests.length / pageSize));
-  useEffect(() => { setPage(1); }, [activeStatus, query, sort, pageSize]);
-  useEffect(() => { if (page > pageCount) setPage(pageCount); }, [page, pageCount]);
+  useEffect(() => {
+    setPage(1);
+  }, [activeStatus, query, sort, pageSize]);
+  useEffect(() => {
+    if (page > pageCount) setPage(pageCount);
+  }, [page, pageCount]);
 
   return (
     <AdminLayout title="Restaurant Requests">
-        <div className="admin-dashboard-content">
-          <div className="admin-dashboard-heading">
-            <div>
-              <h2>Manager Requests</h2>
-              <p>
-                Review manager applications and track their current status.
-              </p>
-            </div>
+      <div className="admin-dashboard-content">
+        <div className="admin-dashboard-heading">
+          <div>
+            <h2>Manager Requests</h2>
+            <p>Review manager applications and track their current status.</p>
+          </div>
 
+          <button
+            type="button"
+            className="admin-refresh-button"
+            onClick={loadManagerRequests}
+            disabled={loading}
+          >
+            <RefreshCw size={15} />
+            Refresh
+          </button>
+        </div>
+
+        <div
+          className="admin-request-status-tabs"
+          role="group"
+          aria-label="Filter manager requests by status"
+        >
+          {requestStatuses.map((status) => (
             <button
+              key={status}
               type="button"
-              className="admin-refresh-button"
-              onClick={loadManagerRequests}
-              disabled={loading}
+              aria-pressed={activeStatus === status}
+              className={`admin-request-status-tab ${activeStatus === status ? "active" : ""}`}
+              onClick={() => setActiveStatus(status)}
             >
-              <RefreshCw size={15} />
-              Refresh
+              {status === "ALL"
+                ? "All Requests"
+                : status.charAt(0) + status.slice(1).toLowerCase()}
+              <span>{statusCounts[status]}</span>
             </button>
-          </div>
+          ))}
+        </div>
 
-          <div className="admin-request-status-tabs" role="group" aria-label="Filter manager requests by status">
-            {requestStatuses.map((status) => (
-              <button
-                key={status}
-                type="button"
-                aria-pressed={activeStatus === status}
-                className={`admin-request-status-tab ${activeStatus === status ? "active" : ""}`}
-                onClick={() => setActiveStatus(status)}
+        <div className="admin-page-actions">
+          <div className="admin-search">
+            <Search size={15} />
+            <input
+              type="search"
+              placeholder="Search manager, restaurant, or location"
+              aria-label="Search manager requests"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </div>
+          <label className="admin-filter-select">
+            Sort{" "}
+            <select
+              value={sort}
+              onChange={(event) => setSort(event.target.value)}
+            >
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+            </select>
+          </label>
+          <button
+            type="button"
+            className="admin-refresh-button"
+            onClick={() => {
+              setQuery("");
+              setActiveStatus("ALL");
+              setSort("newest");
+            }}
+          >
+            Clear filters
+          </button>
+        </div>
+
+        {error && <div className="admin-request-error">{error}</div>}
+
+        {loading ? (
+          <div className="admin-request-empty">Loading manager requests...</div>
+        ) : visibleRequests.length === 0 ? (
+          <div className="admin-request-empty">
+            <UserCheck size={28} />
+            <strong>
+              {managerRequests.length === 0
+                ? "No manager applications"
+                : "No requests match these filters"}
+            </strong>
+            <span>
+              {managerRequests.length === 0
+                ? "New restaurant applications will appear here."
+                : "Try another status or search term."}
+            </span>
+          </div>
+        ) : (
+          <div className="admin-request-list">
+            {visibleRequests.map((manager) => (
+              <article
+                key={manager.id}
+                className="admin-request-card cursor-pointer"
+                onClick={() => navigate(`/admin/requests/${manager.id}`)}
               >
-                {status === "ALL" ? "All Requests" : status.charAt(0) + status.slice(1).toLowerCase()}
-                <span>{statusCounts[status]}</span>
-              </button>
-            ))}
-          </div>
+                <div className="admin-request-avatar">
+                  {manager.name?.charAt(0)?.toUpperCase() || "M"}
+                </div>
 
-          <div className="admin-page-actions">
-            <div className="admin-search"><Search size={15} /><input type="search" placeholder="Search manager, restaurant, or location" aria-label="Search manager requests" value={query} onChange={(event) => setQuery(event.target.value)} /></div>
-            <label className="admin-filter-select">Sort <select value={sort} onChange={(event) => setSort(event.target.value)}><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select></label>
-            <button type="button" className="admin-refresh-button" onClick={() => { setQuery(""); setActiveStatus("ALL"); setSort("newest"); }}>Clear filters</button>
-          </div>
-
-          {error && <div className="admin-request-error">{error}</div>}
-
-          {loading ? (
-            <div className="admin-request-empty">
-              Loading manager requests...
-            </div>
-          ) : visibleRequests.length === 0 ? (
-            <div className="admin-request-empty">
-              <UserCheck size={28} />
-              <strong>{managerRequests.length === 0 ? "No manager applications" : "No requests match these filters"}</strong>
-              <span>{managerRequests.length === 0 ? "New restaurant applications will appear here." : "Try another status or search term."}</span>
-            </div>
-          ) : (
-            <div className="admin-request-list">
-              {visibleRequests.map((manager) => (
-                <article
-                  key={manager.id}
-                  className="admin-request-card cursor-pointer"
-                  onClick={() => navigate(`/admin/requests/${manager.id}`)}
-                >
-                  <div className="admin-request-avatar">
-                    {manager.name?.charAt(0)?.toUpperCase() || "M"}
+                <div className="admin-request-details">
+                  <div className="admin-request-title">
+                    <h3>{manager.restaurant?.name || manager.name}</h3>
+                    <span
+                      className={`admin-request-status ${(manager.restaurant?.status || manager.status || "pending").toLowerCase()}`}
+                    >
+                      {manager.restaurant?.status || manager.status}
+                    </span>
                   </div>
 
-                  <div className="admin-request-details">
-                    <div className="admin-request-title">
-                      <h3>{manager.restaurant?.name || manager.name}</h3>
-                      <span className={`admin-request-status ${(manager.restaurant?.status || manager.status || "pending").toLowerCase()}`}>
-                        {manager.restaurant?.status || manager.status}
-                      </span>
-                    </div>
+                  <p>
+                    {manager.restaurant?.cuisine_type ||
+                      "Restaurant application"}{" "}
+                    · {manager.restaurant?.city || "Location not provided"}
+                  </p>
+                  <small>
+                    Manager: {manager.name} · {manager.email}
+                  </small>
 
-                    <p>{manager.restaurant?.cuisine_type || "Restaurant application"} · {manager.restaurant?.city || "Location not provided"}</p>
-                    <small>Manager: {manager.name} · {manager.email}</small>
+                  <small>
+                    Registered{" "}
+                    {manager.created_at
+                      ? new Date(manager.created_at).toLocaleString()
+                      : "recently"}
+                  </small>
+                </div>
 
-                    <small>
-                      Registered{" "}
-                      {manager.created_at
-                        ? new Date(manager.created_at).toLocaleString()
-                        : "recently"}
-                    </small>
-                  </div>
-
-                  {(manager.restaurant?.status || manager.status) === "PENDING" && <div className="admin-request-actions">
+                {(manager.restaurant?.status || manager.status) ===
+                  "PENDING" && (
+                  <div className="admin-request-actions">
                     <button
                       type="button"
                       className="admin-request-reject"
@@ -224,21 +305,36 @@ export default function AdminRequestsPage() {
                       <Check size={15} />
                       Approve
                     </button>
-                  </div>}
-                </article>
-              ))}
-            </div>
-          )}
-          {!loading && filteredRequests.length > 0 && <Pagination page={page} pageSize={pageSize} total={filteredRequests.length} onPageChange={setPage} onPageSizeChange={setPageSize} label="requests" />}
-        </div>
+                  </div>
+                )}
+              </article>
+            ))}
+          </div>
+        )}
+        {!loading && filteredRequests.length > 0 && (
+          <Pagination
+            page={page}
+            pageSize={pageSize}
+            total={filteredRequests.length}
+            onPageChange={setPage}
+            label="requests"
+          />
+        )}
+      </div>
       <AdminActionConfirmModal
         action={confirmation?.action}
-        subject={confirmation?.manager?.restaurant?.name || confirmation?.manager?.name || "this manager application"}
+        subject={
+          confirmation?.manager?.restaurant?.name ||
+          confirmation?.manager?.name ||
+          "this manager application"
+        }
         busy={confirmation && processingId === confirmation.manager.id}
         onCancel={() => setConfirmation(null)}
-        onConfirm={() => confirmation?.action === "approve"
-          ? handleApprove(confirmation.manager.id)
-          : handleReject(confirmation.manager.id)}
+        onConfirm={() =>
+          confirmation?.action === "approve"
+            ? handleApprove(confirmation.manager.id)
+            : handleReject(confirmation.manager.id)
+        }
       />
     </AdminLayout>
   );

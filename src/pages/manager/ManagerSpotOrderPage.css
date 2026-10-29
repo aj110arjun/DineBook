@@ -71,7 +71,9 @@
   border-radius: 9px;
   background: #79323d;
   color: white;
-  font-family: inherit; font-size: 13px; font-weight: 600;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
 }
 .spot-order-add-row button:disabled,
@@ -250,4 +252,22 @@
   .spot-order-new {
     display: none !important;
   }
+}
+
+.spot-order-offer {
+  display: grid;
+  gap: 7px;
+  margin-top: 20px;
+  font-size: 13px;
+  font-weight: 650;
+}
+.spot-order-breakdown {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+.spot-order-breakdown > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
 }

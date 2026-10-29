@@ -1,3 +1,4 @@
+import { GEOCODING_BASE_URL } from "../../lib/serviceConfig.js";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { MapPin, Save } from "lucide-react";
@@ -49,11 +50,12 @@ export default function ManagerRestaurantLocationPage() {
       setBusy(true);
       try {
         const response = await axios.request({
-          url: `https://photon.komoot.io/api/?q=${encodeURIComponent(search)}&limit=5&lang=en`,
+          url: `${GEOCODING_BASE_URL}/api/?q=${encodeURIComponent(search)}&limit=5&lang=en`,
           validateStatus: () => true,
           signal: controller.signal,
         });
-        if (response.status < 200 || response.status >= 300) throw new Error("Location search is unavailable.");
+        if (response.status < 200 || response.status >= 300)
+          throw new Error("Location search is unavailable.");
         const data = response.data;
         if (!controller.signal.aborted) setSuggestions(data.features || []);
       } catch (reason) {

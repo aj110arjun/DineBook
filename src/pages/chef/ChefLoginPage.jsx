@@ -1,3 +1,4 @@
+import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useState } from "react";
 import { ArrowRight, Mail } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -24,7 +25,8 @@ export default function ChefLoginPage() {
     }
     if (name === "password") {
       if (!value) return "Enter your password.";
-      if (value.length > 128) return "Password must be 128 characters or fewer.";
+      if (value.length > 128)
+        return "Password must be 128 characters or fewer.";
     }
     return "";
   }
@@ -33,13 +35,19 @@ export default function ChefLoginPage() {
     const { name, value } = event.target;
     setError("");
     if (fieldErrors[name]) {
-      setFieldErrors((current) => ({ ...current, [name]: validateField(name, value) }));
+      setFieldErrors((current) => ({
+        ...current,
+        [name]: validateField(name, value),
+      }));
     }
   }
 
   function handleFieldBlur(event) {
     const { name, value } = event.target;
-    setFieldErrors((current) => ({ ...current, [name]: validateField(name, value) }));
+    setFieldErrors((current) => ({
+      ...current,
+      [name]: validateField(name, value),
+    }));
   }
 
   async function handleSubmit(event) {
@@ -50,11 +58,18 @@ export default function ChefLoginPage() {
       password: form.get("password") || "",
     };
     const nextErrors = Object.fromEntries(
-      Object.entries(values).map(([name, value]) => [name, validateField(name, value)]),
+      Object.entries(values).map(([name, value]) => [
+        name,
+        validateField(name, value),
+      ]),
     );
     setFieldErrors(nextErrors);
     if (Object.values(nextErrors).some(Boolean)) {
-      event.currentTarget.querySelector(`[name="${Object.keys(nextErrors).find((name) => nextErrors[name])}"]`)?.focus();
+      event.currentTarget
+        .querySelector(
+          `[name="${Object.keys(nextErrors).find((name) => nextErrors[name])}"]`,
+        )
+        ?.focus();
       return;
     }
     setError("");
@@ -79,12 +94,14 @@ export default function ChefLoginPage() {
 
   return (
     <ChefAuthLayout>
-      <h2 className="font-display text-3xl font-semibold text-ink">Chef Sign In</h2>
+      <h2 className="font-display text-3xl font-semibold text-ink">
+        Chef Sign In
+      </h2>
       <p className="mb-7 mt-2 text-sm leading-6 text-stone-500">
         Sign in to access your DineBook kitchen portal.
       </p>
 
-      <form onSubmit={handleSubmit} noValidate>
+      <CustomForm onSubmit={handleSubmit} noValidate>
         <FormField
           id="email"
           name="email"
@@ -110,7 +127,12 @@ export default function ChefLoginPage() {
           onBlur={handleFieldBlur}
         />
         <div className="mb-5 -mt-2 text-right text-xs">
-          <Link className="font-medium text-wine hover:underline" to="/chef/recovery">Forgot password?</Link>
+          <Link
+            className="font-medium text-wine hover:underline"
+            to="/chef/recovery"
+          >
+            Forgot password?
+          </Link>
         </div>
         {location.state?.notice && <Notice message={location.state.notice} />}
         <Notice message={error} />
@@ -122,8 +144,11 @@ export default function ChefLoginPage() {
           {busy ? "Signing in…" : "Enter Kitchen Dashboard"}
           {!busy && <ArrowRight size={16} />}
         </button>
-      </form>
-      <DevQuickLogin portal="chef" onSuccess={() => navigate("/chef/dashboard", { replace: true })} />
+      </CustomForm>
+      <DevQuickLogin
+        portal="chef"
+        onSuccess={() => navigate("/chef/dashboard", { replace: true })}
+      />
     </ChefAuthLayout>
   );
 }

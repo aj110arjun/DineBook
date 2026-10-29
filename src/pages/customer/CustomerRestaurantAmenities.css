@@ -1,24 +1,109 @@
-.restaurant-amenities-section { display: grid; gap: 18px; padding-bottom: 24px; }
-.restaurant-amenities-section .restaurant-about-eyebrow { margin-bottom: -12px; }
-.restaurant-amenities-section h2 { margin-bottom: -8px; }
-.restaurant-amenities-section > .restaurant-amenities-intro { max-width: 700px; font-size: var(--font-size-sm); line-height: 1.6; }
-.restaurant-amenities-section h3 { margin: 8px 0 -2px; font-size: var(--font-size-md); }
-.restaurant-amenities-notice { max-width: 850px; padding: 20px 22px; border: 1px solid #e8d9c5; border-radius: 14px; background: #fcf8f1; }
-.restaurant-amenities-notice strong { display: block; margin-bottom: 6px; color: #49312b; font-size: var(--font-size-sm); }
-.restaurant-amenities-notice p { margin: 0; color: #665955; font-size: var(--font-size-sm); line-height: 1.6; }
-.restaurant-amenities-contact { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
-.restaurant-amenities-contact a { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 8px 13px; border: 1px solid #b6935d; border-radius: 9px; color: #674724; font-size: var(--font-size-sm); font-weight: 650; text-decoration: none; }
-.restaurant-amenities-contact a:hover { background: #f5e9d8; }
-.restaurant-amenities-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 14px; }
-.restaurant-amenities-grid article { min-width: 0; padding: 20px; border: 1px solid #eee5e1; border-radius: 13px; background: #fff; }
-.restaurant-amenities-grid svg { color: #9b773b; }
-.restaurant-amenities-grid h4 { margin: 11px 0 6px; color: #453936; font-size: var(--font-size-sm); }
-.restaurant-amenities-grid p { margin: 0; color: #706765; font-size: var(--font-size-sm); line-height: 1.5; }
-:root[data-theme="dark"] .restaurant-amenities-notice { border-color: #68523c; background: #30261f; }
+.restaurant-amenities-section {
+  display: grid;
+  gap: 18px;
+  padding-bottom: 24px;
+}
+.restaurant-amenities-section .restaurant-about-eyebrow {
+  margin-bottom: -12px;
+}
+.restaurant-amenities-section h2 {
+  margin-bottom: -8px;
+}
+.restaurant-amenities-section > .restaurant-amenities-intro {
+  max-width: 700px;
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+}
+.restaurant-amenities-section h3 {
+  margin: 8px 0 -2px;
+  font-size: var(--font-size-md);
+}
+.restaurant-amenities-notice {
+  max-width: 850px;
+  padding: 20px 22px;
+  border: 1px solid #e8d9c5;
+  border-radius: 14px;
+  background: #fcf8f1;
+}
+.restaurant-amenities-notice strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #49312b;
+  font-size: var(--font-size-sm);
+}
+.restaurant-amenities-notice p {
+  margin: 0;
+  color: #665955;
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+}
+.restaurant-amenities-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+.restaurant-amenities-contact a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 8px 13px;
+  border: 1px solid #b6935d;
+  border-radius: 9px;
+  color: #674724;
+  font-size: var(--font-size-sm);
+  font-weight: 650;
+  text-decoration: none;
+}
+.restaurant-amenities-contact a:hover {
+  background: #f5e9d8;
+}
+.restaurant-amenities-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+  gap: 14px;
+}
+.restaurant-amenities-grid article {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid #eee5e1;
+  border-radius: 13px;
+  background: #fff;
+}
+.restaurant-amenities-grid svg {
+  color: #9b773b;
+}
+.restaurant-amenities-grid h4 {
+  margin: 11px 0 6px;
+  color: #453936;
+  font-size: var(--font-size-sm);
+}
+.restaurant-amenities-grid p {
+  margin: 0;
+  color: #706765;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+:root[data-theme="dark"] .restaurant-amenities-notice {
+  border-color: #68523c;
+  background: #30261f;
+}
 :root[data-theme="dark"] .restaurant-amenities-notice strong,
-:root[data-theme="dark"] .restaurant-amenities-grid h4 { color: var(--dark-text); }
+:root[data-theme="dark"] .restaurant-amenities-grid h4 {
+  color: var(--dark-text);
+}
 :root[data-theme="dark"] .restaurant-amenities-notice p,
-:root[data-theme="dark"] .restaurant-amenities-grid p { color: var(--dark-muted); }
-:root[data-theme="dark"] .restaurant-amenities-contact a { color: #e6c990; }
-:root[data-theme="dark"] .restaurant-amenities-contact a:hover { background: #433325; }
-:root[data-theme="dark"] .restaurant-amenities-grid article { border-color: var(--dark-line); background: #211d1f; }
+:root[data-theme="dark"] .restaurant-amenities-grid p {
+  color: var(--dark-muted);
+}
+:root[data-theme="dark"] .restaurant-amenities-contact a {
+  color: #e6c990;
+}
+:root[data-theme="dark"] .restaurant-amenities-contact a:hover {
+  background: #433325;
+}
+:root[data-theme="dark"] .restaurant-amenities-grid article {
+  border-color: var(--dark-line);
+  background: #211d1f;
+}

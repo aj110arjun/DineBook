@@ -32,41 +32,53 @@ export default function CustomerRestaurantListingPage() {
 
   useEffect(() => {
     let mounted = true;
-    const params = new URLSearchParams({ page: String(page), page_size: String(PAGE_SIZE), sort });
+    const params = new URLSearchParams({
+      page: String(page),
+      page_size: String(PAGE_SIZE),
+      sort,
+    });
     if (query.trim()) params.set("search", query.trim());
     cuisines.forEach((value) => params.append("cuisine", value));
     locations.forEach((value) => params.append("location", value));
     setLoading(true);
     setError("");
-    const request = sort === "distance" && customerLocation
-      ? requestJson("/api/customer/restaurants/nearby", {
-          method: "POST",
-          body: JSON.stringify({
-            latitude: customerLocation.latitude,
-            longitude: customerLocation.longitude,
-            search: query.trim() || null,
-            cuisine: cuisines,
-            location: locations,
-            page,
-            page_size: PAGE_SIZE,
-          }),
-        })
-      : requestJson(`/api/customer/restaurants?${params.toString()}`);
+    const request =
+      sort === "distance" && customerLocation
+        ? requestJson("/api/customer/restaurants/nearby", {
+            method: "POST",
+            body: JSON.stringify({
+              latitude: customerLocation.latitude,
+              longitude: customerLocation.longitude,
+              search: query.trim() || null,
+              cuisine: cuisines,
+              location: locations,
+              page,
+              page_size: PAGE_SIZE,
+            }),
+          })
+        : requestJson(`/api/customer/restaurants?${params.toString()}`);
     request
       .then((data) => {
         if (!mounted) return;
         setRestaurants(Array.isArray(data?.items) ? data.items : []);
         setTotalRestaurants(Number(data?.total) || 0);
         setCuisineOptions(Array.isArray(data?.cuisines) ? data.cuisines : []);
-        setLocationOptions(Array.isArray(data?.locations) ? data.locations : []);
+        setLocationOptions(
+          Array.isArray(data?.locations) ? data.locations : [],
+        );
       })
       .catch((reason) => mounted && setError(reason.message))
       .finally(() => mounted && setLoading(false));
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [page, query, cuisines, locations, sort, customerLocation, refreshKey]);
 
   useEffect(() => {
-    if (import.meta.env.DEV && sessionStorage.getItem(demoSessionKey) === "active") {
+    if (
+      import.meta.env.DEV &&
+      sessionStorage.getItem(demoSessionKey) === "active"
+    ) {
       setUser(demoCustomer);
       return;
     }
@@ -74,13 +86,19 @@ export default function CustomerRestaurantListingPage() {
     requestJson("/api/customer/me")
       .then((data) => mounted && setUser(data))
       .catch(() => mounted && setUser(null));
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const visibleRestaurants = restaurants;
 
   function toggleFilter(value, setter) {
-    setter((current) => current.includes(value) ? current.filter((item) => item !== value) : [...current, value]);
+    setter((current) =>
+      current.includes(value)
+        ? current.filter((item) => item !== value)
+        : [...current, value],
+    );
     setPage(1);
   }
 
@@ -103,16 +121,21 @@ export default function CustomerRestaurantListingPage() {
     setLocationBusy(true);
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
-        setCustomerLocation({ latitude: coords.latitude, longitude: coords.longitude });
+        setCustomerLocation({
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+        });
         setSort("distance");
         setPage(1);
         setLocationBusy(false);
       },
       (reason) => {
         setLocationBusy(false);
-        setLocationError(reason.code === 1
-          ? "Allow location access to see nearby restaurants."
-          : "Could not get your location. Please try again.");
+        setLocationError(
+          reason.code === 1
+            ? "Allow location access to see nearby restaurants."
+            : "Could not get your location. Please try again.",
+        );
       },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
     );
@@ -123,15 +146,40 @@ export default function CustomerRestaurantListingPage() {
       <CustomerHeader user={user} onLogout={() => setUser(null)} />
       <section className="restaurant-listing-search">
         <div className="restaurant-listing-search-inner">
-          <h1>Find a restaurant{restaurants[0]?.location ? ` in ${restaurants[0].location.split(",")[0]}` : ""}</h1>
+          <h1>
+            Find a restaurant
+            {restaurants[0]?.location
+              ? ` in ${restaurants[0].location.split(",")[0]}`
+              : ""}
+          </h1>
           <div className="restaurant-search-bar">
             <Search size={18} />
-            <input type="search" value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="Search restaurants, cuisines, or locations…" aria-label="Search restaurants" />
-            <button type="button" onClick={() => setPage(1)}>Search</button>
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setPage(1);
+              }}
+              placeholder="Search restaurants, cuisines, or locations…"
+              aria-label="Search restaurants"
+            />
+            <button type="button" onClick={() => setPage(1)}>
+              Search
+            </button>
           </div>
           <div className="restaurant-nearby-controls">
-            <button type="button" onClick={findNearbyRestaurants} disabled={locationBusy}>
-              <MapPin size={15} />{locationBusy ? "Finding location…" : sort === "distance" ? "Refresh nearby results" : "Find restaurants near me"}
+            <button
+              type="button"
+              onClick={findNearbyRestaurants}
+              disabled={locationBusy}
+            >
+              <MapPin size={15} />
+              {locationBusy
+                ? "Finding location…"
+                : sort === "distance"
+                  ? "Refresh nearby results"
+                  : "Find restaurants near me"}
             </button>
             {locationError && <span role="alert">{locationError}</span>}
           </div>
@@ -139,20 +187,145 @@ export default function CustomerRestaurantListingPage() {
       </section>
 
       <main className="restaurant-listing-page">
-        <nav className="restaurant-listing-breadcrumb" aria-label="Breadcrumb"><Link to="/customer">Home</Link><span aria-hidden="true">/</span><strong aria-current="page">Restaurants</strong></nav>
+        <nav className="restaurant-listing-breadcrumb" aria-label="Breadcrumb">
+          <Link to="/customer">Home</Link>
+          <span aria-hidden="true">/</span>
+          <strong aria-current="page">Restaurants</strong>
+        </nav>
         <div className="restaurant-listing-layout">
           <aside className="restaurant-filter-panel">
-            <div className="restaurant-filter-title"><h2>Filters{cuisines.length + locations.length > 0 ? ` · ${cuisines.length + locations.length}` : ""}</h2><div className="restaurant-filter-actions"><button type="button" onClick={clearFilters}>Clear All</button><button className="restaurant-filter-toggle" type="button" aria-expanded={filtersOpen} aria-controls="restaurant-filter-fields" onClick={() => setFiltersOpen((open) => !open)}><SlidersHorizontal size={17} />{filtersOpen ? "Hide" : "Show"}</button></div></div>
-            <div id="restaurant-filter-fields" className={`restaurant-filter-fields${filtersOpen ? " is-open" : ""}`}>
-              <section className="restaurant-filter-group"><h3>Cuisine</h3>{cuisineOptions.length ? cuisineOptions.map((cuisine) => <label key={cuisine}><input type="checkbox" checked={cuisines.includes(cuisine)} onChange={() => toggleFilter(cuisine, setCuisines)} /><span>{cuisine}</span></label>) : <p>Cuisine filters will appear when restaurants are listed.</p>}</section>
-              <section className="restaurant-filter-group"><h3>Location</h3>{locationOptions.map((location) => <label key={location}><input type="checkbox" checked={locations.includes(location)} onChange={() => toggleFilter(location, setLocations)} /><MapPin size={14} aria-hidden="true" /><span>{location}</span></label>)}</section>
+            <div className="restaurant-filter-title">
+              <h2>
+                Filters
+                {cuisines.length + locations.length > 0
+                  ? ` · ${cuisines.length + locations.length}`
+                  : ""}
+              </h2>
+              <div className="restaurant-filter-actions">
+                <button type="button" onClick={clearFilters}>
+                  Clear All
+                </button>
+                <button
+                  className="restaurant-filter-toggle"
+                  type="button"
+                  aria-expanded={filtersOpen}
+                  aria-controls="restaurant-filter-fields"
+                  onClick={() => setFiltersOpen((open) => !open)}
+                >
+                  <SlidersHorizontal size={17} />
+                  {filtersOpen ? "Hide" : "Show"}
+                </button>
+              </div>
+            </div>
+            <div
+              id="restaurant-filter-fields"
+              className={`restaurant-filter-fields${filtersOpen ? " is-open" : ""}`}
+            >
+              <section className="restaurant-filter-group">
+                <h3>Cuisine</h3>
+                {cuisineOptions.length ? (
+                  cuisineOptions.map((cuisine) => (
+                    <label key={cuisine}>
+                      <input
+                        type="checkbox"
+                        checked={cuisines.includes(cuisine)}
+                        onChange={() => toggleFilter(cuisine, setCuisines)}
+                      />
+                      <span>{cuisine}</span>
+                    </label>
+                  ))
+                ) : (
+                  <p>
+                    Cuisine filters will appear when restaurants are listed.
+                  </p>
+                )}
+              </section>
+              <section className="restaurant-filter-group">
+                <h3>Location</h3>
+                {locationOptions.map((location) => (
+                  <label key={location}>
+                    <input
+                      type="checkbox"
+                      checked={locations.includes(location)}
+                      onChange={() => toggleFilter(location, setLocations)}
+                    />
+                    <MapPin size={14} aria-hidden="true" />
+                    <span>{location}</span>
+                  </label>
+                ))}
+              </section>
             </div>
           </aside>
 
           <section className="restaurant-listing-results" aria-live="polite">
-            <div className="restaurant-listing-toolbar"><h2>{loading ? "Finding restaurants…" : `${totalRestaurants} restaurant${totalRestaurants === 1 ? "" : "s"} found`}</h2><label>Sort by:<select value={sort} onChange={(event) => { setSort(event.target.value); setPage(1); }}><option value="newest">Recently added</option><option value="name">Name A–Z</option><option value="name-desc">Name Z–A</option><option value="distance" disabled={!customerLocation}>Nearest to me</option></select></label></div>
-            {error ? <div className="empty-state" role="alert"><p>{error}</p><button type="button" onClick={() => setRefreshKey((value) => value + 1)}>Try again</button></div> : loading ? <div className="empty-state" role="status">Finding restaurants for you…</div> : visibleRestaurants.length ? <div className="restaurant-grid">{visibleRestaurants.map((restaurant) => <RestaurantCard key={restaurant.id} restaurant={restaurant} guests={guestCount} />)}</div> : <div className="empty-state">{sort === "distance" ? "No restaurants with a saved map location match your nearby search yet. Try another area or clear your filters." : totalRestaurants ? "No restaurants match these filters. Try changing or clearing your filters." : "No approved restaurants are available yet. Check back soon."}</div>}
-            {!loading && !error && totalRestaurants > 0 && <Pagination page={page} pageSize={PAGE_SIZE} total={totalRestaurants} onPageChange={setPage} label="restaurants" className="restaurant-pagination" showPageNumbers />}
+            <div className="restaurant-listing-toolbar">
+              <h2>
+                {loading
+                  ? "Finding restaurants…"
+                  : `${totalRestaurants} restaurant${totalRestaurants === 1 ? "" : "s"} found`}
+              </h2>
+              <label>
+                Sort by:
+                <select
+                  value={sort}
+                  onChange={(event) => {
+                    setSort(event.target.value);
+                    setPage(1);
+                  }}
+                >
+                  <option value="newest">Recently added</option>
+                  <option value="name">Name A–Z</option>
+                  <option value="name-desc">Name Z–A</option>
+                  <option value="distance" disabled={!customerLocation}>
+                    Nearest to me
+                  </option>
+                </select>
+              </label>
+            </div>
+            {error ? (
+              <div className="empty-state" role="alert">
+                <p>{error}</p>
+                <button
+                  type="button"
+                  onClick={() => setRefreshKey((value) => value + 1)}
+                >
+                  Try again
+                </button>
+              </div>
+            ) : loading ? (
+              <div className="empty-state" role="status">
+                Finding restaurants for you…
+              </div>
+            ) : visibleRestaurants.length ? (
+              <div className="restaurant-grid">
+                {visibleRestaurants.map((restaurant) => (
+                  <RestaurantCard
+                    key={restaurant.id}
+                    restaurant={restaurant}
+                    guests={guestCount}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">
+                {sort === "distance"
+                  ? "No restaurants with a saved map location match your nearby search yet. Try another area or clear your filters."
+                  : totalRestaurants
+                    ? "No restaurants match these filters. Try changing or clearing your filters."
+                    : "No approved restaurants are available yet. Check back soon."}
+              </div>
+            )}
+            {!loading && !error && totalRestaurants > 0 && (
+              <Pagination
+                page={page}
+                pageSize={PAGE_SIZE}
+                total={totalRestaurants}
+                onPageChange={setPage}
+                label="restaurants"
+                className="restaurant-pagination"
+                showPageNumbers
+              />
+            )}
           </section>
         </div>
       </main>

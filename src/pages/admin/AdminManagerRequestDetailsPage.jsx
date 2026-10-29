@@ -98,19 +98,19 @@ export default function AdminManagerRequestDetailsPage() {
       <AdminLayout title="Request Details" activePath="/admin/requests">
         <div className="admin-dashboard-content admin-request-detail-content">
           <div className="flex min-h-[420px] items-center justify-center">
-              <div className="text-center">
-                <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[#0fa99d]/10 text-[#0fa99d]">
-                  <Clock3 size={22} />
-                </div>
-
-                <h2 className="text-base font-bold text-[#172335]">
-                  Loading manager request
-                </h2>
-
-                <p className="mt-1 text-sm text-gray-500">
-                  Please wait while the application details are loaded.
-                </p>
+            <div className="text-center">
+              <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[#0fa99d]/10 text-[#0fa99d]">
+                <Clock3 size={22} />
               </div>
+
+              <h2 className="text-base font-bold text-[#172335]">
+                Loading manager request
+              </h2>
+
+              <p className="mt-1 text-sm text-gray-500">
+                Please wait while the application details are loaded.
+              </p>
+            </div>
           </div>
         </div>
       </AdminLayout>
@@ -121,32 +121,30 @@ export default function AdminManagerRequestDetailsPage() {
     return (
       <AdminLayout title="Request Details" activePath="/admin/requests">
         <div className="admin-dashboard-content admin-request-detail-content">
-              <button
-                type="button"
-                onClick={() => navigate("/admin/requests")}
-                className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-gray-600 transition hover:text-[#0fa99d]"
-              >
-                <ArrowLeft size={16} />
-                Back to Requests
-              </button>
+          <button
+            type="button"
+            onClick={() => navigate("/admin/requests")}
+            className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-gray-600 transition hover:text-[#0fa99d]"
+          >
+            <ArrowLeft size={16} />
+            Back to Requests
+          </button>
 
-              <div className="rounded-2xl border border-red-200 bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
-                <div className="flex items-start gap-3">
-                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-red-100 text-red-600">
-                    <X size={17} />
-                  </div>
-
-                  <div>
-                    <h2 className="text-sm font-bold text-red-700">
-                      Unable to load application
-                    </h2>
-
-                    <p className="mt-1 text-sm leading-6 text-red-600">
-                      {error}
-                    </p>
-                  </div>
-                </div>
+          <div className="rounded-2xl border border-red-200 bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
+            <div className="flex items-start gap-3">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-red-100 text-red-600">
+                <X size={17} />
               </div>
+
+              <div>
+                <h2 className="text-sm font-bold text-red-700">
+                  Unable to load application
+                </h2>
+
+                <p className="mt-1 text-sm leading-6 text-red-600">{error}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </AdminLayout>
     );
@@ -156,7 +154,9 @@ export default function AdminManagerRequestDetailsPage() {
   const documents = request?.documents || [];
   const hours = request?.hours || [];
 
-  const status = String(restaurant.status || request?.status || "PENDING").toUpperCase();
+  const status = String(
+    restaurant.status || request?.status || "PENDING",
+  ).toUpperCase();
 
   const statusStyles = {
     PENDING: "border-amber-200 bg-amber-50 text-amber-700",
@@ -168,69 +168,70 @@ export default function AdminManagerRequestDetailsPage() {
   return (
     <AdminLayout title="Request Details" activePath="/admin/requests">
       <div className="admin-dashboard-content admin-request-detail-content">
-          {error && (
-            <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
-              {error}
-            </div>
-          )}
+        {error && (
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+            {error}
+          </div>
+        )}
 
-          {/* Page Header */}
-          <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex min-w-0 items-start gap-4">
+        {/* Page Header */}
+        <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex min-w-0 items-start gap-4">
               <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-[#0fa99d]/10 text-[#0fa99d]">
-                  <User size={24} />
-                </div>
-
-                <div className="min-w-0">
-                  <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#0fa99d]">
-                    Manager Application
-                  </p>
-
-                  <h2 className="truncate text-2xl font-bold tracking-tight text-[#172335]">
-                    {request?.name || "Manager Request"}
-                  </h2>
-
-                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500">
-                    <span className="inline-flex items-center gap-2">
-                      <Mail size={14} />
-                      {request?.email || "Not provided"}
-                    </span>
-
-                    {request?.created_at && (
-                      <span className="inline-flex items-center gap-2">
-                        <CalendarDays size={14} />
-                        {new Date(request.created_at).toLocaleDateString()}
-                      </span>
-                    )}
-                  </div>
-                </div>
+                <User size={24} />
               </div>
 
-              <div className="flex shrink-0 items-center gap-3">
-                <span
-                  className={[
-                    "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-wide",
-                    statusStyles[status] ||
-                      "border-gray-200 bg-gray-50 text-gray-600",
-                  ].join(" ")}
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                  {status}
-                </span>
+              <div className="min-w-0">
+                <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#0fa99d]">
+                  Manager Application
+                </p>
+
+                <h2 className="truncate text-2xl font-bold tracking-tight text-[#172335]">
+                  {request?.name || "Manager Request"}
+                </h2>
+
+                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500">
+                  <span className="inline-flex items-center gap-2">
+                    <Mail size={14} />
+                    {request?.email || "Not provided"}
+                  </span>
+
+                  {request?.created_at && (
+                    <span className="inline-flex items-center gap-2">
+                      <CalendarDays size={14} />
+                      {new Date(request.created_at).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
-            <div className="mt-6 border-t border-gray-100 pt-5">
-              <p className="max-w-3xl text-sm leading-6 text-gray-500">
-                Review the manager, restaurant, operating hours, and submitted
-                documents before making an approval decision.
-              </p>
+            <div className="flex shrink-0 items-center gap-3">
+              <span
+                className={[
+                  "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-wide",
+                  statusStyles[status] ||
+                    "border-gray-200 bg-gray-50 text-gray-600",
+                ].join(" ")}
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                {status}
+              </span>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          {status === "PENDING" && <div className="mb-7 flex flex-col gap-3 sm:flex-row sm:justify-end">
+          <div className="mt-6 border-t border-gray-100 pt-5">
+            <p className="max-w-3xl text-sm leading-6 text-gray-500">
+              Review the manager, restaurant, operating hours, and submitted
+              documents before making an approval decision.
+            </p>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        {status === "PENDING" && (
+          <div className="mb-7 flex flex-col gap-3 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={() => setConfirmationAction("reject")}
@@ -250,258 +251,257 @@ export default function AdminManagerRequestDetailsPage() {
               <Check size={16} />
               {processing ? "Processing..." : "Approve Application"}
             </button>
-          </div>}
-          {status !== "PENDING" && (
-            <div className="mb-7 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
-              This application is {status.toLowerCase()}. Approval and rejection actions are available for pending applications.
-            </div>
-          )}
-
-          {/* Main Information */}
-          <div className="grid gap-6 xl:grid-cols-2">
-            {/* Manager Information */}
-            <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
-              <SectionTitle
-                icon={User}
-                title="Manager Information"
-                description="Personal details submitted by the manager."
-              />
-
-              <div className="mt-6 grid gap-5 sm:grid-cols-2">
-                <InfoItem icon={User} label="Full Name" value={request?.name} />
-
-                <InfoItem
-                  icon={Mail}
-                  label="Email Address"
-                  value={request?.email}
-                />
-
-                  <InfoItem
-                    icon={ShieldCheck}
-                  label="Manager Account Status"
-                  value={request?.status}
-                />
-
-                <InfoItem
-                  icon={CalendarDays}
-                  label="Registered On"
-                  value={
-                    request?.created_at
-                      ? new Date(request.created_at).toLocaleString()
-                      : "Not provided"
-                  }
-                />
-              </div>
-            </section>
-
-            {/* Restaurant Information */}
-            <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
-              <SectionTitle
-                icon={Store}
-                title="Restaurant Information"
-                description="Restaurant details provided during registration."
-              />
-
-              <div className="mt-6 grid gap-5 sm:grid-cols-2">
-                <InfoItem
-                  icon={Building2}
-                  label="Restaurant Name"
-                  value={restaurant.name}
-                />
-
-                <InfoItem
-                  icon={Store}
-                  label="Cuisine"
-                  value={restaurant.cuisine_type}
-                />
-
-                <InfoItem
-                  icon={ShieldCheck}
-                  label="Restaurant Status"
-                  value={restaurant.status}
-                />
-
-                <InfoItem
-                  icon={Phone}
-                  label="Restaurant Contact"
-                  value={restaurant.phone}
-                />
-
-                <InfoItem
-                  icon={Mail}
-                  label="Restaurant Email"
-                  value={restaurant.email}
-                />
-
-                <InfoItem
-                  icon={User}
-                  label="Seating Capacity"
-                  value={restaurant.capacity}
-                />
-
-                <InfoItem
-                  icon={Store}
-                  label="Dining Tables"
-                  value={restaurant.tables}
-                />
-              </div>
-
-              <div className="mt-6 border-t border-gray-100 pt-5">
-                <InfoItem
-                  label="Restaurant Description"
-                  value={restaurant.description}
-                  fullWidth
-                />
-              </div>
-            </section>
-
-            {/* Address */}
-            <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
-              <SectionTitle
-                icon={MapPin}
-                title="Restaurant Address"
-                description="Location information submitted by the manager."
-              />
-
-              <div className="mt-6 grid gap-5 sm:grid-cols-2">
-                <InfoItem
-                  icon={MapPin}
-                  label="Full Address"
-                  value={restaurant.address}
-                  fullWidth
-                />
-
-                <InfoItem icon={MapPin} label="City" value={restaurant.city} />
-
-                <InfoItem
-                  icon={MapPin}
-                  label="State"
-                  value={restaurant.state}
-                />
-
-                <InfoItem
-                  icon={MapPin}
-                  label="PIN Code"
-                  value={restaurant.pin_code}
-                />
-              </div>
-            </section>
-
-            {/* Operating Hours */}
-            <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
-              <SectionTitle
-                icon={Clock3}
-                title="Operating Hours"
-                description="Restaurant operating schedule."
-              />
-
-              <div className="mt-6 overflow-hidden rounded-xl border border-gray-100">
-                {hours.length === 0 ? (
-                  <div className="px-5 py-8 text-center">
-                    <Clock3 size={22} className="mx-auto text-gray-300" />
-
-                    <p className="mt-2 text-sm font-medium text-gray-500">
-                      No operating hours available.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-gray-100">
-                    {hours.map((day) => (
-                      <div
-                        key={day.day_of_week}
-                        className="flex items-center justify-between gap-4 px-5 py-3.5 transition hover:bg-gray-50"
-                      >
-                        <div className="flex items-center gap-3">
-                        <div className="h-2 w-2 rounded-full bg-[#0fa99d]/60" />
-
-                          <span className="text-sm font-semibold capitalize text-[#172335]">
-                            {day.day_of_week}
-                          </span>
-                        </div>
-
-                        {day.enabled ? (
-                          <span className="rounded-lg bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-600">
-                            {day.open_time || "—"} – {day.close_time || "—"}
-                          </span>
-                        ) : (
-                          <span className="rounded-lg bg-gray-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-gray-400">
-                            Closed
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </section>
           </div>
+        )}
+        {status !== "PENDING" && (
+          <div className="mb-7 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
+            This application is {status.toLowerCase()}. Approval and rejection
+            actions are available for pending applications.
+          </div>
+        )}
 
-          {/* Documents */}
-          <section className="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
+        {/* Main Information */}
+        <div className="grid gap-6 xl:grid-cols-2">
+          {/* Manager Information */}
+          <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
             <SectionTitle
-              icon={FileText}
-              title="Submitted Documents"
-              description="Documents uploaded during manager registration."
+              icon={User}
+              title="Manager Information"
+              description="Personal details submitted by the manager."
             />
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {documents.length === 0 ? (
-                <div className="sm:col-span-2 lg:col-span-3">
-                  <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-5 py-10 text-center">
-                    <FileText size={26} className="mx-auto text-gray-300" />
+            <div className="mt-6 grid gap-5 sm:grid-cols-2">
+              <InfoItem icon={User} label="Full Name" value={request?.name} />
 
-                    <p className="mt-3 text-sm font-semibold text-gray-500">
-                      No documents available
-                    </p>
+              <InfoItem
+                icon={Mail}
+                label="Email Address"
+                value={request?.email}
+              />
 
-                    <p className="mt-1 text-xs text-gray-400">
-                      No files were submitted with this application.
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                documents.map((document) => (
-                  <button
-                    key={document.id}
-                    type="button"
-                    onClick={() => setPreviewDocument(document)}
-                    className="admin-document-preview-trigger group flex min-w-0 items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 text-left transition hover:border-[#0fa99d] hover:bg-gray-50"
-                  >
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#0fa99d]/10 text-[#0fa99d] transition group-hover:bg-[#0fa99d] group-hover:text-white">
-                      <FileText size={19} />
-                    </div>
+              <InfoItem
+                icon={ShieldCheck}
+                label="Manager Account Status"
+                value={request?.status}
+              />
 
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-[#172335] transition group-hover:text-[#0fa99d]">
-                        {document.document_type || "Document"}
-                      </p>
-
-                      <p className="mt-1 truncate text-xs text-gray-500">
-                        {document.file_name || "View submitted document"}
-                      </p>
-
-                      <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-[#0fa99d]">
-                        Open Document
-                      </p>
-                    </div>
-                  </button>
-                ))
-              )}
+              <InfoItem
+                icon={CalendarDays}
+                label="Registered On"
+                value={
+                  request?.created_at
+                    ? new Date(request.created_at).toLocaleString()
+                    : "Not provided"
+                }
+              />
             </div>
           </section>
 
-          {/* Bottom Actions */}
-          <div className="mt-8 flex flex-col gap-4 border-t border-gray-200 pt-6 sm:flex-row sm:items-center sm:justify-between">
-            <button
-              type="button"
-              onClick={() => navigate("/admin/requests")}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-gray-600 transition hover:text-[#0fa99d]"
-            >
-              <ArrowLeft size={16} />
-              Back to Requests
-            </button>
+          {/* Restaurant Information */}
+          <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
+            <SectionTitle
+              icon={Store}
+              title="Restaurant Information"
+              description="Restaurant details provided during registration."
+            />
 
-            {status === "PENDING" && <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="mt-6 grid gap-5 sm:grid-cols-2">
+              <InfoItem
+                icon={Building2}
+                label="Restaurant Name"
+                value={restaurant.name}
+              />
+
+              <InfoItem
+                icon={Store}
+                label="Cuisine"
+                value={restaurant.cuisine_type}
+              />
+
+              <InfoItem
+                icon={ShieldCheck}
+                label="Restaurant Status"
+                value={restaurant.status}
+              />
+
+              <InfoItem
+                icon={Phone}
+                label="Restaurant Contact"
+                value={restaurant.phone}
+              />
+
+              <InfoItem
+                icon={Mail}
+                label="Restaurant Email"
+                value={restaurant.email}
+              />
+
+              <InfoItem
+                icon={User}
+                label="Seating Capacity"
+                value={restaurant.capacity}
+              />
+
+              <InfoItem
+                icon={Store}
+                label="Dining Tables"
+                value={restaurant.tables}
+              />
+            </div>
+
+            <div className="mt-6 border-t border-gray-100 pt-5">
+              <InfoItem
+                label="Restaurant Description"
+                value={restaurant.description}
+                fullWidth
+              />
+            </div>
+          </section>
+
+          {/* Address */}
+          <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
+            <SectionTitle
+              icon={MapPin}
+              title="Restaurant Address"
+              description="Location information submitted by the manager."
+            />
+
+            <div className="mt-6 grid gap-5 sm:grid-cols-2">
+              <InfoItem
+                icon={MapPin}
+                label="Full Address"
+                value={restaurant.address}
+                fullWidth
+              />
+
+              <InfoItem icon={MapPin} label="City" value={restaurant.city} />
+
+              <InfoItem icon={MapPin} label="State" value={restaurant.state} />
+
+              <InfoItem
+                icon={MapPin}
+                label="PIN Code"
+                value={restaurant.pin_code}
+              />
+            </div>
+          </section>
+
+          {/* Operating Hours */}
+          <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
+            <SectionTitle
+              icon={Clock3}
+              title="Operating Hours"
+              description="Restaurant operating schedule."
+            />
+
+            <div className="mt-6 overflow-hidden rounded-xl border border-gray-100">
+              {hours.length === 0 ? (
+                <div className="px-5 py-8 text-center">
+                  <Clock3 size={22} className="mx-auto text-gray-300" />
+
+                  <p className="mt-2 text-sm font-medium text-gray-500">
+                    No operating hours available.
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {hours.map((day) => (
+                    <div
+                      key={day.day_of_week}
+                      className="flex items-center justify-between gap-4 px-5 py-3.5 transition hover:bg-gray-50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-2 w-2 rounded-full bg-[#0fa99d]/60" />
+
+                        <span className="text-sm font-semibold capitalize text-[#172335]">
+                          {day.day_of_week}
+                        </span>
+                      </div>
+
+                      {day.enabled ? (
+                        <span className="rounded-lg bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-600">
+                          {day.open_time || "—"} – {day.close_time || "—"}
+                        </span>
+                      ) : (
+                        <span className="rounded-lg bg-gray-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-gray-400">
+                          Closed
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+
+        {/* Documents */}
+        <section className="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
+          <SectionTitle
+            icon={FileText}
+            title="Submitted Documents"
+            description="Documents uploaded during manager registration."
+          />
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {documents.length === 0 ? (
+              <div className="sm:col-span-2 lg:col-span-3">
+                <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-5 py-10 text-center">
+                  <FileText size={26} className="mx-auto text-gray-300" />
+
+                  <p className="mt-3 text-sm font-semibold text-gray-500">
+                    No documents available
+                  </p>
+
+                  <p className="mt-1 text-xs text-gray-400">
+                    No files were submitted with this application.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              documents.map((document) => (
+                <button
+                  key={document.id}
+                  type="button"
+                  onClick={() => setPreviewDocument(document)}
+                  className="admin-document-preview-trigger group flex min-w-0 items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 text-left transition hover:border-[#0fa99d] hover:bg-gray-50"
+                >
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#0fa99d]/10 text-[#0fa99d] transition group-hover:bg-[#0fa99d] group-hover:text-white">
+                    <FileText size={19} />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-[#172335] transition group-hover:text-[#0fa99d]">
+                      {document.document_type || "Document"}
+                    </p>
+
+                    <p className="mt-1 truncate text-xs text-gray-500">
+                      {document.file_name || "View submitted document"}
+                    </p>
+
+                    <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-[#0fa99d]">
+                      Open Document
+                    </p>
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+        </section>
+
+        {/* Bottom Actions */}
+        <div className="mt-8 flex flex-col gap-4 border-t border-gray-200 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <button
+            type="button"
+            onClick={() => navigate("/admin/requests")}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-gray-600 transition hover:text-[#0fa99d]"
+          >
+            <ArrowLeft size={16} />
+            Back to Requests
+          </button>
+
+          {status === "PENDING" && (
+            <div className="flex flex-col gap-3 sm:flex-row">
               <button
                 type="button"
                 onClick={() => setConfirmationAction("reject")}
@@ -521,15 +521,18 @@ export default function AdminManagerRequestDetailsPage() {
                 <Check size={16} />
                 Approve
               </button>
-            </div>}
-          </div>
+            </div>
+          )}
+        </div>
       </div>
       <AdminActionConfirmModal
         action={confirmationAction}
         subject={restaurant.name || request?.name || "this manager application"}
         busy={processing}
         onCancel={() => setConfirmationAction(null)}
-        onConfirm={confirmationAction === "approve" ? handleApprove : handleReject}
+        onConfirm={
+          confirmationAction === "approve" ? handleApprove : handleReject
+        }
       />
       {previewDocument && (
         <AdminDocumentPreviewModal

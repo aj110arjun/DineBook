@@ -471,6 +471,11 @@
   gap: 8px;
   flex-wrap: wrap;
 }
+.reservation-expanded-details > .reservation-linked-orders {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
 .reservation-expanded-details button {
   border: 1px solid #79323d;
   border-radius: 7px;
@@ -785,7 +790,9 @@
   border-radius: 9px;
   background: #fff;
   color: #514543;
-  font-family: inherit; font-size: 12px; font-weight: 600;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
 }
 .manager-reservation-confirm-actions .confirm-success {
@@ -985,7 +992,9 @@
   border-radius: 10px;
   background: #79323d;
   color: #fff;
-  font-family: inherit; font-size: 13px; font-weight: 600;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
 }
 .reservation-scan-trigger:hover {
@@ -1009,7 +1018,9 @@
   border-radius: 9px;
   background: #fff;
   color: #514543;
-  font-family: inherit; font-size: 12px; font-weight: 600;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
 }
 .reservation-pass-controls input {
@@ -1045,7 +1056,9 @@
   border-radius: 9px;
   background: #79323d;
   color: #fff;
-  font-family: inherit; font-size: 12px; font-weight: 600;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
 }
 .reservation-pass-id-form button:disabled {
@@ -1236,7 +1249,9 @@
   border-radius: 8px;
   background: #79323d;
   color: #fff;
-  font-family: inherit; font-size: 12px; font-weight: 600;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
 }
 .reservation-linked-orders > button:disabled {
@@ -1259,7 +1274,7 @@
 }
 .reservation-linked-order {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
   padding: 11px 12px;
   gap: 12px;
@@ -1316,6 +1331,8 @@
 .reservation-linked-order-content li span,
 .reservation-linked-order-footer span {
   color: #776b67;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .reservation-linked-order-content li strong,
 .reservation-linked-order-footer strong {
@@ -1324,18 +1341,26 @@
 .reservation-linked-order-footer {
   padding-top: 8px;
   border-top: 1px solid #eee5de;
+  flex-wrap: wrap;
+  align-items: center;
 }
 .reservation-linked-order-actions {
-  display: grid;
-  justify-items: end;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border, #eee5de);
 }
 .reservation-linked-order-actions a,
 .reservation-linked-order-actions button {
   border: 0;
   background: transparent;
   color: #79323d;
-  font-family: inherit; font-size: 12px; font-weight: 600;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 2px;
   cursor: pointer;
@@ -1415,7 +1440,9 @@
   border-radius: 8px;
   background: #fff;
   color: #514543;
-  font-family: inherit; font-size: 12px; font-weight: 600;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
 }
 .desk-order-remove {
@@ -1518,8 +1545,12 @@
   padding: 28px;
   text-align: left;
 }
-.reservation-pass-dialog h3 { padding-right: 28px; }
-.reservation-pass-dialog .manager-reservation-confirm-icon { margin: 0 0 16px; }
+.reservation-pass-dialog h3 {
+  padding-right: 28px;
+}
+.reservation-pass-dialog .manager-reservation-confirm-icon {
+  margin: 0 0 16px;
+}
 .reservation-camera-stage {
   display: grid;
   place-items: center;
@@ -1537,33 +1568,109 @@
   color: var(--color-text-secondary);
   text-align: center;
 }
-.reservation-camera-placeholder svg { color: var(--color-primary); }
-.reservation-camera-placeholder strong { color: var(--color-text-primary); font-size: 14px; }
-.reservation-camera-placeholder span { max-width: 280px; font-size: 13px; }
-.reservation-pass-dialog .reservation-camera-preview.active { aspect-ratio: 4 / 3; max-height: 280px; border-radius: 0; }
-.reservation-pass-dialog .reservation-pass-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.reservation-camera-placeholder svg {
+  color: var(--color-primary);
+}
+.reservation-camera-placeholder strong {
+  color: var(--color-text-primary);
+  font-size: 14px;
+}
+.reservation-camera-placeholder span {
+  max-width: 280px;
+  font-size: 13px;
+}
+.reservation-pass-dialog .reservation-camera-preview.active {
+  aspect-ratio: 4 / 3;
+  max-height: 280px;
+  border-radius: 0;
+}
+.reservation-pass-dialog .reservation-pass-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
 .reservation-pass-controls button,
-.reservation-pass-controls label { min-height: 44px; padding: 10px; }
-.reservation-pass-controls label { position: relative; }
-.reservation-pass-controls label:focus-within { outline: 2px solid var(--color-accent); outline-offset: 3px; }
-.reservation-pass-controls button:disabled { opacity: .6; cursor: default; }
-.reservation-pass-divider { display: flex; align-items: center; gap: 10px; margin: 20px 0 14px; color: var(--color-text-secondary); font-size: 12px; }
+.reservation-pass-controls label {
+  min-height: 44px;
+  padding: 10px;
+}
+.reservation-pass-controls label {
+  position: relative;
+}
+.reservation-pass-controls label:focus-within {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+.reservation-pass-controls button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.reservation-pass-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0 14px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
 .reservation-pass-divider::before,
-.reservation-pass-divider::after { content: ""; height: 1px; flex: 1; background: var(--color-border); }
-.reservation-pass-id-form { width: 100%; }
-.reservation-pass-id-form button { min-height: 44px; flex-shrink: 0; }
+.reservation-pass-divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--color-border);
+}
+.reservation-pass-id-form {
+  width: 100%;
+}
+.reservation-pass-id-form button {
+  min-height: 44px;
+  flex-shrink: 0;
+}
 @media (max-width: 480px) {
-  .manager-reservation-confirm-backdrop { padding: 12px; }
-  .manager-reservation-confirm { padding: 24px 18px; max-height: calc(100dvh - 24px); overflow-y: auto; }
-  .reservation-pass-dialog { width: 100%; }
-  .reservation-pass-id-form { flex-direction: column; }
-  .reservation-pass-id-form input { flex: auto; width: 100%; }
-  .manager-reservation-confirm-actions { flex-wrap: wrap; }
+  .manager-reservation-confirm-backdrop {
+    padding: 12px;
+  }
+  .manager-reservation-confirm {
+    padding: 24px 18px;
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+  }
+  .reservation-pass-dialog {
+    width: 100%;
+  }
+  .reservation-pass-id-form {
+    flex-direction: column;
+  }
+  .reservation-pass-id-form input {
+    flex: auto;
+    width: 100%;
+  }
+  .manager-reservation-confirm-actions {
+    flex-wrap: wrap;
+  }
 }
 
-.reservation-page-heading { flex-wrap: wrap; align-items: flex-start; }
-.reservation-page-heading > div { min-width: 0; }
-.reservation-toolbar { flex: 1 1 620px; min-width: 0; max-width: 100%; }
-.reservation-toolbar select { min-width: 0; max-width: 100%; }
-.reservation-search { min-width: 0; max-width: 100%; }
-.reservation-search input { min-width: 0; max-width: 100%; }
+.reservation-page-heading {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+.reservation-page-heading > div {
+  min-width: 0;
+}
+.reservation-toolbar {
+  flex: 1 1 620px;
+  min-width: 0;
+  max-width: 100%;
+}
+.reservation-toolbar select {
+  min-width: 0;
+  max-width: 100%;
+}
+.reservation-search {
+  min-width: 0;
+  max-width: 100%;
+}
+.reservation-search input {
+  min-width: 0;
+  max-width: 100%;
+}

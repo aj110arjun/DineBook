@@ -4,17 +4,29 @@ import { demoSessionKey } from "../../data/demoCustomer.js";
 import "./DevQuickLogin.css";
 
 const TEST_PASSWORD = "DineBookDemo123!";
-const RESTAURANTS = ["The Saffron Table", "Olive & Ember", "Coastal Kitchen", "The Garden Bistro (pending)"];
+const RESTAURANTS = [
+  "The Saffron Table",
+  "Olive & Ember",
+  "Coastal Kitchen",
+  "The Garden Bistro (pending)",
+];
 const TEST_ACCOUNTS = {
-  customer: ["Aanya Sharma", "Rahul Menon", "Meera Nair", "Vikram Shah"].map((label, i) => ({
-    label, email: `demo.customer${i + 1}@example.com`,
-  })),
+  customer: ["Aanya Sharma", "Rahul Menon", "Meera Nair", "Vikram Shah"].map(
+    (label, i) => ({
+      label,
+      email: `demo.customer${i + 1}@example.com`,
+    }),
+  ),
   manager: RESTAURANTS.map((name, i) => ({
-    label: `Manager · ${name}`, email: `demo.manager${i + 1}@example.com`,
+    label: `Manager · ${name}`,
+    email: `demo.manager${i + 1}@example.com`,
   })),
-  chef: RESTAURANTS.flatMap((name, i) => [1, 2].map((chef) => ({
-    label: `Chef ${chef} · ${name}`, email: `demo.chef${i + 1}${chef}@example.com`,
-  }))),
+  chef: RESTAURANTS.flatMap((name, i) =>
+    [1, 2].map((chef) => ({
+      label: `Chef ${chef} · ${name}`,
+      email: `demo.chef${i + 1}${chef}@example.com`,
+    })),
+  ),
   admin: [{ label: "Demo Administrator", email: "demo.admin@example.com" }],
 };
 
@@ -44,14 +56,11 @@ export default function DevQuickLogin({ portal, onSuccess }) {
   }
 
   return (
-    <section
-      className="db-quick-login"
-      aria-label="Development test accounts"
-    >
-      <p className="db-quick-login-title">
-        One-click demo login
+    <section className="db-quick-login" aria-label="Development test accounts">
+      <p className="db-quick-login-title">One-click demo login</p>
+      <p className="db-quick-login-description">
+        Choose a test account to sign in instantly.
       </p>
-      <p className="db-quick-login-description">Choose a test account to sign in instantly.</p>
       <div className="db-quick-login-accounts">
         {TEST_ACCOUNTS[portal].map((account) => (
           <button

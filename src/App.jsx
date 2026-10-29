@@ -18,6 +18,8 @@ import CustomerTransactionDetailsPage from "./pages/customer/CustomerTransaction
 import GuestOnlyRoute from "./components/auth/GuestOnlyRoute.jsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 import AdminProtectedRoute from "./components/auth/AdminProtectedRoute.jsx";
+import AdminTransactionDetailsPage from "./pages/admin/AdminTransactionDetailsPage.jsx";
+import AdminTransactionsPage from "./pages/admin/AdminTransactionsPage.jsx";
 import AdminLoginPage from "./pages/admin/AdminLoginPage.jsx";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
 import AdminRestaurantsPage from "./pages/admin/AdminRestaurantsPage.jsx";
@@ -79,7 +81,10 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/customer/profile/reviews" element={<Navigate to="/customer/profile" replace />} />
+        <Route
+          path="/customer/profile/reviews"
+          element={<Navigate to="/customer/profile" replace />}
+        />
         <Route
           path="/customer/profile/wallet"
           element={
@@ -242,6 +247,14 @@ export default function App() {
               <AdminOffersPage />
             </AdminProtectedRoute>
           }
+        />
+        <Route
+          path="/admin/transactions/:restaurantId/:transactionId"
+          element={<AdminProtectedRoute><AdminTransactionDetailsPage /></AdminProtectedRoute>}
+        />
+        <Route
+          path="/admin/transactions"
+          element={<AdminProtectedRoute><AdminTransactionsPage /></AdminProtectedRoute>}
         />
         <Route
           path="/admin/revenue"
@@ -458,8 +471,22 @@ export default function App() {
             </ChefProtectedRoute>
           }
         />
-        <Route path="/chef/menu" element={<ChefProtectedRoute><ChefMenuPage /></ChefProtectedRoute>} />
-        <Route path="/chef/menu/:foodId" element={<ChefProtectedRoute><ChefMenuPage /></ChefProtectedRoute>} />
+        <Route
+          path="/chef/menu"
+          element={
+            <ChefProtectedRoute>
+              <ChefMenuPage />
+            </ChefProtectedRoute>
+          }
+        />
+        <Route
+          path="/chef/menu/:foodId"
+          element={
+            <ChefProtectedRoute>
+              <ChefMenuPage />
+            </ChefProtectedRoute>
+          }
+        />
         <Route
           path="/chef/revenue"
           element={

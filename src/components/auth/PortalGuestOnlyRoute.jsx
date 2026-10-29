@@ -2,7 +2,12 @@ import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
 
-export default function PortalGuestOnlyRoute({ children, sessionPath, redirectTo, portalName }) {
+export default function PortalGuestOnlyRoute({
+  children,
+  sessionPath,
+  redirectTo,
+  portalName,
+}) {
   const [signedIn, setSignedIn] = useState(false);
   const [checking, setChecking] = useState(true);
 
@@ -12,11 +17,19 @@ export default function PortalGuestOnlyRoute({ children, sessionPath, redirectTo
       method: "GET",
       fallbackMessage: "Unable to check portal session.",
     })
-      .then(() => { if (active) setSignedIn(true); })
-      .catch(() => { if (active) setSignedIn(false); })
-      .finally(() => { if (active) setChecking(false); });
+      .then(() => {
+        if (active) setSignedIn(true);
+      })
+      .catch(() => {
+        if (active) setSignedIn(false);
+      })
+      .finally(() => {
+        if (active) setChecking(false);
+      });
 
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [sessionPath]);
 
   if (checking) {

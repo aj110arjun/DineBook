@@ -18,13 +18,18 @@ const groups = [
     label: "Manage DineBook",
     items: [
       { label: "Restaurants", icon: Store, path: "/admin/restaurants" },
-      { label: "Restaurant requests", icon: SlidersHorizontal, path: "/admin/requests" },
+      {
+        label: "Restaurant requests",
+        icon: SlidersHorizontal,
+        path: "/admin/requests",
+      },
       { label: "Reviews & reports", icon: FileText, path: "/admin/reviews" },
     ],
   },
   {
     label: "Money",
     items: [
+      { label: "Transactions", icon: FileText, path: "/admin/transactions" },
       { label: "Revenue & wallet", icon: WalletCards, path: "/admin/revenue" },
     ],
   },

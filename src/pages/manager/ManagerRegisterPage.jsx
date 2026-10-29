@@ -1,3 +1,5 @@
+import CustomForm from "../../components/forms/CustomForm.jsx";
+import { GEOCODING_BASE_URL, POSTAL_API_BASE_URL } from "../../lib/serviceConfig.js";
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { API_BASE } from "../../lib/authApi.js";
@@ -16,6 +18,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 
 import ManagerAuthLayout from "../../components/auth/ManagerAuthLayout.jsx";
+import RestaurantLocationPicker from "../../components/manager/RestaurantLocationPicker.jsx";
 import ImageCropDialog from "../../components/manager/ImageCropDialog.jsx";
 import ImageUploadField from "../../components/manager/ImageUploadField.jsx";
 import { FormField, PasswordField } from "../../components/auth/FormField.jsx";
@@ -63,24 +66,43 @@ function DocumentCard({
 
   if (image) {
     return (
-      <div className={`mb-4 rounded-xl border bg-white p-4 ${error ? "border-red-300" : "border-stone-200"}`}>
+      <div
+        className={`mb-4 rounded-xl border bg-white p-4 ${error ? "border-red-300" : "border-stone-200"}`}
+      >
         <div className="mb-3 flex items-center gap-3">
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-stone-100 text-wine"><ImageIcon size={18} /></div>
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-stone-100 text-wine">
+            <ImageIcon size={18} />
+          </div>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-sm font-semibold text-ink">{title}</h3>
-              <span className={`rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${required ? "bg-rose-50 text-rose-600" : "bg-stone-100 text-stone-500"}`}>{required ? "Required" : "Optional"}</span>
+              <span
+                className={`rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${required ? "bg-rose-50 text-rose-600" : "bg-stone-100 text-stone-500"}`}
+              >
+                {required ? "Required" : "Optional"}
+              </span>
             </div>
             <p className="mt-1 text-xs text-stone-400">{description}</p>
           </div>
         </div>
-        <ImageUploadField id={inputId} file={file} accept={accept} prompt="Upload your restaurant banner" hint="PNG or JPG · 16:9 crop · up to 10 MB" onSelect={onUpload} onRemove={onRemove} error={error} />
+        <ImageUploadField
+          id={inputId}
+          file={file}
+          accept={accept}
+          prompt="Upload your restaurant banner"
+          hint="PNG or JPG · 16:9 crop · up to 10 MB"
+          onSelect={onUpload}
+          onRemove={onRemove}
+          error={error}
+        />
       </div>
     );
   }
 
   return (
-    <div className={`mb-4 rounded-xl border bg-white p-4 ${error ? "border-red-300" : "border-stone-200"}`}>
+    <div
+      className={`mb-4 rounded-xl border bg-white p-4 ${error ? "border-red-300" : "border-stone-200"}`}
+    >
       <div className="flex items-center gap-4">
         <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-stone-100 text-wine">
           {image ? <ImageIcon size={19} /> : <FileText size={19} />}
@@ -157,7 +179,11 @@ function DocumentCard({
           />
         </div>
       </div>
-      {error && <p className="mt-2 text-xs font-medium text-red-600" role="alert">{error}</p>}
+      {error && (
+        <p className="mt-2 text-xs font-medium text-red-600" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -228,7 +254,6 @@ export default function ManagerRegisterPage() {
   const [pendingBanner, setPendingBanner] = useState(null);
 
   const [application, setApplication] = useState(initialApplication);
-  const [mapQuery, setMapQuery] = useState("");
   const [addressLookupQuery, setAddressLookupQuery] = useState("");
   const [addressSuggestions, setAddressSuggestions] = useState([]);
   const [addressLookupBusy, setAddressLookupBusy] = useState(false);
@@ -238,11 +263,18 @@ export default function ManagerRegisterPage() {
   const [locationBusy, setLocationBusy] = useState(false);
   const [locationMessage, setLocationMessage] = useState("");
   const locationRequest = useRef(0);
-  useEffect(() => () => { locationRequest.current += 1; }, []);
+  useEffect(
+    () => () => {
+      locationRequest.current += 1;
+    },
+    [],
+  );
 
   async function useCurrentLocation() {
     if (!window.isSecureContext || !navigator.geolocation) {
-      setLocationMessage("Current location requires HTTPS (or localhost) and a browser that supports location access.");
+      setLocationMessage(
+        "Current location requires HTTPS (or localhost) and a browser that supports location access.",
+      );
       return;
     }
     const request = ++locationRequest.current;
@@ -252,39 +284,141 @@ export default function ManagerRegisterPage() {
     setAddressLookupQuery("");
     setAddressSuggestions([]);
     try {
-      const position = await new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: true, timeout: 20000, maximumAge: 0,
-      }));
+      const position = await new Promise((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 20000,
+          maximumAge: 0,
+        }),
+      );
       if (request !== locationRequest.current) return;
       const { latitude, longitude, accuracy } = position.coords;
-      setApplication((current) => ({ ...current, latitude: String(latitude), longitude: String(longitude) }));
-      setLocationMessage(`Location captured (approximately ${Math.round(accuracy)} m accuracy). Looking up address…`);
+      setApplication((current) => ({
+        ...current,
+        latitude: String(latitude),
+        longitude: String(longitude),
+      }));
+      setLocationMessage(
+        `Location captured (approximately ${Math.round(accuracy)} m accuracy). Looking up address…`,
+      );
       const controller = new AbortController();
       const timeout = window.setTimeout(() => controller.abort(), 10000);
       try {
-        const response = await axios.request({ url: `https://photon.komoot.io/reverse?lat=${latitude}&lon=${longitude}&lang=en`, validateStatus: () => true, signal: controller.signal });
-        if (response.status < 200 || response.status >= 300) throw new Error("Address lookup failed");
+        const response = await axios.request({
+          url: `${GEOCODING_BASE_URL}/reverse?lat=${latitude}&lon=${longitude}&lang=en`,
+          validateStatus: () => true,
+          signal: controller.signal,
+        });
+        if (response.status < 200 || response.status >= 300)
+          throw new Error("Address lookup failed");
         const result = response.data;
         if (request !== locationRequest.current) return;
         const details = result.features?.[0]?.properties;
         if (!details) throw new Error("Address not found");
-        const address = [details.housenumber, details.street, details.locality || details.suburb || details.district].filter(Boolean).join(", ") || details.name || "";
-        const city = details.city || details.town || details.village || details.county || "";
-        setApplication((current) => ({ ...current,
-          address, city, state: details.state || "", pinCode: details.postcode || "",
-          latitude: String(latitude), longitude: String(longitude),
+        const address =
+          [
+            details.housenumber,
+            details.street,
+            details.locality || details.suburb || details.district,
+          ]
+            .filter(Boolean)
+            .join(", ") ||
+          details.name ||
+          "";
+        const city =
+          details.city ||
+          details.town ||
+          details.village ||
+          details.county ||
+          "";
+        setApplication((current) => ({
+          ...current,
+          address,
+          city,
+          state: details.state || "",
+          pinCode: details.postcode || "",
+          latitude: String(latitude),
+          longitude: String(longitude),
         }));
-        setFieldErrors((current) => ({ ...current, address: "", city: "", state: "", pinCode: "" }));
-        setLocationMessage(`Location captured (approximately ${Math.round(accuracy)} m accuracy). Review the address and complete any missing details.`);
+        setFieldErrors((current) => ({
+          ...current,
+          address: "",
+          city: "",
+          state: "",
+          pinCode: "",
+        }));
+        setLocationMessage(
+          `Location captured (approximately ${Math.round(accuracy)} m accuracy). Review the address and complete any missing details.`,
+        );
       } catch {
-        if (request === locationRequest.current) setLocationMessage("Your location pin was saved, but the address couldn’t be found. Enter the address details below.");
+        if (request === locationRequest.current)
+          setLocationMessage(
+            "Your location pin was saved, but the address couldn’t be found. Enter the address details below.",
+          );
       } finally {
         window.clearTimeout(timeout);
       }
     } catch (reason) {
-      if (request === locationRequest.current) setLocationMessage(reason.code === 1
-        ? "Location permission was denied. Allow location access in your browser and try again, or enter your address below."
-        : "Couldn’t determine your location. Try again near the restaurant or enter the address below.");
+      if (request === locationRequest.current)
+        setLocationMessage(
+          reason.code === 1
+            ? "Location permission was denied. Allow location access in your browser and try again, or enter your address below."
+            : "Couldn’t determine your location. Try again near the restaurant or enter the address below.",
+        );
+    } finally {
+      if (request === locationRequest.current) setLocationBusy(false);
+    }
+  }
+
+  async function confirmMapLocation({ latitude, longitude }) {
+    const request = ++locationRequest.current;
+    setPinToLookup("");
+    setAddressLookupQuery("");
+    setAddressSuggestions([]);
+    setLocationBusy(true);
+    setApplication((current) => ({
+      ...current,
+      latitude: String(latitude),
+      longitude: String(longitude),
+    }));
+    setLocationMessage("Restaurant pin saved. Looking up the address…");
+    try {
+      const response = await axios.get(`${GEOCODING_BASE_URL}/reverse`, {
+        params: { lat: latitude, lon: longitude, lang: "en" },
+        timeout: 10000,
+      });
+      if (request !== locationRequest.current) return;
+      const details = response.data.features?.[0]?.properties;
+      if (!details) throw new Error("Address not found");
+      setApplication((current) => ({
+        ...current,
+        address:
+          [
+            details.housenumber,
+            details.street,
+            details.locality || details.suburb,
+          ]
+            .filter(Boolean)
+            .join(", ") ||
+          details.name ||
+          "",
+        city:
+          details.city ||
+          details.town ||
+          details.village ||
+          details.county ||
+          "",
+        state: details.state || "",
+        pinCode: details.postcode || "",
+      }));
+      setLocationMessage(
+        "Restaurant location confirmed. Check the address details before continuing.",
+      );
+    } catch {
+      if (request === locationRequest.current)
+        setLocationMessage(
+          "Restaurant pin saved. Enter the address details manually because address lookup is unavailable.",
+        );
     } finally {
       if (request === locationRequest.current) setLocationBusy(false);
     }
@@ -297,34 +431,102 @@ export default function ManagerRegisterPage() {
       return;
     }
     let active = true;
+    const locationVersion = locationRequest.current;
     const controller = new AbortController();
     let requestTimeout;
     setPinLookupMessage("Looking up city and state…");
     const debounce = window.setTimeout(async () => {
       requestTimeout = window.setTimeout(() => controller.abort(), 10000);
       try {
-        const response = await axios.request({ url: `https://api.postalpincode.in/pincode/${pin}`, validateStatus: () => true, signal: controller.signal });
-        if (response.status < 200 || response.status >= 300) throw new Error("Lookup unavailable");
+        const response = await axios.request({
+          url: `${POSTAL_API_BASE_URL}/pincode/${pin}`,
+          validateStatus: () => true,
+          signal: controller.signal,
+        });
+        if (response.status < 200 || response.status >= 300)
+          throw new Error("Lookup unavailable");
         const result = response.data;
-        if (!active) return;
-        const offices = result?.[0]?.Status === "Success" ? result[0].PostOffice : [];
-        const matches = (offices || []).filter((office) => office.Pincode === pin && office.District && office.State);
-        const office = matches.find((item) => item.DeliveryStatus === "Delivery") || matches[0];
+        if (!active || locationVersion !== locationRequest.current) return;
+        const offices =
+          result?.[0]?.Status === "Success" ? result[0].PostOffice : [];
+        const matches = (offices || []).filter(
+          (office) => office.Pincode === pin && office.District && office.State,
+        );
+        const office =
+          matches.find((item) => item.DeliveryStatus === "Delivery") ||
+          matches[0];
         if (!office) {
-          setPinLookupMessage("PIN code not found. Check it or enter city and state manually.");
+          setPinLookupMessage(
+            "PIN code not found. Check it or enter city and state manually.",
+          );
           return;
         }
-        setApplication((current) => current.pinCode.trim() === pin ? {
-          ...current,
-          city: office.District.trim(),
-          state: office.State.trim(),
-          latitude: "",
-          longitude: "",
-        } : current);
+        setApplication((current) =>
+          current.pinCode.trim() === pin
+            ? {
+                ...current,
+                city: office.District.trim(),
+                state: office.State.trim(),
+                latitude: "",
+                longitude: "",
+              }
+            : current,
+        );
         setFieldErrors((current) => ({ ...current, city: "", state: "" }));
-        setPinLookupMessage("City and state filled from postal district details. You can edit them if needed.");
+        setPinLookupMessage(
+          "City and state filled. Finding this PIN code on the map…",
+        );
+        // Postal lookup provides district details, but no coordinates.
+        window.clearTimeout(requestTimeout);
+        requestTimeout = window.setTimeout(() => controller.abort(), 10000);
+        try {
+          const geo = await axios.get(`${GEOCODING_BASE_URL}/api/`, {
+            params: {
+              q: `${pin} ${office.District} ${office.State}`,
+              countrycode: "IN",
+              limit: 10,
+              lang: "en",
+            },
+            signal: controller.signal,
+          });
+          if (!active || locationVersion !== locationRequest.current) return;
+          const match = (geo.data.features || []).find((feature) => {
+            const coordinates = feature.geometry?.coordinates;
+            return (
+              String(feature.properties?.postcode || "").trim() === pin &&
+              Array.isArray(coordinates) &&
+              coordinates.length >= 2 &&
+              Number.isFinite(coordinates[0]) &&
+              Number.isFinite(coordinates[1]) &&
+              Math.abs(coordinates[0]) <= 180 &&
+              Math.abs(coordinates[1]) <= 90
+            );
+          });
+          if (!match) throw new Error("PIN location not found");
+          const [longitude, latitude] = match.geometry.coordinates;
+          setApplication((current) =>
+            current.pinCode.trim() === pin
+              ? {
+                  ...current,
+                  latitude: String(latitude),
+                  longitude: String(longitude),
+                }
+              : current,
+          );
+          setPinLookupMessage(
+            "Map moved to your PIN code area. Adjust the pin to your restaurant entrance and confirm location.",
+          );
+        } catch {
+          if (active && locationVersion === locationRequest.current)
+            setPinLookupMessage(
+              "City and state filled, but this PIN code’s map location is unavailable. Search an address or move the map to select your restaurant.",
+            );
+        }
       } catch {
-        if (active) setPinLookupMessage("Couldn’t look up this PIN code. Enter city and state manually.");
+        if (active && locationVersion === locationRequest.current)
+          setPinLookupMessage(
+            "Couldn’t look up this PIN code. Enter city and state manually.",
+          );
       } finally {
         window.clearTimeout(requestTimeout);
       }
@@ -336,15 +538,6 @@ export default function ManagerRegisterPage() {
       controller.abort();
     };
   }, [pinToLookup]);
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      setMapQuery(application.latitude && application.longitude
-        ? `${application.latitude},${application.longitude}`
-        : [application.address, application.city, application.state, application.pinCode].filter(Boolean).join(", "));
-    }, 500);
-    return () => window.clearTimeout(timeoutId);
-  }, [application.address, application.city, application.state, application.pinCode, application.latitude, application.longitude]);
-
   useEffect(() => {
     const query = addressLookupQuery.trim();
     if (query.length < 5) {
@@ -359,14 +552,21 @@ export default function ManagerRegisterPage() {
       setAddressLookupBusy(true);
       setAddressLookupError("");
       try {
-        const response = await axios.request({ url: `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lang=en`, validateStatus: () => true, signal: controller.signal });
-        if (response.status < 200 || response.status >= 300) throw new Error("Address search is temporarily unavailable.");
+        const response = await axios.request({
+          url: `${GEOCODING_BASE_URL}/api/?q=${encodeURIComponent(query)}&limit=5&lang=en`,
+          validateStatus: () => true,
+          signal: controller.signal,
+        });
+        if (response.status < 200 || response.status >= 300)
+          throw new Error("Address search is temporarily unavailable.");
         const result = response.data;
         setAddressSuggestions(result.features || []);
       } catch (reason) {
         if (!axios.isCancel(reason)) {
           setAddressSuggestions([]);
-          setAddressLookupError("Couldn’t look up addresses right now. You can still enter the coordinates manually.");
+          setAddressLookupError(
+            "Couldn’t look up addresses right now. You can still enter the coordinates manually.",
+          );
         }
       } finally {
         if (!controller.signal.aborted) setAddressLookupBusy(false);
@@ -448,18 +648,22 @@ export default function ManagerRegisterPage() {
     setApplication((current) => ({
       ...current,
       [field]: value,
-      ...( ["address", "city", "state", "pinCode"].includes(field)
+      ...(["address", "city", "state", "pinCode"].includes(field)
         ? { latitude: "", longitude: "" }
         : {}),
     }));
     if (["address", "city", "state", "pinCode"].includes(field)) {
       setAddressSuggestions([]);
-      setAddressLookupQuery([
-        field === "address" ? value : application.address,
-        field === "city" ? value : application.city,
-        field === "state" ? value : application.state,
-        field === "pinCode" ? value : application.pinCode,
-      ].filter(Boolean).join(", "));
+      setAddressLookupQuery(
+        [
+          field === "address" ? value : application.address,
+          field === "city" ? value : application.city,
+          field === "state" ? value : application.state,
+          field === "pinCode" ? value : application.pinCode,
+        ]
+          .filter(Boolean)
+          .join(", "),
+      );
     }
   }
 
@@ -469,12 +673,23 @@ export default function ManagerRegisterPage() {
     setLocationMessage("");
     setPinToLookup("");
     const properties = feature.properties || {};
-    const streetAddress = [properties.housenumber, properties.street].filter(Boolean).join(" ");
-    const address = streetAddress || properties.name || properties.street || properties.city || "";
+    const streetAddress = [properties.housenumber, properties.street]
+      .filter(Boolean)
+      .join(" ");
+    const address =
+      streetAddress ||
+      properties.name ||
+      properties.street ||
+      properties.city ||
+      "";
     setApplication((current) => ({
       ...current,
       address,
-      city: properties.city || properties.district || properties.county || current.city,
+      city:
+        properties.city ||
+        properties.district ||
+        properties.county ||
+        current.city,
       state: properties.state || current.state,
       pinCode: properties.postcode || current.pinCode,
       latitude: feature.geometry?.coordinates?.[1]?.toString() || "",
@@ -495,12 +710,18 @@ export default function ManagerRegisterPage() {
     if (!file) return;
 
     if (!ACCEPTED_DOCUMENT_TYPES.includes(file.type)) {
-      setFieldErrors((current) => ({ ...current, [field]: "Official documents must be uploaded as PDF files." }));
+      setFieldErrors((current) => ({
+        ...current,
+        [field]: "Official documents must be uploaded as PDF files.",
+      }));
       return;
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      setFieldErrors((current) => ({ ...current, [field]: "File must be 5 MB or smaller." }));
+      setFieldErrors((current) => ({
+        ...current,
+        [field]: "File must be 5 MB or smaller.",
+      }));
       return;
     }
 
@@ -516,12 +737,18 @@ export default function ManagerRegisterPage() {
     if (!file) return;
 
     if (!["image/png", "image/jpeg"].includes(file.type)) {
-      setFieldErrors((current) => ({ ...current, brandingImages: "Choose a PNG or JPG image." }));
+      setFieldErrors((current) => ({
+        ...current,
+        brandingImages: "Choose a PNG or JPG image.",
+      }));
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      setFieldErrors((current) => ({ ...current, brandingImages: "Image must be 10 MB or smaller." }));
+      setFieldErrors((current) => ({
+        ...current,
+        brandingImages: "Image must be 10 MB or smaller.",
+      }));
       return;
     }
 
@@ -568,12 +795,18 @@ export default function ManagerRegisterPage() {
     const maxSize = 10 * 1024 * 1024;
 
     if (!["image/jpeg", "image/png"].includes(file.type)) {
-      setFieldErrors((current) => ({ ...current, interiorMedia: "Interior media must be a JPEG or PNG image." }));
+      setFieldErrors((current) => ({
+        ...current,
+        interiorMedia: "Interior media must be a JPEG or PNG image.",
+      }));
       return;
     }
 
     if (file.size > maxSize) {
-      setFieldErrors((current) => ({ ...current, interiorMedia: "Interior media must be 10 MB or smaller." }));
+      setFieldErrors((current) => ({
+        ...current,
+        interiorMedia: "Interior media must be 10 MB or smaller.",
+      }));
       return;
     }
 
@@ -583,22 +816,34 @@ export default function ManagerRegisterPage() {
 
   function validateDocuments() {
     if (!documents.brandingImages) {
-      setFieldErrors((current) => ({ ...current, brandingImages: "Upload and crop a restaurant banner image." }));
+      setFieldErrors((current) => ({
+        ...current,
+        brandingImages: "Upload and crop a restaurant banner image.",
+      }));
       return false;
     }
 
     if (!documents.fssaiLicense) {
-      setFieldErrors((current) => ({ ...current, fssaiLicense: "Upload your FSSAI or food safety document." }));
+      setFieldErrors((current) => ({
+        ...current,
+        fssaiLicense: "Upload your FSSAI or food safety document.",
+      }));
       return false;
     }
 
     if (!documents.businessRegistration) {
-      setFieldErrors((current) => ({ ...current, businessRegistration: "Upload your business registration certificate." }));
+      setFieldErrors((current) => ({
+        ...current,
+        businessRegistration: "Upload your business registration certificate.",
+      }));
       return false;
     }
 
     if (!documents.ownerIdentity) {
-      setFieldErrors((current) => ({ ...current, ownerIdentity: "Upload your owner identity proof." }));
+      setFieldErrors((current) => ({
+        ...current,
+        ownerIdentity: "Upload your owner identity proof.",
+      }));
       return false;
     }
 
@@ -620,18 +865,26 @@ export default function ManagerRegisterPage() {
   async function requestEmailCode() {
     const email = application.email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
-      setFieldErrors((current) => ({ ...current, email: "Enter a valid email address." }));
+      setFieldErrors((current) => ({
+        ...current,
+        email: "Enter a valid email address.",
+      }));
       return;
     }
     setEmailBusy(true);
     setError("");
     try {
-      const response = await axios.request({ url: `${API_BASE}/api/auth/manager/send-verification`, validateStatus: () => true,
-        method: "POST", withCredentials: true, headers: { "Content-Type": "application/json" },
+      const response = await axios.request({
+        url: `${API_BASE}/api/auth/manager/send-verification`,
+        validateStatus: () => true,
+        method: "POST",
+        withCredentials: true,
+        headers: { "Content-Type": "application/json" },
         data: JSON.stringify({ email }),
       });
       const data = response.data;
-      if (response.status < 200 || response.status >= 300) throw new Error(data?.detail || "Unable to send a confirmation code.");
+      if (response.status < 200 || response.status >= 300)
+        throw new Error(data?.detail || "Unable to send a confirmation code.");
       setEmailCodeSent(true);
       setEmailVerified(false);
     } catch (reason) {
@@ -645,12 +898,20 @@ export default function ManagerRegisterPage() {
     setEmailBusy(true);
     setError("");
     try {
-      const response = await axios.request({ url: `${API_BASE}/api/auth/manager/verify-email`, validateStatus: () => true,
-        method: "POST", withCredentials: true, headers: { "Content-Type": "application/json" },
-        data: JSON.stringify({ email: application.email.trim().toLowerCase(), code: emailCode }),
+      const response = await axios.request({
+        url: `${API_BASE}/api/auth/manager/verify-email`,
+        validateStatus: () => true,
+        method: "POST",
+        withCredentials: true,
+        headers: { "Content-Type": "application/json" },
+        data: JSON.stringify({
+          email: application.email.trim().toLowerCase(),
+          code: emailCode,
+        }),
       });
       const data = response.data;
-      if (response.status < 200 || response.status >= 300) throw new Error(data?.detail || "Unable to verify this email.");
+      if (response.status < 200 || response.status >= 300)
+        throw new Error(data?.detail || "Unable to verify this email.");
       setEmailVerified(true);
       setError("");
     } catch (reason) {
@@ -663,7 +924,6 @@ export default function ManagerRegisterPage() {
   function handlePersonalContinue(event) {
     event.preventDefault();
 
-    if (!event.currentTarget.reportValidity()) return;
 
     setError("");
     setFieldErrors({});
@@ -674,7 +934,9 @@ export default function ManagerRegisterPage() {
     }
 
     if (!emailVerified) {
-      setError("Verify your email address with the confirmation code before continuing.");
+      setError(
+        "Verify your email address with the confirmation code before continuing.",
+      );
       return;
     }
 
@@ -688,7 +950,6 @@ export default function ManagerRegisterPage() {
   function handleRestaurantContinue(event) {
     event.preventDefault();
 
-    if (!event.currentTarget.reportValidity()) return;
 
     setError("");
 
@@ -783,7 +1044,9 @@ export default function ManagerRegisterPage() {
         formData.append("interior_media", interiorMedia);
       }
 
-      const response = await axios.request({ url: `${API_BASE}/api/auth/manager/register`, validateStatus: () => true,
+      const response = await axios.request({
+        url: `${API_BASE}/api/auth/manager/register`,
+        validateStatus: () => true,
         method: "POST",
         data: formData,
         withCredentials: true,
@@ -822,7 +1085,10 @@ export default function ManagerRegisterPage() {
               const completed = stepNumber < step;
 
               return (
-                <div key={label} className="manager-registration-step flex flex-1 items-start">
+                <div
+                  key={label}
+                  className="manager-registration-step flex flex-1 items-start"
+                >
                   {/* Step */}
                   <div className="manager-registration-step-label flex min-w-[90px] flex-col items-center">
                     <button
@@ -885,7 +1151,7 @@ export default function ManagerRegisterPage() {
               personal account details.
             </p>
 
-            <form onSubmit={handlePersonalContinue} noValidate>
+            <CustomForm onSubmit={handlePersonalContinue} noValidate>
               <FormField
                 id="name"
                 label="Full Name"
@@ -915,26 +1181,57 @@ export default function ManagerRegisterPage() {
 
               <div className="-mt-2 mb-5">
                 {!emailCodeSent ? (
-                  <button type="button" onClick={requestEmailCode} disabled={emailBusy || emailVerified}
-                    className="text-sm font-semibold text-wine hover:text-ink disabled:opacity-60">
-                    {emailBusy ? "Sending code…" : "Send email confirmation code"}
+                  <button
+                    type="button"
+                    onClick={requestEmailCode}
+                    disabled={emailBusy || emailVerified}
+                    className="text-sm font-semibold text-wine hover:text-ink disabled:opacity-60"
+                  >
+                    {emailBusy
+                      ? "Sending code…"
+                      : "Send email confirmation code"}
                   </button>
                 ) : emailVerified ? (
-                  <p className="text-sm font-medium text-emerald-700">Email confirmed</p>
+                  <p className="text-sm font-medium text-emerald-700">
+                    Email confirmed
+                  </p>
                 ) : (
                   <div className="flex flex-wrap items-end gap-2">
-                    <label className="block flex-1 text-sm font-medium text-ink" htmlFor="managerEmailCode">
+                    <label
+                      className="block flex-1 text-sm font-medium text-ink"
+                      htmlFor="managerEmailCode"
+                    >
                       Confirmation code
-                      <input id="managerEmailCode" inputMode="numeric" autoComplete="one-time-code" maxLength={6}
-                        value={emailCode} onChange={(event) => setEmailCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
-                        className="mt-2 h-11 w-full rounded-lg border border-stone-200 px-3 text-sm outline-none focus:border-wine" />
+                      <input
+                        id="managerEmailCode"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        maxLength={6}
+                        value={emailCode}
+                        onChange={(event) =>
+                          setEmailCode(
+                            event.target.value.replace(/\D/g, "").slice(0, 6),
+                          )
+                        }
+                        className="mt-2 h-11 w-full rounded-lg border border-stone-200 px-3 text-sm outline-none focus:border-wine"
+                      />
                     </label>
-                    <button type="button" onClick={verifyEmailCode} disabled={emailBusy || emailCode.length !== 6}
-                      className="h-11 rounded-lg bg-wine px-4 text-sm font-semibold text-white disabled:opacity-60">
+                    <button
+                      type="button"
+                      onClick={verifyEmailCode}
+                      disabled={emailBusy || emailCode.length !== 6}
+                      className="h-11 rounded-lg bg-wine px-4 text-sm font-semibold text-white disabled:opacity-60"
+                    >
                       {emailBusy ? "Checking…" : "Verify"}
                     </button>
-                    <button type="button" onClick={requestEmailCode} disabled={emailBusy}
-                      className="h-11 rounded-lg border border-stone-200 px-3 text-sm font-semibold text-ink disabled:opacity-60">Resend</button>
+                    <button
+                      type="button"
+                      onClick={requestEmailCode}
+                      disabled={emailBusy}
+                      className="h-11 rounded-lg border border-stone-200 px-3 text-sm font-semibold text-ink disabled:opacity-60"
+                    >
+                      Resend
+                    </button>
                   </div>
                 )}
               </div>
@@ -976,7 +1273,7 @@ export default function ManagerRegisterPage() {
                 Continue
                 <ArrowRight size={16} />
               </button>
-            </form>
+            </CustomForm>
 
             <p className="mt-6 text-center text-sm text-stone-500">
               Already have a manager account?{" "}
@@ -1001,7 +1298,7 @@ export default function ManagerRegisterPage() {
               Fill out the public-facing details for your establishment.
             </p>
 
-            <form onSubmit={handleRestaurantContinue} noValidate>
+            <CustomForm onSubmit={handleRestaurantContinue} noValidate>
               {/* Restaurant Name */}
               <FormField
                 id="restaurantName"
@@ -1031,13 +1328,26 @@ export default function ManagerRegisterPage() {
                   required
                   value={application.restaurantDescription}
                   aria-invalid={Boolean(fieldErrors.restaurantDescription)}
-                  onInvalid={(event) => { event.preventDefault(); setFieldErrors((current) => ({ ...current, restaurantDescription: "Enter a restaurant description." })); }}
+                  onInvalid={(event) => {
+                    event.preventDefault();
+                    setFieldErrors((current) => ({
+                      ...current,
+                      restaurantDescription: "Enter a restaurant description.",
+                    }));
+                  }}
                   onChange={(event) =>
                     updateField("restaurantDescription", event.target.value)
                   }
                   className="block w-full resize-none rounded-lg border border-stone-200 bg-white px-3.5 py-3 text-sm text-ink outline-none placeholder:text-stone-400 transition focus:border-wine focus:ring-2 focus:ring-wine/10"
                 />
-                {fieldErrors.restaurantDescription && <p className="-mt-3 mb-4 text-xs font-medium text-red-600" role="alert">{fieldErrors.restaurantDescription}</p>}
+                {fieldErrors.restaurantDescription && (
+                  <p
+                    className="-mt-3 mb-4 text-xs font-medium text-red-600"
+                    role="alert"
+                  >
+                    {fieldErrors.restaurantDescription}
+                  </p>
+                )}
               </label>
 
               {/* Cuisine */}
@@ -1052,7 +1362,13 @@ export default function ManagerRegisterPage() {
                   required
                   value={application.cuisineType}
                   aria-invalid={Boolean(fieldErrors.cuisineType)}
-                  onInvalid={(event) => { event.preventDefault(); setFieldErrors((current) => ({ ...current, cuisineType: "Choose a cuisine type." })); }}
+                  onInvalid={(event) => {
+                    event.preventDefault();
+                    setFieldErrors((current) => ({
+                      ...current,
+                      cuisineType: "Choose a cuisine type.",
+                    }));
+                  }}
                   onChange={(event) =>
                     updateField("cuisineType", event.target.value)
                   }
@@ -1072,7 +1388,14 @@ export default function ManagerRegisterPage() {
                   <option value="Thai">Thai</option>
                   <option value="Other">Other</option>
                 </select>
-                {fieldErrors.cuisineType && <p className="-mt-3 mb-4 text-xs font-medium text-red-600" role="alert">{fieldErrors.cuisineType}</p>}
+                {fieldErrors.cuisineType && (
+                  <p
+                    className="-mt-3 mb-4 text-xs font-medium text-red-600"
+                    role="alert"
+                  >
+                    {fieldErrors.cuisineType}
+                  </p>
+                )}
               </label>
 
               {/* Contact + Email */}
@@ -1108,14 +1431,37 @@ export default function ManagerRegisterPage() {
 
               {/* Address */}
               <div className="mb-5 rounded-lg border border-stone-200 bg-stone-50 p-4">
-                <button type="button" onClick={useCurrentLocation} disabled={locationBusy}
-                  className="flex items-center gap-2 rounded-lg bg-wine px-4 py-3 text-sm font-semibold text-white disabled:opacity-60">
+                <button
+                  type="button"
+                  onClick={useCurrentLocation}
+                  disabled={locationBusy}
+                  className="flex items-center gap-2 rounded-lg bg-wine px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
+                >
                   <MapPin size={16} />
-                  {locationBusy ? "Getting your location…" : "Use current restaurant location"}
+                  {locationBusy
+                    ? "Getting your location…"
+                    : "Use current restaurant location"}
                 </button>
-                <p className="mt-2 text-xs leading-5 text-stone-500">Use this while at your restaurant. Allow browser location access to save your location pin and fill available address details.</p>
-                <p className="mt-2 text-sm text-stone-600" role="status" aria-live="polite">{locationMessage}</p>
-                <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs text-stone-500 underline">Address data © OpenStreetMap contributors</a>
+                <p className="mt-2 text-xs leading-5 text-stone-500">
+                  Use this while at your restaurant. Allow browser location
+                  access to save your location pin and fill available address
+                  details.
+                </p>
+                <p
+                  className="mt-2 text-sm text-stone-600"
+                  role="status"
+                  aria-live="polite"
+                >
+                  {locationMessage}
+                </p>
+                <a
+                  href="https://www.openstreetmap.org/copyright"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-2 inline-block text-xs text-stone-500 underline"
+                >
+                  Address data © OpenStreetMap contributors
+                </a>
               </div>
               <div className="relative">
                 <FormField
@@ -1127,33 +1473,71 @@ export default function ManagerRegisterPage() {
                   icon={MapPin}
                   required
                   value={application.address}
-                  onChange={(event) => updateField("address", event.target.value)}
-                  onBlur={() => window.setTimeout(() => setAddressSuggestions([]), 150)}
+                  onChange={(event) =>
+                    updateField("address", event.target.value)
+                  }
+                  onBlur={() =>
+                    window.setTimeout(() => setAddressSuggestions([]), 150)
+                  }
                 />
-                {(addressLookupBusy || addressSuggestions.length > 0 || addressLookupError) && (
+                {(addressLookupBusy ||
+                  addressSuggestions.length > 0 ||
+                  addressLookupError) && (
                   <div className="absolute z-20 -mt-3 w-full overflow-hidden rounded-lg border border-stone-200 bg-white shadow-lg">
-                    {addressLookupBusy && <p className="px-4 py-3 text-sm text-stone-500">Searching addresses…</p>}
-                    {!addressLookupBusy && addressSuggestions.map((feature, index) => {
-                      const place = feature.properties || {};
-                      const primary = [place.housenumber, place.street].filter(Boolean).join(" ") || place.name || place.street || "Address result";
-                      const secondary = [place.city || place.district || place.county, place.state, place.postcode, place.country].filter(Boolean).join(", ");
-                      return (
-                        <button
-                          key={`${feature.properties?.osm_id || primary}-${index}`}
-                          type="button"
-                          onMouseDown={(event) => event.preventDefault()}
-                          onClick={() => selectRestaurantAddress(feature)}
-                          className="block w-full border-b border-stone-100 px-4 py-3 text-left last:border-0 hover:bg-stone-50"
-                        >
-                          <span className="block text-sm font-medium text-ink">{primary}</span>
-                          {secondary && <span className="mt-0.5 block text-xs text-stone-500">{secondary}</span>}
-                        </button>
-                      );
-                    })}
-                    {!addressLookupBusy && addressLookupError && <p className="px-4 py-3 text-sm text-amber-800">{addressLookupError}</p>}
+                    {addressLookupBusy && (
+                      <p className="px-4 py-3 text-sm text-stone-500">
+                        Searching addresses…
+                      </p>
+                    )}
+                    {!addressLookupBusy &&
+                      addressSuggestions.map((feature, index) => {
+                        const place = feature.properties || {};
+                        const primary =
+                          [place.housenumber, place.street]
+                            .filter(Boolean)
+                            .join(" ") ||
+                          place.name ||
+                          place.street ||
+                          "Address result";
+                        const secondary = [
+                          place.city || place.district || place.county,
+                          place.state,
+                          place.postcode,
+                          place.country,
+                        ]
+                          .filter(Boolean)
+                          .join(", ");
+                        return (
+                          <button
+                            key={`${feature.properties?.osm_id || primary}-${index}`}
+                            type="button"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => selectRestaurantAddress(feature)}
+                            className="block w-full border-b border-stone-100 px-4 py-3 text-left last:border-0 hover:bg-stone-50"
+                          >
+                            <span className="block text-sm font-medium text-ink">
+                              {primary}
+                            </span>
+                            {secondary && (
+                              <span className="mt-0.5 block text-xs text-stone-500">
+                                {secondary}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    {!addressLookupBusy && addressLookupError && (
+                      <p className="px-4 py-3 text-sm text-amber-800">
+                        {addressLookupError}
+                      </p>
+                    )}
                   </div>
                 )}
-                <p className="-mt-2 mb-4 text-xs text-stone-400">Choose a suggested location to fill its street address, city, state, and postal code. Search data © OpenStreetMap contributors.</p>
+                <p className="-mt-2 mb-4 text-xs text-stone-400">
+                  Choose a suggested location to fill its street address, city,
+                  state, and postal code. Search data © OpenStreetMap
+                  contributors.
+                </p>
               </div>
 
               {/* City / State / PIN */}
@@ -1166,7 +1550,9 @@ export default function ManagerRegisterPage() {
                   autoComplete="postal-code"
                   required
                   value={application.pinCode}
-                  onChange={(event) => updateField("pinCode", event.target.value)}
+                  onChange={(event) =>
+                    updateField("pinCode", event.target.value)
+                  }
                 />
 
                 <FormField
@@ -1190,43 +1576,31 @@ export default function ManagerRegisterPage() {
                   value={application.state}
                   onChange={(event) => updateField("state", event.target.value)}
                 />
-
-
               </div>
-              <p className="-mt-2 mb-4 text-xs text-stone-500" role="status" aria-live="polite">
-                {pinLookupMessage || "Enter a 6-digit Indian PIN code to automatically fill city and state."}
+              <p
+                className="-mt-2 mb-4 text-xs text-stone-500"
+                role="status"
+                aria-live="polite"
+              >
+                {pinLookupMessage ||
+                  "Enter a 6-digit Indian PIN code to automatically fill city and state."}
               </p>
 
-              {/* Live Google Maps location preview */}
-              <div className="mb-6">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-sm font-medium text-ink">
-                    Live Google Maps Location
-                  </span>
-
-                  <span className="text-xs font-medium text-wine">
-                    Required
-                  </span>
-                </div>
-
-                <div className="relative h-64 overflow-hidden rounded-lg border border-stone-200 bg-stone-100">
-                  <iframe
-                    key={mapQuery || "restaurant-location"}
-                    title="Google Maps restaurant location preview"
-                    src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery || "India")}&output=embed`}
-                    className="h-full w-full border-0"
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    allowFullScreen
-                  />
-                </div>
-
-                <p className="mt-2 text-xs leading-5 text-stone-400">
-                  {application.latitude && application.longitude
-                    ? "Restaurant location selected. Customers can find your restaurant in nearby searches."
-                    : "Use your current location or choose a suggested address above to set your restaurant pin."}
-                </p>
-              </div>
+              <RestaurantLocationPicker
+                latitude={application.latitude}
+                longitude={application.longitude}
+                zoom={/^[1-9]\d{5}$/.test(pinToLookup.trim()) ? 13 : 17}
+                onConfirm={confirmMapLocation}
+                onLocate={useCurrentLocation}
+                locating={locationBusy}
+              />
+              <p className="mb-4 text-xs text-stone-500" role="status">
+                {application.latitude && application.longitude
+                  ? pinToLookup.trim()
+                    ? "PIN code area selected. Adjust the map and confirm your restaurant location."
+                    : "Restaurant pin saved. Confirm again after adjusting the map."
+                  : "Select and confirm your restaurant’s exact location on the map."}
+              </p>
 
               <Notice message={error} />
 
@@ -1248,7 +1622,7 @@ export default function ManagerRegisterPage() {
                   <ArrowRight size={16} />
                 </button>
               </div>
-            </form>
+            </CustomForm>
           </>
         )}
 
@@ -1263,7 +1637,7 @@ export default function ManagerRegisterPage() {
               Upload official merchant documents as PDF files only (Max 5MB).
             </p>
 
-            <form onSubmit={handleDocumentsContinue} noValidate>
+            <CustomForm onSubmit={handleDocumentsContinue} noValidate>
               <DocumentCard
                 title="FSSAI License / Food Safety"
                 description="Upload your food safety or FSSAI license as a PDF."
@@ -1349,7 +1723,7 @@ export default function ManagerRegisterPage() {
                   <ArrowRight size={16} />
                 </button>
               </div>
-            </form>
+            </CustomForm>
           </>
         )}
         {/* STEP 4 */}
@@ -1363,22 +1737,32 @@ export default function ManagerRegisterPage() {
               Configure weekly timing schedules and floor capabilities.
             </p>
 
-            <form
+            <CustomForm
               onSubmit={(event) => {
                 event.preventDefault();
 
                 if (!capacity.trim()) {
-                  setFieldErrors((current) => ({ ...current, capacity: "Enter the total seating capacity." }));
+                  setFieldErrors((current) => ({
+                    ...current,
+                    capacity: "Enter the total seating capacity.",
+                  }));
                   return;
                 }
 
                 if (!tables.trim()) {
-                  setFieldErrors((current) => ({ ...current, tables: "Enter the number of dining tables." }));
+                  setFieldErrors((current) => ({
+                    ...current,
+                    tables: "Enter the number of dining tables.",
+                  }));
                   return;
                 }
 
                 setError("");
-                setFieldErrors((current) => ({ ...current, capacity: "", tables: "" }));
+                setFieldErrors((current) => ({
+                  ...current,
+                  capacity: "",
+                  tables: "",
+                }));
 
                 console.log("Operating hours:", {
                   hours,
@@ -1468,7 +1852,13 @@ export default function ManagerRegisterPage() {
                     min={1}
                     value={capacity}
                     error={fieldErrors.capacity}
-                    onChange={(event) => { setCapacity(event.target.value); setFieldErrors((current) => ({ ...current, capacity: "" })); }}
+                    onChange={(event) => {
+                      setCapacity(event.target.value);
+                      setFieldErrors((current) => ({
+                        ...current,
+                        capacity: "",
+                      }));
+                    }}
                   />
 
                   <FormField
@@ -1480,7 +1870,10 @@ export default function ManagerRegisterPage() {
                     min={1}
                     value={tables}
                     error={fieldErrors.tables}
-                    onChange={(event) => { setTables(event.target.value); setFieldErrors((current) => ({ ...current, tables: "" })); }}
+                    onChange={(event) => {
+                      setTables(event.target.value);
+                      setFieldErrors((current) => ({ ...current, tables: "" }));
+                    }}
                   />
                 </div>
               </div>
@@ -1490,7 +1883,22 @@ export default function ManagerRegisterPage() {
                 <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink">
                   Optional Interior Media
                 </h3>
-                <ImageUploadField id="interiorMedia" file={interiorMedia} accept="image/jpeg,image/png" hint="JPEG or PNG · up to 10 MB · ideal size 1200 × 800" prompt="Upload interior photos" onSelect={handleInteriorMedia} onRemove={() => { setInteriorMedia(null); setFieldErrors((current) => ({ ...current, interiorMedia: "" })); }} error={fieldErrors.interiorMedia} />
+                <ImageUploadField
+                  id="interiorMedia"
+                  file={interiorMedia}
+                  accept="image/jpeg,image/png"
+                  hint="JPEG or PNG · up to 10 MB · ideal size 1200 × 800"
+                  prompt="Upload interior photos"
+                  onSelect={handleInteriorMedia}
+                  onRemove={() => {
+                    setInteriorMedia(null);
+                    setFieldErrors((current) => ({
+                      ...current,
+                      interiorMedia: "",
+                    }));
+                  }}
+                  error={fieldErrors.interiorMedia}
+                />
               </div>
 
               <Notice message={error} />
@@ -1513,7 +1921,7 @@ export default function ManagerRegisterPage() {
                   <ArrowRight size={16} />
                 </button>
               </div>
-            </form>
+            </CustomForm>
           </>
         )}
         {/* STEP 5 - REVIEW */}
@@ -1528,7 +1936,7 @@ export default function ManagerRegisterPage() {
               application for admin approval.
             </p>
 
-            <form onSubmit={handleFinalSubmit}>
+            <CustomForm onSubmit={handleFinalSubmit}>
               {/* Personal Details */}
               <section className="mb-5 rounded-xl border border-stone-200 bg-white">
                 <div className="flex items-center justify-between border-b border-stone-100 px-5 py-4">
@@ -1791,7 +2199,7 @@ export default function ManagerRegisterPage() {
                   {!submitting && <ArrowRight size={16} />}
                 </button>
               </div>
-            </form>
+            </CustomForm>
           </>
         )}
       </div>

@@ -24,7 +24,9 @@ export default function CustomerHeader({ user, onLogout }) {
       }
 
       // Real backend logout
-      await axios.request({ url: `${API_BASE}/api/auth/logout`, validateStatus: () => true,
+      await axios.request({
+        url: `${API_BASE}/api/auth/logout`,
+        validateStatus: () => true,
         method: "POST",
         withCredentials: true,
       });
@@ -82,15 +84,52 @@ export default function CustomerHeader({ user, onLogout }) {
 
           {/* Navigation links */}
           <div className="nav-links">
-            <Link className={location.pathname === "/customer" ? "active" : ""} aria-current={location.pathname === "/customer" ? "page" : undefined} to="/customer" onClick={closeMenu}>
+            <Link
+              className={location.pathname === "/customer" ? "active" : ""}
+              aria-current={
+                location.pathname === "/customer" ? "page" : undefined
+              }
+              to="/customer"
+              onClick={closeMenu}
+            >
               Discover
             </Link>
 
-            <Link className={location.pathname.startsWith("/customer/restaurants") ? "active" : ""} aria-current={location.pathname.startsWith("/customer/restaurants") ? "page" : undefined} to="/customer/restaurants" onClick={closeMenu}>
+            <Link
+              className={
+                location.pathname.startsWith("/customer/restaurants")
+                  ? "active"
+                  : ""
+              }
+              aria-current={
+                location.pathname.startsWith("/customer/restaurants")
+                  ? "page"
+                  : undefined
+              }
+              to="/customer/restaurants"
+              onClick={closeMenu}
+            >
               Restaurants
             </Link>
 
-            {user && <Link className={location.pathname === "/customer/saved-restaurants" ? "active" : ""} aria-current={location.pathname === "/customer/saved-restaurants" ? "page" : undefined} to="/customer/saved-restaurants" onClick={closeMenu}>Saved places</Link>}
+            {user && (
+              <Link
+                className={
+                  location.pathname === "/customer/saved-restaurants"
+                    ? "active"
+                    : ""
+                }
+                aria-current={
+                  location.pathname === "/customer/saved-restaurants"
+                    ? "page"
+                    : undefined
+                }
+                to="/customer/saved-restaurants"
+                onClick={closeMenu}
+              >
+                Saved places
+              </Link>
+            )}
 
             <Link to="/customer#offers" onClick={closeMenu}>
               Offers
@@ -105,7 +144,10 @@ export default function CustomerHeader({ user, onLogout }) {
 
                 <button
                   className="profile-button"
-                  onClick={() => { closeMenu(); navigate("/customer/profile"); }}
+                  onClick={() => {
+                    closeMenu();
+                    navigate("/customer/profile");
+                  }}
                 >
                   {user?.name?.split(" ")[0] || "Profile"}
                 </button>

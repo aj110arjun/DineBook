@@ -1,3 +1,4 @@
+import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useState } from "react";
 import { ArrowRight, Mail } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -88,16 +89,22 @@ export default function CustomerRegisterPage() {
     const email = form.get("email").trim();
     const validationErrors = {};
     if (!name) validationErrors.name = "Enter your full name.";
-    else if (!validateFullName(name)) validationErrors.name = "Use at least 2 characters with letters and spaces only.";
+    else if (!validateFullName(name))
+      validationErrors.name =
+        "Use at least 2 characters with letters and spaces only.";
     if (!email) validationErrors.email = "Enter your email address.";
-    else if (!validateEmail(email)) validationErrors.email = "Enter a valid email address, such as alex@example.com.";
+    else if (!validateEmail(email))
+      validationErrors.email =
+        "Enter a valid email address, such as alex@example.com.";
     if (!password) validationErrors.password = "Create a password.";
     else {
       const passwordError = validatePassword(password);
       if (passwordError) validationErrors.password = passwordError;
     }
-    if (!confirmation) validationErrors.confirmPassword = "Confirm your password.";
-    else if (password && password !== confirmation) validationErrors.confirmPassword = "Passwords don’t match.";
+    if (!confirmation)
+      validationErrors.confirmPassword = "Confirm your password.";
+    else if (password && password !== confirmation)
+      validationErrors.confirmPassword = "Passwords don’t match.";
     if (Object.keys(validationErrors).length) {
       setFieldErrors(validationErrors);
       return;
@@ -117,10 +124,18 @@ export default function CustomerRegisterPage() {
           "We couldn’t create the account. Please check your details.",
       });
       formElement.reset();
-      sessionStorage.setItem('dinebook-verification-email', email.toLowerCase());
-      navigate('/customer/verify-email', { state: { email: email.toLowerCase() } });
+      sessionStorage.setItem(
+        "dinebook-verification-email",
+        email.toLowerCase(),
+      );
+      navigate("/customer/verify-email", {
+        state: { email: email.toLowerCase() },
+      });
     } catch (reason) {
-      if (/email/i.test(reason.message) && /already|exists|registered/i.test(reason.message)) {
+      if (
+        /email/i.test(reason.message) &&
+        /already|exists|registered/i.test(reason.message)
+      ) {
         setFieldErrors({ email: reason.message });
       } else {
         setError(reason.message);
@@ -139,9 +154,16 @@ export default function CustomerRegisterPage() {
         Create your guest profile and start planning your next dining
         experience.
       </p>
-      <GoogleSignInButton onSuccess={() => navigate("/customer", { replace: true })} onError={setError} />
-      <div className="my-5 flex items-center gap-3 text-xs text-stone-400"><span className="h-px flex-1 bg-stone-200" />OR SIGN UP WITH EMAIL<span className="h-px flex-1 bg-stone-200" /></div>
-      <form onSubmit={handleSubmit} noValidate>
+      <GoogleSignInButton
+        onSuccess={() => navigate("/customer", { replace: true })}
+        onError={setError}
+      />
+      <div className="my-5 flex items-center gap-3 text-xs text-stone-400">
+        <span className="h-px flex-1 bg-stone-200" />
+        OR SIGN UP WITH EMAIL
+        <span className="h-px flex-1 bg-stone-200" />
+      </div>
+      <CustomForm onSubmit={handleSubmit} noValidate>
         <FormField
           id="name"
           label="Full Name"
@@ -164,14 +186,14 @@ export default function CustomerRegisterPage() {
         <PasswordField
           id="password"
           label="Create Password"
-          placeholder="At least 10 characters"
+          placeholder="At least 8 characters"
           autoComplete="new-password"
-          minLength={10}
+          minLength={8}
           error={fieldErrors.password}
           onChange={() => clearFieldError("password")}
         />
         <p className="-mt-2 mb-4 text-xs leading-5 text-stone-500">
-          Use 10 or more characters with uppercase and lowercase letters, a
+          Use 8 or more characters with uppercase and lowercase letters, a
           number, and a special symbol. Avoid common passwords.
         </p>
         <PasswordField
@@ -179,7 +201,7 @@ export default function CustomerRegisterPage() {
           label="Confirm Password"
           placeholder="Enter your password again"
           autoComplete="new-password"
-          minLength={10}
+          minLength={8}
           error={fieldErrors.confirmPassword}
           onChange={() => clearFieldError("confirmPassword")}
         />
@@ -193,7 +215,7 @@ export default function CustomerRegisterPage() {
           {busy ? "Creating your account…" : "Create Customer Account"}
           {!busy && <ArrowRight size={16} />}
         </button>
-      </form>
+      </CustomForm>
       <p className="mt-7 border-t border-stone-100 pt-5 text-center text-sm text-stone-500">
         Already have an account?{" "}
         <Link

@@ -1,3 +1,5 @@
+import { confirmAction } from "../../lib/confirmDialog.js";
+import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Tag, Plus, Search, RefreshCw } from "lucide-react";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
@@ -46,6 +48,7 @@ export default function ManagerOffersPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [formError, setFormError] = useState("");
   const [notice, setNotice] = useState("");
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
@@ -75,9 +78,9 @@ export default function ManagerOffersPage() {
       setOffers(data.items || []);
       setTotal(data.total || 0);
       setMenu(menuData);
-      setError("");
+      setFormError("");
     } catch (e) {
-      setError(e.message);
+      setFormError(e.message);
     } finally {
       setLoading(false);
     }
@@ -106,19 +109,21 @@ export default function ManagerOffersPage() {
   async function save(event) {
     event.preventDefault();
     if (form.starts_at && form.starts_at < localDateToday()) {
-      setError("The offer start date cannot be in the past.");
+      setFormError("The offer start date cannot be in the past.");
       return;
     }
     if (form.ends_at && form.ends_at < localDateToday()) {
-      setError("The offer end date cannot be in the past.");
+      setFormError("The offer end date cannot be in the past.");
       return;
     }
     if (form.starts_at && form.ends_at && form.ends_at < form.starts_at) {
-      setError("The end date must be the same as or later than the start date.");
+      setFormError(
+        "The end date must be the same as or later than the start date.",
+      );
       return;
     }
     setBusy(true);
-    setError("");
+    setFormError("");
     setNotice("");
     const body = {
       ...form,
@@ -129,8 +134,12 @@ export default function ManagerOffersPage() {
       per_customer_limit: form.per_customer_limit
         ? Number(form.per_customer_limit)
         : null,
-      starts_at: form.starts_at ? new Date(`${form.starts_at}T00:00:00`).toISOString() : null,
-      ends_at: form.ends_at ? new Date(`${form.ends_at}T23:59:59.999`).toISOString() : null,
+      starts_at: form.starts_at
+        ? new Date(`${form.starts_at}T00:00:00`).toISOString()
+        : null,
+      ends_at: form.ends_at
+        ? new Date(`${form.ends_at}T23:59:59.999`).toISOString()
+        : null,
       timezone_name: Intl.DateTimeFormat().resolvedOptions().timeZone,
     };
     try {
@@ -144,7 +153,7 @@ export default function ManagerOffersPage() {
       setNotice("Offer saved.");
       await load();
     } catch (e) {
-      setError(e.message);
+      setFormError(e.message);
     } finally {
       setBusy(false);
     }
@@ -152,9 +161,9 @@ export default function ManagerOffersPage() {
   async function toggle(offer) {
     const action = offer.is_active ? "deactivate" : "activate";
     if (
-      !window.confirm(
+      !(await confirmAction(
         `${action[0].toUpperCase()}${action.slice(1)} ${offer.title}?`,
-      )
+      ))
     )
       return;
     try {
@@ -164,7 +173,7 @@ export default function ManagerOffersPage() {
       );
       await load();
     } catch (e) {
-      setError(e.message);
+      setFormError(e.message);
     }
   }
   async function showRedemptions(offer) {
@@ -174,7 +183,7 @@ export default function ManagerOffersPage() {
       );
       setRedemptionView({ offer, rows: data.items || [] });
     } catch (e) {
-      setError(e.message);
+      setFormError(e.message);
     }
   }
   function edit(o) {
@@ -206,9 +215,9 @@ export default function ManagerOffersPage() {
             <Plus size={17} /> Create offer
           </button>
         </div>
-        {error && (
+        {formError && (
           <p role="alert" className="offer-alert">
-            {error}
+            {formError}
           </p>
         )}
         {notice && (
@@ -391,7 +400,7 @@ export default function ManagerOffersPage() {
       </section>
       {form && (
         <div className="offer-modal-backdrop">
-          <form className="offer-form" onSubmit={save}>
+          <CustomForm className="offer-form" onSubmit={save}>
             <h2>{form.id ? "Edit offer" : "Create offer"}</h2>
             <div className="offer-form-grid">
               <label>
@@ -435,8 +444,8 @@ export default function ManagerOffersPage() {
                   : "Discount amount (₹)"}
                 <input
                   type="number"
-                  min="0.01"
-                  max={form.discount_type === "PERCENTAGE" ? "100" : undefined}
+                  min={form.discount_type === "PERCENTAGE" ? "10" : "0.01"}
+                  max={form.discount_type === "PERCENTAGE" ? "90" : undefined}
                   step="0.01"
                   required
                   value={form.discount_percent}
@@ -489,7 +498,16 @@ export default function ManagerOffersPage() {
                   label="Choose offer start date"
                   value={form.starts_at}
                   minDate={localDateToday()}
-                  onChange={(value) => setForm((current) => ({ ...current, starts_at: value, ends_at: current.ends_at && current.ends_at < value ? "" : current.ends_at }))}
+                  onChange={(value) =>
+                    setForm((current) => ({
+                      ...current,
+                      starts_at: value,
+                      ends_at:
+                        current.ends_at && current.ends_at < value
+                          ? ""
+                          : current.ends_at,
+                    }))
+                  }
                 />
               </label>
               <label>
@@ -568,7 +586,7 @@ export default function ManagerOffersPage() {
               </button>
               <button disabled={busy}>{busy ? "Saving…" : "Save offer"}</button>
             </div>
-          </form>
+          </CustomForm>
         </div>
       )}
       {redemptionView && (

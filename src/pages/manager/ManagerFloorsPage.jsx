@@ -1,3 +1,4 @@
+import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   PlusCircle,
@@ -424,7 +425,7 @@ export default function ManagerFloorsPage() {
               if (event.target === event.currentTarget && !saving) setForm("");
             }}
           >
-            <form
+            <CustomForm
               className="table-entry-modal"
               onSubmit={addFloor}
               aria-labelledby="add-floor-title"
@@ -498,7 +499,7 @@ export default function ManagerFloorsPage() {
                       : "Save Floor"}
                 </button>
               </footer>
-            </form>
+            </CustomForm>
           </div>
         )}
 
@@ -528,7 +529,7 @@ export default function ManagerFloorsPage() {
                 <strong>{editingTable ? "Edit Table" : "Add Table"}</strong>
               </div>
               <div className="table-entry-grid">
-                <form className="table-spec-form" onSubmit={addTable}>
+                <CustomForm className="table-spec-form" onSubmit={addTable}>
                   <h2 id="add-table-title">Table Specifications</h2>
                   <label>
                     Table Name / Number <b>*</b>
@@ -643,7 +644,7 @@ export default function ManagerFloorsPage() {
                           : "Save Table"}
                     </button>
                   </footer>
-                </form>
+                </CustomForm>
                 <section className="table-preview-card">
                   <h2>Visual Layout Preview</h2>
                   <div className="table-preview-canvas">

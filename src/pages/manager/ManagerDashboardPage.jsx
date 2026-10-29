@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CalendarDays, CircleDollarSign, Plus, ShoppingBasket, Star, Table2, Tag } from "lucide-react";
+import {
+  CalendarDays,
+  CircleDollarSign,
+  Plus,
+  ShoppingBasket,
+  Star,
+  Table2,
+  Tag,
+} from "lucide-react";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
 import { requestJson } from "../../lib/authApi.js";
@@ -73,260 +81,278 @@ export default function ManagerDashboardPage() {
           setRestaurantName(manager.restaurant_name?.trim() || "");
         }
       })
-      .catch(() => { if (active) { setManagerName(""); setRestaurantName(""); } });
-    return () => { active = false; };
+      .catch(() => {
+        if (active) {
+          setManagerName("");
+          setRestaurantName("");
+        }
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   return (
     <ManagerLayout title="Dashboard">
       <div className="manager-dashboard-content">
-          <PortalBreadcrumb home={{ label: "Home", to: "/manager/dashboard" }} items={[{ label: "Dashboard" }]} className="manager-breadcrumb" />
+        <PortalBreadcrumb
+          home={{ label: "Home", to: "/manager/dashboard" }}
+          items={[{ label: "Dashboard" }]}
+          className="manager-breadcrumb"
+        />
 
-          <div className="manager-heading">
-            <div>
-              <h2>Good Morning{managerName ? `, ${managerName}` : ""}</h2>
-              <p>{restaurantName ? `Here's what's happening at ${restaurantName} today.` : "Here's what's happening at your restaurant today."}</p>
+        <div className="manager-heading">
+          <div>
+            <h2>Good Morning{managerName ? `, ${managerName}` : ""}</h2>
+            <p>
+              {restaurantName
+                ? `Here's what's happening at ${restaurantName} today.`
+                : "Here's what's happening at your restaurant today."}
+            </p>
+          </div>
+        </div>
+
+        {/* Quick actions */}
+        <div className="manager-quick-actions">
+          <button type="button" onClick={() => navigate("/manager/menu")}>
+            <span className="manager-action-icon">
+              <Plus size={17} />
+            </span>
+            <span>
+              <strong>Add a menu item</strong>
+              <small>Add a dish guests can order</small>
+            </span>
+          </button>
+
+          <button type="button" onClick={() => navigate("/manager/offers")}>
+            <span className="manager-action-icon">
+              <Tag size={17} />
+            </span>
+            <span>
+              <strong>Create an offer</strong>
+              <small>Share a deal with guests</small>
+            </span>
+          </button>
+
+          <button type="button" onClick={() => navigate("/manager/tables")}>
+            <span className="manager-action-icon">
+              <Table2 size={17} />
+            </span>
+            <span>
+              <strong>Set up tables</strong>
+              <small>Arrange floors and seating</small>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate("/manager/reservations")}
+          >
+            <span className="manager-action-icon">
+              <CalendarDays size={17} />
+            </span>
+            <span>
+              <strong>View reservations</strong>
+              <small>See upcoming guest bookings</small>
+            </span>
+          </button>
+        </div>
+
+        {/* Summary cards */}
+        <div className="manager-summary-grid">
+          <SummaryCard
+            title="Today's Revenue"
+            value="₹42,580"
+            change="+12.4%"
+            detail="12% more than last Monday"
+            icon={CircleDollarSign}
+          />
+
+          <SummaryCard
+            title="Today's Orders"
+            value="38"
+            change="+8%"
+            detail="5 currently being prepared"
+            icon={ShoppingBasket}
+          />
+
+          <SummaryCard
+            title="Reservations"
+            value="12"
+            change="On Track"
+            detail="75 guests total confirmed"
+            icon={CalendarDays}
+          />
+
+          <SummaryCard
+            title="Table Occupancy"
+            value="6 / 14"
+            change="42% full"
+            detail="8 tables currently free"
+            icon={Table2}
+          />
+
+          <SummaryCard
+            title="Average Rating"
+            value="4.7 ★"
+            change="+0.1"
+            detail="Based on 482 public reviews"
+            icon={Star}
+          />
+        </div>
+
+        {/* Revenue + order status */}
+        <div className="manager-dashboard-grid">
+          <section className="manager-panel manager-revenue-panel">
+            <div className="manager-panel-header">
+              <h3>Weekly Revenue Overview</h3>
+              <span>Mon 18 Sep - Sun 24 Sep</span>
             </div>
-          </div>
 
-          {/* Quick actions */}
-          <div className="manager-quick-actions">
-            <button type="button" onClick={() => navigate("/manager/menu")}>
-              <span className="manager-action-icon">
-                <Plus size={17} />
-              </span>
-              <span>
-                  <strong>Add a menu item</strong>
-                  <small>Add a dish guests can order</small>
-              </span>
-            </button>
-
-            <button type="button" onClick={() => navigate("/manager/offers")}>
-              <span className="manager-action-icon">
-                <Tag size={17} />
-              </span>
-              <span>
-                  <strong>Create an offer</strong>
-                  <small>Share a deal with guests</small>
-              </span>
-            </button>
-
-            <button type="button" onClick={() => navigate("/manager/tables")}>
-              <span className="manager-action-icon">
-                <Table2 size={17} />
-              </span>
-              <span>
-                  <strong>Set up tables</strong>
-                  <small>Arrange floors and seating</small>
-              </span>
-            </button>
-
-            <button type="button" onClick={() => navigate("/manager/reservations")}>
-              <span className="manager-action-icon">
-                <CalendarDays size={17} />
-              </span>
-              <span>
-                  <strong>View reservations</strong>
-                  <small>See upcoming guest bookings</small>
-              </span>
-            </button>
-          </div>
-
-          {/* Summary cards */}
-          <div className="manager-summary-grid">
-            <SummaryCard
-              title="Today's Revenue"
-              value="₹42,580"
-              change="+12.4%"
-              detail="12% more than last Monday"
-              icon={CircleDollarSign}
-            />
-
-            <SummaryCard
-              title="Today's Orders"
-              value="38"
-              change="+8%"
-              detail="5 currently being prepared"
-              icon={ShoppingBasket}
-            />
-
-            <SummaryCard
-              title="Reservations"
-              value="12"
-              change="On Track"
-              detail="75 guests total confirmed"
-              icon={CalendarDays}
-            />
-
-            <SummaryCard
-              title="Table Occupancy"
-              value="6 / 14"
-              change="42% full"
-              detail="8 tables currently free"
-              icon={Table2}
-            />
-
-            <SummaryCard
-              title="Average Rating"
-              value="4.7 ★"
-              change="+0.1"
-              detail="Based on 482 public reviews"
-              icon={Star}
-            />
-          </div>
-
-          {/* Revenue + order status */}
-          <div className="manager-dashboard-grid">
-            <section className="manager-panel manager-revenue-panel">
-              <div className="manager-panel-header">
-                <h3>Weekly Revenue Overview</h3>
-                <span>Mon 18 Sep - Sun 24 Sep</span>
-              </div>
-
-              <div className="manager-revenue-chart">
-                {revenueData.map((item) => (
-                  <div className="manager-chart-column" key={item.day}>
-                    <div className="manager-chart-bar-wrap">
-                      <div
-                        className="manager-chart-bar"
-                        style={{ height: `${item.value}%` }}
-                      />
-                    </div>
-                    <span>{item.day}</span>
+            <div className="manager-revenue-chart">
+              {revenueData.map((item) => (
+                <div className="manager-chart-column" key={item.day}>
+                  <div className="manager-chart-bar-wrap">
+                    <div
+                      className="manager-chart-bar"
+                      style={{ height: `${item.value}%` }}
+                    />
                   </div>
-                ))}
-              </div>
-            </section>
+                  <span>{item.day}</span>
+                </div>
+              ))}
+            </div>
+          </section>
 
-            <section className="manager-panel manager-orders-panel">
-              <div className="manager-panel-header">
-                <h3>Live Order Statuses</h3>
+          <section className="manager-panel manager-orders-panel">
+            <div className="manager-panel-header">
+              <h3>Live Order Statuses</h3>
+            </div>
+
+            <div className="manager-order-status">
+              <div className="manager-order-donut">
+                <strong>38</strong>
               </div>
 
-              <div className="manager-order-status">
-                <div className="manager-order-donut">
-                  <strong>38</strong>
+              <div className="manager-order-legend">
+                <div>
+                  <span className="status-dot completed" />
+                  Completed (22)
                 </div>
 
-                <div className="manager-order-legend">
-                  <div>
-                    <span className="status-dot completed" />
-                    Completed (22)
-                  </div>
+                <div>
+                  <span className="status-dot ready" />
+                  Ready to Serve (4)
+                </div>
 
-                  <div>
-                    <span className="status-dot ready" />
-                    Ready to Serve (4)
-                  </div>
+                <div>
+                  <span className="status-dot preparing" />
+                  Preparing (8)
+                </div>
 
-                  <div>
-                    <span className="status-dot preparing" />
-                    Preparing (8)
-                  </div>
-
-                  <div>
-                    <span className="status-dot pending" />
-                    Pending (4)
-                  </div>
+                <div>
+                  <span className="status-dot pending" />
+                  Pending (4)
                 </div>
               </div>
-            </section>
-          </div>
+            </div>
+          </section>
+        </div>
 
-          {/* Tables + Popular */}
-          <div className="manager-dashboard-grid manager-middle-grid">
-            <section className="manager-panel">
-              <div className="manager-panel-header">
-                <h3>Live Floor Status Summary</h3>
-              </div>
+        {/* Tables + Popular */}
+        <div className="manager-dashboard-grid manager-middle-grid">
+          <section className="manager-panel">
+            <div className="manager-panel-header">
+              <h3>Live Floor Status Summary</h3>
+            </div>
 
-              <div className="manager-table-grid">
-                {tables.map((table) => (
-                  <div
-                    className={`manager-table-card ${table.status
-                      .toLowerCase()
-                      .replace(" ", "-")}`}
-                    key={table.name}
-                  >
-                    <strong>{table.name}</strong>
-                    <span>{table.seats}</span>
-                    <small>{table.status}</small>
+            <div className="manager-table-grid">
+              {tables.map((table) => (
+                <div
+                  className={`manager-table-card ${table.status
+                    .toLowerCase()
+                    .replace(" ", "-")}`}
+                  key={table.name}
+                >
+                  <strong>{table.name}</strong>
+                  <span>{table.seats}</span>
+                  <small>{table.status}</small>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="manager-panel manager-popular-panel">
+            <div className="manager-panel-header">
+              <h3>Popular Today</h3>
+            </div>
+
+            <div className="manager-popular-list">
+              {popularItems.map((item) => (
+                <div key={item.name} className="manager-popular-item">
+                  <div>
+                    <strong>{item.name}</strong>
+                    <span>{item.orders}</span>
                   </div>
-                ))}
-              </div>
-            </section>
 
-            <section className="manager-panel manager-popular-panel">
-              <div className="manager-panel-header">
-                <h3>Popular Today</h3>
-              </div>
+                  <b>{item.price}</b>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
 
-              <div className="manager-popular-list">
-                {popularItems.map((item) => (
-                  <div key={item.name} className="manager-popular-item">
-                    <div>
-                      <strong>{item.name}</strong>
-                      <span>{item.orders}</span>
-                    </div>
+        {/* Reservations + orders */}
+        <div className="manager-bottom-grid">
+          <section className="manager-panel">
+            <div className="manager-panel-header">
+              <h3>Upcoming Reservations</h3>
+              <button>View All</button>
+            </div>
 
-                    <b>{item.price}</b>
+            <div className="manager-list">
+              {reservations.map((reservation) => (
+                <div className="manager-list-row" key={reservation.name}>
+                  <div>
+                    <strong>{reservation.name}</strong>
+                    <span>{reservation.details}</span>
                   </div>
-                ))}
-              </div>
-            </section>
-          </div>
 
-          {/* Reservations + orders */}
-          <div className="manager-bottom-grid">
-            <section className="manager-panel">
-              <div className="manager-panel-header">
-                <h3>Upcoming Reservations</h3>
-                <button>View All</button>
-              </div>
+                  <b>{reservation.time}</b>
+                </div>
+              ))}
+            </div>
+          </section>
 
-              <div className="manager-list">
-                {reservations.map((reservation) => (
-                  <div className="manager-list-row" key={reservation.name}>
-                    <div>
-                      <strong>{reservation.name}</strong>
-                      <span>{reservation.details}</span>
-                    </div>
+          <section className="manager-panel">
+            <div className="manager-panel-header">
+              <h3>Recent Active Orders</h3>
+              <button>View All</button>
+            </div>
 
-                    <b>{reservation.time}</b>
+            <div className="manager-list">
+              {activeOrders.map((order) => (
+                <div className="manager-list-row" key={order.id}>
+                  <div>
+                    <strong>{order.id}</strong>
+                    <span>{order.details}</span>
                   </div>
-                ))}
-              </div>
-            </section>
 
-            <section className="manager-panel">
-              <div className="manager-panel-header">
-                <h3>Recent Active Orders</h3>
-                <button>View All</button>
-              </div>
-
-              <div className="manager-list">
-                {activeOrders.map((order) => (
-                  <div className="manager-list-row" key={order.id}>
-                    <div>
-                      <strong>{order.id}</strong>
-                      <span>{order.details}</span>
-                    </div>
-
-                    <div className="manager-order-row-right">
-                      <b>{order.amount}</b>
-                      <span
-                        className={`manager-order-pill ${order.status
-                          .toLowerCase()
-                          .replace(" ", "-")}`}
-                      >
-                        {order.status}
-                      </span>
-                    </div>
+                  <div className="manager-order-row-right">
+                    <b>{order.amount}</b>
+                    <span
+                      className={`manager-order-pill ${order.status
+                        .toLowerCase()
+                        .replace(" ", "-")}`}
+                    >
+                      {order.status}
+                    </span>
                   </div>
-                ))}
-              </div>
-            </section>
-          </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
       </div>
     </ManagerLayout>
   );

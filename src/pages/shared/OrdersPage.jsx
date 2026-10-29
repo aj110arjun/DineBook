@@ -630,7 +630,6 @@ export default function OrdersPage({ mode = "customer" }) {
           pageSize={pageSize}
           total={matchingOrders.length}
           onPageChange={setPage}
-          onPageSizeChange={setPageSize}
           label="orders"
         />
       )}

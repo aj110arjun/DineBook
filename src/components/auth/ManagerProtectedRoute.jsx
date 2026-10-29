@@ -59,7 +59,13 @@ export default function ManagerProtectedRoute({ children }) {
       : hadSession.current
         ? "Your session has ended. Please sign in again."
         : undefined;
-    return <Navigate to="/manager/login" replace state={notice ? { notice } : null} />;
+    return (
+      <Navigate
+        to="/manager/login"
+        replace
+        state={notice ? { notice } : null}
+      />
+    );
   }
 
   return children;

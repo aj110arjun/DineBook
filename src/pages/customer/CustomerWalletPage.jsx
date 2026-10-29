@@ -1,3 +1,4 @@
+import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useEffect, useState } from "react";
 import {
   ArrowDownLeft,
@@ -327,7 +328,7 @@ export default function CustomerWalletPage() {
             Wallet funds are securely managed in your DineBook account.
           </small>
         </div>
-        <form className="wallet-topup-card" onSubmit={addMoney}>
+        <CustomForm className="wallet-topup-card" onSubmit={addMoney}>
           <div className="wallet-topup-heading">
             <div>
               <span className="wallet-eyebrow">ADD FUNDS</span>
@@ -430,7 +431,7 @@ export default function CustomerWalletPage() {
               {notice}
             </p>
           )}
-        </form>
+        </CustomForm>
         <div className="wallet-history-heading" id="activity">
           <div>
             <h2>Wallet activity</h2>
@@ -670,7 +671,6 @@ export default function CustomerWalletPage() {
             pageSize={activityPageSize}
             total={activityTotal}
             onPageChange={setActivityPage}
-            onPageSizeChange={setActivityPageSize}
             label="transactions"
           />
         )}

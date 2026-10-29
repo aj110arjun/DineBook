@@ -34,7 +34,8 @@ export default function CustomerLandingPage() {
   const [restaurantsError, setRestaurantsError] = useState("");
   const [restaurantRefresh, setRestaurantRefresh] = useState(0);
   const [selectedCuisine, setSelectedCuisine] = useState("");
-  const isDemoSession = import.meta.env.DEV && sessionStorage.getItem(demoSessionKey) === "active";
+  const isDemoSession =
+    import.meta.env.DEV && sessionStorage.getItem(demoSessionKey) === "active";
 
   useEffect(() => {
     let mounted = true;
@@ -92,7 +93,10 @@ export default function CustomerLandingPage() {
   }, [restaurantRefresh]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setRestaurantRefresh((value) => value + 1), 3000);
+    const timer = window.setInterval(
+      () => setRestaurantRefresh((value) => value + 1),
+      3000,
+    );
     return () => window.clearInterval(timer);
   }, []);
 
@@ -128,7 +132,11 @@ export default function CustomerLandingPage() {
           eyebrow="DISCOVER YOUR NEXT TABLE"
           title="Restaurants to Explore"
           restaurants={matchingRestaurants.slice(0, 4)}
-          emptyMessage={selectedCuisine ? `No approved ${selectedCuisine} restaurants are available yet. Choose another cuisine to explore.` : "No approved restaurants are available yet."}
+          emptyMessage={
+            selectedCuisine
+              ? `No approved ${selectedCuisine} restaurants are available yet. Choose another cuisine to explore.`
+              : "No approved restaurants are available yet."
+          }
           loading={restaurantsLoading}
           error={restaurantsError}
           onRetry={() => setRestaurantRefresh((value) => value + 1)}
