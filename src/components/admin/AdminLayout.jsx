@@ -6,10 +6,7 @@ import { requestJson } from "../../lib/authApi.js";
 import { LogOut, Menu, X } from "lucide-react";
 import NotificationBell from "../notifications/NotificationBell.jsx";
 
-export default function AdminLayout({
-  children,
-  title = "Dashboard",
-}) {
+export default function AdminLayout({ children, title = "Dashboard" }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -27,7 +24,14 @@ export default function AdminLayout({
 
   return (
     <main className="admin-dashboard db-portal-shell">
-      {sidebarOpen && <button className="admin-sidebar-scrim" type="button" aria-label="Close navigation" onClick={() => setSidebarOpen(false)} />}
+      {sidebarOpen && (
+        <button
+          className="admin-sidebar-scrim"
+          type="button"
+          aria-label="Close navigation"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
       <aside className={`admin-sidebar${sidebarOpen ? " is-open" : ""}`}>
         <div className="admin-sidebar-brand">
           <div className="admin-brand-mark">
@@ -64,7 +68,14 @@ export default function AdminLayout({
 
       <section className="admin-dashboard-main db-portal-main">
         <header className="admin-topbar db-portal-topbar">
-          <button className="admin-mobile-nav-toggle" type="button" aria-label={sidebarOpen ? "Close navigation" : "Open navigation"} aria-expanded={sidebarOpen} aria-controls="admin-primary-nav" onClick={() => setSidebarOpen((open) => !open)}>
+          <button
+            className="admin-mobile-nav-toggle"
+            type="button"
+            aria-label={sidebarOpen ? "Close navigation" : "Open navigation"}
+            aria-expanded={sidebarOpen}
+            aria-controls="admin-primary-nav"
+            onClick={() => setSidebarOpen((open) => !open)}
+          >
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
           <h1>{title}</h1>
@@ -74,7 +85,22 @@ export default function AdminLayout({
           </div>
         </header>
 
-        <PortalBreadcrumb home={{ label: "Admin", to: "/admin/dashboard" }} items={pathname.startsWith("/admin/requests/") ? [{ label: "Requests", to: "/admin/requests" }, { label: title }] : pathname.startsWith("/admin/restaurants/") ? [{ label: "Restaurants", to: "/admin/restaurants" }, { label: title }] : [{ label: title }]} className="admin-breadcrumb" />
+        <PortalBreadcrumb
+          home={{ label: "Admin", to: "/admin/dashboard" }}
+          items={
+            pathname.startsWith("/admin/transactions/")
+              ? [{ label: "Transactions", to: "/admin/transactions" }, { label: title }]
+              : pathname.startsWith("/admin/requests/")
+              ? [{ label: "Requests", to: "/admin/requests" }, { label: title }]
+              : pathname.startsWith("/admin/restaurants/")
+                ? [
+                    { label: "Restaurants", to: "/admin/restaurants" },
+                    { label: title },
+                  ]
+                : [{ label: title }]
+          }
+          className="admin-breadcrumb"
+        />
         {children}
       </section>
     </main>

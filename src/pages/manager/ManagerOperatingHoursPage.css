@@ -209,3 +209,345 @@
 :root[data-theme="dark"] .operating-inspection-result {
   background: #211d1f;
 }
+
+/* Operating hours page */
+.manager-dashboard-content.operating-hours-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  color: var(--color-text-primary);
+}
+
+/* Section cards */
+.operating-hours-page > .admin-restaurant-detail-card {
+  min-width: 0;
+  margin: 0;
+  padding: clamp(18px, 3vw, 28px);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-card);
+}
+
+.operating-hours-page > section > h2 {
+  margin: 0 0 8px;
+  color: var(--color-text-primary);
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.operating-hours-page > section > p {
+  max-width: 75ch;
+  margin: 0 0 18px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+/* Schedule status */
+.operating-hours-page > section > p[role="status"]:not(.form-success) {
+  margin: 16px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Weekly schedule */
+.operating-hours-page .admin-restaurant-hours {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  margin-top: 12px;
+}
+
+.operating-hours-page .operating-hours-day {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--color-border);
+  background: transparent;
+}
+
+.operating-hours-page .operating-hours-day > strong {
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.operating-hours-page .operating-period-list {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+}
+
+.operating-hours-page .operating-period {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 160px)) 40px;
+  align-items: end;
+  gap: 12px;
+}
+
+.operating-hours-page .operating-period-list > span {
+  justify-self: start;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Field labels */
+.operating-hours-page .operating-period label,
+.operating-hours-page .operating-exception-form label {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Inputs */
+.operating-hours-page .operating-period input,
+.operating-hours-page .operating-exception-form input,
+.operating-hours-page .operating-exception-form select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: var(--color-surface-raised);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 14px;
+}
+
+.operating-hours-page input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.operating-hours-page input:focus-visible,
+.operating-hours-page select:focus-visible,
+.operating-hours-page button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+/* Secondary buttons */
+.operating-hours-page .operating-hours-day > button,
+.operating-hours-page .operating-period > button,
+.operating-hours-page .operating-hours-actions > button,
+.operating-hours-page .operating-exception-form > button,
+.operating-hours-page .exception-periods > button,
+.operating-hours-page .operating-exception-list button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 9px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.operating-hours-page button:hover:not(:disabled) {
+  border-color: var(--color-text-muted);
+  background: var(--color-surface-raised);
+}
+
+.operating-hours-page button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Remove-period buttons */
+.operating-hours-page .operating-period > button {
+  width: 40px;
+  min-height: 44px;
+  padding: 0;
+  color: var(--color-danger);
+}
+
+/* Weekly save and cancel actions */
+.operating-hours-page .operating-hours-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+/* Primary actions */
+.operating-hours-page .operating-hours-actions > .operating-hours-save,
+.operating-hours-page .operating-exception-form > button[type="submit"] {
+  border-color: #8f3043;
+  background: #8f3043;
+  color: #fff;
+}
+
+.operating-hours-page
+  .operating-hours-actions
+  > .operating-hours-save:hover:not(:disabled),
+.operating-hours-page
+  .operating-exception-form
+  > button[type="submit"]:hover:not(:disabled) {
+  border-color: #742536;
+  background: #742536;
+}
+
+/* Exception form */
+.operating-hours-page .operating-exception-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: 20px;
+  margin: 24px 0;
+}
+
+.operating-hours-page .operating-exception-form > button {
+  justify-self: start;
+}
+
+.operating-hours-page .exception-periods {
+  display: grid;
+  grid-column: 1 / -1;
+  min-width: 0;
+  gap: 12px;
+}
+
+.operating-hours-page .exception-periods > button {
+  justify-self: start;
+}
+
+/* Saved exceptions */
+.operating-hours-page .operating-exception-list {
+  display: grid;
+  gap: 12px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.operating-hours-page .operating-exception-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface-raised);
+}
+
+.operating-hours-page .operating-exception-list li > div {
+  display: grid;
+  min-width: 0;
+  gap: 7px;
+  overflow-wrap: anywhere;
+}
+
+.operating-hours-page .operating-exception-list strong {
+  color: var(--color-text-primary);
+  font-size: 14px;
+}
+
+.operating-hours-page .operating-exception-list span,
+.operating-hours-page .operating-exception-list small {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Success and error messages */
+.operating-hours-page > section > .form-success {
+  max-width: none;
+  padding: 12px 16px;
+  border: 1px solid var(--db-status-border);
+  border-radius: 9px;
+  background: var(--db-status-success-bg);
+  color: var(--db-status-success-text);
+}
+
+.operating-hours-page > section > .form-error {
+  max-width: none;
+  padding: 12px 16px;
+  border: 1px solid var(--db-status-border);
+  border-radius: 9px;
+  background: var(--db-status-danger-bg);
+  color: var(--db-status-danger-text);
+}
+
+/* Native date and time controls */
+:root[data-theme="dark"] .operating-hours-page input,
+:root[data-theme="dark"] .operating-hours-page select {
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] .operating-hours-page input,
+:root[data-theme="light"] .operating-hours-page select {
+  color-scheme: light;
+}
+
+/* Tablet */
+@media (max-width: 1000px) {
+  .operating-hours-page .operating-hours-day {
+    grid-template-columns: 100px minmax(0, 1fr);
+  }
+
+  .operating-hours-page .operating-hours-day > button {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .operating-hours-page .operating-exception-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Mobile */
+@media (max-width: 700px) {
+  .operating-hours-page .operating-hours-day {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .operating-hours-page .operating-hours-day > button {
+    grid-column: auto;
+    justify-self: start;
+  }
+
+  .operating-hours-page .operating-period {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) 40px;
+    gap: 8px;
+  }
+
+  .operating-hours-page .operating-exception-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .operating-hours-page .operating-exception-list li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .operating-hours-page .operating-exception-list li > div {
+    grid-column: 1 / -1;
+  }
+
+  .operating-hours-page .operating-exception-list button {
+    justify-self: start;
+  }
+}

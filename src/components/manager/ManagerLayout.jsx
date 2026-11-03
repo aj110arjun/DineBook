@@ -37,7 +37,7 @@ const navigationGroups = [
       { label: "Opening hours", icon: Clock3, to: "/manager/operating-hours" },
       { label: "Tables & floors", icon: Table2, to: "/manager/tables" },
       { label: "Menu", icon: Utensils, to: "/manager/menu" },
-      { label: "Staff", icon: Users, to: "/manager/staff" },
+      { label: "Chef ", icon: Users, to: "/manager/staff" },
     ],
   },
   {

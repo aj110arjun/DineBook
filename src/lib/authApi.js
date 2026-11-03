@@ -34,7 +34,10 @@ function getErrorMessage(detail, fallbackMessage) {
   );
 }
 
-export async function requestJson(path, { fallbackMessage, body, ...options } = {}) {
+export async function requestJson(
+  path,
+  { fallbackMessage, body, ...options } = {},
+) {
   let response;
   try {
     response = await axios.request({

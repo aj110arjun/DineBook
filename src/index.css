@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    font-family: var(--font-sans, 'DM Sans', sans-serif);
+    font-family: var(--font-sans, "DM Sans", sans-serif);
     color: #241719;
     background: #fbf8f3;
     font-synthesis: none;

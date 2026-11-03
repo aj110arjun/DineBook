@@ -13,10 +13,24 @@
   font-size: 13px;
   font-weight: 750;
   cursor: pointer;
-  transition: background .15s ease, transform .15s ease;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
 }
-.transaction-invoice-button:hover { background: #54202a; }
-.transaction-invoice-button:active { transform: translateY(1px); }
-.transaction-invoice-button:focus-visible { outline: 3px solid rgb(112 45 58 / 25%); outline-offset: 2px; }
-:root[data-theme="dark"] .transaction-invoice-button { border-color: #bd818b; background: #7d3a47; }
-:root[data-theme="dark"] .transaction-invoice-button:hover { background: #914b58; }
+.transaction-invoice-button:hover {
+  background: #54202a;
+}
+.transaction-invoice-button:active {
+  transform: translateY(1px);
+}
+.transaction-invoice-button:focus-visible {
+  outline: 3px solid rgb(112 45 58 / 25%);
+  outline-offset: 2px;
+}
+:root[data-theme="dark"] .transaction-invoice-button {
+  border-color: #bd818b;
+  background: #7d3a47;
+}
+:root[data-theme="dark"] .transaction-invoice-button:hover {
+  background: #914b58;
+}

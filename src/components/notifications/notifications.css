@@ -31,3 +31,54 @@
 .db-notification-popover .db-notification-item:hover{background:var(--color-surface-raised)}
 @media(max-width:640px){.db-notification-popover{right:12px;width:min(390px,calc(100vw - 24px))}}
 @media(prefers-reduced-motion:reduce){.db-notification-skeletons div{animation:none}}
+
+/* Keep the full update readable, including long references and multiline messages. */
+.db-notification-popover .db-notification-item {
+  align-items: flex-start;
+  gap: 12px;
+  padding-top: 16px;
+  padding-bottom: 16px;
+  font-family: inherit;
+}
+.db-notification-copy {
+  flex: 1;
+  gap: 7px;
+  overflow-wrap: anywhere;
+}
+.db-notification-copy strong {
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+.db-notification-copy > .db-notification-message {
+  display: block;
+  overflow: visible;
+  color: var(--color-text-secondary, #525b6b);
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-line;
+  -webkit-line-clamp: unset;
+}
+.db-notification-copy .db-notification-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.db-notification-unread-label {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--color-surface-raised, #f6f7f9);
+  color: var(--color-text-primary, #252a35);
+  font-weight: 600;
+}
+.db-notification-icon.staff {
+  background: var(--color-surface-raised, #f6f7f9);
+  color: var(--color-text-secondary, #525b6b);
+}
+.db-notification-item:focus-visible {
+  outline: 2px solid var(--color-primary, #426de0);
+  outline-offset: -3px;
+}

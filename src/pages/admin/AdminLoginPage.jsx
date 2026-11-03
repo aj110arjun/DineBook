@@ -1,9 +1,9 @@
+import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Mail } from "lucide-react";
 import AdminAuthLayout from "../../components/auth/AdminAuthLayout.jsx";
 import { FormField, PasswordField } from "../../components/auth/FormField.jsx";
-import DevQuickLogin from "../../components/auth/DevQuickLogin.jsx";
 import Notice from "../../components/auth/Notice.jsx";
 import { requestJson } from "../../lib/authApi.js";
 
@@ -15,7 +15,6 @@ export default function AdminLoginPage() {
   async function handleSubmit(event) {
     event.preventDefault();
 
-    if (!event.currentTarget.reportValidity()) return;
 
     setError("");
     setSuccess("");
@@ -53,7 +52,7 @@ export default function AdminLoginPage() {
         Sign in to access the DineBook administration portal.
       </p>
 
-      <form onSubmit={handleSubmit} noValidate>
+      <CustomForm onSubmit={handleSubmit} noValidate>
         <FormField
           id="email"
           label="Admin Email Address"
@@ -93,8 +92,7 @@ export default function AdminLoginPage() {
           {busy ? "Signing in…" : "Access Administrator Console"}
           {!busy && <ArrowRight size={16} />}
         </button>
-      </form>
-      <DevQuickLogin portal="admin" onSuccess={() => navigate("/admin/dashboard", { replace: true })} />
+      </CustomForm>
     </AdminAuthLayout>
   );
 }

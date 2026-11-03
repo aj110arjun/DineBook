@@ -28,7 +28,10 @@ export default function ImageUploadField({
       setLocalError("Choose an image file.");
       return;
     }
-    const allowedTypes = accept.split(",").map((type) => type.trim()).filter((type) => type.startsWith("image/"));
+    const allowedTypes = accept
+      .split(",")
+      .map((type) => type.trim())
+      .filter((type) => type.startsWith("image/"));
     if (allowedTypes.length && !allowedTypes.includes(nextFile.type)) {
       setLocalError("This image format is not supported here.");
       return;
@@ -52,19 +55,34 @@ export default function ImageUploadField({
     <div className="dinebook-image-upload-wrap">
       <div
         className={`dinebook-image-upload ${compact ? "is-compact" : ""} ${dragging ? "is-dragging" : ""} ${disabled ? "is-disabled" : ""}`}
-        onDragOver={(event) => { event.preventDefault(); if (!disabled) setDragging(true); }}
-        onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setDragging(false); }}
+        onDragOver={(event) => {
+          event.preventDefault();
+          if (!disabled) setDragging(true);
+        }}
+        onDragLeave={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget))
+            setDragging(false);
+        }}
         onDrop={(event) => {
           event.preventDefault();
           setDragging(false);
           selectFile(event.dataTransfer.files?.[0]);
         }}
       >
-        <CloudUpload className="dinebook-image-upload-icon" size={34} strokeWidth={1.8} aria-hidden="true" />
+        <CloudUpload
+          className="dinebook-image-upload-icon"
+          size={34}
+          strokeWidth={1.8}
+          aria-hidden="true"
+        />
         {selectedFile ? (
           <>
-            <span className="dinebook-image-upload-prompt">{selectedFile.name}</span>
-            <span className="dinebook-image-upload-hint">{(selectedFile.size / (1024 * 1024)).toFixed(1)} MB</span>
+            <span className="dinebook-image-upload-prompt">
+              {selectedFile.name}
+            </span>
+            <span className="dinebook-image-upload-hint">
+              {(selectedFile.size / (1024 * 1024)).toFixed(1)} MB
+            </span>
           </>
         ) : (
           <>
@@ -85,18 +103,35 @@ export default function ImageUploadField({
               event.target.value = "";
             }}
           />
-          <button type="button" className="dinebook-image-browse" disabled={disabled} onClick={() => inputRef.current?.click()}>
+          <button
+            type="button"
+            className="dinebook-image-browse"
+            disabled={disabled}
+            onClick={() => inputRef.current?.click()}
+          >
             <ImageIcon size={14} /> Browse files
           </button>
           {selectedFile && onRemove && (
-            <button type="button" className="dinebook-image-remove" disabled={disabled} onClick={clearFile} aria-label="Remove selected image">
+            <button
+              type="button"
+              className="dinebook-image-remove"
+              disabled={disabled}
+              onClick={clearFile}
+              aria-label="Remove selected image"
+            >
               <X size={15} />
             </button>
           )}
         </div>
-        <span className="dinebook-image-upload-drop-hint">or drop an image here</span>
+        <span className="dinebook-image-upload-drop-hint">
+          or drop an image here
+        </span>
       </div>
-      {(error || localError) && <p className="dinebook-image-upload-error" role="alert">{error || localError}</p>}
+      {(error || localError) && (
+        <p className="dinebook-image-upload-error" role="alert">
+          {error || localError}
+        </p>
+      )}
     </div>
   );
 }

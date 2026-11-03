@@ -1,13 +1,18 @@
+import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useState } from "react";
 import { ArrowRight, Mail } from "lucide-react";
-import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import AuthLayout from "../../components/auth/AuthLayout.jsx";
 import { FormField, PasswordField } from "../../components/auth/FormField.jsx";
 import Notice from "../../components/auth/Notice.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import { demoSessionKey } from "../../data/demoCustomer.js";
 import GoogleSignInButton from "../../components/auth/GoogleSignInButton.jsx";
-import DevQuickLogin from "../../components/auth/DevQuickLogin.jsx";
 
 export default function CustomerLoginPage() {
   const navigate = useNavigate();
@@ -30,7 +35,7 @@ export default function CustomerLoginPage() {
 
   async function handleSubmit(event) {
     event.preventDefault();
-    if (!event.currentTarget.reportValidity()) return;
+
     setError("");
     setSuccess("");
     setBusy(true);
@@ -62,7 +67,7 @@ export default function CustomerLoginPage() {
       <p className="mb-7 mt-2 text-sm leading-6 text-stone-500">
         Please enter your credentials to access your DineBook account.
       </p>
-      <form onSubmit={handleSubmit} noValidate>
+      <CustomForm onSubmit={handleSubmit} noValidate>
         <FormField
           id="email"
           label="Email Address"
@@ -111,8 +116,7 @@ export default function CustomerLoginPage() {
           onSuccess={() => navigate(returnTo, { replace: true })}
           onError={setError}
         />
-      </form>
-      <DevQuickLogin portal="customer" onSuccess={() => navigate(returnTo, { replace: true })} />
+      </CustomForm>
       <p className="mt-7 border-t border-stone-100 pt-5 text-center text-sm text-stone-500">
         New to DineBook?{" "}
         <Link

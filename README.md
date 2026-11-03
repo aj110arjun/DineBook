@@ -20,6 +20,15 @@ Vite prints the local URL (normally `http://localhost:5173`). Its `/api` proxy f
 VITE_API_URL=https://api.example.com
 ```
 
+The frontend `.env.example` documents all supported configuration:
+
+- `DEV_API_PROXY_TARGET`: local backend destination for the development proxy.
+- `VITE_GEOCODING_BASE_URL`: Photon-compatible search and reverse-geocoding endpoint.
+- `VITE_POSTAL_API_BASE_URL`: India PIN-code lookup endpoint.
+- `VITE_MAP_TILE_URL` and `VITE_MAP_TILE_ATTRIBUTION`: tile URL template and matching provider attribution.
+
+Service URLs have defaults, so existing local setups continue to work. Restart Vite after editing `.env.local`. `VITE_*` values are public and embedded at build time; rebuild for production changes. Keep Google OAuth secrets, Razorpay secrets, and database credentials in the backend environment. The development proxy is not included in a production build: serve `/api` through your deployment proxy or configure `VITE_API_URL` before building.
+
 Build and serve the production bundle with:
 
 ```bash

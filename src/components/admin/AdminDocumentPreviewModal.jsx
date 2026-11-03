@@ -3,7 +3,11 @@ import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { API_BASE } from "../../lib/authApi.js";
 
-export default function AdminDocumentPreviewModal({ managerId, document, onClose }) {
+export default function AdminDocumentPreviewModal({
+  managerId,
+  document,
+  onClose,
+}) {
   const [previewUrl, setPreviewUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -19,10 +23,14 @@ export default function AdminDocumentPreviewModal({ managerId, document, onClose
         const response = await axios.request({
           url: `${API_BASE}/api/admin/managers/requests/${managerId}/documents/${document.id}/preview`,
           validateStatus: () => true,
-          withCredentials: true, responseType: "blob",
+          withCredentials: true,
+          responseType: "blob",
         });
         if (response.status < 200 || response.status >= 300) {
-          const data = await response.data.text().then(JSON.parse).catch(() => ({}));
+          const data = await response.data
+            .text()
+            .then(JSON.parse)
+            .catch(() => ({}));
           throw new Error(data?.detail || "Unable to load this document.");
         }
         objectUrl = URL.createObjectURL(response.data);
@@ -46,13 +54,26 @@ export default function AdminDocumentPreviewModal({ managerId, document, onClose
 
   return (
     <div className="admin-document-preview-backdrop" role="presentation">
-      <section className="admin-document-preview-modal" role="dialog" aria-modal="true" aria-labelledby="document-preview-title">
+      <section
+        className="admin-document-preview-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="document-preview-title"
+      >
         <header className="admin-document-preview-header">
           <div className="min-w-0">
-            <h2 id="document-preview-title">{document.document_type?.replaceAll("_", " ") || "Document Preview"}</h2>
+            <h2 id="document-preview-title">
+              {document.document_type?.replaceAll("_", " ") ||
+                "Document Preview"}
+            </h2>
             <p title={filename}>{filename}</p>
           </div>
-          <button type="button" onClick={onClose} className="admin-document-preview-close" aria-label="Close document preview">
+          <button
+            type="button"
+            onClick={onClose}
+            className="admin-document-preview-close"
+            aria-label="Close document preview"
+          >
             <X size={19} />
           </button>
         </header>
@@ -61,7 +82,9 @@ export default function AdminDocumentPreviewModal({ managerId, document, onClose
           {loading ? (
             <p role="status">Loading document preview…</p>
           ) : error ? (
-            <p className="admin-document-preview-error" role="alert">{error}</p>
+            <p className="admin-document-preview-error" role="alert">
+              {error}
+            </p>
           ) : isImage ? (
             <img src={previewUrl} alt={filename} />
           ) : (
