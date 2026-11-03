@@ -1,5 +1,16 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { Bell, BellOff, CalendarDays, CheckCheck, CreditCard, ShieldCheck, Star, Users, UtensilsCrossed, X } from "lucide-react";
+import {
+  Bell,
+  BellOff,
+  CalendarDays,
+  CheckCheck,
+  CreditCard,
+  ShieldCheck,
+  Star,
+  Users,
+  UtensilsCrossed,
+  X,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
 import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
@@ -54,10 +65,19 @@ export default function NotificationBell({ role, enabled = true }) {
   const wrapRef = useRef(null);
   const bellRef = useRef(null);
   const requestId = useRef(0);
+  const refreshTimer = useRef(null);
+  const refreshInFlight = useRef(false);
+  const pendingRefresh = useRef(null);
   const panelId = useId();
   const navigate = useNavigate();
   const refresh = useCallback(async () => {
     if (!enabled) return;
+    if (refreshInFlight.current) {
+      // Keep only the latest refresh, including its current filter.
+      pendingRefresh.current = refresh;
+      return;
+    }
+    refreshInFlight.current = true;
     const currentRequest = ++requestId.current;
     setLoading(true);
     try {
@@ -74,18 +94,34 @@ export default function NotificationBell({ role, enabled = true }) {
     } catch (e) {
       if (currentRequest === requestId.current) setError(e.message);
     } finally {
+      refreshInFlight.current = false;
       if (currentRequest === requestId.current) setLoading(false);
+      const nextRefresh = pendingRefresh.current;
+      pendingRefresh.current = null;
+      if (nextRefresh) await nextRefresh();
     }
   }, [enabled, filter]);
+  const scheduleRefresh = useCallback(() => {
+    window.clearTimeout(refreshTimer.current);
+    refreshTimer.current = window.setTimeout(refresh, 400);
+  }, [refresh]);
+
   useRealtimeEvents({
     enabled,
     onEvent: (event) => {
-      if (event?.event_type === "notification.created") refresh();
+      if (event?.event_type === "notification.created") scheduleRefresh();
     },
-    onReconnect: refresh,
+    onReconnect: scheduleRefresh,
   });
   useEffect(() => {
+    // Invalidate results for the previous filter or a previous mount.
+    requestId.current += 1;
     refresh();
+    return () => {
+      window.clearTimeout(refreshTimer.current);
+      pendingRefresh.current = null;
+      requestId.current += 1;
+    };
   }, [refresh]);
 
   useEffect(() => {
@@ -239,40 +275,53 @@ export default function NotificationBell({ role, enabled = true }) {
               </div>
             ) : items.length ? (
               items.map((item) => {
-                const category = String(item.category || "SYSTEM").toUpperCase();
+                const category = String(
+                  item.category || "SYSTEM",
+                ).toUpperCase();
                 const Icon = CATEGORY_ICONS[category] || Bell;
                 const timestamp = ago(item.created_at);
                 return (
-                <button
-                  type="button"
-                  key={item.id}
-                  className={`db-notification-item${item.is_read ? "" : " unread"}`}
-                  onClick={() => openItem(item)}
-                >
-                  <span
-                    className={`db-notification-icon ${category.toLowerCase()}`}
-                    aria-hidden="true"
+                  <button
+                    type="button"
+                    key={item.id}
+                    className={`db-notification-item${item.is_read ? "" : " unread"}`}
+                    onClick={() => openItem(item)}
                   >
-                    <Icon size={18} />
-                  </span>
-                  <span className="db-notification-copy">
-                    <strong>{item.title}</strong>
-                    <span className="db-notification-message">{item.message}</span>
-                    <small className="db-notification-meta">
-                      <span>{categoryLabel(category)}</span>
-                      {timestamp && (
-                        <>
-                          <span aria-hidden="true">·</span>
-                          <time dateTime={item.created_at} title={new Date(item.created_at).toLocaleString()}>
-                            {timestamp}
-                          </time>
-                        </>
-                      )}
-                      {!item.is_read && <span className="db-notification-unread-label">Unread</span>}
-                    </small>
-                  </span>
-                  {!item.is_read && <i className="db-unread-dot" aria-hidden="true" />}
-                </button>
+                    <span
+                      className={`db-notification-icon ${category.toLowerCase()}`}
+                      aria-hidden="true"
+                    >
+                      <Icon size={18} />
+                    </span>
+                    <span className="db-notification-copy">
+                      <strong>{item.title}</strong>
+                      <span className="db-notification-message">
+                        {item.message}
+                      </span>
+                      <small className="db-notification-meta">
+                        <span>{categoryLabel(category)}</span>
+                        {timestamp && (
+                          <>
+                            <span aria-hidden="true">·</span>
+                            <time
+                              dateTime={item.created_at}
+                              title={new Date(item.created_at).toLocaleString()}
+                            >
+                              {timestamp}
+                            </time>
+                          </>
+                        )}
+                        {!item.is_read && (
+                          <span className="db-notification-unread-label">
+                            Unread
+                          </span>
+                        )}
+                      </small>
+                    </span>
+                    {!item.is_read && (
+                      <i className="db-unread-dot" aria-hidden="true" />
+                    )}
+                  </button>
                 );
               })
             ) : (

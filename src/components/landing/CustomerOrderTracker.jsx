@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Check, Clock3, CookingPot, PackageCheck, Search } from "lucide-react";
 import { requestJson } from "../../lib/authApi.js";
 import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
@@ -17,6 +17,7 @@ export default function CustomerOrderTracker({ enabled }) {
   const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
+  const refreshTimer = useRef(null);
 
   const loadOrders = useCallback(async () => {
     if (!enabled) return;
@@ -38,7 +39,28 @@ export default function CustomerOrderTracker({ enabled }) {
     }
   }, [enabled, loadOrders]);
 
-  useRealtimeEvents({ enabled, onEvent: loadOrders, onReconnect: loadOrders });
+  // The stream replays saved events in batches. Reconcile once per burst,
+  // rather than fetching the full order list for each historical event.
+  const scheduleOrderRefresh = useCallback(() => {
+    window.clearTimeout(refreshTimer.current);
+    refreshTimer.current = window.setTimeout(loadOrders, 250);
+  }, [loadOrders]);
+
+  const handleRealtimeEvent = useCallback((event) => {
+    if (event.event_type === "order.status_changed") {
+      scheduleOrderRefresh();
+    }
+  }, [scheduleOrderRefresh]);
+
+  useEffect(() => () => {
+    window.clearTimeout(refreshTimer.current);
+  }, [enabled]);
+
+  useRealtimeEvents({
+    enabled,
+    onEvent: handleRealtimeEvent,
+    onReconnect: scheduleOrderRefresh,
+  });
 
   const activeOrders = useMemo(
     () =>

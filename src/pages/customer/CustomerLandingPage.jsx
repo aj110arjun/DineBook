@@ -95,7 +95,7 @@ export default function CustomerLandingPage() {
   useEffect(() => {
     const timer = window.setInterval(
       () => setRestaurantRefresh((value) => value + 1),
-      3000,
+      30000,
     );
     return () => window.clearInterval(timer);
   }, []);

@@ -4,7 +4,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Mail } from "lucide-react";
 import AdminAuthLayout from "../../components/auth/AdminAuthLayout.jsx";
 import { FormField, PasswordField } from "../../components/auth/FormField.jsx";
-import DevQuickLogin from "../../components/auth/DevQuickLogin.jsx";
 import Notice from "../../components/auth/Notice.jsx";
 import { requestJson } from "../../lib/authApi.js";
 
@@ -94,10 +93,6 @@ export default function AdminLoginPage() {
           {!busy && <ArrowRight size={16} />}
         </button>
       </CustomForm>
-      <DevQuickLogin
-        portal="admin"
-        onSuccess={() => navigate("/admin/dashboard", { replace: true })}
-      />
     </AdminAuthLayout>
   );
 }

@@ -108,52 +108,54 @@ export default function ManagerOffersPage() {
   const update = (key, value) => setForm((f) => ({ ...f, [key]: value }));
   async function save(event) {
     event.preventDefault();
-    if (form.starts_at && form.starts_at < localDateToday()) {
-      setFormError("The offer start date cannot be in the past.");
-      return;
-    }
-    if (form.ends_at && form.ends_at < localDateToday()) {
-      setFormError("The offer end date cannot be in the past.");
-      return;
-    }
-    if (form.starts_at && form.ends_at && form.ends_at < form.starts_at) {
-      setFormError(
-        "The end date must be the same as or later than the start date.",
-      );
-      return;
-    }
-    setBusy(true);
+    if (busy) return;
+
     setFormError("");
     setNotice("");
-    const body = {
-      ...form,
-      discount_percent: Number(form.discount_percent),
-      minimum_subtotal: Number(form.minimum_subtotal || 0),
-      max_discount: form.max_discount ? Number(form.max_discount) : null,
-      max_uses: form.max_uses ? Number(form.max_uses) : null,
-      per_customer_limit: form.per_customer_limit
-        ? Number(form.per_customer_limit)
-        : null,
-      starts_at: form.starts_at
-        ? new Date(`${form.starts_at}T00:00:00`).toISOString()
-        : null,
-      ends_at: form.ends_at
-        ? new Date(`${form.ends_at}T23:59:59.999`).toISOString()
-        : null,
-      timezone_name: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    };
+
+    if (form.starts_at && form.starts_at < localDateToday()) {
+      setFormError("Start date cannot be in the past.");
+      return;
+    }
+
+    if (form.ends_at && form.ends_at < localDateToday()) {
+      setFormError("End date cannot be in the past.");
+      return;
+    }
+    if (from.starts_at && form.ends_at && form.ends_at < form.starts_at) {
+      setFormError("End date cannot be before start date.");
+      return;
+    }
+
+    setBusy(true);
+
     try {
-      await requestJson(
-        form.id
-          ? `/api/manager/orders/offers/${form.id}`
-          : "/api/manager/orders/offers",
-        { method: form.id ? "PUT" : "POST", body: JSON.stringify(body) },
-      );
+      const body = {
+        ...form,
+        discount_percent: Number(form.discountFilter),
+        minimum_subtotal: Number(form.minimum_subtotal),
+        max_discount: form.max_discount ? Number(form.max_discount) : null,
+        max_uses: form.max_uses ? Number(form.max_uses) : null,
+        per_customer_limit: form.per_customer_limit
+          ? Number(form.per_customer_limit)
+          : null,
+        starts_at: form.starts_at
+          ? new Date(`${form.starts_at}T00:00:00`).toISOString()
+          : null,
+        ends_at: form.ends_at
+          ? new Date(`${form.ends_at}T23:59:59`).toISOString()
+          : null,
+        timezone_name: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      };
+      await requestJson(`/api/manager/orders/offers/${form.id}`, {
+        method: form.id ? "PATCH" : "POST",
+        body: JSON.stringify(body),
+      });
       setForm(null);
-      setNotice("Offer saved.");
+      setNotice(`Offer ${form.id ? "updated" : "created"} successfully.`);
       await load();
-    } catch (e) {
-      setFormError(e.message);
+    } catch (reason) {
+      setFormError(reason?.message || "Failed to save offer.");
     } finally {
       setBusy(false);
     }
@@ -173,7 +175,7 @@ export default function ManagerOffersPage() {
       );
       await load();
     } catch (e) {
-      setFormError(e.message);
+      setFormError(e?.message || "Failed to toggle offer.");
     }
   }
   async function showRedemptions(offer) {
@@ -183,7 +185,7 @@ export default function ManagerOffersPage() {
       );
       setRedemptionView({ offer, rows: data.items || [] });
     } catch (e) {
-      setFormError(e.message);
+      setFormError(e?.message || "Failed to fetch redemptions.");
     }
   }
   function edit(o) {
@@ -402,6 +404,11 @@ export default function ManagerOffersPage() {
         <div className="offer-modal-backdrop">
           <CustomForm className="offer-form" onSubmit={save}>
             <h2>{form.id ? "Edit offer" : "Create offer"}</h2>
+            {formError && !form && (
+              <p role="alert" className="offer-alert">
+                {formError}
+              </p>
+            )}
             <div className="offer-form-grid">
               <label>
                 Title

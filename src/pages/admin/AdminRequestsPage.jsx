@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, UserCheck, Check, X, RefreshCw } from "lucide-react";
 
@@ -13,6 +13,9 @@ export default function AdminRequestsPage() {
   const navigate = useNavigate();
 
   const [managerRequests, setManagerRequests] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [statusCounts, setStatusCounts] = useState({});
+  const requestSequence = useRef(0);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
   const [confirmation, setConfirmation] = useState(null);
@@ -24,26 +27,32 @@ export default function AdminRequestsPage() {
   const [pageSize, setPageSize] = useState(10);
 
   async function loadManagerRequests() {
+    const sequence = ++requestSequence.current;
     setLoading(true);
     setError("");
 
     try {
-      const data = await requestJson("/api/admin/managers/requests", {
+      const params = new URLSearchParams({ page, page_size: pageSize, search: query, status: activeStatus, sort });
+      const data = await requestJson(`/api/admin/managers/requests?${params}`, {
         method: "GET",
         fallbackMessage: "Unable to load manager requests.",
       });
 
-      setManagerRequests(Array.isArray(data) ? data : []);
+      if (sequence !== requestSequence.current) return;
+      setManagerRequests(data.items);
+      setTotal(data.total);
+      setStatusCounts(data.status_counts);
     } catch (err) {
-      setError(err.message || "Unable to load manager requests.");
+      if (sequence === requestSequence.current) setError(err.message || "Unable to load manager requests.");
     } finally {
-      setLoading(false);
+      if (sequence === requestSequence.current) setLoading(false);
     }
   }
 
   useEffect(() => {
     loadManagerRequests();
-  }, []);
+    return () => { requestSequence.current += 1; };
+  }, [page, pageSize, query, activeStatus, sort]);
 
   async function handleApprove(managerId) {
     setProcessingId(managerId);
@@ -55,17 +64,7 @@ export default function AdminRequestsPage() {
         fallbackMessage: "Unable to approve manager.",
       });
 
-      setManagerRequests((current) =>
-        current.map((manager) =>
-          manager.id === managerId
-            ? {
-                ...manager,
-                status: "ACTIVE",
-                restaurant: { ...manager.restaurant, status: "APPROVED" },
-              }
-            : manager,
-        ),
-      );
+      await loadManagerRequests();
       setConfirmation(null);
     } catch (err) {
       setError(err.message || "Unable to approve manager.");
@@ -84,17 +83,7 @@ export default function AdminRequestsPage() {
         fallbackMessage: "Unable to reject manager.",
       });
 
-      setManagerRequests((current) =>
-        current.map((manager) =>
-          manager.id === managerId
-            ? {
-                ...manager,
-                status: "REJECTED",
-                restaurant: { ...manager.restaurant, status: "REJECTED" },
-              }
-            : manager,
-        ),
-      );
+      await loadManagerRequests();
       setConfirmation(null);
     } catch (err) {
       setError(err.message || "Unable to reject manager.");
@@ -103,41 +92,8 @@ export default function AdminRequestsPage() {
     }
   }
 
-  const statusCounts = {
-    ALL: managerRequests.length,
-    PENDING: managerRequests.filter(
-      (manager) => (manager.restaurant?.status || manager.status) === "PENDING",
-    ).length,
-    APPROVED: managerRequests.filter(
-      (manager) =>
-        (manager.restaurant?.status || manager.status) === "APPROVED",
-    ).length,
-    REJECTED: managerRequests.filter(
-      (manager) =>
-        (manager.restaurant?.status || manager.status) === "REJECTED",
-    ).length,
-  };
-  const filteredRequests = managerRequests
-    .filter((manager) => {
-      const status = manager.restaurant?.status || manager.status;
-      const haystack =
-        `${manager.id} ${manager.name || ""} ${manager.email || ""} ${manager.restaurant?.name || ""} ${manager.restaurant?.city || ""} ${manager.restaurant?.cuisine_type || ""}`.toLowerCase();
-      return (
-        (activeStatus === "ALL" || status === activeStatus) &&
-        (!query.trim() || haystack.includes(query.trim().toLowerCase()))
-      );
-    })
-    .sort((left, right) => {
-      const createdDelta =
-        (Date.parse(left.created_at || 0) || 0) -
-        (Date.parse(right.created_at || 0) || 0);
-      return sort === "oldest" ? createdDelta : -createdDelta;
-    });
-  const visibleRequests = filteredRequests.slice(
-    (page - 1) * pageSize,
-    page * pageSize,
-  );
-  const pageCount = Math.max(1, Math.ceil(filteredRequests.length / pageSize));
+  const visibleRequests = managerRequests;
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
   useEffect(() => {
     setPage(1);
   }, [activeStatus, query, sort, pageSize]);
@@ -311,11 +267,11 @@ export default function AdminRequestsPage() {
             ))}
           </div>
         )}
-        {!loading && filteredRequests.length > 0 && (
+        {!loading && total > 0 && (
           <Pagination
             page={page}
             pageSize={pageSize}
-            total={filteredRequests.length}
+            total={total}
             onPageChange={setPage}
             label="requests"
           />

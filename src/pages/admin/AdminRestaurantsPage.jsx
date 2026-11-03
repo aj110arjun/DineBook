@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, RefreshCw, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
@@ -8,6 +8,9 @@ import { requestJson } from "../../lib/authApi.js";
 export default function AdminRestaurantsPage() {
   const navigate = useNavigate();
   const [restaurants, setRestaurants] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [cuisines, setCuisines] = useState([]);
+  const [locations, setLocations] = useState([]);
   const [query, setQuery] = useState("");
   const [cuisineFilter, setCuisineFilter] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
@@ -23,91 +26,24 @@ export default function AdminRestaurantsPage() {
     let mounted = true;
     setLoading(true);
     setError("");
-    requestJson("/api/admin/restaurants")
-      .then(
-        (data) =>
-          mounted &&
-          setRestaurants(
-            Array.isArray(data)
-              ? data.filter((restaurant) =>
-                  ["APPROVED", "SUSPENDED"].includes(
-                    restaurant.status?.toUpperCase(),
-                  ),
-                )
-              : [],
-          ),
-      )
+    const params = new URLSearchParams({ page, page_size: pageSize, search: query, cuisine: cuisineFilter, location: locationFilter, status: statusFilter, sort });
+    requestJson(`/api/admin/restaurants?${params}`)
+      .then((data) => {
+        if (!mounted) return;
+        setRestaurants(data.items);
+        setTotal(data.total);
+        setCuisines(data.cuisines);
+        setLocations(data.locations);
+      })
       .catch((reason) => mounted && setError(reason.message))
       .finally(() => mounted && setLoading(false));
     return () => {
       mounted = false;
     };
-  }, [refresh]);
+  }, [refresh, page, pageSize, query, cuisineFilter, locationFilter, statusFilter, sort]);
 
-  const cuisines = useMemo(
-    () =>
-      [
-        ...new Set(
-          restaurants
-            .map((restaurant) => restaurant.cuisine_type)
-            .filter(Boolean),
-        ),
-      ].sort(),
-    [restaurants],
-  );
-  const locations = useMemo(
-    () =>
-      [
-        ...new Set(
-          restaurants.map((restaurant) => restaurant.location).filter(Boolean),
-        ),
-      ].sort(),
-    [restaurants],
-  );
-
-  const filteredRestaurants = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    return restaurants
-      .filter(
-        (restaurant) =>
-          (!normalized ||
-            [
-              restaurant.name,
-              restaurant.cuisine_type,
-              restaurant.location,
-              restaurant.manager?.name,
-              restaurant.manager?.email,
-            ]
-              .filter(Boolean)
-              .join(" ")
-              .toLowerCase()
-              .includes(normalized)) &&
-          (!cuisineFilter || restaurant.cuisine_type === cuisineFilter) &&
-          (!locationFilter || restaurant.location === locationFilter) &&
-          (!statusFilter || restaurant.status?.toUpperCase() === statusFilter),
-      )
-      .sort((left, right) => {
-        if (sort === "name") return left.name.localeCompare(right.name);
-        if (sort === "oldest")
-          return (
-            (Date.parse(left.created_at || 0) || 0) -
-            (Date.parse(right.created_at || 0) || 0)
-          );
-        return (
-          (Date.parse(right.created_at || 0) || 0) -
-          (Date.parse(left.created_at || 0) || 0)
-        );
-      });
-  }, [restaurants, query, cuisineFilter, locationFilter, statusFilter, sort]);
-
-  const pageCount = Math.max(
-    1,
-    Math.ceil(filteredRestaurants.length / pageSize),
-  );
-  const visibleRestaurants = filteredRestaurants.slice(
-    (page - 1) * pageSize,
-    page * pageSize,
-  );
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const visibleRestaurants = restaurants;
 
   useEffect(() => {
     setPage(1);
@@ -304,7 +240,7 @@ export default function AdminRestaurantsPage() {
           <Pagination
             page={page}
             pageSize={pageSize}
-            total={filteredRestaurants.length}
+            total={total}
             onPageChange={setPage}
             label="restaurants"
           />

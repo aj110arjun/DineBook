@@ -1,6 +1,6 @@
 import { confirmAction } from "../../lib/confirmDialog.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   ArrowLeft,
   CalendarDays,
@@ -241,6 +241,25 @@ export default function CustomerReservationDetailsPage() {
   const [reviewError, setReviewError] = useState("");
   const [reviewMessage, setReviewMessage] = useState("");
   const [hoverRating, setHoverRating] = useState(0);
+  const realtimeStartedAt = useRef(Date.now());
+  const realtimeRefreshTimer = useRef(null);
+
+  useEffect(() => {
+    realtimeStartedAt.current = Date.now();
+
+    return () => {
+      window.clearTimeout(realtimeRefreshTimer.current);
+    };
+  }, [reservationId]);
+
+  function scheduledRealtimeRefresh() {
+    window.clearTimeout(realtimeRefreshTimer.current);
+    realtimeRefreshTimer.current = window.setTimeout(() => {
+      realtimeRefreshTimer.current = null;
+      setReloadKey((current) => current + 1);
+    }, 300);
+  }
+
   async function load(signal, onSettled) {
     setLoading(true);
     setError("");
@@ -265,6 +284,7 @@ export default function CustomerReservationDetailsPage() {
       if (!signal?.aborted) setLoading(false);
     }
   }
+
   useRealtimeEvents({
     enabled:
       Boolean(user) &&
@@ -273,20 +293,47 @@ export default function CustomerReservationDetailsPage() {
         sessionStorage.getItem(demoSessionKey) === "active"
       ),
     onEvent: (event) => {
-      if (
-        event?.event_type === "booking.updated" &&
-        event.resource_id !== reservationId
-      )
+      if (!event) return;
+
+      // The initial load already fetches current state. Ignore historical
+      // events replayed when the SSE connection opens.
+      const occurredAt = event.occurred_at;
+      const eventTime = occurredAt
+        ? Date.parse(
+            /(?:Z|[+-]\d{2}:\d{2})$/i.test(occurredAt)
+              ? occurredAt
+              : `${occurredAt}Z`,
+          )
+        : NaN;
+
+      if (Number.isFinite(eventTime) && eventTime < realtimeStartedAt.current) {
         return;
+      }
+
+      const matchesReservation = event.resource_id === reservationId;
+      const matchesOrder = reservation?.food_orders?.some(
+        (order) => order.id === event.resource_id,
+      );
+      const referencesReservation =
+        event.data?.reservation_id === reservationId;
+
+      if (event.event_type === "booking.updated") {
+        if (matchesReservation) scheduleRealtimeRefresh();
+        return;
+      }
+
       if (
-        event?.event_type === "booking.updated" ||
-        event?.event_type === "order.status_changed" ||
-        event?.event_type === "payment.status_changed"
-      )
-        load();
+        event.event_type === "order.status_changed" ||
+        event.event_type === "payment.status_changed"
+      ) {
+        if (matchesReservation || matchesOrder || referencesReservation) {
+          scheduleRealtimeRefresh();
+        }
+      }
     },
-    onReconnect: () => load(),
+    onReconnect: scheduledRealtimeRefresh,
   });
+
   useEffect(() => {
     let alive = true;
     const controller = new AbortController();
@@ -320,6 +367,7 @@ export default function CustomerReservationDetailsPage() {
       controller.abort();
     };
   }, [reservationId, navigate, reloadKey]);
+
   async function cancel() {
     setBusy(true);
     setNotice("");
@@ -339,6 +387,7 @@ export default function CustomerReservationDetailsPage() {
       setBusy(false);
     }
   }
+
   useEffect(() => {
     if (reservation?.status !== "SEATED") return undefined;
     let active = true;
@@ -361,6 +410,7 @@ export default function CustomerReservationDetailsPage() {
       active = false;
     };
   }, [reservation?.restaurant_id, reservation?.status]);
+
   useEffect(() => {
     let active = true;
     requestJson("/api/customer/orders/tax-rate")
@@ -373,6 +423,7 @@ export default function CustomerReservationDetailsPage() {
       active = false;
     };
   }, []);
+
   useEffect(() => {
     if (!user || !reservation?.restaurant_id) return undefined;
     let active = true;
@@ -394,6 +445,7 @@ export default function CustomerReservationDetailsPage() {
       active = false;
     };
   }, [user, reservation?.restaurant_id, reloadKey]);
+
   async function saveOrderReview(event) {
     event.preventDefault();
     setReviewBusy(true);
@@ -431,11 +483,12 @@ export default function CustomerReservationDetailsPage() {
       setReviewBusy(false);
     }
   }
+
   async function deleteOwnReview(reviewId) {
     if (
-      !await confirmAction(
+      !(await confirmAction(
         "Delete your review for this restaurant? This cannot be undone.",
-      )
+      ))
     )
       return;
     try {

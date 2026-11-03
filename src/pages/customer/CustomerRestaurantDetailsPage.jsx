@@ -31,7 +31,6 @@ import LandingFooter from "../../components/landing/LandingFooter.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
 import {
-  mergeReservations,
   saveReservation,
 } from "../../data/customerReservations.js";
 import { photo } from "../../data/landingData.js";
@@ -111,82 +110,17 @@ export default function CustomerRestaurantDetailsPage() {
   const activeSection = detailTabs.some((tab) => tab.id === section)
     ? section
     : "about";
-  const restaurantReservations = myReservations.filter(
-    (item) => String(item.restaurant_id) === String(restaurantId),
-  );
-  const sortedReservations = restaurantReservations
-    .filter(
-      (item) =>
-        reservationStatusFilter === "ALL" ||
-        item.status === reservationStatusFilter,
-    )
-    .filter(
-      (item) =>
-        !reservationDateFilter ||
-        item.reservation_date === reservationDateFilter,
-    )
-    .sort((a, b) => {
-      const aDate =
-        Date.parse(a.created_at || `${a.reservation_date}T${a.start_time}`) ||
-        0;
-      const bDate =
-        Date.parse(b.created_at || `${b.reservation_date}T${b.start_time}`) ||
-        0;
-      if (reservationSort === "OLDEST") return aDate - bDate;
-      if (reservationSort === "FEE_LOW")
-        return Number(a.fee_amount) - Number(b.fee_amount);
-      if (reservationSort === "FEE_HIGH")
-        return Number(b.fee_amount) - Number(a.fee_amount);
-      return bDate - aDate;
-    });
+  const [reservationTotal, setReservationTotal] = useState(0);
+  const [reservationListError, setReservationListError] = useState("");
+  const [reservationListLoading, setReservationListLoading] = useState(false);
+  const [seatedReservations, setSeatedReservations] = useState([]);
+  const [visibleMenuFoods, setVisibleMenuFoods] = useState([]);
+  const [menuTotal, setMenuTotal] = useState(0);
   const reservationsPerPage = 4;
-  const reservationPageCount = Math.max(
-    1,
-    Math.ceil(sortedReservations.length / reservationsPerPage),
-  );
-  const currentReservationPage = Math.min(
-    reservationPage,
-    reservationPageCount,
-  );
-  const pagedReservations = sortedReservations.slice(
-    (currentReservationPage - 1) * reservationsPerPage,
-    currentReservationPage * reservationsPerPage,
-  );
-  const activeMenuCategory = menuCategories.find(
-    (category) =>
-      category.id === (selectedMenuCategoryId || menuCategories[0]?.id),
-  );
-  const menuNeedle = menuQuery.trim().toLowerCase();
-  const filteredMenuFoods = (activeMenuCategory?.foods || [])
-    .filter(
-      (food) =>
-        food.is_available &&
-        (!menuNeedle ||
-          `${food.name} ${food.description || ""} ${activeMenuCategory?.name || ""}`
-            .toLowerCase()
-            .includes(menuNeedle)),
-    )
-    .sort((left, right) => {
-      if (menuSort === "price-low" || menuSort === "price-high") {
-        const lowest = (food) =>
-          Math.min(
-            ...(food.variants || [])
-              .filter((variant) => variant.is_available)
-              .map((variant) => Number(variant.price)),
-            Number.POSITIVE_INFINITY,
-          );
-        const delta = lowest(left) - lowest(right);
-        return menuSort === "price-low" ? delta : -delta;
-      }
-      return menuSort === "name-desc"
-        ? right.name.localeCompare(left.name)
-        : left.name.localeCompare(right.name);
-    });
+  const reservationPageCount = Math.max(1, Math.ceil(reservationTotal / reservationsPerPage));
+  const currentReservationPage = reservationPage;
+  const pagedReservations = myReservations;
   const menuPageSize = 8;
-  const visibleMenuFoods = filteredMenuFoods.slice(
-    (menuPage - 1) * menuPageSize,
-    menuPage * menuPageSize,
-  );
   useEffect(() => {
     setMenuPage(1);
   }, [menuQuery, menuSort, selectedMenuCategoryId]);
@@ -231,22 +165,21 @@ export default function CustomerRestaurantDetailsPage() {
     let mounted = true;
     setMenuLoading(true);
     setMenuError("");
-    requestJson(`/api/customer/restaurants/${restaurantId}/menu`)
+    const params = new URLSearchParams({ page: menuPage, page_size: menuPageSize, search: menuQuery, sort: menuSort });
+    if (selectedMenuCategoryId) params.set("category_id", selectedMenuCategoryId);
+    requestJson(`/api/customer/restaurants/${restaurantId}/menu?${params}`)
       .then((data) => {
         if (!mounted) return;
-        setMenuCategories(data);
-        setSelectedMenuCategoryId((current) =>
-          data.some((category) => category.id === current)
-            ? current
-            : (data[0]?.id ?? ""),
-        );
+        setMenuCategories(data.categories);
+        setVisibleMenuFoods(data.items);
+        setMenuTotal(data.total);
       })
       .catch((reason) => mounted && setMenuError(reason.message))
       .finally(() => mounted && setMenuLoading(false));
     return () => {
       mounted = false;
     };
-  }, [restaurantId, activeSection]);
+  }, [restaurantId, activeSection, menuPage, menuQuery, menuSort, selectedMenuCategoryId]);
 
   useEffect(() => {
     if (
@@ -267,26 +200,38 @@ export default function CustomerRestaurantDetailsPage() {
 
   useEffect(() => {
     if (!user) return;
-    requestJson("/api/customer/reservations")
-      .then((items) => {
-        const merged = mergeReservations(items, user.email);
-        setMyReservations(merged);
-        setSelectedOrderReservationId((current) =>
-          merged.some(
-            (item) =>
-              item.id === current &&
-              item.status === "SEATED" &&
-              String(item.restaurant_id) === String(restaurantId),
-          )
-            ? current
-            : merged.find(
-                (item) =>
-                  item.status === "SEATED" &&
-                  String(item.restaurant_id) === String(restaurantId),
-              )?.id || "",
-        );
+    let alive = true;
+    setReservationListLoading(true);
+    setReservationListError("");
+    const params = new URLSearchParams({ page: reservationPage, page_size: reservationsPerPage, restaurant_id: restaurantId,
+      status: reservationStatusFilter, sort: { NEWEST: "created-newest", OLDEST: "created-oldest", FEE_LOW: "fee-low", FEE_HIGH: "fee-high" }[reservationSort] });
+    if (reservationDateFilter) {
+      params.set("date_from", reservationDateFilter);
+      params.set("date_to", reservationDateFilter);
+    }
+    requestJson(`/api/customer/reservations?${params}`)
+      .then((data) => {
+        if (!alive) return;
+        setMyReservations(data.items);
+        setReservationTotal(data.total);
+        if (reservationPage > Math.max(1, Math.ceil(data.total / reservationsPerPage))) setReservationPage(1);
       })
-      .catch(() => setMyReservations(mergeReservations([], user.email)));
+      .catch((reason) => alive && setReservationListError(reason.message))
+      .finally(() => alive && setReservationListLoading(false));
+    return () => { alive = false; };
+  }, [user, restaurantId, reservationPage, reservationStatusFilter, reservationDateFilter, reservationSort]);
+
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+    requestJson(`/api/customer/reservations?page=1&page_size=100&restaurant_id=${restaurantId}&status=SEATED`)
+      .then((data) => {
+        if (!alive) return;
+        setSeatedReservations(data.items);
+        setSelectedOrderReservationId((current) => data.items.some((item) => item.id === current) ? current : data.items[0]?.id || "");
+      })
+      .catch(() => alive && setSeatedReservations([]));
+    return () => { alive = false; };
   }, [user, restaurantId]);
 
   useEffect(() => {
@@ -901,7 +846,7 @@ export default function CustomerRestaurantDetailsPage() {
                             </select>
                           </label>
                           <span>
-                            {filteredMenuFoods.length} available dishes
+                            {menuTotal} available dishes
                           </span>
                         </div>
                         <nav
@@ -924,16 +869,7 @@ export default function CustomerRestaurantDetailsPage() {
                             >
                               {category.name}
                               <span>
-                                {
-                                  category.foods.filter(
-                                    (food) =>
-                                      food.is_available &&
-                                      (!menuNeedle ||
-                                        `${food.name} ${food.description || ""} ${category.name}`
-                                          .toLowerCase()
-                                          .includes(menuNeedle)),
-                                  ).length
-                                }
+                                {category.count}
                               </span>
                             </button>
                           ))}
@@ -957,7 +893,7 @@ export default function CustomerRestaurantDetailsPage() {
                               </div>
                               {visibleMenuFoods.length === 0 ? (
                                 <p className="customer-menu-message">
-                                  {category.foods.length
+                                  {category.count
                                     ? "No available dishes match your search."
                                     : "No dishes are listed in this category yet."}
                                 </p>
@@ -1020,11 +956,11 @@ export default function CustomerRestaurantDetailsPage() {
                                   ))}
                                 </div>
                               )}
-                              {filteredMenuFoods.length > menuPageSize && (
+                              {menuTotal > menuPageSize && (
                                 <Pagination
                                   page={menuPage}
                                   pageSize={menuPageSize}
-                                  total={filteredMenuFoods.length}
+                                  total={menuTotal}
                                   onPageChange={setMenuPage}
                                   label="menu items"
                                   className="customer-menu-pagination"
@@ -1368,7 +1304,7 @@ export default function CustomerRestaurantDetailsPage() {
                           <h3>Your reservations</h3>
                           <p>Manage your upcoming and past visits.</p>
                         </div>
-                        <span>{restaurantReservations.length} total</span>
+                        <span>{reservationTotal} total</span>
                       </div>
                       <div className="reservation-history-toolbar">
                         <label>
@@ -1415,12 +1351,11 @@ export default function CustomerRestaurantDetailsPage() {
                           </select>
                         </label>
                       </div>
-                      {restaurantReservations.length === 0 ? (
-                        <p className="reservation-history-empty">
-                          You haven’t made any reservations at this restaurant
-                          yet.
-                        </p>
-                      ) : sortedReservations.length === 0 ? (
+                      {reservationListLoading ? (
+                        <p role="status">Loading reservations…</p>
+                      ) : reservationListError ? (
+                        <p role="alert">{reservationListError}</p>
+                      ) : reservationTotal === 0 ? (
                         <p className="reservation-history-empty">
                           No reservations match these filters. Adjust the status
                           or date to see more.
@@ -1520,7 +1455,7 @@ export default function CustomerRestaurantDetailsPage() {
                           <Pagination
                             page={currentReservationPage}
                             pageSize={reservationsPerPage}
-                            total={sortedReservations.length}
+                            total={reservationTotal}
                             onPageChange={setReservationPage}
                             label="reservations"
                           />

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Bell,
   CalendarDays,
@@ -20,7 +20,6 @@ import Pagination from "../../components/Pagination.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
 import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
-import { mergeReservations } from "../../data/customerReservations.js";
 import "./CustomerProfilePage.css";
 
 const statusText = (value) =>
@@ -136,6 +135,8 @@ export default function CustomerReservationsPage() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [items, setItems] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [restaurants, setRestaurants] = useState([]);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("ALL");
@@ -150,6 +151,17 @@ export default function CustomerReservationsPage() {
   const [passQr, setPassQr] = useState("");
   const [passError, setPassError] = useState("");
   const pageSize = 10;
+  const requestSequence = useRef(0);
+  const realtimeStartedAt = useRef(Date.now());
+  const realtimeRefreshTimer = useRef(null);
+  const [realtimeReloadKey, setRealtimeReloadKey] = useState(0);
+
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(realtimeRefreshTimer.current);
+    };
+  }, []);
+
   useEffect(() => {
     let alive = true;
     const demo =
@@ -159,16 +171,6 @@ export default function CustomerReservationsPage() {
       .then(async (value) => {
         if (!alive) return;
         setUser(value);
-        try {
-          const data = await requestJson("/api/customer/reservations");
-          if (alive) setItems(mergeReservations(data, value.email));
-        } catch (reason) {
-          const localItems = mergeReservations([], value.email);
-          if (alive) {
-            setItems(localItems);
-            if (!localItems.length) setError(reason.message);
-          }
-        }
       })
       .catch(() => alive && navigate("/customer/login", { replace: true }))
       .finally(() => alive && setBusy(false));
@@ -176,11 +178,62 @@ export default function CustomerReservationsPage() {
       alive = false;
     };
   }, [navigate]);
+
+  function scheduleReservationRefresh() {
+    window.clearTimeout(realtimeRefreshTimer.current);
+    realtimeRefreshTimer.current = window.setTimeout(() => {
+      realtimeRefreshTimer.current = null;
+      setRealtimeReloadKey((current) => current + 1);
+    }, 300);
+  }
+
   async function refreshReservations() {
     if (!user) return;
-    const data = await requestJson("/api/customer/reservations");
-    setItems(mergeReservations(data, user.email));
+    const sequence = ++requestSequence.current;
+    setBusy(true);
+    setError("");
+    const params = new URLSearchParams({
+      page,
+      page_size: pageSize,
+      search: query,
+      status: filter,
+      period,
+      sort,
+      today: new Date().toLocaleDateString("en-CA"),
+    });
+    if (restaurantFilter !== "ALL")
+      params.set("restaurant_id", restaurantFilter);
+    if (dateFrom) params.set("date_from", dateFrom);
+    if (dateTo) params.set("date_to", dateTo);
+    try {
+      const data = await requestJson(`/api/customer/reservations?${params}`);
+      if (sequence !== requestSequence.current) return;
+      setItems(data.items);
+      setTotal(data.total);
+      setRestaurants(data.restaurants);
+    } catch (reason) {
+      if (sequence === requestSequence.current) setError(reason.message);
+    } finally {
+      if (sequence === requestSequence.current) setBusy(false);
+    }
   }
+  useEffect(() => {
+    refreshReservations();
+    return () => {
+      requestSequence.current += 1;
+    };
+  }, [
+    user,
+    page,
+    query,
+    filter,
+    restaurantFilter,
+    period,
+    dateFrom,
+    dateTo,
+    sort,
+    realtimeReloadKey,
+  ]);
   const realtimeStatus = useRealtimeEvents({
     enabled:
       Boolean(user) &&
@@ -188,56 +241,33 @@ export default function CustomerReservationsPage() {
         import.meta.env.DEV &&
         sessionStorage.getItem(demoSessionKey) === "active"
       ),
-    onEvent: refreshReservations,
-    onReconnect: refreshReservations,
+    onEvent: (event) => {
+      if (!event) return;
+
+      const occurredAt = event.occurred_at;
+      const eventTime = occurredAt
+        ? Date.parse(
+            /(?:Z|[+-]\d{2}:\d{2})$/i.test(occurredAt)
+              ? occurrredAt
+              : `${occurredAt}Z`,
+          )
+        : NaN;
+      if (Number.isFinite(eventTime) && eventTime < realtimeStartedAt.currnet) {
+        return;
+      }
+
+      const affectsReservations =
+        event.event_type === "booking.updated" ||
+        (event.event_type === "payement.status_changed" &&
+          event.data?.resource_type === "reservation");
+      if (affectsReservations) {
+        scheduleReservationRefresh();
+      }
+    },
+    onReconnect: scheduleReservationRefresh,
   });
-  const restaurants = [
-    ...new Map(
-      items.map((item) => [
-        item.restaurant_id,
-        { id: item.restaurant_id, name: item.restaurant_name || "Restaurant" },
-      ]),
-    ).values(),
-  ].sort((a, b) => a.name.localeCompare(b.name));
-  const today = new Date().toLocaleDateString("en-CA");
-  const needle = query.trim().toLowerCase();
-  const filtered = items
-    .filter((item) => {
-      const haystack =
-        `${item.restaurant_name || ""} ${item.id || ""} ${item.restaurant_location || item.location || ""}`.toLowerCase();
-      const date = item.reservation_date || "";
-      return (
-        (filter === "ALL" || item.status === filter) &&
-        (restaurantFilter === "ALL" ||
-          item.restaurant_id === restaurantFilter) &&
-        (!needle || haystack.includes(needle)) &&
-        (period === "ALL" ||
-          (period === "UPCOMING" ? date >= today : date < today)) &&
-        (!dateFrom || date >= dateFrom) &&
-        (!dateTo || date <= dateTo)
-      );
-    })
-    .sort((a, b) => {
-      const createdA =
-        Date.parse(a.created_at || `${a.reservation_date}T${a.start_time}`) ||
-        0;
-      const createdB =
-        Date.parse(b.created_at || `${b.reservation_date}T${b.start_time}`) ||
-        0;
-      const dateA =
-        Date.parse(
-          `${a.reservation_date || "1970-01-01"}T${a.start_time || "00:00"}`,
-        ) || 0;
-      const dateB =
-        Date.parse(
-          `${b.reservation_date || "1970-01-01"}T${b.start_time || "00:00"}`,
-        ) || 0;
-      if (sort === "created-newest") return createdB - createdA;
-      if (sort === "created-oldest") return createdA - createdB;
-      return sort === "date-oldest" ? dateA - dateB : dateB - dateA;
-    });
-  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const visible = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const visible = items;
   useEffect(() => {
     setPage(1);
   }, [query, filter, restaurantFilter, period, dateFrom, dateTo, sort]);
@@ -403,7 +433,7 @@ export default function CustomerReservationsPage() {
                 </select>
               </label>
               <span className="reservation-result-count">
-                {filtered.length} result{filtered.length === 1 ? "" : "s"}
+                {total} result{total === 1 ? "" : "s"}
               </span>
               <button
                 type="button"
@@ -489,11 +519,11 @@ export default function CustomerReservationsPage() {
                 <p>Try changing the restaurant or status filter.</p>
               </div>
             )}
-            {filtered.length > 0 && (
+            {total > 0 && (
               <Pagination
                 page={page}
                 pageSize={pageSize}
-                total={filtered.length}
+                total={total}
                 onPageChange={setPage}
                 label="reservations"
                 showPageNumbers

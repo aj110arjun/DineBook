@@ -1,5 +1,5 @@
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -53,17 +53,70 @@ export default function CustomerWalletPage() {
   const [activityLoading, setActivityLoading] = useState(false);
   const [activityError, setActivityError] = useState("");
   const [activityRefresh, setActivityRefresh] = useState(0);
+  const realTimeStartedAt = useRef(Date.now());
+  const realtimeRefreshTimer = useRef(null);
+  const walletRefreshPromise = useRef(null);
 
-  async function refreshWallet() {
-    const latest = await requestJson("/api/customer/wallet");
-    setWallet(latest);
-    setActivityRefresh((current) => current + 1);
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(realtimeRefreshTimer.current);
+    };
+  }, []);
+
+  function refreshWallet() {
+    if (walletRefreshPromise.current) {
+      return walletRefreshPromise.current;
+    }
+    walletRefreshPromise.current = requestJson("/api/customer/wallet")
+      .then((latest) => {
+        setWallet(latest);
+        setActivityRefresh((current) => current + 1);
+      })
+      .finally(() => {
+        walletRefreshPromise.current = null;
+      });
+    return walletRefreshPromise.current;
+  }
+
+  function scheduleWalletRefresh() {
+    window.clearTimeout(realtimeRefreshTimer.current);
+    realtimeRefreshTimer.current = window.setTimeout(() => {
+      realtimeRefreshTimer.current = null;
+      refreshWallet().catch((reason) => {
+        setError(reason.message || "Unable to refresh your wallet.");
+      });
+    }, 300);
   }
 
   const realtimeStatus = useRealtimeEvents({
     enabled: Boolean(user),
-    onEvent: refreshWallet,
-    onReconnect: refreshWallet,
+    onEvent: (event) => {
+      if (!event) return;
+      const occuredAt = event.occured_at;
+      const eventTime = occuredAt
+        ? Date.parse(
+            /(?:Z|[+-]\d{2}:\d{2})$/i.test(occuredAt)
+              ? occuredAt
+              : `${occuredAt}Z`,
+          )
+        : NaN;
+      if (Number.isFinite(eventTime) && eventTime < realTimeStartedAt.current) {
+        return;
+      }
+
+      const affectsWallet = [
+        "wallet.transfer_sent",
+        "wallet.transfer_received",
+        "payment.status_changed",
+        "booking.updated",
+        "order.status_changed",
+      ].includes(event.event_type);
+
+      if (affectsWallet) {
+        scheduleWalletRefresh();
+      }
+    },
+    onReconnect: scheduleWalletRefresh,
   });
   useEffect(() => {
     setActivityPage(1);

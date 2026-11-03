@@ -1,5 +1,8 @@
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { GEOCODING_BASE_URL, POSTAL_API_BASE_URL } from "../../lib/serviceConfig.js";
+import {
+  GEOCODING_BASE_URL,
+  POSTAL_API_BASE_URL,
+} from "../../lib/serviceConfig.js";
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { API_BASE } from "../../lib/authApi.js";
@@ -777,6 +780,10 @@ export default function ManagerRegisterPage() {
         [field]: value,
       },
     }));
+    setFieldErrors((current) => ({
+      ...current,
+      [`${day}Hours`]: "",
+    }));
   }
 
   function toggleDay(day) {
@@ -786,6 +793,10 @@ export default function ManagerRegisterPage() {
         ...current[day],
         enabled: !current[day].enabled,
       },
+    }));
+    setFieldErrors((current) => ({
+      ...current,
+      [`${day}Hours`]: "",
     }));
   }
 
@@ -814,52 +825,20 @@ export default function ManagerRegisterPage() {
     setInteriorMedia(file);
   }
 
-  function validateDocuments() {
-    if (!documents.brandingImages) {
-      setFieldErrors((current) => ({
-        ...current,
-        brandingImages: "Upload and crop a restaurant banner image.",
-      }));
-      return false;
-    }
-
-    if (!documents.fssaiLicense) {
-      setFieldErrors((current) => ({
-        ...current,
-        fssaiLicense: "Upload your FSSAI or food safety document.",
-      }));
-      return false;
-    }
-
-    if (!documents.businessRegistration) {
-      setFieldErrors((current) => ({
-        ...current,
-        businessRegistration: "Upload your business registration certificate.",
-      }));
-      return false;
-    }
-
-    if (!documents.ownerIdentity) {
-      setFieldErrors((current) => ({
-        ...current,
-        ownerIdentity: "Upload your owner identity proof.",
-      }));
-      return false;
-    }
-
-    return true;
-  }
-
   function handleDocumentsContinue(event) {
     event.preventDefault();
 
-    if (!validateDocuments()) return;
-
-    setError("");
-
-    console.log("Documents:", documents);
+    if (!validateStep(3)) return;
 
     setStep(4);
+  }
+
+  function handleOperatingHoursContinue(event) {
+    event.preventDefault();
+
+    if (!validateStep(4)) return;
+
+    setStep(5);
   }
 
   async function requestEmailCode() {
@@ -921,50 +900,210 @@ export default function ManagerRegisterPage() {
     }
   }
 
+  function getStepErrors(stepNumber) {
+    const errors = {};
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+    function checkLength(field, label, minimum, maximum) {
+      const value = application[field].trim();
+
+      if (value.length < minimum || value.length > maximum) {
+        errors[field] =
+          `${label} must contain ${minimum}–${maximum} characters.`;
+      }
+    }
+
+    function checkFile(field, file, label, types, maxMB, required = false) {
+      if (!file) {
+        if (required) errors[field] = `Upload ${label}.`;
+        return;
+      }
+
+      if (!types.includes(file.type)) {
+        errors[field] = `${label}: choose a valid file type.`;
+      } else if (file.size > maxMB * 1024 * 1024) {
+        errors[field] = `${label} must be ${maxMB} MB or smaller.`;
+      }
+    }
+
+    if (stepNumber === 1) {
+      checkLength("name", "Full name", 2, 120);
+
+      if (
+        application.name.trim() &&
+        !/^[\p{L}\s'.-]+$/u.test(application.name.trim())
+      ) {
+        errors.name = "Use letters, spaces, apostrophes, hyphens, or periods.";
+      }
+
+      if (!emailPattern.test(application.email.trim())) {
+        errors.email = "Enter a valid email address.";
+      } else if (!emailVerified) {
+        errors.email = "Verify your email before continuing.";
+      }
+
+      const password = application.password;
+
+      if (password.length < 10 || password.length > 128) {
+        errors.password = "Password must contain 10–128 characters.";
+      } else if (!/\p{L}/u.test(password) || !/[^\p{L}\s]/u.test(password)) {
+        errors.password = "Include a letter and a number or symbol.";
+      }
+
+      if (!application.confirmPassword) {
+        errors.confirmPassword = "Confirm your password.";
+      } else if (password !== application.confirmPassword) {
+        errors.confirmPassword = "Passwords do not match.";
+      }
+    }
+
+    if (stepNumber === 2) {
+      checkLength("restaurantName", "Restaurant name", 2, 255);
+      checkLength("restaurantDescription", "Description", 1, 2000);
+      checkLength("cuisineType", "Cuisine type", 2, 100);
+      checkLength("address", "Address", 2, 500);
+      checkLength("city", "City", 2, 100);
+      checkLength("state", "State", 2, 100);
+
+      if (
+        application.restaurantName.trim() &&
+        !/^[\p{L}\p{N}\s'.-]+$/u.test(application.restaurantName.trim())
+      ) {
+        errors.restaurantName =
+          "Use letters, numbers, spaces, apostrophes, hyphens, or periods.";
+      }
+
+      if (
+        !/^\+?[0-9][0-9 ()-]{5,18}[0-9]$/.test(
+          application.restaurantContact.trim(),
+        )
+      ) {
+        errors.restaurantContact = "Enter a valid restaurant phone number.";
+      }
+
+      if (!emailPattern.test(application.restaurantEmail.trim())) {
+        errors.restaurantEmail = "Enter a valid restaurant email.";
+      }
+
+      if (
+        !/^[A-Za-z0-9][A-Za-z0-9 -]{1,18}[A-Za-z0-9]$/.test(
+          application.pinCode.trim(),
+        )
+      ) {
+        errors.pinCode = "Enter a valid PIN or ZIP code.";
+      }
+    }
+
+    if (stepNumber === 3) {
+      const pdfTypes = ["application/pdf"];
+      const imageTypes = ["image/jpeg", "image/png"];
+
+      checkFile(
+        "fssaiLicense",
+        documents.fssaiLicense,
+        "your FSSAI or food safety document",
+        pdfTypes,
+        5,
+        true,
+      );
+
+      checkFile(
+        "businessRegistration",
+        documents.businessRegistration,
+        "your business registration certificate",
+        pdfTypes,
+        5,
+        true,
+      );
+
+      checkFile(
+        "ownerIdentity",
+        documents.ownerIdentity,
+        "your owner identity proof",
+        pdfTypes,
+        5,
+        true,
+      );
+
+      checkFile(
+        "gstCertificate",
+        documents.gstCertificate,
+        "your GST certificate",
+        pdfTypes,
+        5,
+      );
+
+      checkFile(
+        "brandingImages",
+        documents.brandingImages,
+        "your cropped restaurant banner",
+        imageTypes,
+        10,
+        true,
+      );
+    }
+
+    if (stepNumber === 4) {
+      if (!Number.isSafeInteger(Number(capacity)) || Number(capacity) < 1) {
+        errors.capacity =
+          "Enter a seating capacity as a positive whole number.";
+      }
+
+      if (!Number.isSafeInteger(Number(tables)) || Number(tables) < 1) {
+        errors.tables =
+          "Enter the number of tables as a positive whole number.";
+      }
+
+      const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+      Object.entries(hours).forEach(([day, schedule]) => {
+        if (
+          schedule.enabled &&
+          (!timePattern.test(schedule.open) ||
+            !timePattern.test(schedule.close))
+        ) {
+          errors[`${day}Hours`] = `Enter opening and closing times for ${day}.`;
+        }
+      });
+
+      checkFile(
+        "interiorMedia",
+        interiorMedia,
+        "your interior image",
+        ["image/jpeg", "image/png"],
+        10,
+      );
+    }
+
+    return errors;
+  }
+
+  function validateStep(stepNumber) {
+    const errors = getStepErrors(stepNumber);
+
+    setFieldErrors(errors);
+    setError("");
+
+    return Object.keys(errors).length === 0;
+  }
+
   function handlePersonalContinue(event) {
     event.preventDefault();
 
-
-    setError("");
-    setFieldErrors({});
-
-    if (application.password !== application.confirmPassword) {
-      setFieldErrors({ confirmPassword: "Passwords do not match." });
-      return;
-    }
-
-    if (!emailVerified) {
-      setError(
-        "Verify your email address with the confirmation code before continuing.",
-      );
-      return;
-    }
+    if (!validateStep(1)) return;
 
     setApplication((current) => ({
       ...current,
       restaurantEmail: current.restaurantEmail || current.email,
     }));
+
     setStep(2);
   }
 
   function handleRestaurantContinue(event) {
     event.preventDefault();
 
-
-    setError("");
-
-    /*
-     * We are not submitting to the backend yet.
-     *
-     * The complete application will be submitted after:
-     * Personal Details
-     * Restaurant Info
-     * Documents
-     * Operating Hours
-     * Review
-     */
-
-    console.log("Restaurant information:", application);
+    if (!validateStep(2)) return;
 
     setStep(3);
   }
@@ -976,6 +1115,18 @@ export default function ManagerRegisterPage() {
   async function handleFinalSubmit(event) {
     event.preventDefault();
 
+    for (const stepNumber of [1, 2, 3, 4]) {
+      const errors = getStepErrors(stepNumber);
+
+      if (Object.keys(errors).length > 0) {
+        setFieldErrors(errors);
+        setError("Please correct the highlighted fields before submitting.");
+        setStep(stepNumber);
+        return;
+      }
+    }
+
+    setFieldErrors({});
     setError("");
     setSubmitting(true);
 
@@ -1241,7 +1392,8 @@ export default function ManagerRegisterPage() {
                 label="Password"
                 placeholder="Create a password"
                 autoComplete="new-password"
-                minLength={8}
+                minLength={10}
+                maxLength={128}
                 required
                 value={application.password}
                 error={fieldErrors.password}
@@ -1255,7 +1407,8 @@ export default function ManagerRegisterPage() {
                 label="Confirm Password"
                 placeholder="Re-enter your password"
                 autoComplete="new-password"
-                minLength={8}
+                minLength={10}
+                maxLength={128}
                 required
                 value={application.confirmPassword}
                 error={fieldErrors.confirmPassword}
@@ -1309,6 +1462,7 @@ export default function ManagerRegisterPage() {
                 minLength={2}
                 required
                 value={application.restaurantName}
+                error={fieldErrors.restaurantName}
                 onChange={(event) =>
                   updateField("restaurantName", event.target.value)
                 }
@@ -1410,6 +1564,7 @@ export default function ManagerRegisterPage() {
                   pattern="[+]?[0-9][0-9 ()-]{5,18}[0-9]"
                   patternMessage="Enter a valid phone number."
                   value={application.restaurantContact}
+                  error={fieldErrors.restaurantContact}
                   onChange={(event) =>
                     updateField("restaurantContact", event.target.value)
                   }
@@ -1423,6 +1578,7 @@ export default function ManagerRegisterPage() {
                   autoComplete="email"
                   required
                   value={application.restaurantEmail}
+                  error={fieldErrors.restaurantEmail}
                   onChange={(event) =>
                     updateField("restaurantEmail", event.target.value)
                   }
@@ -1473,6 +1629,7 @@ export default function ManagerRegisterPage() {
                   icon={MapPin}
                   required
                   value={application.address}
+                  error={fieldErrors.address}
                   onChange={(event) =>
                     updateField("address", event.target.value)
                   }
@@ -1550,6 +1707,7 @@ export default function ManagerRegisterPage() {
                   autoComplete="postal-code"
                   required
                   value={application.pinCode}
+                  error={fieldErrors.pinCode}
                   onChange={(event) =>
                     updateField("pinCode", event.target.value)
                   }
@@ -1563,6 +1721,7 @@ export default function ManagerRegisterPage() {
                   autoComplete="address-level2"
                   required
                   value={application.city}
+                  error={fieldErrors.city}
                   onChange={(event) => updateField("city", event.target.value)}
                 />
 
@@ -1574,6 +1733,7 @@ export default function ManagerRegisterPage() {
                   autoComplete="address-level1"
                   required
                   value={application.state}
+                  error={fieldErrors.state}
                   onChange={(event) => updateField("state", event.target.value)}
                 />
               </div>
@@ -1737,44 +1897,7 @@ export default function ManagerRegisterPage() {
               Configure weekly timing schedules and floor capabilities.
             </p>
 
-            <CustomForm
-              onSubmit={(event) => {
-                event.preventDefault();
-
-                if (!capacity.trim()) {
-                  setFieldErrors((current) => ({
-                    ...current,
-                    capacity: "Enter the total seating capacity.",
-                  }));
-                  return;
-                }
-
-                if (!tables.trim()) {
-                  setFieldErrors((current) => ({
-                    ...current,
-                    tables: "Enter the number of dining tables.",
-                  }));
-                  return;
-                }
-
-                setError("");
-                setFieldErrors((current) => ({
-                  ...current,
-                  capacity: "",
-                  tables: "",
-                }));
-
-                console.log("Operating hours:", {
-                  hours,
-                  capacity,
-                  tables,
-                  interiorMedia,
-                });
-
-                setStep(5);
-              }}
-              noValidate
-            >
+            <CustomForm onSubmit={handleOperatingHoursContinue} noValidate>
               {/* Weekly Timing Schedule */}
               <div className="mb-7">
                 <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-ink">
@@ -1795,6 +1918,9 @@ export default function ManagerRegisterPage() {
                         type="time"
                         value={schedule.open}
                         disabled={!schedule.enabled}
+                        required={schedule.enabled}
+                        aria-label={`${day} opening time`}
+                        aria-invalid={Boolean(fieldErrors[`${day}Hours`])}
                         onChange={(event) =>
                           updateHours(day, "open", event.target.value)
                         }
@@ -1809,6 +1935,9 @@ export default function ManagerRegisterPage() {
                         type="time"
                         value={schedule.close}
                         disabled={!schedule.enabled}
+                        required={schedule.enabled}
+                        aria-label={`${day} closing time`}
+                        aria-invalid={Boolean(fieldErrors[`${day}Hours`])}
                         onChange={(event) =>
                           updateHours(day, "close", event.target.value)
                         }
@@ -1831,6 +1960,14 @@ export default function ManagerRegisterPage() {
                           ].join(" ")}
                         />
                       </button>
+                      {fieldErrors[`${day}Hours`] && (
+                        <p
+                          className="col-span-full text-xs font-medium text-red-600"
+                          role="alert"
+                        >
+                          {fieldErrors[`${day}Hours`]}
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>

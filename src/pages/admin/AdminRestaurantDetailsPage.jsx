@@ -1,5 +1,5 @@
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   Building2,
@@ -83,40 +83,29 @@ export default function AdminRestaurantDetailsPage() {
         Number(right.floor_number ?? Number.MAX_SAFE_INTEGER) ||
       compareLabels(left.name, right.name),
   );
-  const menuFoods = useMemo(
-    () =>
-      (restaurant?.menu || [])
-        .flatMap((category) =>
-          category.foods.map((food) => ({
-            ...food,
-            category_id: category.id,
-            category_name: category.name,
-          })),
-        )
-        .filter(
-          (food) =>
-            (menuCategory === "ALL" || food.category_id === menuCategory) &&
-            (!menuQuery.trim() ||
-              `${food.name || ""} ${food.description || ""} ${food.category_name || ""}`
-                .toLowerCase()
-                .includes(menuQuery.trim().toLowerCase())) &&
-            (menuAvailability === "ALL" ||
-              (menuAvailability === "AVAILABLE"
-                ? food.is_available
-                : !food.is_available)),
-        )
-        .sort((left, right) =>
-          menuSort === "name-desc"
-            ? right.name.localeCompare(left.name)
-            : left.name.localeCompare(right.name),
-        ),
-    [restaurant?.menu, menuCategory, menuQuery, menuAvailability, menuSort],
-  );
-  const menuPageCount = Math.max(1, Math.ceil(menuFoods.length / menuPageSize));
-  const visibleMenuFoods = menuFoods.slice(
-    (menuPage - 1) * menuPageSize,
-    menuPage * menuPageSize,
-  );
+  const [visibleMenuFoods, setVisibleMenuFoods] = useState([]);
+  const [menuTotal, setMenuTotal] = useState(0);
+  const [menuCategories, setMenuCategories] = useState([]);
+  const [menuLoading, setMenuLoading] = useState(false);
+  const [menuError, setMenuError] = useState("");
+  const menuPageCount = Math.max(1, Math.ceil(menuTotal / menuPageSize));
+  useEffect(() => {
+    let alive = true;
+    setMenuLoading(true);
+    setMenuError("");
+    const params = new URLSearchParams({ page: menuPage, page_size: menuPageSize, search: menuQuery, availability: menuAvailability, sort: menuSort });
+    if (menuCategory !== "ALL") params.set("category_id", menuCategory);
+    requestJson(`/api/admin/restaurants/${restaurantId}/menu?${params}`)
+      .then((data) => {
+        if (!alive) return;
+        setVisibleMenuFoods(data.items);
+        setMenuTotal(data.total);
+        setMenuCategories(data.categories);
+      })
+      .catch((reason) => alive && setMenuError(reason.message))
+      .finally(() => alive && setMenuLoading(false));
+    return () => { alive = false; };
+  }, [restaurantId, menuPage, menuQuery, menuCategory, menuAvailability, menuSort]);
   useEffect(() => {
     setMenuPage(1);
   }, [menuCategory, menuQuery, menuAvailability, menuSort]);
@@ -128,7 +117,7 @@ export default function AdminRestaurantDetailsPage() {
     let mounted = true;
     setLoading(true);
     setError("");
-    requestJson(`/api/admin/restaurants/${restaurantId}`)
+    requestJson(`/api/admin/restaurants/${restaurantId}?include_menu=false`)
       .then((data) => mounted && setRestaurant(data))
       .catch((reason) => mounted && setError(reason.message))
       .finally(() => mounted && setLoading(false));
@@ -598,7 +587,9 @@ export default function AdminRestaurantDetailsPage() {
               <h3>
                 <Store size={17} /> Menu inspection
               </h3>
-              {restaurant.menu?.length ? (
+              {menuError && <p role="alert">{menuError}</p>}
+              {menuLoading && <p role="status">Loading menu…</p>}
+              {menuCategories.length ? (
                 <>
                   <div className="admin-page-actions">
                     <div className="admin-search">
@@ -618,7 +609,7 @@ export default function AdminRestaurantDetailsPage() {
                       onChange={(event) => setMenuCategory(event.target.value)}
                     >
                       <option value="ALL">All categories</option>
-                      {restaurant.menu.map((category) => (
+                      {menuCategories.map((category) => (
                         <option key={category.id} value={category.id}>
                           {category.name}
                         </option>
@@ -684,11 +675,11 @@ export default function AdminRestaurantDetailsPage() {
                       No menu items match these filters.
                     </p>
                   )}
-                  {menuFoods.length > 0 && (
+                  {menuTotal > 0 && (
                     <Pagination
                       page={menuPage}
                       pageSize={menuPageSize}
-                      total={menuFoods.length}
+                      total={menuTotal}
                       onPageChange={setMenuPage}
                       label="menu items"
                     />
