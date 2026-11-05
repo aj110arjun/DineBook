@@ -15,7 +15,7 @@ import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
 import LandingFooter from "../../components/landing/LandingFooter.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
-import "./CustomerProfilePage.css";
+import "../../assets/css/CustomerProfilePage.css";
 
 const preferenceDefaults = {
   cuisines: ["Modern Indian", "Contemporary Japanese", "Seafood & Coastal"],

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ReceiptText, RotateCcw } from "lucide-react";
-import "./AdminTransactionsPage.css";
+import "../../assets/css/AdminTransactionsPage.css";
 import Pagination from "../../components/Pagination.jsx";
 import { requestJson } from "../../lib/authApi.js";
 

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import { MapPin } from "lucide-react";
 import "leaflet/dist/leaflet.css";
-import "./RestaurantLocationPicker.css";
+import "../../assets/css/RestaurantLocationPicker.css";
 
 export default function RestaurantLocationPicker({
   latitude,

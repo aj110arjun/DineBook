@@ -2,7 +2,7 @@ import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useEffect, useState } from "react";
 import { requestJson } from "../../lib/authApi.js";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
-import "../shared/ReviewsPage.css";
+import "../../assets/css/ReviewsPage.css";
 
 const flagReasons = ["ABUSIVE", "HARASSMENT", "MISLEADING", "SPAM", "OTHER"];
 

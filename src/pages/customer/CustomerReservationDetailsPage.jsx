@@ -18,10 +18,10 @@ import { requestJson } from "../../lib/authApi.js";
 import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
 import TransactionInvoiceButton from "../../components/TransactionInvoice.jsx";
 import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
-import "./CustomerRestaurantReviews.css";
+import "../../assets/css/CustomerRestaurantReviews.css";
 import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
 import { ProfileFrame } from "./CustomerReservationsPage.jsx";
-import "./CustomerProfilePage.css";
+import "../../assets/css/CustomerProfilePage.css";
 
 const dateText = (value) =>
   value

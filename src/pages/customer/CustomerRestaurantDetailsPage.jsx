@@ -32,8 +32,8 @@ import { requestJson } from "../../lib/authApi.js";
 import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
 import { saveReservation } from "../../data/customerReservations.js";
 import { photo } from "../../data/landingData.js";
-import "./CustomerRestaurantReviews.css";
-import "./CustomerRestaurantAmenities.css";
+import "../../assets/css/CustomerRestaurantReviews.css";
+import "../../assets/css/CustomerRestaurantAmenities.css";
 
 const detailTabs = [
   { id: "about", label: "About" },

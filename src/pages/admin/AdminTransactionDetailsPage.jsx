@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
 import TransactionInvoiceButton from "../../components/TransactionInvoice.jsx";
 import { requestJson } from "../../lib/authApi.js";
-import "./AdminTransactionsPage.css";
+import "../../assets/css/AdminTransactionsPage.css";
 
 const humanize = (value) =>
   value

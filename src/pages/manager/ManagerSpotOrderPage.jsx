@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Printer, Plus, Trash2 } from "lucide-react";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import { requestJson } from "../../lib/authApi.js";
-import "./ManagerSpotOrderPage.css";
+import "../../assets/css/ManagerSpotOrderPage.css";
 
 export default function ManagerSpotOrderPage() {
   const [floors, setFloors] = useState([]);

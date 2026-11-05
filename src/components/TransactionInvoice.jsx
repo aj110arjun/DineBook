@@ -3,7 +3,7 @@ import {
   createTransactionInvoicePdf,
   transactionInvoiceFilename,
 } from "../lib/transactionInvoicePdf.js";
-import "./TransactionInvoice.css";
+import "../assets/css/TransactionInvoice.css";
 
 export function downloadTransactionInvoice(invoice) {
   const url = URL.createObjectURL(createTransactionInvoicePdf(invoice));

@@ -20,7 +20,7 @@ import LandingFooter from "../../components/landing/LandingFooter.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import { photo } from "../../data/landingData.js";
 import { saveReservation } from "../../data/customerReservations.js";
-import "./CustomerReservationPage.css";
+import "../../assets/css/CustomerReservationPage.css";
 import BookingProgress from "../../components/BookingProgress.jsx";
 import TableFloorPicker from "../../components/TableFloorPicker.jsx";
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "./TableFloorPicker.css";
+import "../assets/css/TableFloorPicker.css";
 import { displayTableLayout, hasTablePosition } from "../lib/tableFloorLayout.js";
 
 const money = (amount) =>

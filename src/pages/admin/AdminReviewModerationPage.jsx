@@ -2,7 +2,7 @@ import { confirmAction } from "../../lib/confirmDialog.js";
 import { useEffect, useState } from "react";
 import { requestJson } from "../../lib/authApi.js";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
-import "../shared/ReviewsPage.css";
+import "../../assets/css/ReviewsPage.css";
 
 export default function AdminReviewModerationPage() {
   const [data, setData] = useState({ items: [], total: 0 });

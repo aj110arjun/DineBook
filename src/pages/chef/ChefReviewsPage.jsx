@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { requestJson } from "../../lib/authApi.js";
 import ChefLayout from "../../components/chef/ChefLayout.jsx";
-import "../shared/ReviewsPage.css";
+import "../../assets/css/ReviewsPage.css";
 export default function ChefReviewsPage() {
   const [data, setData] = useState({ items: [], total: 0 }),
     [rating, setRating] = useState(""),

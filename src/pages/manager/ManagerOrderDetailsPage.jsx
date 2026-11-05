@@ -13,7 +13,7 @@ import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
 import { requestJson } from "../../lib/authApi.js";
-import "./ManagerOrderDetailsPage.css";
+import "../../assets/css/ManagerOrderDetailsPage.css";
 
 const statusLabel = (status) =>
   (status || "")
