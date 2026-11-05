@@ -76,6 +76,19 @@ export default function CustomForm({ children, onSubmit, onChange, onBlur, onRes
         onReset?.(event);
       }}
     >
+      {submitted.current && errors.length > 0 && (
+        <div className="ux-form-summary" role="alert">
+          <strong>Check {errors.length === 1 ? "this field" : `these ${errors.length} fields`} to continue</strong>
+          <ul>
+            {errors.map(({ field, message }, index) => (
+              <li key={index}><button type="button" onClick={() => {
+                field.focus();
+                field.scrollIntoView({ block: "center", behavior: "instant" });
+              }}>{message}</button></li>
+            ))}
+          </ul>
+        </div>
+      )}
       {children}
       {errors.map(({ field, message }) => {
         if (!fieldKeys.current.has(field)) fieldKeys.current.set(field, nextKey.current++);

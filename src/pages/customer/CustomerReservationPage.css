@@ -1898,3 +1898,33 @@
 :root[data-theme="dark"] .booking-offers-checkout .booking-offer-scope {
   color: #c0b5b1;
 }
+
+.booking-duration-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+}
+.booking-duration-field input {
+  width: 120px;
+  padding: 10px 12px;
+  border: 1px solid #8886;
+  border-radius: 8px;
+  color: inherit;
+  background: transparent;
+}
+
+.booking-dining-times {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+.booking-dining-times .booking-duration-field {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 8px;
+}
+.booking-dining-times input {
+  width: 160px;
+}

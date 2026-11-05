@@ -37,6 +37,8 @@ export default function ManagerFloorsPage() {
   const [number, setNumber] = useState("");
   const [seats, setSeats] = useState("2");
   const [reservationFee, setReservationFee] = useState("250");
+  const [gridRow, setGridRow] = useState("");
+  const [gridCol, setGridCol] = useState("");
   const [shape, setShape] = useState("round");
   const [tableStatus, setTableStatus] = useState("available");
   const [editingTable, setEditingTable] = useState(null);
@@ -170,6 +172,8 @@ export default function ManagerFloorsPage() {
         table_number: number.trim(),
         capacity: Number(seats),
         reservation_fee: Number(reservationFee),
+        grid_row: Number(gridRow),
+        grid_col: Number(gridCol),
         table_type: shape,
         status: tableStatus,
       };
@@ -197,6 +201,8 @@ export default function ManagerFloorsPage() {
     setNumber("");
     setSeats("4");
     setReservationFee("250");
+    setGridRow("");
+    setGridCol("");
     setShape("round");
     setTableStatus("available");
     setEditingTable(null);
@@ -230,6 +236,8 @@ export default function ManagerFloorsPage() {
     setNumber(table.table_number);
     setSeats(String(table.capacity ?? table.seats));
     setReservationFee(String(table.reservation_fee ?? 0));
+    setGridRow(table.grid_row == null ? "" : String(table.grid_row));
+    setGridCol(table.grid_col == null ? "" : String(table.grid_col));
     setShape(table.table_type || "round");
     setTableStatus(table.status);
     setError("");
@@ -574,6 +582,16 @@ export default function ManagerFloorsPage() {
                       onChange={(e) => setReservationFee(e.target.value)}
                       required
                     />
+                  </label>
+                  <label>
+                    Layout row (starts at 0) <b>*</b>
+                    <input type="number" min="0" max="100" step="1" required
+                      value={gridRow} onChange={(event) => setGridRow(event.target.value)} />
+                  </label>
+                  <label>
+                    Layout column (starts at 0) <b>*</b>
+                    <input type="number" min="0" max="100" step="1" required
+                      value={gridCol} onChange={(event) => setGridCol(event.target.value)} />
                   </label>
                   <label>
                     Floor / Zone <b>*</b>

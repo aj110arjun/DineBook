@@ -1,6 +1,7 @@
+import useNavigationDisclosure from "../../hooks/useNavigationDisclosure.js";
 import axios from "axios";
 import { useState } from "react";
-import { ChevronDown, MapPin, Menu, Utensils, X } from "lucide-react";
+import { MapPin, Menu, Utensils, X } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { API_BASE } from "../../lib/authApi.js";
 import { demoSessionKey } from "../../data/demoCustomer.js";
@@ -10,6 +11,7 @@ export default function CustomerHeader({ user, onLogout }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  useNavigationDisclosure(menuOpen, () => setMenuOpen(false), "customer-primary-nav");
 
   async function signOut() {
     try {
@@ -69,18 +71,9 @@ export default function CustomerHeader({ user, onLogout }) {
           aria-label="Main navigation"
         >
           {/* Location */}
-          <label className="location-select">
-            <MapPin size={13} />
-
-            <select aria-label="Choose location" defaultValue="Mumbai, BKC">
-              <option>Mumbai, BKC</option>
-              <option>Mumbai, Fort</option>
-              <option>Mumbai, Bandra</option>
-              <option>Dubai, DIFC</option>
-            </select>
-
-            <ChevronDown size={12} />
-          </label>
+          <Link className="location-select" to="/customer/restaurants" onClick={closeMenu}>
+            <MapPin size={15} aria-hidden="true" /> Find nearby
+          </Link>
 
           {/* Navigation links */}
           <div className="nav-links">
@@ -130,9 +123,15 @@ export default function CustomerHeader({ user, onLogout }) {
                 Saved places
               </Link>
             )}
+            {user && (
+              <Link to="/customer/profile/reservations" onClick={closeMenu}
+                aria-current={location.pathname.startsWith("/customer/profile/reservations") ? "page" : undefined}>
+                My reservations
+              </Link>
+            )}
 
-            <Link to="/customer#offers" onClick={closeMenu}>
-              Offers
+            <Link to="/customer#how-it-works" onClick={closeMenu}>
+              How it works
             </Link>
           </div>
 

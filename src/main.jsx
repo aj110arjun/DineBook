@@ -2,11 +2,13 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App.jsx";
+import AppExperience, { AppErrorBoundary } from "./components/AppExperience.jsx";
 import ConfirmDialogHost from "./components/ConfirmDialogHost.jsx";
 import "./index.css";
 import "./styles.css";
 import "./design-system.css";
 import "./layout-refresh.css";
+import "./ux-improvements.css";
 
 const savedTheme = window.localStorage.getItem("dinebook-theme");
 document.documentElement.dataset.theme =
@@ -15,8 +17,11 @@ document.documentElement.dataset.theme =
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
-      <ConfirmDialogHost />
+      <AppExperience />
+      <AppErrorBoundary>
+        <App />
+        <ConfirmDialogHost />
+      </AppErrorBoundary>
     </BrowserRouter>
   </React.StrictMode>,
 );

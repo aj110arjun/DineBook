@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { MapPin, Search, SlidersHorizontal, Users } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
 import LandingFooter from "../../components/landing/LandingFooter.jsx";
 import Pagination from "../../components/Pagination.jsx";
@@ -11,6 +11,7 @@ import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
 const PAGE_SIZE = 6;
 
 export default function CustomerRestaurantListingPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [restaurants, setRestaurants] = useState([]);
   const [totalRestaurants, setTotalRestaurants] = useState(0);
   const [cuisineOptions, setCuisineOptions] = useState([]);
@@ -18,9 +19,10 @@ export default function CustomerRestaurantListingPage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [query, setQuery] = useState("");
-  const [cuisines, setCuisines] = useState([]);
-  const [locations, setLocations] = useState([]);
+  const [query, setQuery] = useState(() => searchParams.get("search") || "");
+  const [searchTerm, setSearchTerm] = useState(query);
+  const [cuisines, setCuisines] = useState(() => searchParams.getAll("cuisine"));
+  const [locations, setLocations] = useState(() => searchParams.getAll("location"));
   const [sort, setSort] = useState("newest");
   const [page, setPage] = useState(1);
   const [guestCount, setGuestCount] = useState("4");
@@ -31,13 +33,45 @@ export default function CustomerRestaurantListingPage() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
+    const value = searchParams.get("search") || "";
+    setQuery(value);
+    setSearchTerm(value);
+    setCuisines(searchParams.getAll("cuisine"));
+    setLocations(searchParams.getAll("location"));
+    setPage(1);
+  }, [searchParams]);
+
+  function updateSearchUrl(value) {
+    const params = new URLSearchParams(searchParams);
+    if (value) params.set("search", value);
+    else params.delete("search");
+    setSearchParams(params, { replace: true });
+  }
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const value = query.trim();
+      setSearchTerm(value);
+      if (value !== (searchParams.get("search") || "")) {
+        const params = new URLSearchParams(searchParams);
+        if (value) params.set("search", value);
+        else params.delete("search");
+        setSearchParams(params, { replace: true });
+      }
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [query, searchParams, setSearchParams]);
+
+  useEffect(() => {
+    if (query.trim() !== searchTerm) { setLoading(true); return; }
     let mounted = true;
+    const controller = new AbortController();
     const params = new URLSearchParams({
       page: String(page),
       page_size: String(PAGE_SIZE),
       sort,
     });
-    if (query.trim()) params.set("search", query.trim());
+    if (searchTerm) params.set("search", searchTerm);
     cuisines.forEach((value) => params.append("cuisine", value));
     locations.forEach((value) => params.append("location", value));
     setLoading(true);
@@ -46,17 +80,18 @@ export default function CustomerRestaurantListingPage() {
       sort === "distance" && customerLocation
         ? requestJson("/api/customer/restaurants/nearby", {
             method: "POST",
+            signal: controller.signal,
             body: JSON.stringify({
               latitude: customerLocation.latitude,
               longitude: customerLocation.longitude,
-              search: query.trim() || null,
+              search: searchTerm || null,
               cuisine: cuisines,
               location: locations,
               page,
               page_size: PAGE_SIZE,
             }),
           })
-        : requestJson(`/api/customer/restaurants?${params.toString()}`);
+        : requestJson(`/api/customer/restaurants?${params.toString()}`, { signal: controller.signal });
     request
       .then((data) => {
         if (!mounted) return;
@@ -71,8 +106,9 @@ export default function CustomerRestaurantListingPage() {
       .finally(() => mounted && setLoading(false));
     return () => {
       mounted = false;
+      controller.abort();
     };
-  }, [page, query, cuisines, locations, sort, customerLocation, refreshKey]);
+  }, [page, query, searchTerm, cuisines, locations, sort, customerLocation, refreshKey]);
 
   useEffect(() => {
     if (
@@ -94,16 +130,23 @@ export default function CustomerRestaurantListingPage() {
   const visibleRestaurants = restaurants;
 
   function toggleFilter(value, setter) {
-    setter((current) =>
-      current.includes(value)
-        ? current.filter((item) => item !== value)
-        : [...current, value],
-    );
+    const key = setter === setCuisines ? "cuisine" : "location";
+    const current = setter === setCuisines ? cuisines : locations;
+    const next = current.includes(value)
+      ? current.filter((item) => item !== value)
+      : [...current, value];
+    setter(next);
+    const params = new URLSearchParams(searchParams);
+    params.delete(key);
+    next.forEach((item) => params.append(key, item));
+    setSearchParams(params, { replace: true });
     setPage(1);
   }
 
   function clearFilters() {
+    setSearchParams({}, { replace: true });
     setQuery("");
+    setSearchTerm("");
     setCuisines([]);
     setLocations([]);
     setSort("newest");
@@ -146,13 +189,15 @@ export default function CustomerRestaurantListingPage() {
       <CustomerHeader user={user} onLogout={() => setUser(null)} />
       <section className="restaurant-listing-search">
         <div className="restaurant-listing-search-inner">
-          <h1>
-            Find a restaurant
-            {restaurants[0]?.location
-              ? ` in ${restaurants[0].location.split(",")[0]}`
-              : ""}
-          </h1>
-          <div className="restaurant-search-bar">
+          <h1>Find your next table</h1>
+          <p className="ux-search-intro">Search restaurants, compare menus, and choose a place for your next meal.</p>
+          <form className="restaurant-search-bar" role="search" onSubmit={(event) => {
+            event.preventDefault();
+            setSearchTerm(query.trim());
+            updateSearchUrl(query.trim());
+            setPage(1);
+            setRefreshKey((value) => value + 1);
+          }}>
             <Search size={18} />
             <input
               type="search"
@@ -164,10 +209,8 @@ export default function CustomerRestaurantListingPage() {
               placeholder="Search restaurants, cuisines, or locations…"
               aria-label="Search restaurants"
             />
-            <button type="button" onClick={() => setPage(1)}>
-              Search
-            </button>
-          </div>
+            <button type="submit">Search</button>
+          </form>
           <div className="restaurant-nearby-controls">
             <button
               type="button"
@@ -257,9 +300,9 @@ export default function CustomerRestaurantListingPage() {
             </div>
           </aside>
 
-          <section className="restaurant-listing-results" aria-live="polite">
+          <section className="restaurant-listing-results" aria-busy={loading}>
             <div className="restaurant-listing-toolbar">
-              <h2>
+              <h2 role="status" aria-live="polite">
                 {loading
                   ? "Finding restaurants…"
                   : `${totalRestaurants} restaurant${totalRestaurants === 1 ? "" : "s"} found`}
@@ -282,6 +325,13 @@ export default function CustomerRestaurantListingPage() {
                 </select>
               </label>
             </div>
+            {(query || cuisines.length > 0 || locations.length > 0) && (
+              <div className="ux-filter-chips" aria-label="Active filters">
+                {query && <button type="button" onClick={() => { setQuery(""); setSearchTerm(""); updateSearchUrl(""); setPage(1); }} aria-label={`Remove search ${query}`}>Search: {query} ×</button>}
+                {cuisines.map((value) => <button type="button" key={`c-${value}`} onClick={() => toggleFilter(value, setCuisines)} aria-label={`Remove cuisine filter ${value}`}>{value} ×</button>)}
+                {locations.map((value) => <button type="button" key={`l-${value}`} onClick={() => toggleFilter(value, setLocations)} aria-label={`Remove location filter ${value}`}>{value} ×</button>)}
+              </div>
+            )}
             {error ? (
               <div className="empty-state" role="alert">
                 <p>{error}</p>
@@ -293,8 +343,8 @@ export default function CustomerRestaurantListingPage() {
                 </button>
               </div>
             ) : loading ? (
-              <div className="empty-state" role="status">
-                Finding restaurants for you…
+              <div className="restaurant-grid ux-restaurant-skeletons" aria-label="Loading restaurants">
+                {Array.from({ length: PAGE_SIZE }, (_, index) => <div className="ux-skeleton-card" key={index} aria-hidden="true"><div /><span /><span /></div>)}
               </div>
             ) : visibleRestaurants.length ? (
               <div className="restaurant-grid">
@@ -308,11 +358,15 @@ export default function CustomerRestaurantListingPage() {
               </div>
             ) : (
               <div className="empty-state">
-                {sort === "distance"
+                <h3>No matching restaurants</h3>
+                <p>{sort === "distance"
                   ? "No restaurants with a saved map location match your nearby search yet. Try another area or clear your filters."
                   : totalRestaurants
                     ? "No restaurants match these filters. Try changing or clearing your filters."
-                    : "No approved restaurants are available yet. Check back soon."}
+                    : query || cuisines.length || locations.length
+                      ? "Try a broader search or remove a filter to see more restaurants."
+                      : "No restaurants are available yet. Check back soon."}</p>
+                {(query || cuisines.length > 0 || locations.length > 0 || sort === "distance") && <button type="button" onClick={clearFilters}>Clear search and filters</button>}
               </div>
             )}
             {!loading && !error && totalRestaurants > 0 && (

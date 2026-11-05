@@ -4,13 +4,13 @@ import { Link } from "react-router-dom";
 const stories = {
   login: {
     tag: "DINEBOOK FOR GUESTS",
-    title: "Secure Your Table at the World’s Best Bistros",
-    body: "Access vetted tables, book premium dining experiences, and keep every memorable evening in one place.",
+    title: "Your next meal, all in one place",
+    body: "Sign in to reserve tables, manage your visits and keep track of your orders.",
   },
   register: {
     tag: "YOUR NEXT GREAT EVENING",
-    title: "Access the World’s Most Coveted Tables",
-    body: "Create your guest account to discover exceptional restaurants and make every reservation feel effortless.",
+    title: "Make room for your next meal",
+    body: "Create an account to discover restaurants, save your favorites and manage your reservations.",
   },
   verification: {
     tag: "ONE LAST STEP",
@@ -24,7 +24,7 @@ const stories = {
   },
   password: {
     tag: "GUEST ACCOUNT SECURITY",
-    title: "Enhance Your Culinary Profile Security",
+    title: "Keep your account secure",
     body: "Keep your account secure with a strong password that protects your dining plans and personal details.",
   },
 };
@@ -33,7 +33,7 @@ function Brand() {
   return (
     <Link
       className="inline-flex items-center gap-3 text-xl font-semibold tracking-tight text-white"
-      to="/customer/login"
+      to="/customer"
       aria-label="DineBook home"
     >
       <span className="grid h-10 w-10 place-items-center rounded-full border border-white/25 bg-white/10 text-gold">

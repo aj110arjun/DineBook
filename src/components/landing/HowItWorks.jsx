@@ -6,19 +6,19 @@ const steps = [
     icon: Search,
     number: "01",
     title: "Search & Discover",
-    body: "Browse critically reviewed Michelin guides, chic casual bistros, and trendy bites tailored to your palate.",
+    body: "Search by restaurant, cuisine or location. Compare menus and guest reviews before choosing.",
   },
   {
     icon: CalendarDays,
     number: "02",
     title: "Pick Date & Table",
-    body: "Select date, party size, and customize seating preferences. Reserve sunset views, private booths, or counters.",
+    body: "Choose a date, start and end time, and enough table seats for everyone in your party.",
   },
   {
     icon: Bell,
     number: "03",
     title: "Confirm & Dine",
-    body: "Instantly secure the reservation with a custom guest pass. Arrive like a VIP and relish your gourmet experience.",
+    body: "Review your total, complete payment, and find your booking details and guest pass in My reservations.",
   },
 ];
 
