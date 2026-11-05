@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { NotFoundPage } from "./components/AppExperience.jsx";
 import CustomerChangePasswordPage from "./pages/customer/CustomerChangePasswordPage.jsx";
 import CustomerLoginPage from "./pages/customer/CustomerLoginPage.jsx";
 import CustomerRecoveryPage from "./pages/customer/CustomerRecoveryPage.jsx";
@@ -511,6 +512,7 @@ export default function App() {
             </ChefProtectedRoute>
           }
         />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <ThemeToggle />
     </>

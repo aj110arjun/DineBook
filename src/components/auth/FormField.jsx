@@ -30,13 +30,14 @@ export function FormField({
       <label className="block" htmlFor={id}>
         <span className="mb-2 block text-sm font-medium text-ink">{label}</span>
         <span
-          className={`flex h-12 items-center gap-3 rounded-lg border bg-white px-3.5 text-stone-400 transition focus-within:ring-2 ${visibleError ? "border-red-400 focus-within:border-red-500 focus-within:ring-red-100" : "border-stone-200 focus-within:border-wine focus-within:ring-wine/10"}`}
+          className={`auth-field-control flex h-12 items-center gap-3 rounded-lg border bg-white px-3.5 text-stone-400 transition ${visibleError ? "border-red-400" : "border-stone-200"}`}
         >
           {Icon && <Icon size={16} aria-hidden="true" />}
           <input
             className="min-w-0 flex-1 border-0 bg-transparent text-sm text-ink outline-none placeholder:text-stone-400 focus:ring-0"
             id={id}
             name={id}
+            aria-label={label}
             type={type}
             placeholder={placeholder}
             autoComplete={autoComplete}
@@ -81,10 +82,11 @@ export function PasswordField(props) {
       icon={LockKeyhole}
       trailing={
         <button
-          className="grid h-8 w-8 place-items-center rounded-md text-stone-400 transition hover:bg-stone-100 hover:text-ink"
+          className="password-toggle grid h-8 w-8 place-items-center rounded-md text-stone-400 transition hover:bg-stone-100 hover:text-ink"
           type="button"
           onClick={() => setVisible((current) => !current)}
           aria-label={visible ? "Hide password" : "Show password"}
+          aria-pressed={visible}
         >
           <ToggleIcon size={16} />
         </button>

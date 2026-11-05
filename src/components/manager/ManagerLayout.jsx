@@ -1,3 +1,4 @@
+import useNavigationDisclosure from "../../hooks/useNavigationDisclosure.js";
 import {
   CalendarDays,
   CircleDollarSign,
@@ -16,7 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
 import NotificationBell from "../notifications/NotificationBell.jsx";
 
@@ -37,7 +38,7 @@ const navigationGroups = [
       { label: "Opening hours", icon: Clock3, to: "/manager/operating-hours" },
       { label: "Tables & floors", icon: Table2, to: "/manager/tables" },
       { label: "Menu", icon: Utensils, to: "/manager/menu" },
-      { label: "Chef ", icon: Users, to: "/manager/staff" },
+      { label: "Kitchen team", icon: Users, to: "/manager/staff" },
     ],
   },
   {
@@ -55,6 +56,7 @@ export default function ManagerLayout({ children, title = "Dashboard" }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  useNavigationDisclosure(sidebarOpen, () => setSidebarOpen(false), "manager-primary-nav");
 
   async function handleLogout() {
     try {
@@ -99,19 +101,16 @@ export default function ManagerLayout({ children, title = "Dashboard" }) {
                 const active = to === pathname || pathname.startsWith(`${to}/`) ||
                   (to === "/manager/tables" && pathname.startsWith("/manager/floors"));
                 return (
-                  <button
+                  <Link
                     key={label}
-                    type="button"
+                    to={to}
                     className={`manager-nav-item ${active ? "active" : ""}`}
-                    onClick={() => {
-                      navigate(to);
-                      setSidebarOpen(false);
-                    }}
+                    onClick={() => setSidebarOpen(false)}
                     aria-current={active ? "page" : undefined}
                   >
                     <Icon size={16} />
                     <span>{label}</span>
-                  </button>
+                  </Link>
                 );
               })}
             </div>

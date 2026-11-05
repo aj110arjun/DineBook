@@ -36,7 +36,7 @@ export default function ManagerProtectedRoute({ children }) {
     }
 
     checkManager(true);
-    const timer = window.setInterval(() => checkManager(false), 2000);
+    const timer = window.setInterval(() => checkManager(false), 50000);
 
     return () => {
       active = false;

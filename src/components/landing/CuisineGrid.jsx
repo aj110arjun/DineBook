@@ -8,6 +8,8 @@ export default function CuisineGrid({ selected, onSelect }) {
       <div className="cuisine-grid">
         {cuisines.map((cuisine) => (
           <button
+            type="button"
+            aria-pressed={selected === cuisine.name}
             className={`cuisine-card${selected === cuisine.name ? " selected" : ""}`}
             key={cuisine.name}
             onClick={() =>

@@ -2,15 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
 import CuisineGrid from "../../components/landing/CuisineGrid.jsx";
-import DishSection from "../../components/landing/DishSection.jsx";
 import HeroBanner from "../../components/landing/HeroBanner.jsx";
 import HowItWorks from "../../components/landing/HowItWorks.jsx";
 import LandingFooter from "../../components/landing/LandingFooter.jsx";
-import PromoBanner from "../../components/landing/PromoBanner.jsx";
 import RestaurantSection from "../../components/landing/RestaurantSection.jsx";
-import Testimonials from "../../components/landing/Testimonials.jsx";
 import CustomerOrderTracker from "../../components/landing/CustomerOrderTracker.jsx";
-import { signatureDishes, testimonials } from "../../data/landingData.js";
 import { requestJson } from "../../lib/authApi.js";
 import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
 
@@ -143,10 +139,7 @@ export default function CustomerLandingPage() {
           actionLabel="View All Restaurants"
           actionHref="/customer/restaurants"
         />
-        {/* <DishSection dishes={signatureDishes} /> */}
-        {/* <PromoBanner /> */}
         <HowItWorks />
-        <Testimonials testimonials={testimonials} />
       </main>
       <LandingFooter />
     </div>

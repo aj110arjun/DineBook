@@ -1,3 +1,4 @@
+import useNavigationDisclosure from "../../hooks/useNavigationDisclosure.js";
 import { useEffect, useState } from "react";
 import {
   Bell,
@@ -10,7 +11,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
 import NotificationBell from "../notifications/NotificationBell.jsx";
 
@@ -27,6 +28,7 @@ export default function ChefLayout({ title, children }) {
   const { hash, pathname } = useLocation();
   const [chef, setChef] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  useNavigationDisclosure(sidebarOpen, () => setSidebarOpen(false), "chef-primary-nav");
   const avatar =
     chef?.name
       ?.trim()
@@ -100,20 +102,16 @@ export default function ChefLayout({ title, children }) {
               to === `${pathname}${hash}` ||
               (to === "/chef/menu" && pathname.startsWith("/chef/menu/"));
             return (
-              <button
+              <Link
                 key={label}
-                type="button"
+                to={to}
                 className={`chef-nav-item ${active ? "active" : ""}`}
                 aria-current={active ? "page" : undefined}
-                onClick={() => {
-                  setSidebarOpen(false);
-                  if (to) navigate(to);
-                  else navigate("/chef/dashboard");
-                }}
+                onClick={() => setSidebarOpen(false)}
               >
                 <Icon size={18} />
                 <span>{label}</span>
-              </button>
+              </Link>
             );
           })}
         </nav>

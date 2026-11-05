@@ -1,0 +1,136 @@
+/* Shared interaction standards across customer, manager, kitchen and admin. */
+:root { --ux-focus: #886015; }
+:root[data-theme="dark"] { --ux-focus: #f0cd80; }
+html { scroll-padding-top: 108px; }
+:where(h1, h2, h3, section, [id]) { scroll-margin-top: 108px; }
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--ux-focus);
+  outline-offset: 3px;
+}
+:where(button, input, select, textarea) { font: inherit; }
+:where(input, select, textarea) { accent-color: var(--color-primary); }
+:where(button, a) { -webkit-tap-highlight-color: transparent; }
+:where(button:disabled) { cursor: not-allowed; }
+:where(.empty-state p, .ux-action-hint) { line-height: 1.65; }
+.ux-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.ux-skip-link {
+  position: fixed; top: 12px; left: 12px; z-index: 10000;
+  padding: 12px 20px; border-radius: 10px; background: var(--color-primary);
+  color: var(--color-surface); transform: translateY(-160%);
+}
+.ux-skip-link:focus { transform: translateY(0); }
+.ux-offline { position: sticky; top: 0; z-index: 2000; padding: 12px 24px; background: var(--db-status-warning-bg); color: var(--db-status-warning-text); text-align: center; font-size: 14px; }
+.ux-recovery { max-width: 600px; margin: 12vh auto; padding: 32px; color: var(--color-text-primary); }
+.ux-recovery h1 { font-size: clamp(26px, 5vw, 40px); line-height: 1.15; margin: 16px 0; }
+.ux-recovery p { line-height: 1.7; color: var(--color-text-secondary); }
+.ux-recovery button, .ux-recovery a { display: inline-flex; align-items: center; min-height: 44px; padding: 10px 16px; margin: 20px 12px 0 0; border: 1px solid var(--color-border); border-radius: 10px; }
+.ux-recovery button { background: var(--color-primary); color: #fff; }
+.ux-eyebrow { letter-spacing: .12em; font-size: 12px; color: var(--color-text-secondary); }
+/* Errors explain how to recover, alongside the fields that need attention. */
+.ux-form-summary { padding: 16px 20px; margin-bottom: 20px; border: 1px solid var(--color-danger); border-left-width: 4px; border-radius: 10px; color: var(--color-danger); background: var(--db-status-danger-bg); font-size: 14px; }
+.ux-form-summary ul { margin: 8px 0 0; padding-left: 18px; }
+.ux-form-summary button { padding: 4px 0; border: 0; background: transparent; text-align: left; color: inherit; text-decoration: underline; line-height: 1.5; cursor: pointer; }
+/* Clear, labelled and comfortably sized shared controls. */
+:is(.manager-nav-item, .chef-nav-item, .admin-nav-item) { text-decoration: none; }
+:is(.manager-nav-item, .admin-nav-item, .chef-sidebar-nav a, .chef-sidebar-nav button) { min-height: 44px; }
+:is(.mobile-menu-toggle, .manager-menu-button, .chef-menu-button, .chef-menu-toggle, .admin-mobile-nav-toggle, .manager-mobile-close, .chef-mobile-close, .save-button, .action-confirm-actions button, .admin-pagination-controls > button) { min-width: 44px; min-height: 44px; }
+.password-toggle { min-width: 44px; min-height: 44px; }
+.site-header .location-select { text-decoration: none; gap: 8px; min-height: 44px; white-space: nowrap; }
+.site-header .nav-links a { min-height: 44px; display: inline-flex; align-items: center; }
+.footer-column a { min-height: 32px; display: inline-flex; align-items: center; width: fit-content; }
+.footer-column h3 { margin-bottom: 12px; }
+/* Discovery: one primary action, direct search, honest and concise copy. */
+.ux-hero-search { display: flex; align-items: center; gap: 12px; max-width: 580px; padding: 8px 8px 8px 18px; margin: 26px 0 18px; border: 1px solid #ffffff55; border-radius: 14px; background: #fff; color: #443238; box-shadow: 0 8px 28px #0002; }
+.ux-hero-search input { flex: 1; width: 0; min-width: 0; padding: 12px 0; background: transparent; color: #292426; border: 0; font-size: 15px; }
+.ux-hero-search input::placeholder { color: #655d5e; }
+.ux-hero-search button { flex-shrink: 0; min-height: 46px; padding: 12px 20px; border: 0; border-radius: 10px; background: #641b2b; color: white; font-weight: 700; cursor: pointer; }
+.hero-actions .ux-hero-secondary { display: inline-flex; align-items: center; min-height: 44px; color: #fff; text-underline-offset: 5px; text-decoration: underline; font-size: 14px; }
+.ux-search-intro { margin: 8px 0 20px; color: var(--color-text-secondary); font-size: 15px; line-height: 1.6; }
+.ux-filter-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; }
+.ux-filter-chips button { min-height: 36px; border: 1px solid var(--color-border); border-radius: 24px; padding: 6px 14px; background: var(--color-surface); color: var(--color-text-primary); font-size: 13px; cursor: pointer; }
+.ux-filter-chips button:hover { border-color: var(--color-primary); }
+.ux-skeleton-card { overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-card); min-height: 320px; background: var(--color-surface); }
+.ux-skeleton-card div { height: 200px; background: var(--color-border); }
+.ux-skeleton-card span { display: block; height: 16px; margin: 20px; width: 65%; border-radius: 4px; background: var(--color-border); }
+.ux-skeleton-card span:last-child { width: 45%; }
+.ux-skeleton-card { animation: ux-pulse 1.5s ease-in-out infinite alternate; }
+@keyframes ux-pulse { to { opacity: .55; } }
+/* Booking stays understandable at every stage, with editable previous steps. */
+.ux-booking-progress { padding: 20px 24px; margin: 0 0 24px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-surface); }
+.ux-booking-progress ol { display: flex; list-style: none; margin: 0; padding: 0; gap: 20px; }
+.ux-booking-progress li { flex: 1; color: var(--color-text-secondary); font-size: 14px; }
+.ux-booking-progress li > span, .ux-booking-progress button { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.ux-booking-progress button { padding: 0; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.ux-step-number { display: inline-grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--color-border); border-radius: 50%; flex-shrink: 0; font-weight: 700; }
+.ux-booking-progress .is-current { color: var(--color-text-primary); font-weight: 700; }
+.ux-booking-progress .is-current .ux-step-number { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+.ux-booking-progress .is-complete .ux-step-number { background: var(--db-status-success-bg); border-color: var(--color-success); color: var(--color-success); }
+.ux-booking-progress p { margin: 10px 0 0; font-size: 13px; color: var(--color-text-secondary); }
+.ux-action-hint { margin: 12px 0; padding: 12px 16px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface-raised); color: var(--color-text-secondary); font-size: 13px; }
+.ux-action-hint a { color: var(--color-link); text-decoration: underline; }
+.floor-picker .ux-capacity-complete { color: var(--color-success); background: var(--db-status-success-bg); padding: 12px 16px; border-radius: 10px; }
+.floor-picker__table { position: relative; }
+.floor-picker__table.is-selected::after { content: "✓"; position: absolute; right: 2px; top: 2px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--color-surface); color: var(--color-primary); font-weight: 800; }
+.floor-picker__table:disabled { border-style: dashed; }
+@media (max-width: 700px) {
+  html { scroll-padding-top: 88px; }
+  .ux-booking-progress { padding: 16px; }
+  .ux-booking-progress ol { gap: 8px; }
+  .ux-booking-progress li { font-size: 12px; }
+  .ux-booking-progress li > span, .ux-booking-progress button { flex-direction: column; gap: 6px; align-items: flex-start; }
+  .ux-booking-progress p { line-height: 1.6; }
+  .ux-hero-search { gap: 8px; padding-left: 12px; }
+  .ux-hero-search button { padding: 10px 12px; font-size: 13px; }
+  .ux-hero-search input { font-size: 16px; }
+  .hero-actions { flex-wrap: wrap; }
+  .footer-column a { min-height: 40px; }
+  .restaurant-filter-group label { min-height: 44px; }
+  .restaurant-filter-group input { width: 18px; height: 18px; }
+  .shared-pagination { flex-wrap: wrap; gap: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+.ux-dialog-error { color: var(--color-danger); font-size: 14px; line-height: 1.6; }
+
+/* Composite auth controls own their border and focus ring, including icons. */
+form .auth-field-control {
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+form .auth-field-control > input,
+:root[data-theme="dark"] form .auth-field-control > input.custom-field-invalid {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: var(--color-text-primary);
+}
+form .auth-field-control > svg,
+form .auth-field-control > button { flex-shrink: 0; }
+:root[data-theme] form .auth-field-control:focus-within {
+  border-color: var(--color-primary) !important;
+  outline: 2px solid var(--ux-focus);
+  outline-offset: 2px;
+}
+:root[data-theme] form .auth-field-control:has(input[aria-invalid="true"]) {
+  border-color: var(--color-danger) !important;
+}
+:root[data-theme] form .auth-field-control:has(input[aria-invalid="true"]):focus-within {
+  outline-color: var(--color-danger);
+}
+@media (max-width: 700px) {
+  .auth-story { min-height: 0 !important; padding: 24px !important; }
+  .auth-story-copy { margin: 24px 0 0 !important; }
+  .auth-story-copy h1 { font-size: 26px !important; }
+  .auth-story-copy p, .auth-story footer { display: none; }
+}

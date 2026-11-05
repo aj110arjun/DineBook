@@ -30,9 +30,7 @@ import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
 import LandingFooter from "../../components/landing/LandingFooter.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
-import {
-  saveReservation,
-} from "../../data/customerReservations.js";
+import { saveReservation } from "../../data/customerReservations.js";
 import { photo } from "../../data/landingData.js";
 import "./CustomerRestaurantReviews.css";
 import "./CustomerRestaurantAmenities.css";
@@ -117,7 +115,10 @@ export default function CustomerRestaurantDetailsPage() {
   const [visibleMenuFoods, setVisibleMenuFoods] = useState([]);
   const [menuTotal, setMenuTotal] = useState(0);
   const reservationsPerPage = 4;
-  const reservationPageCount = Math.max(1, Math.ceil(reservationTotal / reservationsPerPage));
+  const reservationPageCount = Math.max(
+    1,
+    Math.ceil(reservationTotal / reservationsPerPage),
+  );
   const currentReservationPage = reservationPage;
   const pagedReservations = myReservations;
   const menuPageSize = 8;
@@ -165,8 +166,14 @@ export default function CustomerRestaurantDetailsPage() {
     let mounted = true;
     setMenuLoading(true);
     setMenuError("");
-    const params = new URLSearchParams({ page: menuPage, page_size: menuPageSize, search: menuQuery, sort: menuSort });
-    if (selectedMenuCategoryId) params.set("category_id", selectedMenuCategoryId);
+    const params = new URLSearchParams({
+      page: menuPage,
+      page_size: menuPageSize,
+      search: menuQuery,
+      sort: menuSort,
+    });
+    if (selectedMenuCategoryId)
+      params.set("category_id", selectedMenuCategoryId);
     requestJson(`/api/customer/restaurants/${restaurantId}/menu?${params}`)
       .then((data) => {
         if (!mounted) return;
@@ -179,7 +186,14 @@ export default function CustomerRestaurantDetailsPage() {
     return () => {
       mounted = false;
     };
-  }, [restaurantId, activeSection, menuPage, menuQuery, menuSort, selectedMenuCategoryId]);
+  }, [
+    restaurantId,
+    activeSection,
+    menuPage,
+    menuQuery,
+    menuSort,
+    selectedMenuCategoryId,
+  ]);
 
   useEffect(() => {
     if (
@@ -203,8 +217,18 @@ export default function CustomerRestaurantDetailsPage() {
     let alive = true;
     setReservationListLoading(true);
     setReservationListError("");
-    const params = new URLSearchParams({ page: reservationPage, page_size: reservationsPerPage, restaurant_id: restaurantId,
-      status: reservationStatusFilter, sort: { NEWEST: "created-newest", OLDEST: "created-oldest", FEE_LOW: "fee-low", FEE_HIGH: "fee-high" }[reservationSort] });
+    const params = new URLSearchParams({
+      page: reservationPage,
+      page_size: reservationsPerPage,
+      restaurant_id: restaurantId,
+      status: reservationStatusFilter,
+      sort: {
+        NEWEST: "created-newest",
+        OLDEST: "created-oldest",
+        FEE_LOW: "fee-low",
+        FEE_HIGH: "fee-high",
+      }[reservationSort],
+    });
     if (reservationDateFilter) {
       params.set("date_from", reservationDateFilter);
       params.set("date_to", reservationDateFilter);
@@ -214,24 +238,45 @@ export default function CustomerRestaurantDetailsPage() {
         if (!alive) return;
         setMyReservations(data.items);
         setReservationTotal(data.total);
-        if (reservationPage > Math.max(1, Math.ceil(data.total / reservationsPerPage))) setReservationPage(1);
+        if (
+          reservationPage >
+          Math.max(1, Math.ceil(data.total / reservationsPerPage))
+        )
+          setReservationPage(1);
       })
       .catch((reason) => alive && setReservationListError(reason.message))
       .finally(() => alive && setReservationListLoading(false));
-    return () => { alive = false; };
-  }, [user, restaurantId, reservationPage, reservationStatusFilter, reservationDateFilter, reservationSort]);
+    return () => {
+      alive = false;
+    };
+  }, [
+    user,
+    restaurantId,
+    reservationPage,
+    reservationStatusFilter,
+    reservationDateFilter,
+    reservationSort,
+  ]);
 
   useEffect(() => {
     if (!user) return;
     let alive = true;
-    requestJson(`/api/customer/reservations?page=1&page_size=100&restaurant_id=${restaurantId}&status=SEATED`)
+    requestJson(
+      `/api/customer/reservations?page=1&page_size=100&restaurant_id=${restaurantId}&status=SEATED`,
+    )
       .then((data) => {
         if (!alive) return;
         setSeatedReservations(data.items);
-        setSelectedOrderReservationId((current) => data.items.some((item) => item.id === current) ? current : data.items[0]?.id || "");
+        setSelectedOrderReservationId((current) =>
+          data.items.some((item) => item.id === current)
+            ? current
+            : data.items[0]?.id || "",
+        );
       })
       .catch(() => alive && setSeatedReservations([]));
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [user, restaurantId]);
 
   useEffect(() => {
@@ -263,7 +308,9 @@ export default function CustomerRestaurantDetailsPage() {
         const ownIds = new Set(ownReviews.map((review) => review.id));
         setRestaurantReviews([
           ...ownReviews,
-          ...(publicReviews.items || []).filter((review) => !ownIds.has(review.id)),
+          ...(publicReviews.items || []).filter(
+            (review) => !ownIds.has(review.id),
+          ),
         ]);
         setLoadedReviewScope(reviewScope);
       })
@@ -334,9 +381,9 @@ export default function CustomerRestaurantDetailsPage() {
 
   async function deleteOwnRestaurantReview(reviewId) {
     if (
-      !await confirmAction(
+      !(await confirmAction(
         "Delete your review for this restaurant? This cannot be undone.",
-      )
+      ))
     )
       return;
     try {
@@ -378,45 +425,10 @@ export default function CustomerRestaurantDetailsPage() {
     return `${hour % 12 || 12}:${String(minute).padStart(2, "0")} ${hour >= 12 ? "PM" : "AM"}`;
   }
 
-  async function confirmReservation() {
-    setBookingBusy(true);
-    setBookingMessage("");
-    try {
-      const reservation = await requestJson("/api/customer/reservations", {
-        method: "POST",
-        body: JSON.stringify({
-          restaurant_id: restaurant.id,
-          reservation_date: date,
-          start_time: reservationStartTime(),
-          number_of_guests: Number(guests),
-          table_ids: availableTables.find(
-            (table) => table.id === selectedTableId,
-          )?.table_ids || [selectedTableId],
-        }),
-      });
-      saveReservation(user?.email, {
-        ...reservation,
-        restaurant_name: restaurant.name,
-        restaurant_location: restaurant.location || restaurant.address,
-      });
-      setReservationResult(reservation);
-      setMyReservations((current) => [
-        reservation,
-        ...current.filter((item) => item.id !== reservation.id),
-      ]);
-      setBookingStep(4);
-    } catch (reason) {
-      setBookingMessage(reason.message);
-      if (
-        reason.message.toLowerCase().includes("no suitable table") ||
-        reason.message.toLowerCase().includes("no longer available")
-      ) {
-        setBookingStep(1);
-        setAvailableTables([]);
-      }
-    } finally {
-      setBookingBusy(false);
-    }
+  function confirmReservation() {
+    navigate(`/customer/restaurants/${restaurantId}/booking`, {
+      state: { date, guests, time },
+    });
   }
 
   function resetReservationFlow() {
@@ -845,9 +857,7 @@ export default function CustomerRestaurantDetailsPage() {
                               </option>
                             </select>
                           </label>
-                          <span>
-                            {menuTotal} available dishes
-                          </span>
+                          <span>{menuTotal} available dishes</span>
                         </div>
                         <nav
                           className="customer-menu-categories"
@@ -868,9 +878,7 @@ export default function CustomerRestaurantDetailsPage() {
                               }
                             >
                               {category.name}
-                              <span>
-                                {category.count}
-                              </span>
+                              <span>{category.count}</span>
                             </button>
                           ))}
                         </nav>

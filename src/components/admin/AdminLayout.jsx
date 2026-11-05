@@ -1,3 +1,4 @@
+import useNavigationDisclosure from "../../hooks/useNavigationDisclosure.js";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import PortalBreadcrumb from "../PortalBreadcrumb.jsx";
@@ -10,6 +11,7 @@ export default function AdminLayout({ children, title = "Dashboard" }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  useNavigationDisclosure(sidebarOpen, () => setSidebarOpen(false), "admin-primary-nav");
 
   async function handleLogout() {
     try {
@@ -57,10 +59,10 @@ export default function AdminLayout({ children, title = "Dashboard" }) {
         </div>
 
         <div className="admin-sidebar-user">
-          <div className="admin-avatar">MC</div>
+          <div className="admin-avatar" aria-hidden="true">AD</div>
 
           <div>
-            <strong>Maya Chen</strong>
+            <strong>Administrator</strong>
             <span>Super Admin</span>
           </div>
         </div>

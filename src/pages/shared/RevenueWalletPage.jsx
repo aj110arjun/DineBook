@@ -1,5 +1,5 @@
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
@@ -31,21 +31,87 @@ export function ChefRevenuePage() {
   const [data, setData] = useState(null);
   const [wallet, setWallet] = useState(null);
   const [error, setError] = useState("");
-  const refresh = useCallback(async () => {
-    const [result, walletResult] = await Promise.all([
-      requestJson("/api/chef/revenue"),
-      requestJson("/api/chef/wallet"),
-    ]);
-    setData(result);
-    setWallet(walletResult);
+  const mounted = useRef(false);
+  const refreshTimer = useRef(null);
+  const refreshInFlight = useRef(null);
+  const refreshPending = useRef(false);
+
+  const refresh = useCallback(() => {
+    if (!mounted.current) {
+      return Promise.resolve();
+    }
+
+    // Never run overlapping wallet/revenue refreshes.
+    if (refreshInFlight.current) {
+      refreshPending.current = true;
+      return refreshInFlight.current;
+    }
+
+    const run = async () => {
+      do {
+        refreshPending.current = false;
+
+        const [result, walletResult] = await Promise.all([
+          requestJson("/api/manager/revenue"),
+          requestJson("/api/manager/wallet"),
+        ]);
+
+        if (!mounted.current) return;
+
+        setData(result);
+        setWallet(walletResult);
+        setError("");
+
+        // Events arriving during a request require at most
+        // one pending refresh, rather than one per event.
+      } while (mounted.current && refreshPending.current);
+    };
+
+    refreshInFlight.current = run().finally(() => {
+      refreshInFlight.current = null;
+    });
+
+    return refreshInFlight.current;
   }, []);
-  useEffect(() => {
-    refresh().catch((reason) => setError(reason.message));
+
+  const scheduleRefresh = useCallback(() => {
+    if (!mounted.current || refreshTimer.current !== null) {
+      return;
+    }
+
+    // Combine events arriving within this window.
+    refreshTimer.current = window.setTimeout(() => {
+      refreshTimer.current = null;
+
+      refresh().catch((reason) => {
+        if (mounted.current) {
+          setError(reason.message);
+        }
+      });
+    }, 400);
   }, [refresh]);
+
+  useEffect(() => {
+    mounted.current = true;
+
+    return () => {
+      mounted.current = false;
+      refreshPending.current = false;
+
+      window.clearTimeout(refreshTimer.current);
+      refreshTimer.current = null;
+    };
+  }, []);
+
   useRealtimeEvents({
     enabled: true,
-    onEvent: () => refresh().catch((reason) => setError(reason.message)),
-    onReconnect: () => refresh().catch((reason) => setError(reason.message)),
+
+    // Initial loading happens after the stream establishes
+    // its cursor, preventing a startup snapshot gap.
+    onReady: scheduleRefresh,
+
+    onEvent: scheduleRefresh,
+    onReconnect: scheduleRefresh,
   });
   return (
     <ChefLayout title="Revenue & Wallet">
@@ -69,8 +135,6 @@ export function ManagerRevenuePage() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [walletBusy, setWalletBusy] = useState(false);
-  const [payoutBusy, setPayoutBusy] = useState(false);
-  const [confirmCommissionPayout, setConfirmCommissionPayout] = useState(false);
   const refresh = useCallback(async () => {
     const [result, walletResult] = await Promise.all([
       requestJson("/api/manager/revenue"),
@@ -151,29 +215,6 @@ export function ManagerRevenuePage() {
       setWalletBusy(false);
     }
   }
-  async function payAdminCommission() {
-    setPayoutBusy(true);
-    setError("");
-    setNotice("");
-    try {
-      const result = await requestJson(
-        "/api/manager/revenue/commission-payouts",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            amount: String(data.admin_commission_outstanding),
-          }),
-        },
-      );
-      await refresh();
-      setNotice(`${money(result.amount)} sent to the admin wallet.`);
-      setConfirmCommissionPayout(false);
-    } catch (reason) {
-      setError(reason.message);
-    } finally {
-      setPayoutBusy(false);
-    }
-  }
   return (
     <ManagerLayout title="Revenue & wallets">
       <RevenueContent
@@ -187,33 +228,22 @@ export function ManagerRevenuePage() {
           <div>
             <h2>Admin commission</h2>
             <p>
-              {Number(data.commission_percent).toFixed(2)}% of paid reservation
-              fees, pre-orders, and food orders is recorded here. It stays
-              separate from your wallet until you send it.
+              {Number(data.commission_percent).toFixed(2)}% of each confirmed
+              reservation fee, preorder, and food order is automatically
+              transferred to the admin wallet. Desk payments deduct commission
+              from your wallet when you confirm payment.
             </p>
           </div>
           <div className="commission-due">
-            <span>Recorded and unpaid</span>
-            <strong>{money(data.admin_commission_outstanding)}</strong>
-            <button
-              type="button"
-              disabled={
-                payoutBusy ||
-                Number(data.admin_commission_outstanding) <= 0 ||
-                Number(wallet?.balance) <
-                  Number(data.admin_commission_outstanding)
-              }
-              onClick={() => setConfirmCommissionPayout(true)}
-            >
-              {payoutBusy ? "Sending…" : "Send commission to admin"}
-            </button>
-            {Number(wallet?.balance) <
-              Number(data.admin_commission_outstanding) && (
-              <small>
-                Your wallet balance is below the recorded commission.
-              </small>
-            )}
+            <span>Transferred after refunds</span>
+            <strong>{money(data.admin_commission_paid_out)}</strong>
           </div>
+          {Number(data.admin_commission_outstanding) > 0 && (
+            <p>
+              Historical commission awaiting settlement:{" "}
+              {money(data.admin_commission_outstanding)}
+            </p>
+          )}
           <CommissionActivity data={data} />
         </section>
       )}
@@ -318,49 +348,6 @@ export function ManagerRevenuePage() {
           </section>
         </div>
       )}
-      {confirmCommissionPayout && (
-        <div
-          className="commission-modal-backdrop"
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget && !payoutBusy)
-              setConfirmCommissionPayout(false);
-          }}
-        >
-          <section
-            className="commission-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="commission-confirm-title"
-          >
-            <h2 id="commission-confirm-title">
-              Confirm admin commission payment
-            </h2>
-            <p>
-              This will deduct{" "}
-              <strong>{money(data?.admin_commission_outstanding)}</strong> from
-              your manager wallet and credit it to the admin wallet.
-            </p>
-            <div>
-              <button
-                type="button"
-                className="commission-cancel"
-                disabled={payoutBusy}
-                onClick={() => setConfirmCommissionPayout(false)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={payoutBusy}
-                onClick={payAdminCommission}
-              >
-                {payoutBusy ? "Sending…" : "Confirm and send"}
-              </button>
-            </div>
-          </section>
-        </div>
-      )}
     </ManagerLayout>
   );
 }
@@ -421,8 +408,8 @@ export function AdminRevenuePage() {
           <div>
             <h2>Commission activity</h2>
             <p>
-              Each manager payout is shown as one transaction for the full
-              amount sent to the admin wallet.
+              Commission is transferred automatically when a payment is
+              confirmed. Refund reversals are reflected in the net amount.
             </p>
           </div>
           <CommissionActivity data={data} />
@@ -661,8 +648,8 @@ function CommissionActivity({ data }) {
       <div className="commission-records">
         <h3>
           {data.role === "ADMIN"
-            ? "Payouts from managers"
-            : "Your payouts to the admin"}
+            ? "Commission transfer history"
+            : "Commission transfers to admin"}
         </h3>
         {payouts.length ? (
           <div className="revenue-wallet-table-wrap">
@@ -670,8 +657,10 @@ function CommissionActivity({ data }) {
               <thead>
                 <tr>
                   <th>Date</th>
-                  <th>Paid by</th>
-                  <th>Amount sent</th>
+                  <th>Restaurant manager</th>
+                  <th>Transferred</th>
+                  <th>Refunded</th>
+                  <th>Net amount</th>
                 </tr>
               </thead>
               <tbody>
@@ -688,14 +677,18 @@ function CommissionActivity({ data }) {
                         ? row.manager_name || "Manager"
                         : "You"}
                     </td>
-                    <td className="is-credit">{money(row.amount)}</td>
+                    <td>{money(row.amount)}</td>
+                    <td>{money(row.refunded_amount || 0)}</td>
+                    <td className="is-credit">
+                      {money(row.net_amount ?? row.amount)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         ) : (
-          <p className="revenue-empty">No commission payouts yet.</p>
+          <p className="revenue-empty">No commission transfers yet.</p>
         )}
       </div>
     </div>
@@ -729,7 +722,7 @@ function RevenueContent({ data, error, title, description }) {
             <strong>{money(data.balance)}</strong>
             <small>
               {data.role === "ADMIN"
-                ? "Accrued commission"
+                ? "Available commission balance"
                 : data.role === "MANAGER"
                   ? "Available to transfer"
                   : "Transfers received"}
@@ -769,14 +762,14 @@ function RevenueContent({ data, error, title, description }) {
             <article>
               <span>Commission this month</span>
               <strong>{money(data.admin_commission_this_month)}</strong>
-              <small>Default rate: 10%</small>
+              <small>After refunded payments</small>
             </article>
           )}
           {data.role === "ADMIN" && (
             <article>
-              <span>Awaiting manager payouts</span>
+              <span>Historical commission outstanding</span>
               <strong>{money(data.admin_commission_outstanding)}</strong>
-              <small>Recorded and unpaid</small>
+              <small>Awaiting historical settlement</small>
             </article>
           )}
           {data.role === "ADMIN" && (

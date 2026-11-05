@@ -63,7 +63,7 @@ export default function Pagination({
             ))}
           </div>
         )}
-        <span className="admin-pagination-page">
+        <span className="admin-pagination-page" role="status" aria-live="polite">
           Page {currentPage} of {pageCount}
         </span>
         <button

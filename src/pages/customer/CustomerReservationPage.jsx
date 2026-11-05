@@ -21,6 +21,8 @@ import { requestJson } from "../../lib/authApi.js";
 import { photo } from "../../data/landingData.js";
 import { saveReservation } from "../../data/customerReservations.js";
 import "./CustomerReservationPage.css";
+import BookingProgress from "../../components/BookingProgress.jsx";
+import TableFloorPicker from "../../components/TableFloorPicker.jsx";
 
 const weekDays = [
   "sunday",
@@ -60,6 +62,15 @@ const todayInRestaurantTimezone = () => {
   );
   return `${values.year}-${values.month}-${values.day}`;
 };
+function displayLocalDate(value) {
+  if (!value) return "—";
+  return new Intl.DateTimeFormat("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(new Date(`${value}T12:00:00+05:30`));
+}
 function to24Hour(value) {
   if (/^\d{2}:\d{2}$/.test(value)) return value;
   const [clock, period] = value.split(" ");
@@ -171,7 +182,7 @@ function makePassImage(qrData, reservation, restaurant) {
         drawRow("Reservation code", reservationCode(reservation), 558, true);
         drawRow(
           "Date and time",
-          `${reservation.reservation_date} · ${shortTime(reservation.start_time)}`,
+          `${displayLocalDate(reservation.reservation_date)} · ${shortTime(reservation.start_time)} – ${shortTime(reservation.end_time)}`,
           585,
         );
         drawRow("Guests", `${reservation.number_of_guests}`, 612);
@@ -246,8 +257,6 @@ export default function CustomerReservationPage() {
   });
   const [guests, setGuests] = useState(Number(location.state?.guests || 2));
   const [time, setTime] = useState(to24Hour(location.state?.time || "20:00"));
-  const selectedTimeRef = useRef(time);
-  selectedTimeRef.current = time;
   const [walletBalance, setWalletBalance] = useState(0);
   const [walletLoading, setWalletLoading] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState("WALLET");
@@ -262,12 +271,15 @@ export default function CustomerReservationPage() {
   const [offerCode, setOfferCode] = useState("");
   const [offerPreview, setOfferPreview] = useState(null);
   const [offerBusy, setOfferBusy] = useState(false);
+  const [durationMinutes, setDurationMinutes] = useState(90);
+  const durationValid = Number.isInteger(Number(durationMinutes)) &&
+    Number(durationMinutes) >= 30 && Number(durationMinutes) <= 720;
   const [availability, setAvailability] = useState({});
   const [availabilityRefreshKey, setAvailabilityRefreshKey] = useState(0);
   const [timeSlotsLoading, setTimeSlotsLoading] = useState(false);
   const [availabilityError, setAvailabilityError] = useState("");
   const [step, setStep] = useState(1);
-  const [selectedTableId, setSelectedTableId] = useState("");
+  const [selectedTableIds, setSelectedTableIds] = useState([]);
   const [reservation, setReservation] = useState(null);
   const [paymentFailureMessage, setPaymentFailureMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -277,6 +289,18 @@ export default function CustomerReservationPage() {
   const [qrError, setQrError] = useState("");
   const checkoutStep = 3;
   const resultStep = checkoutStep + 1;
+  const previousStep = useRef(step);
+  useEffect(() => {
+    if (previousStep.current === step) return;
+    previousStep.current = step;
+    const frame = window.requestAnimationFrame(() => {
+      const heading = document.querySelector(".customer-booking-main h2, .customer-booking-main h3");
+      heading?.setAttribute("tabindex", "-1");
+      heading?.focus({ preventScroll: true });
+      heading?.scrollIntoView({ block: "start", behavior: "instant" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [step]);
 
   const operatingHours = useMemo(() => restaurant?.hours || [], [restaurant]);
   const hoursByDay = useMemo(
@@ -397,10 +421,16 @@ export default function CustomerReservationPage() {
     setAvailabilityError("");
     setTimeSlotsLoading(true);
     setAvailability({});
+    if (!durationValid || !time) {
+      setTimeSlotsLoading(false);
+      setAvailabilityError("Choose an end time between 30 minutes and 12 hours after your start time.");
+      return;
+    }
     const params = new URLSearchParams({
       restaurant_id: restaurantId,
       reservation_date: date,
       number_of_guests: String(guests),
+      duration_minutes: String(durationMinutes),
     });
     const refreshAvailability = (initial = false) => {
       const controller = new AbortController();
@@ -413,19 +443,15 @@ export default function CustomerReservationPage() {
           const nextAvailability = Object.fromEntries(
             (result.slots || []).map((slot) => [
               slot.time,
-              { loading: false, tables: slot.tables || [] },
+              {
+                loading: false,
+                end_time: slot.end_time,
+                available: Boolean(slot.available),
+                tables: slot.tables || [],
+              },
             ]),
           );
           setAvailability(nextAvailability);
-          if (
-            !nextAvailability[selectedTimeRef.current] ||
-            !nextAvailability[selectedTimeRef.current].tables.length
-          ) {
-            const firstAvailable = Object.keys(nextAvailability).find(
-              (slot) => nextAvailability[slot].tables.length,
-            );
-            if (firstAvailable) setTime(firstAvailable);
-          }
           setAvailabilityError("");
         })
         .catch((reason) => {
@@ -450,7 +476,7 @@ export default function CustomerReservationPage() {
       window.clearInterval(timer);
       window.removeEventListener("focus", onFocus);
     };
-  }, [restaurantId, date, guests, availabilityRefreshKey]);
+  }, [restaurantId, date, guests, time, durationMinutes, durationValid, availabilityRefreshKey]);
 
   useEffect(() => {
     if (
@@ -529,6 +555,7 @@ export default function CustomerReservationPage() {
   }, [month]);
   const selectedAvailability = availability[time] || {
     loading: timeSlotsLoading,
+    available: false,
     tables: [],
   };
   const reservationPaymentFailed =
@@ -539,9 +566,40 @@ export default function CustomerReservationPage() {
     .toLowerCase()
     .includes("cancelled");
   const availableTables = selectedAvailability.tables || [];
-  const selectedTable = availableTables.find(
-    (table) => table.id === selectedTableId,
+  const selectedTables = availableTables.filter((table) =>
+    selectedTableIds.includes(table.id),
   );
+
+  const selectionValid =
+    selectedTables.length > 0 &&
+    selectedTables.every((table) => table.status === "available") &&
+    selectedTables.length === selectedTableIds.length &&
+    selectedTables.reduce((sum, table) => sum + table.capacity, 0) >=
+      Number(guests);
+
+  // Preserve the shape used by checkout and the existing booking request.
+  const selectedTable = selectionValid
+    ? {
+        table_ids: selectedTables.map((table) => table.id),
+        table_number: selectedTables
+          .map((table) => table.table_number)
+          .join(" + "),
+        floor_name: [
+          ...new Set(selectedTables.map((table) => table.floor_name)),
+        ].join(" / "),
+        capacity: selectedTables.reduce(
+          (sum, table) => sum + table.capacity,
+          0,
+        ),
+        reservation_fee:
+          selectedTables.reduce(
+            (sum, table) =>
+              sum + Math.round(Number(table.reservation_fee) * 100),
+            0,
+          ) / 100,
+      }
+    : null;
+
   const preorderVariants = menuCategories.flatMap((category) =>
     (category.foods || [])
       .filter((food) => food.is_available)
@@ -650,7 +708,7 @@ export default function CustomerReservationPage() {
     (fulfillmentType === "PREORDER" && preorderPaymentMethod === "WALLET"
       ? preorderTotalWithTax
       : 0);
-  const monthTitle = new Intl.DateTimeFormat("en", {
+  const monthTitle = new Intl.DateTimeFormat("en-IN", {
     month: "long",
     year: "numeric",
   }).format(month);
@@ -672,12 +730,26 @@ export default function CustomerReservationPage() {
   }
 
   function continueToTables() {
-    if (!availableTables.length || selectedAvailability.loading) return;
-    setSelectedTableId(availableTables[0].id);
+    if (!selectedAvailability.available || selectedAvailability.loading) return;
+    setSelectedTableIds([]);
     setStep(2);
   }
 
   function continueFromTable() {
+    const selectedSeats = selectedTables.reduce(
+      (sum, table) => sum + table.capacity,
+      0,
+    );
+    if (selectedSeats < Number(guests)) {
+      setError(
+        `Select more tables to seat all ${guests} guests. ${Number(guests) - selectedSeats} more seats needed.`,
+      );
+      return;
+    }
+    if (!selectedTable) {
+      setError("Select available tables with enough seats for your party.");
+      return;
+    }
     if (fulfillmentType === "PREORDER" && preorderCart.length === 0) {
       setError("Add at least one menu item to your preorder.");
       return;
@@ -744,6 +816,7 @@ export default function CustomerReservationPage() {
           restaurant_id: restaurantId,
           reservation_date: date,
           start_time: time,
+          duration_minutes: Number(durationMinutes),
           number_of_guests: guests,
           table_ids: selectedTable.table_ids,
           fulfillment_type: fulfillmentType,
@@ -866,12 +939,7 @@ export default function CustomerReservationPage() {
     }
   }
 
-  const selectedDateLabel = new Intl.DateTimeFormat("en", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(`${date}T12:00:00`));
+  const selectedDateLabel = displayLocalDate(date);
   const restaurantPhoto =
     restaurant?.images?.[0] ||
     restaurant?.image ||
@@ -919,6 +987,7 @@ export default function CustomerReservationPage() {
                 </span>
               </div>
             </section>
+            <BookingProgress step={step} busy={busy} onBack={(next) => { setError(""); setStep(next); }} />
             <div className="customer-booking-layout">
               <section className="customer-booking-main">
                 {step === 1 && (
@@ -1203,10 +1272,60 @@ export default function CustomerReservationPage() {
                       )}
                     </section>
                     <section className="booking-slots-panel">
-                      <h3>Available time slots</h3>
+                      <h3>Dining period</h3>
+                      <div className="booking-dining-times">
+                        <label className="booking-duration-field">
+                          Start time
+                          <input
+                            type="time"
+                            step="1800"
+                            value={time}
+                            onChange={(event) => {
+                              setTime(event.target.value);
+                              setSelectedTableIds([]);
+                              setError("");
+                            }}
+                          />
+                        </label>
+                        <label className="booking-duration-field">
+                          End time
+                          <input
+                            type="time"
+                            step="60"
+                            value={durationValid && time ? (() => {
+                              const [hours, minutes] = time.split(":").map(Number);
+                              const end = (hours * 60 + minutes + Number(durationMinutes)) % 1440;
+                              return `${String(Math.floor(end / 60)).padStart(2, "0")}:${String(end % 60).padStart(2, "0")}`;
+                            })() : ""}
+                            onChange={(event) => {
+                              const [startHour, startMinute] = time.split(":").map(Number);
+                              const [endHour, endMinute] = event.target.value.split(":").map(Number);
+                              const duration = event.target.value && time
+                                ? (endHour * 60 + endMinute - startHour * 60 - startMinute + 1440) % 1440
+                                : "";
+                              setDurationMinutes(duration);
+                              setSelectedTableIds([]);
+                              setAvailability({});
+                              setError("");
+                            }}
+                          />
+                        </label>
+                      </div>
+                      {durationValid && time && (
+                        <p className="booking-hours-message">
+                          Dining duration: {Math.floor(Number(durationMinutes) / 60)} hr {Number(durationMinutes) % 60} min.
+                          {(() => {
+                            const [hours, minutes] = time.split(":").map(Number);
+                            return hours * 60 + minutes + Number(durationMinutes) >= 1440
+                              ? " Ends the following day."
+                              : "";
+                          })()}
+                        </p>
+                      )}
+                      <h3>Available start times</h3>
                       <p className="booking-hours-message">
-                        Choose a 30-minute reservation start time. Each slot
-                        reflects current table availability for {guests}{" "}
+                        Choose a start time in 30-minute intervals. Tables must
+                        remain available for your entire dining period for {guests}{" "}
                         {guests === 1 ? "guest" : "guests"}.
                       </p>
                       {selectedDateException && (
@@ -1243,7 +1362,7 @@ export default function CustomerReservationPage() {
                               availability={availability[slot]}
                               onClick={() => {
                                 setTime(slot);
-                                setSelectedTableId("");
+                                setSelectedTableIds([]);
                               }}
                             />
                           ))}
@@ -1273,46 +1392,19 @@ export default function CustomerReservationPage() {
                     <span className="booking-step-label">
                       RESERVATION STEP 2 OF 3
                     </span>
-                    <h2>Select Your Table Setup</h2>
                     <p>
-                      Suggested tables for {selectedDateLabel} at{" "}
-                      {displayTime(time)} · {guests} guests
+                      {selectedDateLabel} at {displayTime(time)} · {guests}{" "}
+                      guests
                     </p>
-                    <div className="booking-table-legend">
-                      <span>Available</span>
-                      <span>Selected</span>
-                      <span>Unavailable</span>
-                    </div>
-                    <div className="booking-table-list">
-                      {availableTables.map((table) => (
-                        <button
-                          type="button"
-                          key={table.id}
-                          className={
-                            selectedTableId === table.id ? "selected" : ""
-                          }
-                          onClick={() => setSelectedTableId(table.id)}
-                        >
-                          <span className="booking-table-bullet">
-                            {selectedTableId === table.id ? (
-                              <Check size={15} />
-                            ) : null}
-                          </span>
-                          <span>
-                            <strong>
-                              {table.table_ids.length > 1
-                                ? `${table.table_ids.length} tables together`
-                                : `Table ${table.table_number}`}
-                            </strong>
-                            <small>
-                              {table.floor_name} · Tables {table.table_number} ·
-                              Seats up to {table.capacity} · {table.table_type}
-                            </small>
-                          </span>
-                          <b>₹{Number(table.reservation_fee).toFixed(2)}</b>
-                        </button>
-                      ))}
-                    </div>
+                    <TableFloorPicker
+                      tables={availableTables}
+                      selectedIds={selectedTableIds}
+                      onChange={(ids) => {
+                        setError("");
+                        setSelectedTableIds(ids);
+                      }}
+                      guests={guests}
+                    />
                     <button
                       type="button"
                       className="booking-back-button"
@@ -1693,7 +1785,7 @@ export default function CustomerReservationPage() {
                         onClick={() => {
                           setPaymentFailureMessage("");
                           setReservation(null);
-                          setSelectedTableId("");
+                          setSelectedTableIds([]);
                           setError("");
                           setAvailabilityRefreshKey((current) => current + 1);
                           setStep(1);
@@ -1728,7 +1820,7 @@ export default function CustomerReservationPage() {
                       <p>
                         {reservation.status === "CONFIRMED"
                           ? "Your reservation fee is paid. Show this QR pass at the restaurant when you arrive. Food orders are handled by the manager at reception."
-                          : "Payment is awaiting confirmation. Refresh this page to check the latest status."}
+                          : "Payment is awaiting confirmation. Use Check payment status below, or open your reservation details. Check the status before paying again."}
                       </p>
                       {reservation.status === "CONFIRMED" && (
                         <>
@@ -1740,7 +1832,7 @@ export default function CustomerReservationPage() {
                               />
                               <ReviewLine
                                 label="Date & time"
-                                value={`${reservation.reservation_date} · ${shortTime(reservation.start_time)}`}
+                                value={`${displayLocalDate(reservation.reservation_date)} · ${shortTime(reservation.start_time)} – ${shortTime(reservation.end_time)}`}
                               />
                               <ReviewLine
                                 label="Table"
@@ -1861,7 +1953,7 @@ export default function CustomerReservationPage() {
               <aside className="booking-summary-column">
                 <section className="booking-summary-card">
                   <span className="booking-step-label">
-                    RESERVATION STEP {step} OF 3
+                    {step <= 3 ? `RESERVATION STEP ${step} OF 3` : "BOOKING STATUS"}
                   </span>
                   <h2>
                     {step === 1
@@ -1884,8 +1976,10 @@ export default function CustomerReservationPage() {
                       value={`${guests} ${guests === 1 ? "Guest" : "Guests"}`}
                     />
                     <ReviewLine
-                      label="Preferred time"
-                      value={displayTime(time)}
+                      label="Dining period"
+                      value={step === resultStep && reservation
+                        ? `${displayTime(reservation.start_time)} – ${displayTime(reservation.end_time)}`
+                        : `${displayTime(time)}${selectedAvailability.end_time ? ` – ${displayTime(selectedAvailability.end_time)}` : ""}` }
                     />
                     {step >= 2 && (
                       <ReviewLine
@@ -1970,7 +2064,7 @@ export default function CustomerReservationPage() {
                       className="booking-primary-action"
                       disabled={
                         selectedAvailability.loading ||
-                        !availableTables.length ||
+                        !selectedAvailability.available ||
                         (fulfillmentType === "PREORDER" &&
                           (menuLoading || preorderCart.length === 0))
                       }
@@ -1981,7 +2075,7 @@ export default function CustomerReservationPage() {
                         : fulfillmentType === "PREORDER" &&
                             preorderCart.length === 0
                           ? "Add preorder items to continue"
-                          : !availableTables.length
+                          : !selectedAvailability.available
                             ? "No tables available"
                             : "Continue to Table Selection"}
                     </button>
@@ -1997,7 +2091,7 @@ export default function CustomerReservationPage() {
                       }
                       onClick={continueFromTable}
                     >
-                      Continue
+                      Continue to checkout
                     </button>
                   )}
                   {step === checkoutStep && (
@@ -2013,6 +2107,7 @@ export default function CustomerReservationPage() {
                         offerBusy
                       }
                       onClick={submitReservation}
+                      aria-busy={busy}
                     >
                       {busy
                         ? "Submitting…"
@@ -2023,10 +2118,10 @@ export default function CustomerReservationPage() {
                   )}
                   {step === resultStep && (
                     <Link
-                      to="/customer/restaurants"
+                      to={reservation?.id ? `/customer/profile/reservations/${reservation.id}` : "/customer/profile/reservations"}
                       className="booking-primary-action booking-link-action"
                     >
-                      Explore restaurants
+                      View reservation details
                     </Link>
                   )}
                 </section>
@@ -2034,6 +2129,19 @@ export default function CustomerReservationPage() {
                   Choose wallet or securely pay online with Razorpay. Preorder
                   food can be paid now or at the restaurant.
                 </p>
+                {step === 2 && !selectedTable && (
+                  <p className="ux-action-hint" role="status">
+                    {selectedTables.some((table) => table.status !== "available")
+                      ? "A selected table is no longer available. Clear your selection and choose again."
+                      : `Select tables with at least ${guests} seats to continue. You have ${selectedTables.reduce((total, table) => total + table.capacity, 0)} seats selected.`}
+                  </p>
+                )}
+                {step === checkoutStep && walletRequired > 0 && !walletLoading && walletBalance < walletRequired && (
+                  <p className="ux-action-hint" role="status">
+                    Your wallet needs ₹{(walletRequired - walletBalance).toFixed(2)} more for this payment.
+                    {" "}Choose Razorpay above or <Link to="/customer/profile/wallet" target="_blank" rel="noopener noreferrer">top up your wallet in a new tab</Link>.
+                  </p>
+                )}
                 {error && step > 1 && (
                   <p className="reservation-page-error" role="alert">
                     {error}
@@ -2051,7 +2159,7 @@ export default function CustomerReservationPage() {
 
 function SlotButton({ slot, selected, availability, onClick }) {
   const isLoading = availability?.loading ?? true;
-  const isAvailable = (availability?.tables?.length || 0) > 0;
+  const isAvailable = Boolean(availability?.available);
   return (
     <button
       type="button"

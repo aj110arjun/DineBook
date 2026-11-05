@@ -101,18 +101,21 @@ export default function ConfirmActionDialog({
   const config = actionDefaults[action] || actionDefaults.delete;
   const Icon = config.icon;
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const dialogRef = useRef(null);
-  const confirmRef = useRef(null);
+  const cancelRef = useRef(null);
+  const busyRef = useRef(false);
   const previousFocus = useRef(null);
   const onCancelRef = useRef(onCancel);
   onCancelRef.current = onCancel;
   const isBusy = busy || submitting;
+  busyRef.current = isBusy;
 
   useEffect(() => {
     previousFocus.current = document.activeElement;
-    confirmRef.current?.focus();
+    cancelRef.current?.focus();
     function onKeyDown(event) {
-      if (event.key === "Escape" && !isBusy) onCancelRef.current?.();
+      if (event.key === "Escape" && !busyRef.current) onCancelRef.current?.();
       if (event.key !== "Tab") return;
       const focusable = dialogRef.current?.querySelectorAll(
         "button:not(:disabled), textarea:not(:disabled), input:not(:disabled)",
@@ -133,13 +136,16 @@ export default function ConfirmActionDialog({
       document.removeEventListener("keydown", onKeyDown);
       previousFocus.current?.focus?.();
     };
-  }, [isBusy]);
+  }, []);
 
   async function confirm() {
     if (isBusy || (requireReason && !reason.trim())) return;
     setSubmitting(true);
+    setSubmitError("");
     try {
       await onConfirm?.(reason.trim());
+    } catch (error) {
+      setSubmitError(error?.message || "This action couldn’t be completed. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -158,6 +164,7 @@ export default function ConfirmActionDialog({
         className="action-confirm-dialog"
         role="alertdialog"
         aria-modal="true"
+        aria-busy={isBusy}
         aria-labelledby="action-confirm-title"
         aria-describedby="action-confirm-description"
       >
@@ -195,9 +202,11 @@ export default function ConfirmActionDialog({
             />
           </label>
         )}
+        {submitError && <p className="ux-dialog-error" role="alert">{submitError}</p>}
         <div className="action-confirm-actions">
           <button
             type="button"
+            ref={cancelRef}
             className="action-confirm-cancel"
             onClick={onCancel}
             disabled={isBusy}
@@ -205,7 +214,6 @@ export default function ConfirmActionDialog({
             {cancelLabel}
           </button>
           <button
-            ref={confirmRef}
             type="button"
             className={`action-confirm-submit ${config.tone}`}
             onClick={confirm}
