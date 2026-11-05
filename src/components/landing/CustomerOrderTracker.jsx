@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Check, Clock3, CookingPot, PackageCheck, Search } from "lucide-react";
 import { requestJson } from "../../lib/authApi.js";
 import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
-import "./CustomerOrderTracker.css";
+import "../../assets/css/CustomerOrderTracker.css";
 
 const steps = [
   { status: "PLACED", label: "Order placed", icon: Clock3 },

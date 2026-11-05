@@ -966,15 +966,9 @@ a:focus-visible,
 .nav-links a:hover,
 .nav-links a.active {
   color: #e4c57d;
+  border-bottom: 1px solid #e4c57d;
 }
-.nav-links a.active::after {
-  content: "";
-  display: block;
-  height: 1px;
-  width: 22px;
-  background: var(--gold);
-  margin: 6px auto -7px;
-}
+
 .account-nav {
   gap: 18px;
 }

@@ -1,7 +1,7 @@
 import { useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { getFormErrors } from "../../lib/formValidation.js";
-import "./CustomForm.css";
+import "../../assets/css/CustomForm.css";
 
 function FieldError({ field, message }) {
   const id = useId();

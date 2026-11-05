@@ -19,7 +19,7 @@ import { requestJson } from "../../lib/authApi.js";
 import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
 import Pagination from "../../components/Pagination.jsx";
 import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
-import "./ManagerOrdersPage.css";
+import "../../assets/css/ManagerOrdersPage.css";
 
 const managerOrderFilters = [
   "ALL",

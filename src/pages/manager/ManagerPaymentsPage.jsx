@@ -11,7 +11,7 @@ import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import Pagination from "../../components/Pagination.jsx";
 import TransactionInvoiceButton from "../../components/TransactionInvoice.jsx";
 import { requestJson } from "../../lib/authApi.js";
-import "./ManagerPaymentsPage.css";
+import "../../assets/css/ManagerPaymentsPage.css";
 
 const money = (value) => `₹${Number(value || 0).toFixed(2)}`;
 const humanize = (value) =>

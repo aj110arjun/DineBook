@@ -20,7 +20,7 @@ import Pagination from "../../components/Pagination.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
 import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
-import "./CustomerProfilePage.css";
+import "../../assets/css/CustomerProfilePage.css";
 
 const statusText = (value) =>
   (value || "")

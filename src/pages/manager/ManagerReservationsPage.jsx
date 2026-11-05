@@ -19,7 +19,7 @@ import { requestJson } from "../../lib/authApi.js";
 import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
 import Pagination from "../../components/Pagination.jsx";
 import jsQR from "jsqr";
-import "./ManagerReservationsPage.css";
+import "../../assets/css/ManagerReservationsPage.css";
 
 const statusClass = {
   CONFIRMED: "confirmed",

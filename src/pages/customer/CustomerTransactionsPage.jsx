@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Pagination from "../../components/Pagination.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import { ProfileFrame } from "./CustomerReservationsPage.jsx";
-import "./CustomerProfilePage.css";
+import "../../assets/css/CustomerProfilePage.css";
 
 const typeLabel = (value) =>
   ({

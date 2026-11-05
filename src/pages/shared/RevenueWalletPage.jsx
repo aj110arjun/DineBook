@@ -6,7 +6,7 @@ import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import ChefLayout from "../../components/chef/ChefLayout.jsx";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
 import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
-import "./RevenueWalletPage.css";
+import "../../assets/css/RevenueWalletPage.css";
 
 const money = (amount) =>
   `₹${Number(amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

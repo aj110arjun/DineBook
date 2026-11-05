@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { ProfileFrame } from "./CustomerReservationsPage.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import TransactionInvoiceButton from "../../components/TransactionInvoice.jsx";
-import "./CustomerProfilePage.css";
+import "../../assets/css/CustomerProfilePage.css";
 
 const humanize = (value) =>
   String(value || "—")

@@ -14,7 +14,7 @@ import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
 import { ProfileFrame } from "./CustomerReservationsPage.jsx";
 import Pagination from "../../components/Pagination.jsx";
 import TransactionInvoiceButton from "../../components/TransactionInvoice.jsx";
-import "./CustomerProfilePage.css";
+import "../../assets/css/CustomerProfilePage.css";
 
 function loadRazorpayCheckout() {
   if (window.Razorpay) return Promise.resolve();

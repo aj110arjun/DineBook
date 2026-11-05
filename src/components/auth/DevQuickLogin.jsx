@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { requestJson } from "../../lib/authApi.js";
 import { demoSessionKey } from "../../data/demoCustomer.js";
-import "./DevQuickLogin.css";
+import "../../assets/css/DevQuickLogin.css";
 
 const TEST_PASSWORD = "DineBookDemo123!";
 const RESTAURANTS = [

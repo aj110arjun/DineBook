@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Plus, Save, Trash2 } from "lucide-react";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import { requestJson } from "../../lib/authApi.js";
-import "./ManagerOperatingHoursPage.css";
+import "../../assets/css/ManagerOperatingHoursPage.css";
 
 const days = [
   "monday",

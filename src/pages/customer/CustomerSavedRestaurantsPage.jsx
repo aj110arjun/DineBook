@@ -8,8 +8,8 @@ import {
   toggleSavedRestaurant,
 } from "../../lib/savedRestaurants.js";
 import { ProfileFrame } from "./CustomerReservationsPage.jsx";
-import "./CustomerSavedRestaurantsPage.css";
-import "./CustomerProfilePage.css";
+import "../../assets/css/CustomerSavedRestaurantsPage.css";
+import "../../assets/css/CustomerProfilePage.css";
 
 export default function CustomerSavedRestaurantsPage() {
   const navigate = useNavigate();

@@ -14,7 +14,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
 import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
-import "./notifications.css";
+import "../../assets/css/notifications.css";
 
 const PREFIX = {
   customer: "/customer",
