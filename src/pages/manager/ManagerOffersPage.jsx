@@ -1,7 +1,8 @@
 import { confirmAction } from "../../lib/confirmDialog.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Tag, Plus, Search, RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { createPortal } from "react-dom";
+import { Tag, Plus, Search, RefreshCw, MoreVertical } from "lucide-react";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import CustomDatePicker from "../../components/CustomDatePicker.jsx";
 import { requestJson } from "../../lib/authApi.js";
@@ -94,6 +95,84 @@ export default function ManagerOffersPage() {
     validFrom,
     validTo,
   ]);
+  const [actionMenu, setActionMenu] = useState(null);
+  const actionMenuRef = useRef(null);
+
+  function openActions(event, offer) {
+    const trigger = event.currentTarget;
+
+    if (actionMenu?.offer.id === offer.id) {
+      setActionMenu(null);
+      return;
+    }
+
+    const rect = trigger.getBoundingClientRect();
+    const width = 180;
+    const height = 150;
+
+    setActionMenu({
+      offer,
+      trigger,
+      left: Math.max(
+        8,
+        Math.min(rect.right - width, window.innerWidth - width - 8),
+      ),
+      top:
+        rect.bottom + height + 8 > window.innerHeight
+          ? Math.max(8, rect.top - height - 8)
+          : rect.bottom + 8,
+    });
+  }
+
+  function runAction(callback) {
+    if (!actionMenu) return;
+
+    const { offer, trigger } = actionMenu;
+    trigger.focus();
+    setActionMenu(null);
+    callback(offer);
+  }
+
+  useEffect(() => {
+    if (!actionMenu) return;
+
+    actionMenuRef.current?.querySelector("button")?.focus();
+
+    function closeOutside(event) {
+      if (
+        !actionMenuRef.current?.contains(event.target) &&
+        !actionMenu.trigger.contains(event.target)
+      ) {
+        setActionMenu(null);
+      }
+    }
+
+    function handleEscape(event) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setActionMenu(null);
+        actionMenu.trigger.focus();
+      }
+    }
+
+    function closeMenu() {
+      setActionMenu(null);
+    }
+
+    document.addEventListener("pointerdown", closeOutside);
+    document.addEventListener("focusin", closeOutside);
+    document.addEventListener("keydown", handleEscape);
+    window.addEventListener("scroll", closeMenu, true);
+    window.addEventListener("resize", closeMenu);
+
+    return () => {
+      document.removeEventListener("pointerdown", closeOutside);
+      document.removeEventListener("focusin", closeOutside);
+      document.removeEventListener("keydown", handleEscape);
+      window.removeEventListener("scroll", closeMenu, true);
+      window.removeEventListener("resize", closeMenu);
+    };
+  }, [actionMenu]);
   useEffect(() => {
     load();
   }, [load]);
@@ -106,12 +185,23 @@ export default function ManagerOffersPage() {
   );
   const filtered = offers;
   const update = (key, value) => setForm((f) => ({ ...f, [key]: value }));
+
   async function save(event) {
     event.preventDefault();
     if (busy) return;
 
     setFormError("");
     setNotice("");
+
+    if (!form.starts_at) {
+      setFormError("Start date is required");
+      return;
+    }
+
+    if (!form.ends_at) {
+      setFormError("End date is required");
+      return;
+    }
 
     if (form.starts_at && form.starts_at < localDateToday()) {
       setFormError("Start date cannot be in the past.");
@@ -122,7 +212,7 @@ export default function ManagerOffersPage() {
       setFormError("End date cannot be in the past.");
       return;
     }
-    if (from.starts_at && form.ends_at && form.ends_at < form.starts_at) {
+    if (form.starts_at && form.ends_at && form.ends_at < form.starts_at) {
       setFormError("End date cannot be before start date.");
       return;
     }
@@ -132,7 +222,7 @@ export default function ManagerOffersPage() {
     try {
       const body = {
         ...form,
-        discount_percent: Number(form.discountFilter),
+        discount_percent: Number(form.discount_percent),
         minimum_subtotal: Number(form.minimum_subtotal),
         max_discount: form.max_discount ? Number(form.max_discount) : null,
         max_uses: form.max_uses ? Number(form.max_uses) : null,
@@ -147,10 +237,15 @@ export default function ManagerOffersPage() {
           : null,
         timezone_name: Intl.DateTimeFormat().resolvedOptions().timeZone,
       };
-      await requestJson(`/api/manager/orders/offers/${form.id}`, {
-        method: form.id ? "PATCH" : "POST",
-        body: JSON.stringify(body),
-      });
+      await requestJson(
+        form.id
+          ? `/api/manager/orders/offers/${form.id}`
+          : `/api/manager/orders/offers`,
+        {
+          method: form.id ? "PUT" : "POST",
+          body: JSON.stringify(body),
+        },
+      );
       setForm(null);
       setNotice(`Offer ${form.id ? "updated" : "created"} successfully.`);
       await load();
@@ -217,7 +312,7 @@ export default function ManagerOffersPage() {
             <Plus size={17} /> Create offer
           </button>
         </div>
-        {formError && (
+        {formError && !form && (
           <p role="alert" className="offer-alert">
             {formError}
           </p>
@@ -369,12 +464,19 @@ export default function ManagerOffersPage() {
                       </span>
                     </td>
                     <td>
-                      <button onClick={() => edit(o)}>Edit</button>{" "}
-                      <button onClick={() => showRedemptions(o)}>
-                        History
-                      </button>{" "}
-                      <button onClick={() => toggle(o)}>
-                        {o.is_active ? "Deactivate" : "Activate"}
+                      <button
+                        type="button"
+                        className="offer-actions-trigger"
+                        aria-label={`Actions for ${o.title}`}
+                        aria-expanded={actionMenu?.offer.id === o.id}
+                        aria-controls={
+                          actionMenu?.offer.id === o.id
+                            ? "offer-actions-dropdown"
+                            : undefined
+                        }
+                        onClick={(event) => openActions(event, o)}
+                      >
+                        <MoreVertical size={19} aria-hidden="true" />
                       </button>
                     </td>
                   </tr>
@@ -400,15 +502,39 @@ export default function ManagerOffersPage() {
           </div>
         )}
       </section>
+      {actionMenu &&
+        createPortal(
+          <div
+            id="offer-actions-dropdown"
+            className="offer-actions-dropdown"
+            role="group"
+            aria-label={`Actions for ${actionMenu.offer.title}`}
+            ref={actionMenuRef}
+            style={{
+              top: actionMenu.top,
+              left: actionMenu.left,
+            }}
+          >
+            <button type="button" onClick={() => runAction(edit)}>
+              Edit offer
+            </button>
+
+            <button type="button" onClick={() => runAction(showRedemptions)}>
+              View history
+            </button>
+
+            <button type="button" onClick={() => runAction(toggle)}>
+              {actionMenu.offer.is_active
+                ? "Deactivate offer"
+                : "Activate offer"}
+            </button>
+          </div>,
+          document.body,
+        )}
       {form && (
         <div className="offer-modal-backdrop">
           <CustomForm className="offer-form" onSubmit={save}>
             <h2>{form.id ? "Edit offer" : "Create offer"}</h2>
-            {formError && !form && (
-              <p role="alert" className="offer-alert">
-                {formError}
-              </p>
-            )}
             <div className="offer-form-grid">
               <label>
                 Title
@@ -505,6 +631,7 @@ export default function ManagerOffersPage() {
                   label="Choose offer start date"
                   value={form.starts_at}
                   minDate={localDateToday()}
+                  required
                   onChange={(value) =>
                     setForm((current) => ({
                       ...current,
@@ -520,6 +647,7 @@ export default function ManagerOffersPage() {
               <label>
                 End date
                 <CustomDatePicker
+                  required
                   label="Choose offer end date"
                   value={form.ends_at}
                   minDate={form.starts_at || localDateToday()}

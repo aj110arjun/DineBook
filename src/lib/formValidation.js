@@ -1,5 +1,11 @@
 export function getFieldError(field) {
-  if (field.disabled || !field.willValidate) return "";
+  if (field.disabled) return "";
+
+  if (field.dataset?.required === "true" && !field.dataset.value) {
+    return `${field.dataset.validationLabel || "Date"} is required.`;
+  }
+
+  if (!field.willValidate) return "";
 
   const labelNode = field.labels?.[0]?.cloneNode(true);
   labelNode

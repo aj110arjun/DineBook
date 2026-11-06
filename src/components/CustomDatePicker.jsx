@@ -14,6 +14,8 @@ export default function CustomDatePicker({
   onChange,
   label = "Choose date",
   minDate = todayKey(),
+  required = false,
+  validationLabel = label,
 }) {
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(() => {
@@ -81,6 +83,9 @@ export default function CustomDatePicker({
         aria-label={label}
         aria-haspopup="dialog"
         aria-expanded={open}
+        data-required={required ? "true" : undefined}
+        data-value={value || ""}
+        data-validation-label={validationLabel}
         onClick={() => {
           if (!open) {
             const anchor = new Date(`${value || minimumDate}T12:00:00`);
