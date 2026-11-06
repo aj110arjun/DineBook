@@ -359,16 +359,6 @@
   color: var(--dark-muted, #bdb2b3);
 }
 :root {
-  color-scheme: light;
-  --font-sans: "DM Sans", Arial, sans-serif;
-  --font-display: "Playfair Display", Georgia, serif;
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-md: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.375rem;
-  --font-size-2xl: 1.75rem;
-  --font-size-3xl: 2rem;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
@@ -376,55 +366,10 @@
   --line-height-tight: 1.2;
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.65;
-  --color-primary: #551321;
-  --color-primary-strong: #3a0b15;
-  --color-link: #551321;
-  --color-link-hover: #3a0b15;
-  --color-accent: #c7a45e;
-  --color-background: #f9f8f6;
-  --color-surface: #fff;
-  --color-surface-raised: #faf7f4;
-  --color-text-primary: #302829;
-  --color-text-secondary: #6f6868;
-  --color-text-muted: #898283;
-  --color-border: #e9e5e2;
-  --color-success: #27744a;
-  --color-warning: #80652f;
-  --color-danger: #b42334;
-  --color-info: #416a93;
-  --focus-ring: 0 0 0 3px rgb(199 164 94 / 28%);
-  --shadow-card: 0 8px 24px rgb(48 25 27 / 6%);
-  --content-width: 1440px;
-  --control-height: 44px;
   --transition-fast: 150ms ease;
-  --text-primary: var(--color-text-primary);
-  --text-secondary: #6f6868;
-  --text-muted: var(--color-text-muted);
-  --border-color: #e9e5e2;
-  --paper: var(--color-background);
-  --surface: var(--color-surface);
-  --surface-raised: var(--color-surface-raised);
-  --radius-control: 9px;
-  --radius-card: 14px;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-6: 24px;
-  --space-8: 32px;
-  font-family: var(--font-sans);
-  color: var(--color-text-primary);
-  background: var(--color-background);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
   font-optical-sizing: auto;
   font-weight: 400;
-  --wine: var(--color-primary);
-  --wine-dark: var(--color-primary-strong);
-  --gold: var(--color-accent);
   --muted: var(--text-muted);
-  --line: var(--border-color);
-  --paper: #faf9f7;
 }
 * {
   box-sizing: border-box;
@@ -468,26 +413,8 @@
     white-space: nowrap;
   }
 }
-html {
-  scroll-behavior: smooth;
-  scroll-padding-top: 90px;
-}
 body {
   margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-}
-button,
-input,
-select {
-  font: inherit;
-}
-textarea {
-  font: inherit;
-}
-button,
-a {
-  -webkit-tap-highlight-color: transparent;
 }
 a {
   color: var(--color-link);
@@ -896,7 +823,6 @@ a:focus-visible,
 }
 .header-inner {
   height: 78px;
-  max-width: 1440px;
   margin: auto;
   padding: 0 clamp(22px, 4.5vw, 72px);
   display: flex;
@@ -908,7 +834,6 @@ a:focus-visible,
   align-items: center;
   gap: 10px;
   color: white;
-  font-size: var(--font-size-md);
   font-weight: 700;
   white-space: nowrap;
 }
@@ -935,7 +860,6 @@ a:focus-visible,
   border-radius: 18px;
   color: #f5dd9b;
   background: #ffffff08;
-  font-size: var(--font-size-xs);
   white-space: nowrap;
 }
 .location-select select {
@@ -945,7 +869,6 @@ a:focus-visible,
   outline: 0;
   background: transparent;
   color: #fff;
-  font-size: var(--font-size-xs);
   cursor: pointer;
 }
 .location-select option {
@@ -959,7 +882,6 @@ a:focus-visible,
 }
 .nav-links a,
 .text-button {
-  font-size: var(--font-size-xs);
   color: #f4eeee;
   transition: color 0.15s;
 }
@@ -1098,7 +1020,6 @@ a:focus-visible,
   font-weight: 600;
 }
 .hero-content p {
-  max-width: 670px;
   margin: 0;
   color: #e8dfe0;
   font-size: var(--font-size-md);
@@ -1208,21 +1129,15 @@ a:focus-visible,
   color: white;
   font-size: var(--font-size-xs);
   font-weight: 600;
-  box-shadow: 0 2px 8px #2c1c1817;
   transition:
     transform 0.18s,
     box-shadow 0.18s;
-}
-.cuisine-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px #2c1c1828;
 }
 .cuisine-card.selected {
   outline: 3px solid var(--gold);
   outline-offset: 2px;
 }
 .cuisine-card span {
-  position: relative;
   text-shadow: 0 1px 4px #000;
 }
 .restaurant-section {
@@ -1496,7 +1411,6 @@ a:focus-visible,
 }
 .restaurant-photo {
   height: 205px;
-  position: relative;
   background-size: cover;
   background-position: center;
 }
@@ -1540,9 +1454,6 @@ a:focus-visible,
 }
 .save-button.saved {
   color: #a43247;
-}
-.restaurant-info {
-  padding: 15px 17px 17px;
 }
 .restaurant-title {
   display: flex;
@@ -1606,10 +1517,6 @@ a:focus-visible,
 .restaurant-menu-link:hover {
   border-color: #9e6d75;
   background: #fbf7f5;
-}
-.restaurant-menu-link:focus-visible {
-  outline: 3px solid #c7a45e;
-  outline-offset: 3px;
 }
 .restaurant-card-actions .reserve-button {
   box-sizing: border-box;
@@ -3249,7 +3156,6 @@ a:focus-visible,
   padding: 13px 20px;
   font-size: var(--font-size-xs);
   box-shadow: 0 9px 30px #0004;
-  white-space: nowrap;
 }
 @media (max-width: 1000px) {
   .header-inner {
@@ -3277,9 +3183,6 @@ a:focus-visible,
     height: 66px;
     justify-content: space-between;
     padding: 0 19px;
-  }
-  .site-brand {
-    font-size: var(--font-size-sm);
   }
   .mobile-menu-toggle {
     border: 0;
@@ -3311,12 +3214,6 @@ a:focus-visible,
   .account-nav {
     justify-content: space-between;
   }
-  .hero-banner {
-    min-height: 475px;
-  }
-  .hero-content {
-    padding: 72px 25px;
-  }
   .hero-content h1 {
     font-size: clamp(42px, 10vw, 62px);
   }
@@ -3325,9 +3222,6 @@ a:focus-visible,
   }
   .content-section {
     padding: 49px 20px 0;
-  }
-  .cuisine-section {
-    padding-top: 45px;
   }
   .cuisine-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3636,18 +3530,6 @@ a:focus-visible,
     margin-top: 20px;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-  *,
-  *::before,
-  *::after {
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-  }
-}
 /* Portal Admin authentication */
 
 .admin-auth-shell {
@@ -3705,8 +3587,6 @@ a:focus-visible,
   gap: 5px;
   padding: 4px 7px;
   border-radius: 3px;
-  background: rgba(80, 185, 150, 0.14);
-  color: #58c9a0;
   font-size: var(--font-size-xs);
   letter-spacing: 0.08em;
 }
@@ -3782,7 +3662,6 @@ a:focus-visible,
 .admin-dashboard {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 237px minmax(0, 1fr);
   background: #f4f7f8;
   color: #182335;
 }
@@ -3809,7 +3688,6 @@ a:focus-visible,
   display: grid;
   place-items: center;
   border-radius: 8px;
-  background: #0fa99d;
 }
 
 .admin-sidebar-brand strong {
@@ -3824,7 +3702,6 @@ a:focus-visible,
   display: block;
   margin-top: 3px;
   color: #8291a5;
-  font-size: var(--font-size-xs);
   letter-spacing: 0.06em;
 }
 
@@ -3875,7 +3752,6 @@ a:focus-visible,
 
 .admin-nav-item {
   width: 100%;
-  height: 41px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -3885,7 +3761,6 @@ a:focus-visible,
   background: transparent;
   color: #aeb9c8;
   font-family: inherit;
-  font-size: var(--font-size-xs);
   text-align: left;
   cursor: pointer;
   text-decoration: none;
@@ -3896,18 +3771,10 @@ a:focus-visible,
   color: #fff;
 }
 
-.admin-nav-item.active {
-  background: #0fa99d;
-  color: #fff;
-}
-
 .admin-sidebar-user {
-  margin-top: auto;
-  padding: 18px 10px 0;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
-  gap: 10px;
 }
 
 .admin-avatar {
@@ -3926,7 +3793,6 @@ a:focus-visible,
 .admin-sidebar-user strong {
   display: block;
   color: #fff;
-  font-size: var(--font-size-xs);
   font-weight: 500;
 }
 
@@ -3934,11 +3800,6 @@ a:focus-visible,
   display: block;
   margin-top: 2px;
   color: #8291a5;
-  font-size: var(--font-size-xs);
-}
-
-.admin-dashboard-main {
-  min-width: 0;
 }
 
 .admin-topbar {
@@ -3956,7 +3817,6 @@ a:focus-visible,
   color: #172335;
   font-family: var(--font-sans);
   font-size: var(--font-size-xl);
-  font-weight: 500;
 }
 
 .admin-topbar-actions {
@@ -4009,14 +3869,12 @@ a:focus-visible,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 21px;
 }
 
 .admin-dashboard-heading h2 {
   margin: 0;
   color: #172335;
   font-size: var(--font-size-3xl);
-  font-weight: 500;
 }
 
 .admin-dashboard-heading p {
@@ -4034,13 +3892,6 @@ a:focus-visible,
 }
 
 @media (max-width: 800px) {
-  .admin-dashboard {
-    grid-template-columns: 1fr;
-  }
-
-  .admin-sidebar {
-    display: none;
-  }
 
   .admin-topbar {
     padding: 0 20px;
@@ -4128,15 +3979,10 @@ a:focus-visible,
   padding: 0 15px;
   border: 0;
   border-radius: 9px;
-  background: #0fa99d;
   color: #fff;
   font-family: inherit;
   font-size: var(--font-size-xs);
   cursor: pointer;
-}
-
-.admin-primary-button:hover {
-  background: #0c948a;
 }
 
 .admin-table-card {
@@ -4261,9 +4107,6 @@ a:focus-visible,
   font-weight: 600;
   text-decoration: none;
 }
-.admin-restaurant-back:hover {
-  color: #0fa99d;
-}
 .admin-restaurant-detail-heading,
 .admin-restaurant-detail-card {
   margin-bottom: 18px;
@@ -4279,81 +4122,58 @@ a:focus-visible,
   gap: 18px;
 }
 .admin-restaurant-detail-heading > div > span {
-  color: #0fa99d;
-  font-size: var(--font-size-xs);
   font-weight: 700;
-  letter-spacing: 0.12em;
 }
 .admin-restaurant-detail-heading h2 {
-  margin: 7px 0 4px;
   color: #172335;
-  font-size: var(--font-size-2xl);
 }
 .admin-restaurant-detail-heading p {
   margin: 0;
   color: #748399;
-  font-size: var(--font-size-xs);
 }
 .admin-restaurant-detail-card h3 {
   display: flex;
   align-items: center;
-  gap: 8px;
   margin: 0 0 19px;
   color: #172335;
-  font-size: var(--font-size-sm);
 }
 .admin-restaurant-detail-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
 }
 .admin-restaurant-detail-item {
   display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  color: #0fa99d;
 }
 .admin-restaurant-detail-item > div {
   display: grid;
-  gap: 5px;
   min-width: 0;
 }
 .admin-restaurant-detail-item span,
 .admin-restaurant-description > span {
   color: #8792a0;
-  font-size: var(--font-size-xs);
 }
 .admin-restaurant-detail-item strong {
   overflow-wrap: anywhere;
   color: #263346;
-  font-size: var(--font-size-xs);
-  font-weight: 600;
 }
 .admin-restaurant-description {
-  margin-top: 20px;
-  padding-top: 17px;
   border-top: 1px solid #edf0f2;
 }
 .admin-restaurant-description p,
 .admin-restaurant-empty {
   margin: 7px 0 0;
   color: #68778a;
-  font-size: var(--font-size-xs);
   line-height: 1.6;
 }
 .admin-restaurant-hours {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 25px;
 }
 .admin-restaurant-hours > div {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 0;
   border-bottom: 1px solid #edf0f2;
   color: #68778a;
-  font-size: var(--font-size-xs);
   text-transform: capitalize;
 }
 .admin-restaurant-hours strong {
@@ -4363,18 +4183,13 @@ a:focus-visible,
 }
 .admin-restaurant-documents {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
 }
 .admin-restaurant-documents a {
   display: flex;
   align-items: center;
   gap: 10px;
   min-width: 0;
-  padding: 13px;
   border: 1px solid #e4e9ec;
-  border-radius: 9px;
-  color: #0fa99d;
   text-decoration: none;
 }
 .admin-restaurant-documents a:hover {
@@ -4419,10 +4234,6 @@ a:focus-visible,
 
   .admin-table {
     min-width: 760px;
-  }
-  .admin-restaurant-detail-grid,
-  .admin-restaurant-documents {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 @media (max-width: 560px) {
@@ -4661,24 +4472,6 @@ a:focus-visible,
 :root[data-theme="dark"] .admin-confirm-close:hover {
   background: #302a2d;
 }
-:root[data-theme="dark"] .admin-request-status-tab {
-  border-color: #514447;
-  background: #211c1e;
-  color: #d0c7c7;
-}
-:root[data-theme="dark"] .admin-request-status-tab span {
-  background: #302a2d;
-  color: #d0c7c7;
-}
-:root[data-theme="dark"] .admin-request-status-tab.active {
-  border-color: #0fa99d;
-  background: #183532;
-  color: #8be0d7;
-}
-:root[data-theme="dark"] .admin-request-status-tab.active span {
-  background: #23514c;
-  color: #b8f0e9;
-}
 
 .admin-document-preview-trigger {
   width: 100%;
@@ -4801,31 +4594,6 @@ a:focus-visible,
 
 /* Shared dark palette for utility classes used across every route. */
 :root[data-theme="dark"] {
-  color-scheme: dark;
-  --color-primary: #6a2939;
-  --color-primary-strong: #46131f;
-  --color-link: #e7c5ca;
-  --color-link-hover: #fff;
-  --color-accent: #e1c477;
-  --color-background: #171516;
-  --color-surface: #211d1f;
-  --color-surface-raised: #2c2629;
-  --color-text-primary: #f1e9e8;
-  --color-text-secondary: #d0c6c2;
-  --color-text-muted: #bdb2b3;
-  --color-border: #494044;
-  --color-success: #82dfb8;
-  --color-warning: #f0cc7d;
-  --color-danger: #ffabb4;
-  --color-info: #aec9e1;
-  --focus-ring: 0 0 0 3px rgb(225 196 119 / 30%);
-  --shadow-card: 0 10px 28px rgb(0 0 0 / 22%);
-  --paper: #171516;
-  --surface: #211d1f;
-  --surface-raised: #2c2629;
-  --dark-text: #f1e9e8;
-  --dark-muted: #bdb2b3;
-  --dark-line: #494044;
   --text-primary: var(--color-text-primary);
   --text-secondary: var(--color-text-secondary);
   --text-muted: var(--color-text-muted);
@@ -4837,7 +4605,6 @@ a:focus-visible,
 }
 :root[data-theme="dark"] body {
   background-color: var(--paper);
-  color: var(--dark-text);
 }
 :root[data-theme="dark"] body [class~="bg-white"],
 :root[data-theme="dark"] body [class~="bg-cream"],
@@ -4910,7 +4677,6 @@ a:focus-visible,
 :root[data-theme="dark"] .restaurant-details-page,
 :root[data-theme="dark"] .restaurant-listing-page {
   background-color: var(--paper);
-  color: var(--dark-text);
 }
 :root[data-theme="dark"]
   :is(
@@ -4986,20 +4752,13 @@ a:focus-visible,
 
 /* Chef dashboard contrast fixes. Keep these after the shared typography rules. */
 :root[data-theme="dark"] .chef-dashboard-shell {
-  --chef-paper: #171516;
-  --chef-ink: #f1e9e8;
-  --chef-muted: #bdb2b3;
   --chef-sidebar: #10090b;
-  background: var(--chef-paper);
-  color: var(--chef-ink);
 }
 :root[data-theme="dark"] .chef-topbar,
 :root[data-theme="dark"] .chef-stat-card,
 :root[data-theme="dark"] .chef-panel,
 :root[data-theme="dark"] .chef-dish-card {
-  border-color: #494044;
   background: #211d1f;
-  color: #f1e9e8;
 }
 :root[data-theme="dark"] .chef-topbar-title h1,
 :root[data-theme="dark"] .chef-page-heading h2,
@@ -5063,17 +4822,10 @@ a:focus-visible,
 }
 :root[data-theme="dark"] .chef-icon-button,
 :root[data-theme="dark"] .chef-view-order {
-  border-color: #494044;
   background: #2c2629;
-  color: #f1e9e8;
 }
 :root[data-theme="dark"] .chef-view-order:hover {
   border-color: #73545e;
-  background: #392a30;
-}
-:root[data-theme="dark"] .chef-pipeline-item {
-  border-color: #494044;
-  background: #2c2629;
 }
 :root[data-theme="dark"] .chef-pipeline-item span {
   color: #c7bfc0 !important;
@@ -5096,13 +4848,7 @@ a:focus-visible,
 :root[data-theme="dark"] .chef-panel-heading button {
   color: #e4a0b0;
 }
-:root[data-theme="dark"] .chef-orders-table th {
-  border-color: #494044;
-  background: #302a2d;
-  color: #c7bfc0;
-}
 :root[data-theme="dark"] .chef-orders-table td {
-  border-color: #40383a;
   color: #e6dfe0;
 }
 :root[data-theme="dark"] .chef-order-status.new {
@@ -5204,7 +4950,6 @@ a:focus-visible,
 
 .admin-request-list {
   display: grid;
-  gap: 13px;
 }
 
 .admin-request-status-tabs {
@@ -5241,42 +4986,21 @@ a:focus-visible,
 .admin-request-status-tab:hover {
   border-color: #b9c7ce;
 }
-.admin-request-status-tab.active {
-  border-color: #0fa99d;
-  background: #e8f6f5;
-  color: #0b8279;
-}
-.admin-request-status-tab.active span {
-  background: #d3efed;
-  color: #0b8279;
-}
 
 .admin-request-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  padding: 18px 20px;
   border: 1px solid #e4e9ec;
-  border-radius: 13px;
   background: #fff;
-  box-shadow: 0 3px 12px rgba(23, 35, 53, 0.035);
-}
-
-.admin-request-card:hover {
-  border-color: #d9e1e5;
 }
 
 .admin-request-avatar {
-  width: 43px;
-  height: 43px;
   flex-shrink: 0;
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: #e8f6f5;
-  color: #0b8279;
-  font-size: var(--font-size-xs);
   font-weight: 700;
 }
 
@@ -5300,27 +5024,17 @@ a:focus-visible,
 
 .admin-request-status {
   display: inline-flex;
-  align-items: center;
-  padding: 4px 8px;
-  border-radius: 20px;
   background: #fff5df;
   color: #b77a17;
-  font-size: var(--font-size-xs);
-  font-weight: 600;
   text-transform: uppercase;
 }
 
 .admin-request-details p {
   margin: 5px 0 0;
-  color: #748399;
-  font-size: var(--font-size-xs);
 }
 
 .admin-request-details small {
   display: block;
-  margin-top: 6px;
-  color: #9aa5b1;
-  font-size: var(--font-size-xs);
 }
 
 .admin-request-actions {
@@ -5507,10 +5221,6 @@ a:focus-visible,
   font-size: var(--font-size-md);
 }
 
-.admin-dashboard {
-  grid-template-columns: 260px minmax(0, 1fr);
-}
-
 .admin-sidebar-brand span {
   font-size: var(--font-size-xs);
 }
@@ -5529,74 +5239,8 @@ a:focus-visible,
   font-size: var(--font-size-xs);
 }
 
-.manager-sidebar {
-  width: 250px;
-}
-
-.manager-dashboard-main {
-  width: calc(100% - 250px);
-  margin-left: 250px;
-}
-
-.manager-restaurant-card strong {
-  font-size: var(--font-size-sm);
-}
-
-.manager-restaurant-card span {
-  font-size: var(--font-size-xs);
-}
-
-.manager-nav-item {
-  min-height: 46px;
-  font-size: var(--font-size-md);
-}
-
-.manager-topbar {
-  min-height: 76px;
-  height: auto;
-}
-
 .manager-topbar-left h1 {
   font-size: var(--font-size-2xl);
-}
-
-.manager-order-status-badge {
-  font-size: var(--font-size-xs);
-  padding: 8px 12px;
-}
-
-.manager-search {
-  width: 280px;
-  height: 40px;
-}
-
-.manager-search input {
-  font-size: var(--font-size-sm);
-}
-
-.manager-notification-button {
-  width: 42px;
-  height: 42px;
-}
-
-.manager-notification-button span {
-  min-width: 18px;
-  height: 18px;
-  font-size: var(--font-size-xs);
-}
-
-.manager-profile-avatar {
-  width: 40px;
-  height: 40px;
-  font-size: var(--font-size-xs);
-}
-
-.manager-profile strong {
-  font-size: var(--font-size-sm);
-}
-
-.manager-profile span {
-  font-size: var(--font-size-xs);
 }
 
 .manager-menu-button {
@@ -5604,48 +5248,16 @@ a:focus-visible,
   height: 42px;
 }
 
-.chef-nav-item {
-  min-height: 48px;
-  font-size: var(--font-size-md);
-}
-
-.chef-identity-copy strong {
-  font-size: var(--font-size-md);
-}
-
-.chef-identity-copy span {
-  font-size: var(--font-size-sm);
-}
-
 @media (max-width: 760px) {
   .nav-links a,
   .text-button {
     font-size: var(--font-size-md);
-  }
-
-  .manager-sidebar {
-    width: min(290px, 86vw);
-  }
-
-  .manager-dashboard-main {
-    width: 100%;
-    margin-left: 0;
   }
 }
 
 @media (max-width: 650px) {
   .manager-topbar-left h1 {
     font-size: var(--font-size-xl);
-  }
-
-  .manager-topbar {
-    min-height: 68px;
-  }
-}
-
-@media (max-width: 800px) {
-  .admin-dashboard {
-    grid-template-columns: 1fr;
   }
 }
 /* =========================================================
@@ -5676,7 +5288,6 @@ a:focus-visible,
   align-items: center;
   gap: 9px;
   padding: 0 14px;
-  font-size: var(--font-size-md);
   font-weight: 700;
 }
 
@@ -5699,14 +5310,9 @@ a:focus-visible,
   background: rgba(255, 255, 255, 0.09);
 }
 
-.manager-restaurant-card strong {
-  font-size: var(--font-size-xs);
-}
-
 .manager-restaurant-card span {
   margin-top: 3px;
   color: #cbb8bc;
-  font-size: var(--font-size-xs);
 }
 
 .manager-nav {
@@ -5735,7 +5341,6 @@ a:focus-visible,
 
 .manager-nav-item {
   width: 100%;
-  min-height: 34px;
   display: flex;
   align-items: center;
   gap: 11px;
@@ -5745,7 +5350,6 @@ a:focus-visible,
   background: transparent;
   color: #dfcfd2;
   font-family: inherit;
-  font-size: var(--font-size-xs);
   text-align: left;
   cursor: pointer;
 }
@@ -5777,7 +5381,6 @@ a:focus-visible,
 
 .manager-dashboard-main {
   width: calc(100% - 214px);
-  min-width: 0;
   margin-left: 214px;
 }
 
@@ -5805,7 +5408,6 @@ a:focus-visible,
 .manager-topbar-left h1 {
   margin: 0;
   font-size: var(--font-size-xl);
-  font-weight: 650;
 }
 
 .manager-order-status-badge {
@@ -5816,7 +5418,6 @@ a:focus-visible,
   border-radius: 20px;
   background: #eaf6eb;
   color: #34803c;
-  font-size: var(--font-size-xs);
   font-weight: 600;
 }
 
@@ -5932,7 +5533,6 @@ a:focus-visible,
 }
 
 .manager-dashboard-content {
-  max-width: 1440px;
   margin: 0 auto;
   padding: 29px 27px 42px;
 }
@@ -6016,10 +5616,6 @@ a:focus-visible,
 .manager-menu-input:focus {
   border-color: #80525c;
   box-shadow: 0 0 0 3px rgb(85 19 33 / 9%);
-}
-.manager-menu-food-extras {
-  min-width: 0;
-  width: 100%;
 }
 .manager-menu-food-extras > .grid > div {
   min-width: 0;
@@ -6558,9 +6154,6 @@ a:focus-visible,
 }
 .customer-menu-image {
   display: block;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
 }
 .customer-menu-image-placeholder {
   background: linear-gradient(135deg, #f5eeea, #e8ded8);
@@ -6606,8 +6199,6 @@ a:focus-visible,
   font-size: var(--font-size-xs);
 }
 .customer-menu-variants {
-  display: grid;
-  gap: 5px;
   margin: 12px 0 0;
   border-top: 1px solid #f0eae7;
   padding: 8px 0 0;
@@ -6764,7 +6355,6 @@ a:focus-visible,
 .manager-summary-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 13px;
 }
 
 .manager-summary-card {
@@ -7296,8 +6886,6 @@ a:focus-visible,
 .admin-stat-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin-top: 24px;
 }
 
 .admin-stat-card {
@@ -7329,8 +6917,6 @@ a:focus-visible,
   display: grid;
   place-items: center;
   border-radius: 8px;
-  background: #e7f7f5;
-  color: #0fa99d;
 }
 
 .admin-stat-value {
@@ -7480,8 +7066,6 @@ a:focus-visible,
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: #e7f7f5;
-  color: #0fa99d;
 }
 
 .admin-activity-item > div:last-child {
@@ -8569,11 +8153,9 @@ a:focus-visible,
 }
 .chef-dashboard-main {
   width: calc(100% - 306px);
-  min-width: 0;
   margin-left: 306px;
 }
 .chef-topbar {
-  min-height: 92px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -8592,7 +8174,6 @@ a:focus-visible,
   margin: 0;
   font-size: var(--font-size-2xl);
   line-height: 1.25;
-  font-weight: 700;
   letter-spacing: -0.025em;
 }
 .chef-topbar-title p {
@@ -8678,7 +8259,6 @@ a:focus-visible,
   line-height: 14px;
 }
 .chef-dashboard-content {
-  max-width: 1800px;
   margin: 0 auto;
   padding: 29px 38px 20px;
 }
@@ -8700,7 +8280,6 @@ a:focus-visible,
   margin: 0;
   font-size: var(--font-size-3xl);
   line-height: 1.25;
-  font-weight: 700;
   letter-spacing: -0.035em;
 }
 .chef-page-heading p {
@@ -8710,8 +8289,6 @@ a:focus-visible,
 }
 .chef-stat-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 18px;
 }
 .chef-stat-card,
 .chef-panel {
@@ -8775,8 +8352,6 @@ a:focus-visible,
 .chef-overview-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.75fr) minmax(320px, 0.85fr);
-  gap: 28px;
-  margin-top: 27px;
   align-items: start;
 }
 .chef-panel {
@@ -8965,7 +8540,6 @@ a:focus-visible,
 .chef-dish-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 18px;
   margin-top: 16px;
 }
 .chef-dish-card {
@@ -9117,12 +8691,8 @@ a:focus-visible,
 }
 
 @media (max-width: 1450px) {
-  .chef-stat-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
   .chef-overview-grid {
     grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.8fr);
-    gap: 18px;
   }
 }
 @media (max-width: 1050px) {
@@ -9182,7 +8752,6 @@ a:focus-visible,
     place-items: center;
   }
   .chef-topbar {
-    min-height: 76px;
     justify-content: flex-start;
     padding: 12px 16px;
   }
@@ -9210,9 +8779,6 @@ a:focus-visible,
   .chef-account-button {
     display: none;
   }
-  .chef-dashboard-content {
-    padding: 21px 16px 15px;
-  }
   .chef-page-heading {
     margin: 21px 0;
   }
@@ -9221,10 +8787,6 @@ a:focus-visible,
   }
   .chef-page-heading p {
     font-size: var(--font-size-xs);
-  }
-  .chef-stat-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 11px;
   }
   .chef-stat-card {
     padding: 13px;
@@ -9266,7 +8828,6 @@ a:focus-visible,
   }
   .chef-dish-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
   }
   .chef-dish-card {
     display: grid;
@@ -9320,7 +8881,6 @@ a:focus-visible,
 
 /* Persisted application-wide dark theme */
 :root[data-theme="dark"] {
-  color-scheme: dark;
   --paper: #171516;
   --surface: #211d1f;
   --surface-raised: #292426;
@@ -9873,7 +9433,6 @@ a:focus-visible,
 :root[data-theme="dark"] .chef-orders-table th,
 :root[data-theme="dark"] .chef-pipeline-item {
   border-color: var(--dark-line);
-  background: var(--surface-raised);
   color: var(--dark-muted);
 }
 :root[data-theme="dark"] .admin-table td,
@@ -10335,19 +9894,6 @@ a:focus-visible,
   body
   a:not(.site-brand):not(.brand):not(.restaurant-name-link) {
   color: #e4c57d;
-}
-:root[data-theme="dark"] .restaurant-status.pending {
-  color: #f4c96f;
-}
-:root[data-theme="dark"] .restaurant-status.approved,
-:root[data-theme="dark"] .restaurant-status.active {
-  color: #72d6b4;
-}
-:root[data-theme="dark"] .restaurant-status.rejected {
-  color: #ff9ca8;
-}
-:root[data-theme="dark"] .restaurant-status.inactive {
-  color: #c3ccd7;
 }
 :root[data-theme="dark"] .admin-status,
 :root[data-theme="dark"] .chef-order-status,
@@ -10922,7 +10468,6 @@ a:focus-visible,
   width: 100%;
   min-height: 62px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 3px 10px;
   padding: 12px 14px;
@@ -11437,9 +10982,6 @@ a:focus-visible,
     min-height: 82px;
     padding: 13px;
   }
-  .table-layout-toolbar {
-    flex-wrap: wrap;
-  }
   .table-layout-toolbar > .table-layout-primary {
     margin-left: 0;
   }
@@ -11687,11 +11229,9 @@ a:focus-visible,
 }
 :root[data-theme="dark"] .admin-restaurant-documents a {
   border-color: #494044;
-  background: #292426;
 }
 :root[data-theme="dark"] .admin-restaurant-documents a:hover {
   border-color: #348f86;
-  background: #24312f;
 }
 :root[data-theme="dark"] .admin-restaurant-documents small {
   color: #b0a5a5;
@@ -11699,11 +11239,6 @@ a:focus-visible,
 :root[data-theme="dark"] .admin-stat-top > span,
 :root[data-theme="dark"] .admin-stat-warning {
   color: #c7bfc0;
-}
-:root[data-theme="dark"] .admin-stat-icon,
-:root[data-theme="dark"] .admin-activity-icon {
-  background: #203733;
-  color: #75d1c5;
 }
 :root[data-theme="dark"] .admin-chart {
   border-color: #40383a;
@@ -11725,22 +11260,6 @@ a:focus-visible,
   background: #302a2d;
   color: #d0c7c7;
 }
-:root[data-theme="dark"] .admin-request-status-tab.active {
-  border-color: #0fa99d;
-  background: #183532;
-  color: #8be0d7;
-}
-:root[data-theme="dark"] .admin-request-status-tab.active span {
-  background: #23514c;
-  color: #b8f0e9;
-}
-:root[data-theme="dark"] .admin-request-card:hover {
-  border-color: #5a7773;
-}
-:root[data-theme="dark"] .admin-request-avatar {
-  background: #203733;
-  color: #8be0d7;
-}
 :root[data-theme="dark"] .admin-request-status {
   background: #3b2f1d;
   color: #f4c96f;
@@ -11754,19 +11273,12 @@ a:focus-visible,
   border-color: #8f4a56;
   background: #482630;
 }
-:root[data-theme="dark"] .admin-request-empty strong {
-  color: #f1e9e8;
-}
-:root[data-theme="dark"] .admin-request-empty span {
-  color: #b0a5a5;
-}
 
 /* Keep admin navigation still while each admin page scrolls independently. */
 @media (min-width: 801px) {
   .admin-sidebar {
     position: fixed;
     inset: 0 auto 0 0;
-    width: 237px;
     height: 100vh;
     min-height: 0;
     overflow-y: auto;
@@ -11918,8 +11430,6 @@ a:focus-visible,
   width: 48px;
   height: 48px;
   border: 1px solid #ccebe6;
-  background: linear-gradient(145deg, #e5f8f5, #d5efeb);
-  color: #087d73;
   font-size: var(--font-size-sm);
 }
 .admin-request-title h3 {
@@ -12009,8 +11519,6 @@ a:focus-visible,
 }
 :root[data-theme="dark"] .admin-request-avatar {
   border-color: #31544f;
-  background: linear-gradient(145deg, #203733, #263f3b);
-  color: #8be0d7;
 }
 :root[data-theme="dark"] .admin-request-title h3 {
   color: #f4eeee;
@@ -12134,11 +11642,7 @@ a:focus-visible,
 .restaurant-pagination .admin-pagination-summary strong {
   color: #393131;
 }
-.restaurant-pagination .admin-pagination-controls {
-  gap: 8px;
-}
 .restaurant-pagination .pagination-page-numbers button {
-  min-width: 36px;
   padding: 0 11px;
 }
 .customer-menu-pagination.admin-pagination {
@@ -12460,13 +11964,11 @@ a:focus-visible,
 }
 @media (max-width: 700px) {
   .admin-restaurant-detail-layout {
-    grid-template-columns: 1fr;
     gap: 11px;
     padding: 14px 16px 22px;
   }
   .admin-restaurant-detail-layout > .admin-restaurant-detail-heading,
   .admin-restaurant-detail-layout > .admin-restaurant-detail-card {
-    grid-column: 1;
     padding: 16px;
   }
   .admin-restaurant-detail-heading h2 {
@@ -12884,20 +12386,10 @@ a:focus-visible,
   cursor: pointer;
 }
 .orders-search {
-  display: grid;
-  gap: 6px;
-  max-width: 420px;
   margin: 0 0 14px;
   color: #5f6b73;
   font-size: var(--font-size-xs);
   font-weight: 700;
-}
-.orders-search input {
-  padding: 10px;
-  border: 1px solid #dce2e3;
-  border-radius: 8px;
-  background: #fff;
-  color: inherit;
 }
 .orders-search {
   display: flex;
@@ -13088,8 +12580,6 @@ a:focus-visible,
   border: 0;
   border-radius: 6px;
   padding: 5px 9px;
-  background: #0b9288;
-  color: #fff;
   font-size: var(--font-size-xs);
   font-weight: 700;
   cursor: pointer;
@@ -13950,7 +13440,6 @@ a:focus-visible,
 
 /* Manager reservation date field: keep native date controls aligned across browsers. */
 .reservation-page .reservation-toolbar {
-  flex-wrap: nowrap;
   gap: 10px;
 }
 .reservation-page .reservation-date-control {
@@ -14133,9 +13622,7 @@ a:focus-visible,
   color: var(--color-primary);
 }
 .admin-request-status-tab.active {
-  border-color: var(--color-primary);
   background: #f4ebeb;
-  color: var(--color-primary);
 }
 .admin-request-status-tab.active span {
   background: #eadcde;
@@ -14247,9 +13734,6 @@ a:focus-visible,
   color-scheme: light;
 }
 @media (max-width: 1200px) {
-  .reservation-page .reservation-toolbar {
-    flex-wrap: wrap;
-  }
   .reservation-page .reservation-date-control {
     flex: 1 1 200px;
     min-width: 200px;
@@ -14263,33 +13747,6 @@ a:focus-visible,
 }
 
 /* Shared semantic status colors for badges across customer, manager, chef, and admin pages. */
-:root {
-  --db-status-neutral-bg: #eef0f2;
-  --db-status-neutral-text: #46515a;
-  --db-status-info-bg: #e5f0fb;
-  --db-status-info-text: #245b8b;
-  --db-status-success-bg: #e7f6ef;
-  --db-status-success-text: #12623f;
-  --db-status-warning-bg: #fff2d9;
-  --db-status-warning-text: #754700;
-  --db-status-danger-bg: #fcebec;
-  --db-status-danger-text: #8f2634;
-  --db-status-border: rgb(70 81 90 / 18%);
-}
-
-:root[data-theme="dark"] {
-  --db-status-neutral-bg: #383235;
-  --db-status-neutral-text: #ddd4d6;
-  --db-status-info-bg: #1f3142;
-  --db-status-info-text: #b5d5f5;
-  --db-status-success-bg: #1d382e;
-  --db-status-success-text: #a7e5c6;
-  --db-status-warning-bg: #39301f;
-  --db-status-warning-text: #f0d38b;
-  --db-status-danger-bg: #382527;
-  --db-status-danger-text: #ffb8bf;
-  --db-status-border: rgb(221 212 214 / 20%);
-}
 
 :is(
   .food-order-status,
@@ -14410,9 +13867,6 @@ a:focus-visible,
   background: var(--db-status-danger-bg) !important;
 }
 @media (max-width: 560px) {
-  .reservation-page .reservation-toolbar {
-    flex-wrap: wrap;
-  }
   .reservation-page .reservation-date-control,
   .reservation-page .reservation-toolbar > select,
   .reservation-page .reservation-search {

@@ -18,11 +18,17 @@ import QRCode from "qrcode";
 import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
 import LandingFooter from "../../components/landing/LandingFooter.jsx";
 import { requestJson } from "../../lib/authApi.js";
+import {
+  getPreorderCartDetails,
+  mergePreorderVariants,
+} from "../../lib/preorderMenu.js";
 import { photo } from "../../data/landingData.js";
 import { saveReservation } from "../../data/customerReservations.js";
 import "../../assets/css/CustomerReservationPage.css";
 import BookingProgress from "../../components/BookingProgress.jsx";
 import TableFloorPicker from "../../components/TableFloorPicker.jsx";
+
+const MAX_VARIANT_COUNT = 5;
 
 const weekDays = [
   "sunday",
@@ -265,15 +271,31 @@ export default function CustomerReservationPage() {
     useState("PAY_AT_DESK");
   const [orderTaxPercent, setOrderTaxPercent] = useState(18);
   const [menuCategories, setMenuCategories] = useState([]);
+  const [menuItems, setMenuItems] = useState([]);
+  const [menuTotal, setMenuTotal] = useState(0);
+  const [menuQuery, setMenuQuery] = useState({
+    search: "",
+    category: "",
+    diet: "",
+    sort: "name",
+    page: 1,
+    pageSize: 8,
+  });
+  const [menuError, setMenuError] = useState("");
+  const [menuRetry, setMenuRetry] = useState(0);
+  const [preorderVariants, setPreorderVariants] = useState({});
   const [menuLoading, setMenuLoading] = useState(true);
   const [preorderCart, setPreorderCart] = useState([]);
+
   const [availableOffers, setAvailableOffers] = useState([]);
   const [offerCode, setOfferCode] = useState("");
   const [offerPreview, setOfferPreview] = useState(null);
   const [offerBusy, setOfferBusy] = useState(false);
   const [durationMinutes, setDurationMinutes] = useState(90);
-  const durationValid = Number.isInteger(Number(durationMinutes)) &&
-    Number(durationMinutes) >= 30 && Number(durationMinutes) <= 720;
+  const durationValid =
+    Number.isInteger(Number(durationMinutes)) &&
+    Number(durationMinutes) >= 30 &&
+    Number(durationMinutes) <= 720;
   const [availability, setAvailability] = useState({});
   const [availabilityRefreshKey, setAvailabilityRefreshKey] = useState(0);
   const [timeSlotsLoading, setTimeSlotsLoading] = useState(false);
@@ -287,14 +309,30 @@ export default function CustomerReservationPage() {
   const [qrCode, setQrCode] = useState("");
   const [passDownload, setPassDownload] = useState("");
   const [qrError, setQrError] = useState("");
-  const checkoutStep = 3;
+  const isPreorder = fulfillmentType === "PREORDER";
+  const preorderStep = isPreorder ? 2 : null;
+  const tableStep = isPreorder ? 3 : 2;
+  const checkoutStep = tableStep + 1;
   const resultStep = checkoutStep + 1;
   const previousStep = useRef(step);
+  const [selectedPreorderFood, setSelectedPreorderFood] = useState(null);
+  const [draftPreorderQuantities, setDraftPreorderQuantities] = useState({});
+  const preorderDialogRef = useRef(null);
+
+  useEffect(() => {
+    const dialog = preorderDialogRef.current;
+    if (selectedPreorderFood && dialog && !dialog.open) {
+      dialog.showModal();
+    }
+  }, [selectedPreorderFood]);
+
   useEffect(() => {
     if (previousStep.current === step) return;
     previousStep.current = step;
     const frame = window.requestAnimationFrame(() => {
-      const heading = document.querySelector(".customer-booking-main h2, .customer-booking-main h3");
+      const heading = document.querySelector(
+        ".customer-booking-main h2, .customer-booking-main h3",
+      );
       heading?.setAttribute("tabindex", "-1");
       heading?.focus({ preventScroll: true });
       heading?.scrollIntoView({ block: "start", behavior: "instant" });
@@ -349,26 +387,81 @@ export default function CustomerReservationPage() {
 
   useEffect(() => {
     let active = true;
+    const controller = new AbortController();
     setMenuLoading(true);
-    Promise.all([
-      requestJson(`/api/customer/restaurants/${restaurantId}/menu`),
+    setMenuError("");
+    const params = new URLSearchParams({
+      page: String(menuQuery.page),
+      page_size: String(menuQuery.pageSize),
+      search: menuQuery.search.trim(),
+      sort: menuQuery.sort,
+    });
+    if (menuQuery.category) params.set("category_id", menuQuery.category);
+    if (menuQuery.diet) params.set("is_vegetarian", menuQuery.diet);
+    const timer = window.setTimeout(() => {
       requestJson(
-        `/api/customer/orders/offers?restaurant_id=${encodeURIComponent(restaurantId)}`,
-      ),
-    ])
-      .then(([menu, offers]) => {
-        if (active) {
-          setMenuCategories(menu);
-          setAvailableOffers(offers);
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setMenuCategories([]);
-          setAvailableOffers([]);
-        }
-      })
-      .finally(() => active && setMenuLoading(false));
+        `/api/customer/restaurants/${restaurantId}/preorder-menu?${params}`,
+        {
+          signal: controller.signal,
+        },
+      )
+        .then((menu) => {
+          if (!active) return;
+          const lastPage = Math.max(
+            1,
+            Math.ceil(menu.total / menuQuery.pageSize),
+          );
+          if (menuQuery.page > lastPage) {
+            setMenuQuery((current) => ({ ...current, page: lastPage }));
+            return;
+          }
+          setMenuItems(menu.items);
+          setMenuCategories(menu.categories);
+          setMenuTotal(menu.total);
+          // Keep metadata for earlier pages so cart totals and offers stay correct.
+          setPreorderVariants((current) =>
+            mergePreorderVariants(current, menu.items),
+          );
+        })
+        .catch((reason) => {
+          if (active) {
+            setMenuItems([]);
+            setMenuError(reason.message || "Could not load the preorder menu.");
+          }
+        })
+        .finally(() => active && setMenuLoading(false));
+    }, 250);
+    return () => {
+      active = false;
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [restaurantId, menuQuery, menuRetry]);
+
+  useEffect(() => {
+    // A different restaurant must start with an empty cart and menu selection.
+    setPreorderCart([]);
+    preorderDialogRef.current?.close();
+    setSelectedPreorderFood(null);
+    setPreorderVariants({});
+    setOfferPreview(null);
+    setMenuQuery({
+      search: "",
+      category: "",
+      diet: "",
+      sort: "name",
+      page: 1,
+      pageSize: 8,
+    });
+    setMenuItems([]);
+    setMenuCategories([]);
+    setMenuTotal(0);
+    let active = true;
+    requestJson(
+      `/api/customer/orders/offers?restaurant_id=${encodeURIComponent(restaurantId)}`,
+    )
+      .then((offers) => active && setAvailableOffers(offers))
+      .catch(() => active && setAvailableOffers([]));
     return () => {
       active = false;
     };
@@ -423,7 +516,9 @@ export default function CustomerReservationPage() {
     setAvailability({});
     if (!durationValid || !time) {
       setTimeSlotsLoading(false);
-      setAvailabilityError("Choose an end time between 30 minutes and 12 hours after your start time.");
+      setAvailabilityError(
+        "Choose an end time between 30 minutes and 12 hours after your start time.",
+      );
       return;
     }
     const params = new URLSearchParams({
@@ -476,7 +571,15 @@ export default function CustomerReservationPage() {
       window.clearInterval(timer);
       window.removeEventListener("focus", onFocus);
     };
-  }, [restaurantId, date, guests, time, durationMinutes, durationValid, availabilityRefreshKey]);
+  }, [
+    restaurantId,
+    date,
+    guests,
+    time,
+    durationMinutes,
+    durationValid,
+    availabilityRefreshKey,
+  ]);
 
   useEffect(() => {
     if (
@@ -600,31 +703,11 @@ export default function CustomerReservationPage() {
       }
     : null;
 
-  const preorderVariants = menuCategories.flatMap((category) =>
-    (category.foods || [])
-      .filter((food) => food.is_available)
-      .flatMap((food) =>
-        (food.variants || [])
-          .filter((variant) => variant.is_available)
-          .map((variant) => ({
-            ...variant,
-            food_id: food.id,
-            food_name: food.name,
-            category_id: food.category_id || category.id,
-            category_name: category.name,
-          })),
-      ),
-  );
-  const preorderSubtotal = preorderCart.reduce(
-    (sum, line) =>
-      sum +
-      Number(
-        preorderVariants.find((variant) => variant.id === line.variant_id)
-          ?.price || 0,
-      ) *
-        line.quantity,
-    0,
-  );
+  const {
+    subtotal: preorderSubtotal,
+    foodIds: preorderFoodIds,
+    categoryIds: preorderCategoryIds,
+  } = getPreorderCartDetails(preorderCart, preorderVariants);
   const preorderNet = Math.max(
     0,
     preorderSubtotal -
@@ -632,24 +715,6 @@ export default function CustomerReservationPage() {
   );
   const preorderTaxAmount = Math.round(preorderNet * orderTaxPercent) / 100;
   const preorderTotalWithTax = preorderNet + preorderTaxAmount;
-  const preorderFoodIds = new Set(
-    preorderCart
-      .map(
-        (line) =>
-          preorderVariants.find((variant) => variant.id === line.variant_id)
-            ?.food_id,
-      )
-      .filter(Boolean),
-  );
-  const preorderCategoryIds = new Set(
-    preorderCart
-      .map(
-        (line) =>
-          preorderVariants.find((variant) => variant.id === line.variant_id)
-            ?.category_id,
-      )
-      .filter(Boolean),
-  );
   const relevantOffers = availableOffers.filter(
     (offer) =>
       offer.status === "ACTIVE" &&
@@ -664,7 +729,7 @@ export default function CustomerReservationPage() {
           ))),
   );
   const quotedFee =
-    step === 1
+    step < tableStep
       ? Math.min(
           ...(availableTables.length
             ? availableTables.map((table) => Number(table.reservation_fee))
@@ -729,10 +794,24 @@ export default function CustomerReservationPage() {
     setMonth(new Date(chosen.getFullYear(), chosen.getMonth(), 1));
   }
 
-  function continueToTables() {
-    if (!selectedAvailability.available || selectedAvailability.loading) return;
+  function continueFromVisit() {
+    if (selectedAvailability.loading || !selectedAvailability.available) {
+      return;
+    }
+
+    setError("");
     setSelectedTableIds([]);
-    setStep(2);
+    setStep(isPreorder ? preorderStep : tableStep);
+  }
+
+  function continueToTables() {
+    if (isPreorder && (menuLoading || preorderCart.length === 0)) {
+      setError("Add at least one menu item to your preorder.");
+      return;
+    }
+
+    setError("");
+    setStep(tableStep);
   }
 
   function continueFromTable() {
@@ -758,6 +837,11 @@ export default function CustomerReservationPage() {
     setStep(checkoutStep);
   }
 
+  function updateMenuQuery(changes) {
+    setMenuLoading(true);
+    setMenuQuery((current) => ({ ...current, page: 1, ...changes }));
+  }
+
   function changePreorderQuantity(variantId, delta) {
     setOfferPreview(null);
     setPreorderCart((current) => {
@@ -767,11 +851,70 @@ export default function CustomerReservationPage() {
       return current
         .map((line) =>
           line.variant_id === variantId
-            ? { ...line, quantity: Math.min(99, line.quantity + delta) }
+            ? {
+                ...line,
+                quantity: Math.min(MAX_VARIANT_COUNT, line.quantity + delta),
+              }
             : line,
         )
         .filter((line) => line.quantity > 0);
     });
+  }
+  const selectablePreorderVariants =
+    selectedPreorderFood?.variants?.filter((variant) => variant.is_available) ??
+    [];
+
+  const draftPreorderLines = selectablePreorderVariants
+    .map((variant) => ({
+      variant_id: variant.id,
+      quantity: draftPreorderQuantities[variant.id] ?? 0,
+    }))
+    .filter((line) => line.quantity > 0);
+
+  const savedDishLines = selectedPreorderFood
+    ? preorderCart.filter(
+        (line) =>
+          preorderVariants[line.variant_id]?.food_id ===
+          selectedPreorderFood.id,
+      )
+    : [];
+
+  function openPreorderVariantPicker(food) {
+    const quantities = {};
+
+    for (const line of preorderCart) {
+      if (preorderVariants[line.variant_id]?.food_id === food.id) {
+        quantities[line.variant_id] = line.quantity;
+      }
+    }
+
+    setDraftPreorderQuantities(quantities);
+    setSelectedPreorderFood(food);
+  }
+
+  function changeDraftPreorderQuantity(variantId, delta) {
+    setDraftPreorderQuantities((current) => ({
+      ...current,
+      [variantId]: Math.max(
+        0,
+        Math.min(MAX_VARIANT_COUNT, (current[variantId] ?? 0) + delta),
+      ),
+    }));
+  }
+
+  function confirmPreorderVariants() {
+    if (!selectedPreorderFood) return;
+
+    setPreorderCart((current) => [
+      ...current.filter(
+        (line) =>
+          preorderVariants[line.variant_id]?.food_id !==
+          selectedPreorderFood.id,
+      ),
+      ...draftPreorderLines,
+    ]);
+    setOfferPreview(null);
+    preorderDialogRef.current?.close();
   }
 
   async function previewPreorderOffer(code = offerCode) {
@@ -987,7 +1130,15 @@ export default function CustomerReservationPage() {
                 </span>
               </div>
             </section>
-            <BookingProgress step={step} busy={busy} onBack={(next) => { setError(""); setStep(next); }} />
+            <BookingProgress
+              step={step}
+              busy={busy}
+              preorder={isPreorder}
+              onBack={(next) => {
+                setError("");
+                setStep(next);
+              }}
+            />
             <div className="customer-booking-layout">
               <section className="customer-booking-main">
                 {step === 1 && (
@@ -996,7 +1147,7 @@ export default function CustomerReservationPage() {
                       <header>
                         <div>
                           <span className="booking-step-label">
-                            RESERVATION STEP 1 OF 3
+                            RESERVATION STEP 1 OF {checkoutStep}
                           </span>
                           <h2>Select Date</h2>
                         </div>
@@ -1141,10 +1292,7 @@ export default function CustomerReservationPage() {
                             <Utensils size={18} />
                           </span>
                           <strong>Preorder food</strong>
-                          <small>
-                            Choose menu items now and select how to pay for
-                            them.
-                          </small>
+                          <small>Choose your food on the next page.</small>
                         </button>
                         <button
                           type="button"
@@ -1167,109 +1315,6 @@ export default function CustomerReservationPage() {
                           </small>
                         </button>
                       </div>
-                      {fulfillmentType === "PREORDER" && (
-                        <div className="booking-preorder-panel">
-                          <h3>Choose preorder items</h3>
-                          {menuLoading ? (
-                            <p>Loading menu…</p>
-                          ) : menuCategories.length === 0 ? (
-                            <p>
-                              The restaurant menu is unavailable for preorder
-                              right now.
-                            </p>
-                          ) : (
-                            menuCategories.map((category) => {
-                              const foods = (category.foods || []).filter(
-                                (food) =>
-                                  food.is_available &&
-                                  (food.variants || []).some(
-                                    (variant) => variant.is_available,
-                                  ),
-                              );
-                              return foods.length ? (
-                                <div
-                                  className="booking-preorder-category"
-                                  key={category.id}
-                                >
-                                  <h4>{category.name}</h4>
-                                  {foods.map((food) => (
-                                    <article
-                                      className="booking-preorder-food"
-                                      key={food.id}
-                                    >
-                                      {food.image_url && (
-                                        <img src={food.image_url} alt="" />
-                                      )}
-                                      <div className="booking-preorder-food-copy">
-                                        <strong>{food.name}</strong>
-                                        {food.description && (
-                                          <small>{food.description}</small>
-                                        )}
-                                        {(food.variants || [])
-                                          .filter(
-                                            (variant) => variant.is_available,
-                                          )
-                                          .map((variant) => {
-                                            const quantity =
-                                              preorderCart.find(
-                                                (line) =>
-                                                  line.variant_id ===
-                                                  variant.id,
-                                              )?.quantity || 0;
-                                            return (
-                                              <div
-                                                className="booking-preorder-variant"
-                                                key={variant.id}
-                                              >
-                                                <span>
-                                                  {variant.name} · ₹
-                                                  {Number(
-                                                    variant.price,
-                                                  ).toFixed(2)}
-                                                </span>
-                                                <div>
-                                                  {quantity > 0 && (
-                                                    <button
-                                                      type="button"
-                                                      aria-label={`Remove one ${food.name}`}
-                                                      onClick={() =>
-                                                        changePreorderQuantity(
-                                                          variant.id,
-                                                          -1,
-                                                        )
-                                                      }
-                                                    >
-                                                      <Minus size={13} />
-                                                    </button>
-                                                  )}
-                                                  <strong>
-                                                    {quantity || ""}
-                                                  </strong>
-                                                  <button
-                                                    type="button"
-                                                    aria-label={`Add one ${food.name}`}
-                                                    onClick={() =>
-                                                      changePreorderQuantity(
-                                                        variant.id,
-                                                        1,
-                                                      )
-                                                    }
-                                                  >
-                                                    <Plus size={13} />
-                                                  </button>
-                                                </div>
-                                              </div>
-                                            );
-                                          })}
-                                      </div>
-                                    </article>
-                                  ))}
-                                </div>
-                              ) : null;
-                            })
-                          )}
-                        </div>
-                      )}
                     </section>
                     <section className="booking-slots-panel">
                       <h3>Dining period</h3>
@@ -1292,17 +1337,37 @@ export default function CustomerReservationPage() {
                           <input
                             type="time"
                             step="60"
-                            value={durationValid && time ? (() => {
-                              const [hours, minutes] = time.split(":").map(Number);
-                              const end = (hours * 60 + minutes + Number(durationMinutes)) % 1440;
-                              return `${String(Math.floor(end / 60)).padStart(2, "0")}:${String(end % 60).padStart(2, "0")}`;
-                            })() : ""}
+                            value={
+                              durationValid && time
+                                ? (() => {
+                                    const [hours, minutes] = time
+                                      .split(":")
+                                      .map(Number);
+                                    const end =
+                                      (hours * 60 +
+                                        minutes +
+                                        Number(durationMinutes)) %
+                                      1440;
+                                    return `${String(Math.floor(end / 60)).padStart(2, "0")}:${String(end % 60).padStart(2, "0")}`;
+                                  })()
+                                : ""
+                            }
                             onChange={(event) => {
-                              const [startHour, startMinute] = time.split(":").map(Number);
-                              const [endHour, endMinute] = event.target.value.split(":").map(Number);
-                              const duration = event.target.value && time
-                                ? (endHour * 60 + endMinute - startHour * 60 - startMinute + 1440) % 1440
-                                : "";
+                              const [startHour, startMinute] = time
+                                .split(":")
+                                .map(Number);
+                              const [endHour, endMinute] = event.target.value
+                                .split(":")
+                                .map(Number);
+                              const duration =
+                                event.target.value && time
+                                  ? (endHour * 60 +
+                                      endMinute -
+                                      startHour * 60 -
+                                      startMinute +
+                                      1440) %
+                                    1440
+                                  : "";
                               setDurationMinutes(duration);
                               setSelectedTableIds([]);
                               setAvailability({});
@@ -1313,10 +1378,17 @@ export default function CustomerReservationPage() {
                       </div>
                       {durationValid && time && (
                         <p className="booking-hours-message">
-                          Dining duration: {Math.floor(Number(durationMinutes) / 60)} hr {Number(durationMinutes) % 60} min.
+                          Dining duration:{" "}
+                          {Math.floor(Number(durationMinutes) / 60)} hr{" "}
+                          {Number(durationMinutes) % 60} min.
                           {(() => {
-                            const [hours, minutes] = time.split(":").map(Number);
-                            return hours * 60 + minutes + Number(durationMinutes) >= 1440
+                            const [hours, minutes] = time
+                              .split(":")
+                              .map(Number);
+                            return hours * 60 +
+                              minutes +
+                              Number(durationMinutes) >=
+                              1440
                               ? " Ends the following day."
                               : "";
                           })()}
@@ -1325,8 +1397,8 @@ export default function CustomerReservationPage() {
                       <h3>Available start times</h3>
                       <p className="booking-hours-message">
                         Choose a start time in 30-minute intervals. Tables must
-                        remain available for your entire dining period for {guests}{" "}
-                        {guests === 1 ? "guest" : "guests"}.
+                        remain available for your entire dining period for{" "}
+                        {guests} {guests === 1 ? "guest" : "guests"}.
                       </p>
                       {selectedDateException && (
                         <p className="booking-hours-message">
@@ -1387,10 +1459,364 @@ export default function CustomerReservationPage() {
                   </>
                 )}
 
-                {step === 2 && (
+                {isPreorder && step === preorderStep && (
+                  <section className="booking-preorder-panel">
+                    <span className="booking-step-label">
+                      RESERVATION STEP {preorderStep} OF {checkoutStep}
+                    </span>
+                    <h2>Choose preorder items</h2>
+                    <div className="booking-menu-controls">
+                      <label className="booking-menu-search">
+                        Search menu
+                        <input
+                          type="search"
+                          placeholder="Food, description or option"
+                          maxLength={100}
+                          value={menuQuery.search}
+                          onChange={(event) =>
+                            updateMenuQuery({ search: event.target.value })
+                          }
+                        />
+                      </label>
+                      <label>
+                        Category
+                        <select
+                          value={menuQuery.category}
+                          onChange={(event) =>
+                            updateMenuQuery({ category: event.target.value })
+                          }
+                        >
+                          <option value="">All categories</option>
+                          {menuCategories.map((category) => (
+                            <option key={category.id} value={category.id}>
+                              {category.name} ({category.count})
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label>
+                        Dietary preference
+                        <select
+                          value={menuQuery.diet}
+                          onChange={(event) =>
+                            updateMenuQuery({ diet: event.target.value })
+                          }
+                        >
+                          <option value="">All food</option>
+                          <option value="true">Vegetarian</option>
+                          <option value="false">Non-vegetarian</option>
+                        </select>
+                      </label>
+                      <label>
+                        Sort by
+                        <select
+                          value={menuQuery.sort}
+                          onChange={(event) =>
+                            updateMenuQuery({ sort: event.target.value })
+                          }
+                        >
+                          <option value="name">Name: A–Z</option>
+                          <option value="name-desc">Name: Z–A</option>
+                          <option value="price-low">Price: low to high</option>
+                          <option value="price-high">Price: high to low</option>
+                        </select>
+                      </label>
+                      <label>
+                        Items per page
+                        <select
+                          value={menuQuery.pageSize}
+                          onChange={(event) =>
+                            updateMenuQuery({
+                              pageSize: Number(event.target.value),
+                            })
+                          }
+                        >
+                          {[8, 16, 24].map((size) => (
+                            <option key={size} value={size}>
+                              {size}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                    {(menuQuery.search ||
+                      menuQuery.category ||
+                      menuQuery.diet) && (
+                      <button
+                        type="button"
+                        className="booking-back-button"
+                        onClick={() =>
+                          updateMenuQuery({
+                            search: "",
+                            category: "",
+                            diet: "",
+                          })
+                        }
+                      >
+                        Clear filters
+                      </button>
+                    )}
+                    <div role="status" aria-live="polite">
+                      {menuLoading
+                        ? "Loading menu…"
+                        : menuError
+                          ? ""
+                          : `${menuTotal} menu ${menuTotal === 1 ? "item" : "items"} found`}
+                    </div>
+                    {menuLoading ? null : menuError ? (
+                      <div role="alert">
+                        <p className="reservation-page-error">{menuError}</p>
+                        <button
+                          type="button"
+                          className="booking-back-button"
+                          onClick={() => {
+                            setMenuLoading(true);
+                            setMenuRetry((value) => value + 1);
+                          }}
+                        >
+                          Retry menu
+                        </button>
+                      </div>
+                    ) : menuItems.length === 0 ? (
+                      <p>
+                        {menuQuery.search ||
+                        menuQuery.category ||
+                        menuQuery.diet
+                          ? "No menu items match your filters. Try another search or clear the filters."
+                          : "The restaurant menu is unavailable for preorder right now."}
+                      </p>
+                    ) : (
+                      <div className="booking-preorder-grid">
+                        {menuItems.map((food) => (
+                          <article
+                            className="booking-preorder-food"
+                            key={food.id}
+                          >
+                            <div className="booking-preorder-food-media">
+                              {food.image_url ? (
+                                <img
+                                  src={food.image_url}
+                                  alt=""
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <Utensils size={34} aria-hidden="true" />
+                              )}
+                            </div>
+                            <div className="booking-preorder-food-copy">
+                              <small>
+                                {food.category_name} ·{" "}
+                                {food.is_vegetarian
+                                  ? "Vegetarian"
+                                  : "Non-vegetarian"}
+                              </small>
+                              <h4>{food.name}</h4>
+                              {food.description && (
+                                <small>{food.description}</small>
+                              )}
+                              <button
+                                type="button"
+                                className="booking-primary-action booking-preorder-card-add"
+                                aria-haspopup="dialog"
+                                aria-controls="booking-preorder-variant-dialog"
+                                aria-label={`Add variants for ${food.name}, ${food.category_name}`}
+                                disabled={
+                                  !food.variants?.some(
+                                    (variant) => variant.is_available,
+                                  )
+                                }
+                                onClick={() => openPreorderVariantPicker(food)}
+                              >
+                                Add
+                              </button>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                    {!menuLoading && !menuError && menuTotal > 0 && (
+                      <nav
+                        className="booking-menu-pagination"
+                        aria-label="Preorder menu pages"
+                      >
+                        <button
+                          type="button"
+                          className="booking-back-button"
+                          disabled={menuQuery.page <= 1}
+                          onClick={() =>
+                            updateMenuQuery({ page: menuQuery.page - 1 })
+                          }
+                        >
+                          Previous
+                        </button>
+                        <span>
+                          Page {menuQuery.page} of{" "}
+                          {Math.max(
+                            1,
+                            Math.ceil(menuTotal / menuQuery.pageSize),
+                          )}
+                        </span>
+                        <button
+                          type="button"
+                          className="booking-back-button"
+                          disabled={
+                            menuQuery.page * menuQuery.pageSize >= menuTotal
+                          }
+                          onClick={() =>
+                            updateMenuQuery({ page: menuQuery.page + 1 })
+                          }
+                        >
+                          Next
+                        </button>
+                      </nav>
+                    )}
+                    <dialog
+                      ref={preorderDialogRef}
+                      id="booking-preorder-variant-dialog"
+                      className="booking-preorder-dialog"
+                      aria-labelledby="booking-preorder-variant-title"
+                      onClose={() => setSelectedPreorderFood(null)}
+                    >
+                      <h2 id="booking-preorder-variant-title">
+                        {selectedPreorderFood?.name}
+                      </h2>
+                      <p>Choose your variants and quantities.</p>
+
+                      <div className="booking-preorder-variants">
+                        {selectablePreorderVariants.map((variant) => {
+                          const quantity =
+                            draftPreorderQuantities[variant.id] ?? 0;
+
+                          return (
+                            <div
+                              className="booking-preorder-variant"
+                              key={variant.id}
+                            >
+                              <span className="booking-preorder-variant-details">
+                                <span>{variant.name}</span>
+                                <b>₹{Number(variant.price).toFixed(2)}</b>
+                              </span>
+
+                              <div>
+                                <button
+                                  type="button"
+                                  disabled={quantity === 0}
+                                  aria-label={`Remove one ${variant.name}`}
+                                  onClick={() =>
+                                    changeDraftPreorderQuantity(variant.id, -1)
+                                  }
+                                >
+                                  <Minus size={13} aria-hidden="true" />
+                                </button>
+
+                                <strong aria-live="polite">{quantity}</strong>
+
+                                <button
+                                  type="button"
+                                  disabled={quantity >= MAX_VARIANT_COUNT}
+                                  aria-label={`Add one ${variant.name}`}
+                                  onClick={() =>
+                                    changeDraftPreorderQuantity(variant.id, 1)
+                                  }
+                                >
+                                  <Plus size={13} aria-hidden="true" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="booking-preorder-dialog-actions">
+                        <button
+                          type="button"
+                          className="booking-back-button"
+                          onClick={() => preorderDialogRef.current?.close()}
+                        >
+                          Cancel
+                        </button>
+
+                        <button
+                          type="button"
+                          className="booking-primary-action"
+                          disabled={
+                            draftPreorderLines.length === 0 &&
+                            savedDishLines.length === 0
+                          }
+                          onClick={confirmPreorderVariants}
+                        >
+                          Confirm selection
+                        </button>
+                      </div>
+                    </dialog>
+                    {preorderCart.length > 0 && (
+                      <section
+                        className="booking-menu-selection"
+                        aria-label="Selected preorder items"
+                      >
+                        <h3>Selected items</h3>
+                        {preorderCart.map((line) => {
+                          const variant = preorderVariants[line.variant_id];
+                          return (
+                            <div
+                              className="booking-preorder-variant"
+                              key={line.variant_id}
+                            >
+                              <span className="booking-preorder-variant-details">
+                                <span>
+                                  {variant?.food_name} · {variant?.name}
+                                </span>
+                                <b>
+                                  ₹
+                                  {(
+                                    Number(variant?.price || 0) * line.quantity
+                                  ).toFixed(2)}
+                                </b>
+                              </span>
+                              <div>
+                                <button
+                                  type="button"
+                                  aria-label={`Remove one selected ${variant?.food_name}, ${variant?.name}`}
+                                  onClick={() =>
+                                    changePreorderQuantity(line.variant_id, -1)
+                                  }
+                                >
+                                  <Minus size={13} />
+                                </button>
+                                <strong>{line.quantity}</strong>
+                                <button
+                                  type="button"
+                                  disabled={line.quantity >= MAX_VARIANT_COUNT}
+                                  aria-label={`Add one selected ${variant?.food_name}, ${variant?.name}`}
+                                  onClick={() =>
+                                    changePreorderQuantity(line.variant_id, 1)
+                                  }
+                                >
+                                  <Plus size={13} />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </section>
+                    )}
+                    <button
+                      type="button"
+                      className="booking-back-button"
+                      onClick={() => {
+                        setError("");
+                        setStep(1);
+                      }}
+                    >
+                      Back to date & time
+                    </button>
+                  </section>
+                )}
+
+                {step === tableStep && (
                   <section className="booking-table-panel">
                     <span className="booking-step-label">
-                      RESERVATION STEP 2 OF 3
+                      RESERVATION STEP {tableStep} OF {checkoutStep}
                     </span>
                     <p>
                       {selectedDateLabel} at {displayTime(time)} · {guests}{" "}
@@ -1408,9 +1834,12 @@ export default function CustomerReservationPage() {
                     <button
                       type="button"
                       className="booking-back-button"
-                      onClick={() => setStep(1)}
+                      onClick={() => {
+                        setError("");
+                        setStep(isPreorder ? preorderStep : 1);
+                      }}
                     >
-                      Back to date & time
+                      {isPreorder ? "Back to preorder" : "Back to date & time"}
                     </button>
                   </section>
                 )}
@@ -1419,7 +1848,7 @@ export default function CustomerReservationPage() {
                   <section className="booking-checkout-panel">
                     <header className="booking-checkout-heading">
                       <span className="booking-step-label">
-                        RESERVATION STEP {checkoutStep} OF 3
+                        RESERVATION STEP {checkoutStep} OF {checkoutStep}
                       </span>
                       <h2>Checkout</h2>
                       <p>
@@ -1477,7 +1906,7 @@ export default function CustomerReservationPage() {
                           </span>
                         </button>
                       </div>
-                      {fulfillmentType === "PREORDER" && (
+                      {isPreorder && (
                         <div className="booking-preorder-payment">
                           <strong>Preorder payment</strong>
                           <p>
@@ -1535,7 +1964,7 @@ export default function CustomerReservationPage() {
                           </div>
                         </div>
                       )}
-                      {fulfillmentType === "PREORDER" && (
+                      {isPreorder && (
                         <div className="booking-offers-checkout">
                           <strong>Offers for your preorder</strong>
                           <small className="booking-offer-scope">
@@ -1675,45 +2104,47 @@ export default function CustomerReservationPage() {
                           <span>Table reservation fee</span>
                           <strong>₹{quotedFee.toFixed(2)}</strong>
                         </div>
-                        {fulfillmentType === "PREORDER" && (
-                          <>
-                            <div className="booking-checkout-cost-line">
-                              <span>Preorder subtotal</span>
-                              <strong>₹{preorderSubtotal.toFixed(2)}</strong>
-                            </div>
-                            {offerPreview?.valid && (
+                        {isPreorder &&
+                          (preorderCart.length > 0 || step === resultStep) && (
+                            <>
                               <div className="booking-checkout-cost-line">
-                                <span>Food order discount · {offerCode}</span>
+                                <span>Preorder subtotal</span>
+                                <strong>₹{preorderSubtotal.toFixed(2)}</strong>
+                              </div>
+                              {offerPreview?.valid && (
+                                <div className="booking-checkout-cost-line">
+                                  <span>Food order discount · {offerCode}</span>
+                                  <strong>
+                                    −₹
+                                    {Number(
+                                      offerPreview.discount_amount,
+                                    ).toFixed(2)}
+                                  </strong>
+                                </div>
+                              )}
+                              <div className="booking-checkout-cost-line">
+                                <span>
+                                  Food tax after discount · GST (
+                                  {orderTaxPercent}
+                                  %)
+                                </span>
+                                <strong>₹{preorderTaxAmount.toFixed(2)}</strong>
+                              </div>
+                              <div className="booking-checkout-cost-line">
+                                <span>
+                                  Food total including GST ·{" "}
+                                  {preorderPaymentMethod === "WALLET"
+                                    ? "wallet"
+                                    : preorderPaymentMethod === "RAZORPAY"
+                                      ? "Razorpay"
+                                      : "pay at restaurant"}
+                                </span>
                                 <strong>
-                                  −₹
-                                  {Number(offerPreview.discount_amount).toFixed(
-                                    2,
-                                  )}
+                                  ₹{preorderTotalWithTax.toFixed(2)}
                                 </strong>
                               </div>
-                            )}
-                            <div className="booking-checkout-cost-line">
-                              <span>
-                                Food tax after discount · GST ({orderTaxPercent}
-                                %)
-                              </span>
-                              <strong>₹{preorderTaxAmount.toFixed(2)}</strong>
-                            </div>
-                            <div className="booking-checkout-cost-line">
-                              <span>
-                                Food total including GST ·{" "}
-                                {preorderPaymentMethod === "WALLET"
-                                  ? "wallet"
-                                  : preorderPaymentMethod === "RAZORPAY"
-                                    ? "Razorpay"
-                                    : "pay at restaurant"}
-                              </span>
-                              <strong>
-                                ₹{preorderTotalWithTax.toFixed(2)}
-                              </strong>
-                            </div>
-                          </>
-                        )}
+                            </>
+                          )}
                         <div className="booking-checkout-cost-line">
                           <span>Order total · reservation + food</span>
                           <strong>₹{checkoutTotal.toFixed(2)}</strong>
@@ -1743,7 +2174,10 @@ export default function CustomerReservationPage() {
                       <button
                         type="button"
                         className="booking-back-button"
-                        onClick={() => setStep(2)}
+                        onClick={() => {
+                          setError("");
+                          setStep(tableStep);
+                        }}
                       >
                         Back
                       </button>
@@ -1953,18 +2387,22 @@ export default function CustomerReservationPage() {
               <aside className="booking-summary-column">
                 <section className="booking-summary-card">
                   <span className="booking-step-label">
-                    {step <= 3 ? `RESERVATION STEP ${step} OF 3` : "BOOKING STATUS"}
+                    {step <= checkoutStep
+                      ? `RESERVATION STEP ${step} OF ${checkoutStep}`
+                      : "BOOKING STATUS"}
                   </span>
                   <h2>
                     {step === 1
                       ? "Booking Summary"
-                      : step === 2
-                        ? "Dine-in Details"
-                        : step === checkoutStep
-                          ? "Checkout Summary"
-                          : step === resultStep
-                            ? "Reservation Status"
-                            : "Reservation Summary"}
+                      : isPreorder && step === preorderStep
+                        ? "Preorder Summary"
+                        : step === tableStep
+                          ? "Dine-in Details"
+                          : step === checkoutStep
+                            ? "Checkout Summary"
+                            : step === resultStep
+                              ? "Reservation Status"
+                              : "Reservation Summary"}
                   </h2>
                   <div className="booking-summary-lines">
                     <ReviewLine
@@ -1977,11 +2415,13 @@ export default function CustomerReservationPage() {
                     />
                     <ReviewLine
                       label="Dining period"
-                      value={step === resultStep && reservation
-                        ? `${displayTime(reservation.start_time)} – ${displayTime(reservation.end_time)}`
-                        : `${displayTime(time)}${selectedAvailability.end_time ? ` – ${displayTime(selectedAvailability.end_time)}` : ""}` }
+                      value={
+                        step === resultStep && reservation
+                          ? `${displayTime(reservation.start_time)} – ${displayTime(reservation.end_time)}`
+                          : `${displayTime(time)}${selectedAvailability.end_time ? ` – ${displayTime(selectedAvailability.end_time)}` : ""}`
+                      }
                     />
-                    {step >= 2 && (
+                    {step >= tableStep && (
                       <ReviewLine
                         label="Selected table"
                         value={
@@ -2004,30 +2444,31 @@ export default function CustomerReservationPage() {
                           : `₹${quotedFee.toFixed(2)}`
                       }
                     />
-                    {fulfillmentType === "PREORDER" && (
-                      <>
-                        {offerPreview?.valid && (
-                          <>
-                            <ReviewLine
-                              label="Original preorder amount"
-                              value={`₹${preorderSubtotal.toFixed(2)}`}
-                            />
-                            <ReviewLine
-                              label={`Offer discount · ${offerPreview.offer.title}`}
-                              value={`−₹${Number(offerPreview.discount_amount).toFixed(2)}`}
-                            />
-                          </>
-                        )}
-                        <ReviewLine
-                          label={`Food tax after discount · GST (${orderTaxPercent}%)`}
-                          value={`₹${step === resultStep ? Number(reservation?.preorder_tax_amount || 0).toFixed(2) : preorderTaxAmount.toFixed(2)}`}
-                        />
-                        <ReviewLine
-                          label="Preorder total including GST"
-                          value={`₹${step === resultStep ? Number(reservation?.preorder_total || 0).toFixed(2) : preorderTotalWithTax.toFixed(2)}`}
-                        />
-                      </>
-                    )}
+                    {isPreorder &&
+                      (preorderCart.length > 0 || step === resultStep) && (
+                        <>
+                          {offerPreview?.valid && (
+                            <>
+                              <ReviewLine
+                                label="Original preorder amount"
+                                value={`₹${preorderSubtotal.toFixed(2)}`}
+                              />
+                              <ReviewLine
+                                label={`Offer discount · ${offerPreview.offer.title}`}
+                                value={`−₹${Number(offerPreview.discount_amount).toFixed(2)}`}
+                              />
+                            </>
+                          )}
+                          <ReviewLine
+                            label={`Food tax after discount · GST (${orderTaxPercent}%)`}
+                            value={`₹${step === resultStep ? Number(reservation?.preorder_tax_amount || 0).toFixed(2) : preorderTaxAmount.toFixed(2)}`}
+                          />
+                          <ReviewLine
+                            label="Preorder total including GST"
+                            value={`₹${step === resultStep ? Number(reservation?.preorder_total || 0).toFixed(2) : preorderTotalWithTax.toFixed(2)}`}
+                          />
+                        </>
+                      )}
                     <ReviewLine
                       label="Order total"
                       value={`₹${summaryCheckoutTotal.toFixed(2)}`}
@@ -2064,23 +2505,34 @@ export default function CustomerReservationPage() {
                       className="booking-primary-action"
                       disabled={
                         selectedAvailability.loading ||
-                        !selectedAvailability.available ||
-                        (fulfillmentType === "PREORDER" &&
-                          (menuLoading || preorderCart.length === 0))
+                        !selectedAvailability.available
                       }
-                      onClick={continueToTables}
+                      onClick={continueFromVisit}
                     >
                       {selectedAvailability.loading
                         ? "Checking table availability…"
-                        : fulfillmentType === "PREORDER" &&
-                            preorderCart.length === 0
-                          ? "Add preorder items to continue"
-                          : !selectedAvailability.available
-                            ? "No tables available"
-                            : "Continue to Table Selection"}
+                        : !selectedAvailability.available
+                          ? "No tables available"
+                          : isPreorder
+                            ? "Continue to preorder"
+                            : "Continue to table selection"}
                     </button>
                   )}
-                  {step === 2 && (
+                  {isPreorder && step === preorderStep && (
+                    <button
+                      type="button"
+                      className="booking-primary-action"
+                      disabled={menuLoading || preorderCart.length === 0}
+                      onClick={continueToTables}
+                    >
+                      {menuLoading
+                        ? "Loading menu…"
+                        : preorderCart.length === 0
+                          ? "Add preorder items to continue"
+                          : "Continue to table selection"}
+                    </button>
+                  )}
+                  {step === tableStep && (
                     <button
                       type="button"
                       className="booking-primary-action"
@@ -2118,7 +2570,11 @@ export default function CustomerReservationPage() {
                   )}
                   {step === resultStep && (
                     <Link
-                      to={reservation?.id ? `/customer/profile/reservations/${reservation.id}` : "/customer/profile/reservations"}
+                      to={
+                        reservation?.id
+                          ? `/customer/profile/reservations/${reservation.id}`
+                          : "/customer/profile/reservations"
+                      }
                       className="booking-primary-action booking-link-action"
                     >
                       View reservation details
@@ -2129,19 +2585,33 @@ export default function CustomerReservationPage() {
                   Choose wallet or securely pay online with Razorpay. Preorder
                   food can be paid now or at the restaurant.
                 </p>
-                {step === 2 && !selectedTable && (
+                {step === tableStep && !selectedTable && (
                   <p className="ux-action-hint" role="status">
-                    {selectedTables.some((table) => table.status !== "available")
+                    {selectedTables.some(
+                      (table) => table.status !== "available",
+                    )
                       ? "A selected table is no longer available. Clear your selection and choose again."
                       : `Select tables with at least ${guests} seats to continue. You have ${selectedTables.reduce((total, table) => total + table.capacity, 0)} seats selected.`}
                   </p>
                 )}
-                {step === checkoutStep && walletRequired > 0 && !walletLoading && walletBalance < walletRequired && (
-                  <p className="ux-action-hint" role="status">
-                    Your wallet needs ₹{(walletRequired - walletBalance).toFixed(2)} more for this payment.
-                    {" "}Choose Razorpay above or <Link to="/customer/profile/wallet" target="_blank" rel="noopener noreferrer">top up your wallet in a new tab</Link>.
-                  </p>
-                )}
+                {step === checkoutStep &&
+                  walletRequired > 0 &&
+                  !walletLoading &&
+                  walletBalance < walletRequired && (
+                    <p className="ux-action-hint" role="status">
+                      Your wallet needs ₹
+                      {(walletRequired - walletBalance).toFixed(2)} more for
+                      this payment. Choose Razorpay above or{" "}
+                      <Link
+                        to="/customer/profile/wallet"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        top up your wallet in a new tab
+                      </Link>
+                      .
+                    </p>
+                  )}
                 {error && step > 1 && (
                   <p className="reservation-page-error" role="alert">
                     {error}
