@@ -16,7 +16,10 @@ function FieldError({ field, message }) {
     else field.insertAdjacentElement("afterend", node);
     const previousInvalid = field.getAttribute("aria-invalid");
     field.setAttribute("aria-invalid", "true");
-    field.setAttribute("aria-describedby", [field.getAttribute("aria-describedby"), id].filter(Boolean).join(" "));
+    field.setAttribute(
+      "aria-describedby",
+      [field.getAttribute("aria-describedby"), id].filter(Boolean).join(" "),
+    );
     field.classList.add("custom-field-invalid");
     setAnchor(node);
     return () => {
@@ -24,29 +27,60 @@ function FieldError({ field, message }) {
       field.classList.remove("custom-field-invalid");
       if (previousInvalid === null) field.removeAttribute("aria-invalid");
       else field.setAttribute("aria-invalid", previousInvalid);
-      const remaining = (field.getAttribute("aria-describedby") || "").split(/\s+/).filter((token) => token && token !== id).join(" ");
+      const remaining = (field.getAttribute("aria-describedby") || "")
+        .split(/\s+/)
+        .filter((token) => token && token !== id)
+        .join(" ");
       if (remaining) field.setAttribute("aria-describedby", remaining);
       else field.removeAttribute("aria-describedby");
     };
   }, [field, id]);
 
-  return anchor ? createPortal(<span id={id} className="custom-field-error" role="alert">{message}</span>, anchor) : null;
+  return anchor
+    ? createPortal(
+        <span id={id} className="custom-field-error" role="alert">
+          {message}
+        </span>,
+        anchor,
+      )
+    : null;
 }
 
-export default function CustomForm({ children, onSubmit, onChange, onBlur, onReset, noValidate: _noValidate, ...props }) {
+export default function CustomForm({
+  children,
+  onSubmit,
+  onChange,
+  onBlur,
+  onReset,
+  noValidate: _noValidate,
+  ...props
+}) {
   const [errors, setErrors] = useState([]);
   const submitted = useRef(false);
   const touched = useRef(new Set());
   const fieldKeys = useRef(new WeakMap());
   const nextKey = useRef(0);
+  const formRef = useRef(null);
+
+  useLayoutEffect(() => {
+    if (formRef.current && (submitted.current || touched.current.size > 0)) {
+      refresh(formRef.current);
+    }
+  }, [children]);
 
   function refresh(form) {
-    setErrors(getFormErrors(form).filter(({ field }) => submitted.current || touched.current.has(field)));
+    setErrors(
+      getFormErrors(form).filter(
+        ({ field }) => submitted.current || touched.current.has(field),
+      ),
+    );
   }
 
   function submit(event) {
     submitted.current = true;
-    const next = event.nativeEvent.submitter?.formNoValidate ? [] : getFormErrors(event.currentTarget);
+    const next = event.nativeEvent.submitter?.formNoValidate
+      ? []
+      : getFormErrors(event.currentTarget);
     setErrors(next);
     if (next.length) {
       event.preventDefault();
@@ -57,9 +91,16 @@ export default function CustomForm({ children, onSubmit, onChange, onBlur, onRes
   }
 
   return (
-    <form {...props} noValidate onSubmit={submit}
+    <form
+      {...props}
+      ref={formRef}
+      noValidate
+      onSubmit={submit}
       onBlur={(event) => {
-        if (event.target.willValidate) {
+        if (
+          event.target.willValidate ||
+          event.target.dataset?.required === "true"
+        ) {
           touched.current.add(event.target);
           refresh(event.currentTarget);
         }
@@ -78,21 +119,44 @@ export default function CustomForm({ children, onSubmit, onChange, onBlur, onRes
     >
       {submitted.current && errors.length > 0 && (
         <div className="ux-form-summary" role="alert">
-          <strong>Check {errors.length === 1 ? "this field" : `these ${errors.length} fields`} to continue</strong>
+          <strong>
+            Check{" "}
+            {errors.length === 1
+              ? "this field"
+              : `these ${errors.length} fields`}{" "}
+            to continue
+          </strong>
           <ul>
             {errors.map(({ field, message }, index) => (
-              <li key={index}><button type="button" onClick={() => {
-                field.focus();
-                field.scrollIntoView({ block: "center", behavior: "instant" });
-              }}>{message}</button></li>
+              <li key={index}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    field.focus();
+                    field.scrollIntoView({
+                      block: "center",
+                      behavior: "instant",
+                    });
+                  }}
+                >
+                  {message}
+                </button>
+              </li>
             ))}
           </ul>
         </div>
       )}
       {children}
       {errors.map(({ field, message }) => {
-        if (!fieldKeys.current.has(field)) fieldKeys.current.set(field, nextKey.current++);
-        return <FieldError key={fieldKeys.current.get(field)} field={field} message={message} />;
+        if (!fieldKeys.current.has(field))
+          fieldKeys.current.set(field, nextKey.current++);
+        return (
+          <FieldError
+            key={fieldKeys.current.get(field)}
+            field={field}
+            message={message}
+          />
+        );
       })}
     </form>
   );

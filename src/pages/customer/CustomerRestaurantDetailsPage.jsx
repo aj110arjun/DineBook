@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
+import RestaurantOffers from "../../components/landing/RestaurantOffers.jsx";
 import CustomTimePicker from "../../components/CustomTimePicker.jsx";
 import CustomDatePicker from "../../components/CustomDatePicker.jsx";
 import CustomGuestPicker from "../../components/CustomGuestPicker.jsx";
@@ -596,59 +597,12 @@ export default function CustomerRestaurantDetailsPage() {
                           "More information about this restaurant will be available soon."}
                       </p>
                     </header>
-                    {restaurantOffers.length > 0 && (
-                      <section
-                        className="customer-offers-panel"
-                        aria-label="Available offers"
-                      >
-                        <div>
-                          <span>DINING OFFERS</span>
-                          <h2>Restaurant offers</h2>
-                        </div>
-                        <div className="customer-offers-list">
-                          {restaurantOffers.map((offer) => (
-                            <article key={offer.id}>
-                              <b>{offer.title}</b>
-                              <span>
-                                {offer.discount_type === "PERCENTAGE"
-                                  ? `${offer.discount_percent}% off`
-                                  : `₹${Number(offer.discount_percent).toFixed(2)} off`}{" "}
-                                <i
-                                  className={`offer-status ${offer.status.toLowerCase()}`}
-                                >
-                                  {offer.status}
-                                </i>
-                              </span>
-                              <small>
-                                {offer.description || `Use code ${offer.code}`}{" "}
-                                · Minimum ₹
-                                {Number(offer.minimum_subtotal).toFixed(2)}
-                                {offer.max_discount
-                                  ? ` · Maximum discount ₹${Number(offer.max_discount).toFixed(2)}`
-                                  : ""}
-                              </small>
-                              <small>
-                                Code: <strong>{offer.code}</strong> ·{" "}
-                                {offer.applicability === "RESTAURANT"
-                                  ? "Entire order"
-                                  : `${offer.applicability === "ITEMS" ? "Items" : "Categories"}: ${(offer.applicable_names || []).join(", ")}`}
-                              </small>
-                              <small>
-                                {offer.per_customer_limit
-                                  ? `${offer.per_customer_limit} use(s) per customer`
-                                  : "No per-customer limit"}
-                                {offer.starts_at
-                                  ? ` · Starts ${new Date(offer.starts_at).toLocaleString()}`
-                                  : ""}
-                                {offer.ends_at
-                                  ? ` · Ends ${new Date(offer.ends_at).toLocaleString()}`
-                                  : ""}
-                              </small>
-                            </article>
-                          ))}
-                        </div>
-                      </section>
-                    )}
+                    <RestaurantOffers
+                      key={restaurantId}
+                      offers={restaurantOffers.filter(
+                        (offer) => offer.status !== "EXPIRED",
+                      )}
+                    />
                     <div
                       className={`restaurant-about-info-grid${floors.length ? " has-floors" : ""}`}
                     >
@@ -804,11 +758,12 @@ export default function CustomerRestaurantDetailsPage() {
                         </span>
                         <h2>Explore the menu</h2>
                         <p>
-                          Browse dishes and choose from this restaurant’s
-                          available options.
+                          Browse dishes and available options. Place your order
+                          at reception.
                         </p>
                       </div>
                     </div>
+
                     {menuLoading ? (
                       <p className="customer-menu-message" role="status">
                         Loading menu…
@@ -911,6 +866,7 @@ export default function CustomerRestaurantDetailsPage() {
                                     <article
                                       className={`customer-menu-card ${food.is_available ? "" : "unavailable"}`}
                                       key={food.id}
+                                      tabIndex={0}
                                     >
                                       {food.image_url ? (
                                         <img
@@ -927,39 +883,20 @@ export default function CustomerRestaurantDetailsPage() {
                                           <Utensils size={26} />
                                         </div>
                                       )}
-                                      <div className="customer-menu-card-content">
-                                        <div className="customer-menu-card-title">
-                                          <h4>{food.name}</h4>
-                                        </div>
-                                        {food.description && (
-                                          <p className="customer-menu-description">
-                                            {food.description}
-                                          </p>
-                                        )}
-                                        {food.variants?.length > 0 && (
-                                          <ul className="customer-menu-variants">
-                                            {food.variants
-                                              .filter(
-                                                (variant) =>
-                                                  variant.is_available,
-                                              )
-                                              .map((variant) => (
-                                                <li key={variant.id}>
-                                                  <span>{variant.name}</span>
-                                                  <strong>
-                                                    ₹
-                                                    {Number(
-                                                      variant.price,
-                                                    ).toFixed(2)}
-                                                  </strong>
-                                                  <span className="customer-menu-service-note">
-                                                    Order at reception
-                                                  </span>
-                                                </li>
-                                              ))}
-                                          </ul>
-                                        )}
+                                      <div className="customer-menu-hover-details">
+                                        <h4>{food.name}</h4>
+                                        <p>
+                                          {food.description?.trim() ||
+                                            "No description has been added for this dish."}
+                                        </p>
                                       </div>
+                                      {!(food.variants || []).some(
+                                        (variant) => variant.is_available,
+                                      ) && (
+                                        <p className="customer-menu-description">
+                                          No options are currently available.
+                                        </p>
+                                      )}
                                     </article>
                                   ))}
                                 </div>
