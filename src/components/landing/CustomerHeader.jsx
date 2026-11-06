@@ -1,6 +1,6 @@
 import useNavigationDisclosure from "../../hooks/useNavigationDisclosure.js";
 import axios from "axios";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MapPin, Menu, Utensils, X } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { API_BASE } from "../../lib/authApi.js";
@@ -11,7 +11,26 @@ export default function CustomerHeader({ user, onLogout }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  useNavigationDisclosure(menuOpen, () => setMenuOpen(false), "customer-primary-nav");
+  useNavigationDisclosure(
+    menuOpen,
+    () => setMenuOpen(false),
+    "customer-primary-nav",
+  );
+
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 1281px)");
+
+    function closeOnDsktop() {
+      if (desktop.matches) setMenuOpen(false);
+    }
+
+    closeOnDsktop();
+    desktop.addEventListener("change", closeOnDsktop);
+
+    return () => {
+      desktop.removeEventListener("change", closeOnDsktop);
+    };
+  }, []);
 
   async function signOut() {
     try {
@@ -71,7 +90,11 @@ export default function CustomerHeader({ user, onLogout }) {
           aria-label="Main navigation"
         >
           {/* Location */}
-          <Link className="location-select" to="/customer/restaurants" onClick={closeMenu}>
+          <Link
+            className="location-select"
+            to="/customer/restaurants"
+            onClick={closeMenu}
+          >
             <MapPin size={15} aria-hidden="true" /> Find nearby
           </Link>
 
@@ -124,8 +147,20 @@ export default function CustomerHeader({ user, onLogout }) {
               </Link>
             )}
             {user && (
-              <Link to="/customer/profile/reservations" onClick={closeMenu}
-                aria-current={location.pathname.startsWith("/customer/profile/reservations") ? "page" : undefined}>
+              <Link
+                className={
+                  location.pathname === "/customer/profile/reservations"
+                    ? "active"
+                    : ""
+                }
+                to="/customer/profile/reservations"
+                onClick={closeMenu}
+                aria-current={
+                  location.pathname.startsWith("/customer/profile/reservations")
+                    ? "page"
+                    : undefined
+                }
+              >
                 My reservations
               </Link>
             )}

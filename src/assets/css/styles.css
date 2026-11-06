@@ -963,10 +963,59 @@ a:focus-visible,
   color: #f4eeee;
   transition: color 0.15s;
 }
+.nav-links a {
+  position: relative;
+  border-bottom: none;
+  border-radius: 10px;
+  padding-inline: 10px;
+  transition:
+    color 220ms ease,
+    background-color 220ms ease;
+}
+
 .nav-links a:hover,
 .nav-links a.active {
   color: #e4c57d;
-  border-bottom: 1px solid #e4c57d;
+  border-bottom: none;
+  background-color: rgb(228 197 125 / 12%);
+}
+
+.nav-links a::after {
+  content: "";
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #e4c57d;
+  box-shadow: 0 0 8px rgb(228 197 125 / 60%);
+  transform: translateX(-50%) scale(0);
+  transition: transform 220ms ease;
+}
+
+.nav-links a.active::after {
+  transform: translateX(-50%) scale(1);
+  animation: nav-dot-in 280ms ease-out;
+}
+
+@keyframes nav-dot-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px) scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-links a,
+  .nav-links a::after {
+    transition: none;
+    animation: none;
+  }
 }
 
 .account-nav {
