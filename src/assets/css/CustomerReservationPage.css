@@ -721,62 +721,163 @@
 }
 .booking-preorder-category {
   display: grid;
-  gap: 8px;
+  gap: 12px;
+  min-width: 0;
 }
 .booking-preorder-category h3 {
   margin: 8px 0 0;
   color: #8a6732;
+  font-size: var(--font-size-sm);
+}
+.booking-preorder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: 16px;
+}
+.booking-menu-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 12px;
+}
+.booking-menu-controls label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  color: #6b5d58;
   font-size: var(--font-size-xs);
+}
+.booking-menu-search {
+  grid-column: 1 / -1;
+}
+.booking-menu-controls input,
+.booking-menu-controls select {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 9px 10px;
+  border: 1px solid #e8deda;
+  border-radius: 8px;
+  background: #fff;
+  color: #473a37;
+  font: inherit;
+  box-sizing: border-box;
+}
+.booking-menu-controls input:focus-visible,
+.booking-menu-controls select:focus-visible {
+  outline: 2px solid #79323d;
+  outline-offset: 2px;
+}
+.booking-menu-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: var(--font-size-xs);
+}
+.booking-menu-pagination button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.booking-menu-selection h3 {
+  margin: 8px 0;
+  font-size: var(--font-size-sm);
+}
+:root[data-theme="dark"] .booking-menu-controls label {
+  color: #c0b5b1;
+}
+:root[data-theme="dark"] .booking-menu-controls input,
+:root[data-theme="dark"] .booking-menu-controls select {
+  border-color: #514246;
+  background: #211d1f;
+  color: #eee4e2;
+  color-scheme: dark;
+}
+:root[data-theme="dark"] .booking-menu-controls input:focus-visible,
+:root[data-theme="dark"] .booking-menu-controls select:focus-visible {
+  outline-color: #e9c2c6;
 }
 .booking-preorder-food {
   display: flex;
-  gap: 12px;
-  padding: 12px;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
   border: 1px solid #eee5e1;
-  border-radius: 11px;
+  border-radius: 14px;
   background: #fff;
 }
-.booking-preorder-food > img {
-  width: 76px;
-  height: 76px;
+.booking-preorder-food-media {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 16 / 10;
   flex: none;
-  border-radius: 9px;
+  place-items: center;
+  overflow: hidden;
+  background: #f7eee8;
+  color: #987d63;
+}
+.booking-preorder-food-media img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
 .booking-preorder-food-copy {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   flex: 1;
-  gap: 6px;
+  gap: 8px;
+  width: 100%;
   min-width: 0;
+  padding: 14px;
+  box-sizing: border-box;
 }
-.booking-preorder-food-copy > strong {
+.booking-preorder-food-copy > h4 {
+  margin: 0;
   color: #3e322f;
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
+  overflow-wrap: anywhere;
 }
 .booking-preorder-food-copy > small {
   color: #8d827d;
   font-size: var(--font-size-xs);
   line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.booking-preorder-variants {
+  display: grid;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 8px;
 }
 .booking-preorder-variant {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding-top: 6px;
+  padding-top: 10px;
   border-top: 1px solid #f1eae5;
   color: #6b5d58;
   font-size: var(--font-size-xs);
+}
+.booking-preorder-variant-details {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.booking-preorder-variant-details b {
+  color: #79323d;
 }
 .booking-preorder-variant > div {
   display: flex;
   align-items: center;
   gap: 7px;
+  flex-shrink: 0;
 }
 .booking-preorder-variant button {
   display: grid;
-  width: 25px;
-  height: 25px;
+  width: 36px;
+  height: 36px;
   place-items: center;
   border: 1px solid #e8deda;
   border-radius: 7px;
@@ -1033,7 +1134,7 @@
   background: #36272b;
 }
 :root[data-theme="dark"] .booking-intent-options strong,
-:root[data-theme="dark"] .booking-preorder-food-copy > strong,
+:root[data-theme="dark"] .booking-preorder-food-copy > h4,
 :root[data-theme="dark"] .booking-preorder-variant strong,
 :root[data-theme="dark"] .booking-payment-methods button strong,
 :root[data-theme="dark"] .booking-checkout-summary h3 {
@@ -1052,6 +1153,17 @@
   background: #292426;
   color: #e9c2c6;
 }
+:root[data-theme="dark"] .booking-preorder-food-media {
+  background: #362c2f;
+  color: #d5b766;
+}
+:root[data-theme="dark"] .booking-preorder-category h3,
+:root[data-theme="dark"] .booking-preorder-variant-details b {
+  color: #e3c179;
+}
+:root[data-theme="dark"] .booking-preorder-food-copy > small {
+  color: #c0b5b1;
+}
 :root[data-theme="dark"] .booking-payment-methods button:disabled {
   background: #292426;
 }
@@ -1067,10 +1179,6 @@
   .booking-intent-options,
   .booking-payment-methods {
     grid-template-columns: 1fr;
-  }
-  .booking-preorder-food > img {
-    width: 62px;
-    height: 62px;
   }
   .booking-preorder-footer {
     flex-direction: column;
@@ -1519,22 +1627,6 @@
   color: #493c38;
   font-size: var(--font-size-sm);
 }
-.booking-preorder-category {
-  display: grid;
-  gap: 8px;
-}
-.booking-preorder-category h4 {
-  margin: 5px 0 0;
-  color: #8a6732;
-  font-size: var(--font-size-xs);
-}
-.booking-preorder-food {
-  align-items: flex-start;
-}
-.booking-preorder-food-copy {
-  min-width: 0;
-  flex: 1;
-}
 .booking-preorder-payment {
   display: grid;
   gap: 8px;
@@ -1927,4 +2019,58 @@
 }
 .booking-dining-times input {
   width: 160px;
+}
+
+.booking-primary-action.booking-preorder-card-add {
+  align-self: flex-end;
+  width: auto;
+  min-height: 42px;
+  margin-top: auto;
+  padding-inline: 18px;
+}
+
+.booking-preorder-dialog {
+  box-sizing: border-box;
+  width: min(480px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 20px;
+  overflow: auto;
+  border: 1px solid #eee5e1;
+  border-radius: 14px;
+  background: #fff;
+  color: #3e322f;
+}
+
+.booking-preorder-dialog::backdrop {
+  background: rgb(33 19 22 / 55%);
+}
+
+.booking-preorder-dialog h2 {
+  margin: 0;
+}
+
+.booking-preorder-dialog > p {
+  margin: 8px 0 12px;
+}
+
+.booking-preorder-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.booking-preorder-dialog-actions button {
+  width: auto;
+  min-height: 42px;
+  margin: 0;
+  padding-inline: 16px;
+}
+
+:root[data-theme="dark"] .booking-preorder-dialog {
+  border-color: #40383a;
+  background: #211d1f;
+  color: #eee4e2;
 }
