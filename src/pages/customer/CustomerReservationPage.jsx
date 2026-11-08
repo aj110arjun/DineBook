@@ -86,6 +86,7 @@ function to24Hour(value) {
   return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
 function displayTime(value) {
+  if (!value) return "-";
   const [hour, minute] = value.split(":").map(Number);
   return `${hour % 12 || 12}:${String(minute).padStart(2, "0")} ${hour >= 12 ? "PM" : "AM"}`;
 }
@@ -296,10 +297,8 @@ export default function CustomerReservationPage() {
     Number.isInteger(Number(durationMinutes)) &&
     Number(durationMinutes) >= 30 &&
     Number(durationMinutes) <= 720;
-  const [availability, setAvailability] = useState({});
+  const [availabilityResult, setAvailabilityResult] = useState(null);
   const [availabilityRefreshKey, setAvailabilityRefreshKey] = useState(0);
-  const [timeSlotsLoading, setTimeSlotsLoading] = useState(false);
-  const [availabilityError, setAvailabilityError] = useState("");
   const [step, setStep] = useState(1);
   const [selectedTableIds, setSelectedTableIds] = useState([]);
   const [reservation, setReservation] = useState(null);
@@ -509,77 +508,76 @@ export default function CustomerReservationPage() {
     }
   }, [hasConfiguredHours, hoursLoaded, hoursExceptions, hoursByDay, date]);
 
+  const availabilityParams =
+    time && durationValid
+      ? new URLSearchParams({
+          restaurant_id: restaurantId,
+          reservation_date: date,
+          start_time: time,
+          number_of_guests: String(guests),
+          duration_minutes: String(durationMinutes),
+        }).toString()
+      : "";
+
+  const availabilityKey = `${availabilityRefreshKey}:${availabilityParams}`;
+
   useEffect(() => {
+    setAvailabilityResult(null);
+    if (!availabilityParams) return;
+
     let active = true;
-    setAvailabilityError("");
-    setTimeSlotsLoading(true);
-    setAvailability({});
-    if (!durationValid || !time) {
-      setTimeSlotsLoading(false);
-      setAvailabilityError(
-        "Choose an end time between 30 minutes and 12 hours after your start time.",
-      );
-      return;
+    let controller = null;
+
+    async function refreshAvailability() {
+      if (controller) return;
+
+      const request = new AbortController();
+      controller = request;
+      const timeout = window.setTimeout(() => request.abort(), 12000);
+
+      try {
+        const result = await requestJson(
+          `/api/customer/reservations/availability?${availabilityParams}`,
+          { signal: request.signal },
+        );
+
+        if (active) {
+          setAvailabilityResult({
+            ...result,
+            key: availabilityKey,
+            loading: false,
+          });
+        }
+      } catch (error) {
+        if (active) {
+          setAvailabilityResult({
+            key: availabilityKey,
+            loading: false,
+            available: false,
+            tables: [],
+            error: request.signal.aborted
+              ? "Checking table availability timed out. Please try again."
+              : error.message,
+          });
+        }
+      } finally {
+        window.clearTimeout(timeout);
+        controller = null;
+      }
     }
-    const params = new URLSearchParams({
-      restaurant_id: restaurantId,
-      reservation_date: date,
-      number_of_guests: String(guests),
-      duration_minutes: String(durationMinutes),
-    });
-    const refreshAvailability = (initial = false) => {
-      const controller = new AbortController();
-      const timeout = window.setTimeout(() => controller.abort(), 12000);
-      requestJson(`/api/customer/reservations/time-slots?${params}`, {
-        signal: controller.signal,
-      })
-        .then((result) => {
-          if (!active) return;
-          const nextAvailability = Object.fromEntries(
-            (result.slots || []).map((slot) => [
-              slot.time,
-              {
-                loading: false,
-                end_time: slot.end_time,
-                available: Boolean(slot.available),
-                tables: slot.tables || [],
-              },
-            ]),
-          );
-          setAvailability(nextAvailability);
-          setAvailabilityError("");
-        })
-        .catch((reason) => {
-          if (active)
-            setAvailabilityError(
-              controller.signal.aborted
-                ? "Checking table availability timed out. Please try again."
-                : reason.message,
-            );
-        })
-        .finally(() => {
-          window.clearTimeout(timeout);
-          if (active && initial) setTimeSlotsLoading(false);
-        });
-    };
-    refreshAvailability(true);
-    const timer = window.setInterval(() => refreshAvailability(false), 30000);
-    const onFocus = () => refreshAvailability(false);
-    window.addEventListener("focus", onFocus);
+
+    const firstCheck = window.setTimeout(refreshAvailability, 250);
+    const refreshTimer = window.setInterval(refreshAvailability, 30000);
+    window.addEventListener("focus", refreshAvailability);
+
     return () => {
       active = false;
-      window.clearInterval(timer);
-      window.removeEventListener("focus", onFocus);
+      controller?.abort();
+      window.clearTimeout(firstCheck);
+      window.clearInterval(refreshTimer);
+      window.removeEventListener("focus", refreshAvailability);
     };
-  }, [
-    restaurantId,
-    date,
-    guests,
-    time,
-    durationMinutes,
-    durationValid,
-    availabilityRefreshKey,
-  ]);
+  }, [availabilityParams, availabilityKey]);
 
   useEffect(() => {
     if (
@@ -656,11 +654,14 @@ export default function CustomerReservationPage() {
         ),
     );
   }, [month]);
-  const selectedAvailability = availability[time] || {
-    loading: timeSlotsLoading,
-    available: false,
-    tables: [],
-  };
+  const selectedAvailability =
+    availabilityResult?.key === availabilityKey
+      ? availabilityResult
+      : {
+          loading: Boolean(availabilityParams),
+          available: false,
+          tables: [],
+        };
   const reservationPaymentFailed =
     Boolean(paymentFailureMessage) ||
     reservation?.status === "CANCELLED" ||
@@ -1323,7 +1324,7 @@ export default function CustomerReservationPage() {
                           Start time
                           <input
                             type="time"
-                            step="1800"
+                            step="60"
                             value={time}
                             onChange={(event) => {
                               setTime(event.target.value);
@@ -1338,7 +1339,7 @@ export default function CustomerReservationPage() {
                             type="time"
                             step="60"
                             value={
-                              durationValid && time
+                              durationMinutes !== "" && time
                                 ? (() => {
                                     const [hours, minutes] = time
                                       .split(":")
@@ -1416,45 +1417,29 @@ export default function CustomerReservationPage() {
                             : ""}
                         </p>
                       )}
-                      {timeSlotsLoading ? (
-                        <p className="booking-hours-message">
-                          Checking available times…
-                        </p>
-                      ) : (
-                        <div
-                          className="booking-time-slots"
-                          role="group"
-                          aria-label="Available reservation times"
-                        >
-                          {Object.keys(availability).map((slot) => (
-                            <SlotButton
-                              key={slot}
-                              slot={displayTime(slot)}
-                              selected={time === slot}
-                              availability={availability[slot]}
-                              onClick={() => {
-                                setTime(slot);
-                                setSelectedTableIds([]);
-                              }}
-                            />
-                          ))}
-                        </div>
-                      )}
-                      {!timeSlotsLoading &&
-                        !Object.keys(availability).length && (
-                          <p className="reservation-page-error">
-                            {selectedDateException?.is_closed
-                              ? `The restaurant is closed on this date.${selectedDateException.reason ? ` ${selectedDateException.reason}` : ""}`
-                              : date <= todayInRestaurantTimezone()
-                                ? "No same-day reservations. Choose a future date."
-                                : "No reservation times are available for this date."}
-                          </p>
-                        )}
-                      {availabilityError && (
-                        <p className="reservation-page-error">
-                          {availabilityError}
-                        </p>
-                      )}
+                      <p
+                        className={
+                          time &&
+                          (!durationValid ||
+                            selectedAvailability.error ||
+                            selectedAvailability.reason)
+                            ? "reservation-page-error"
+                            : "booking-hours-message"
+                        }
+                        role="status"
+                      >
+                        {!time
+                          ? "Choose a start time."
+                          : !durationValid
+                            ? "Choose an end time between 30 minutes and 12 hours after your start time."
+                            : selectedAvailability.loading
+                              ? "Checking table availability…"
+                              : selectedAvailability.error ||
+                                selectedAvailability.reason ||
+                                (selectedAvailability.available
+                                  ? "Tables are available for this dining period."
+                                  : "No tables are available for this dining period. Try another time.")}
+                      </p>
                     </section>
                   </>
                 )}
@@ -2512,7 +2497,7 @@ export default function CustomerReservationPage() {
                       {selectedAvailability.loading
                         ? "Checking table availability…"
                         : !selectedAvailability.available
-                          ? "No tables available"
+                          ? "Continue when available"
                           : isPreorder
                             ? "Continue to preorder"
                             : "Continue to table selection"}
@@ -2624,22 +2609,6 @@ export default function CustomerReservationPage() {
       </main>
       <LandingFooter />
     </div>
-  );
-}
-
-function SlotButton({ slot, selected, availability, onClick }) {
-  const isLoading = availability?.loading ?? true;
-  const isAvailable = Boolean(availability?.available);
-  return (
-    <button
-      type="button"
-      disabled={isLoading || !isAvailable}
-      className={`${selected ? "selected" : ""}${!isLoading && !isAvailable ? " unavailable" : ""}`}
-      onClick={onClick}
-    >
-      {slot}
-      {isLoading && <small>Checking</small>}
-    </button>
   );
 }
 

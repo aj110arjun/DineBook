@@ -26,15 +26,26 @@ const navigationGroups = [
     label: "Today’s work",
     items: [
       { label: "Dashboard", icon: Grid2X2, to: "/manager/dashboard" },
-      { label: "Reservations", icon: CalendarDays, to: "/manager/reservations" },
-      { label: "Orders", icon: ClipboardList, to: "/manager/orders" },
-      { label: "New walk-in order", icon: ClipboardList, to: "/manager/spot-order" },
+      {
+        label: "Reservations",
+        icon: CalendarDays,
+        to: "/manager/reservations",
+      },
+      {
+        label: "New walk-in order",
+        icon: ClipboardList,
+        to: "/manager/spot-order",
+      },
     ],
   },
   {
     label: "Restaurant setup",
     items: [
-      { label: "Restaurant details", icon: Store, to: "/manager/restaurant-location" },
+      {
+        label: "Restaurant details",
+        icon: Store,
+        to: "/manager/restaurant-location",
+      },
       { label: "Opening hours", icon: Clock3, to: "/manager/operating-hours" },
       { label: "Tables & floors", icon: Table2, to: "/manager/tables" },
       { label: "Menu", icon: Utensils, to: "/manager/menu" },
@@ -46,7 +57,11 @@ const navigationGroups = [
     items: [
       { label: "Offers", icon: Tag, to: "/manager/offers" },
       { label: "Reviews", icon: MessageCircle, to: "/manager/reviews" },
-      { label: "Revenue & wallet", icon: CircleDollarSign, to: "/manager/revenue" },
+      {
+        label: "Revenue & wallet",
+        icon: CircleDollarSign,
+        to: "/manager/revenue",
+      },
       { label: "Payments", icon: ClipboardList, to: "/manager/payments" },
     ],
   },
@@ -56,7 +71,11 @@ export default function ManagerLayout({ children, title = "Dashboard" }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  useNavigationDisclosure(sidebarOpen, () => setSidebarOpen(false), "manager-primary-nav");
+  useNavigationDisclosure(
+    sidebarOpen,
+    () => setSidebarOpen(false),
+    "manager-primary-nav",
+  );
 
   async function handleLogout() {
     try {
@@ -93,13 +112,20 @@ export default function ManagerLayout({ children, title = "Dashboard" }) {
           <strong>Restaurant</strong>
           <span>Owner Console</span>
         </div>
-        <nav id="manager-primary-nav" className="manager-nav" aria-label="Restaurant workspace">
+        <nav
+          id="manager-primary-nav"
+          className="manager-nav"
+          aria-label="Restaurant workspace"
+        >
           {navigationGroups.map((group) => (
             <div className="manager-nav-group" key={group.label}>
               <h2 className="manager-nav-group-title">{group.label}</h2>
               {group.items.map(({ label, icon: Icon, to }) => {
-                const active = to === pathname || pathname.startsWith(`${to}/`) ||
-                  (to === "/manager/tables" && pathname.startsWith("/manager/floors"));
+                const active =
+                  to === pathname ||
+                  pathname.startsWith(`${to}/`) ||
+                  (to === "/manager/tables" &&
+                    pathname.startsWith("/manager/floors"));
                 return (
                   <Link
                     key={label}

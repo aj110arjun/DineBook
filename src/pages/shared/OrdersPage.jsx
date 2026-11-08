@@ -508,19 +508,20 @@ export default function OrdersPage({ mode = "customer" }) {
                     </div>
                   </div>
                 )}
-                {mode === "customer" && order.status === "PLACED" && (
-                  <button
-                    className="food-order-cancel"
-                    type="button"
-                    disabled={busy === order.id}
-                    onClick={() => {
-                      setActionReason("");
-                      setPendingAction({ kind: "cancel", order });
-                    }}
-                  >
-                    Cancel order
-                  </button>
-                )}
+                {mode === "customer" &&
+                  (order.can_customer_cancel ?? (order.status === "PLACED")) && (
+                    <button
+                      className="food-order-cancel"
+                      type="button"
+                      disabled={busy === order.id}
+                      onClick={() => {
+                        setActionReason("");
+                        setPendingAction({ kind: "cancel", order });
+                      }}
+                    >
+                      Cancel order
+                    </button>
+                  )}
                 {(mode === "manager" || mode === "chef") && (
                   <div className="food-order-actions">
                     {(transitions[mode][order.status] || []).map((status) => (
