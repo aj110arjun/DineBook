@@ -200,7 +200,9 @@ export default function ManagerOrderDetailsPage() {
                   <span
                     className={`manager-order-status status-${order.status.toLowerCase()}`}
                   >
-                    {statusLabel(order.status)}
+                    {order.reservation_id && order.status === "ACCEPTED"
+                      ? "Sent to kitchen"
+                      : statusLabel(order.status)}
                   </span>
                 </div>
                 <div className="manager-order-details-facts">
@@ -397,7 +399,8 @@ export default function ManagerOrderDetailsPage() {
                         Placed <time>{dateTime(order.created_at)}</time>
                       </li>
                       <li className={order.accepted_at ? "complete" : ""}>
-                        Accepted <time>{dateTime(order.accepted_at)}</time>
+                        {order.reservation_id ? "Sent to kitchen" : "Accepted"}{" "}
+                        <time>{dateTime(order.accepted_at)}</time>
                       </li>
                       <li
                         className={

@@ -61,8 +61,8 @@ const orderTone = (status) =>
   })[status] || "pending";
 const orderStatusLabel = (status) =>
   ({
-    PLACED: "Sent to kitchen",
-    ACCEPTED: "Accepted by kitchen",
+    PLACED: "Awaiting kitchen handoff",
+    ACCEPTED: "Sent to kitchen",
     PREPARING: "Being prepared",
     READY: "Ready to serve",
     COMPLETED: "Served",
@@ -377,7 +377,9 @@ export default function ManagerReservationsPage() {
         method: "PATCH",
         body: JSON.stringify({ status, reason: reason.trim() || null }),
       });
-      await Promise.all([loadCalendarActivities(), loadCalendarSummary()]);
+      const refreshes = [loadCalendarActivities(), loadCalendarSummary()];
+      if (status === "SEATED") refreshes.push(loadReservationOrders(item.id));
+      await Promise.all(refreshes);
       return true;
     } catch (e) {
       setError(e.message);
@@ -413,6 +415,7 @@ export default function ManagerReservationsPage() {
       const date = new Date(`${reservation.reservation_date}T12:00:00`);
       setMonth(new Date(date.getFullYear(), date.getMonth(), 1));
       setExpandedId(reservation.id);
+      loadReservationOrders(reservation.id);
       setScannerOpen(false);
       setScanValue("");
     } catch (e) {
@@ -505,28 +508,6 @@ export default function ManagerReservationsPage() {
       }));
       await loadCalendarSummary();
       setPendingOrderRemoval(null);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusyId("");
-    }
-  }
-
-  async function queueExistingPreorder(item) {
-    setBusyId(item.id);
-    try {
-      const order = await requestJson(
-        `/api/manager/reservations/${item.id}/preorder-order`,
-        { method: "POST" },
-      );
-      setReservationOrders((current) => ({
-        ...current,
-        [item.id]: [
-          ...(current[item.id] || []).filter((entry) => entry.id !== order.id),
-          order,
-        ],
-      }));
-      await loadReservationOrders(item.id);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -1077,22 +1058,29 @@ export default function ManagerReservationsPage() {
                               )
                             )}
                             {item.status === "SEATED" &&
-                              item.fulfillment_type === "PREORDER" &&
-                              item.preorder_items?.length > 0 &&
-                              !(reservationOrders[item.id] || []).some(
-                                (order) => order.is_preorder,
-                              ) && (
+                              ordersLoadingId !== item.id &&
+                              reservationOrders[item.id] &&
+                              (reservationOrders[item.id].some(
+                                (order) => order.status === "PLACED",
+                              ) ||
+                                (item.fulfillment_type === "PREORDER" &&
+                                  item.preorder_items?.length > 0 &&
+                                  !["REFUNDED", "CANCELLED"].includes(
+                                    item.preorder_payment_status,
+                                  ) &&
+                                  !reservationOrders[item.id].some(
+                                    (order) => order.is_preorder,
+                                  ))) && (
                                 <button
                                   type="button"
-                                  disabled={
-                                    busyId === item.id ||
-                                    ordersLoadingId === item.id
+                                  disabled={busyId === item.id}
+                                  onClick={() =>
+                                    updateReservationStatus(item, "SEATED")
                                   }
-                                  onClick={() => queueExistingPreorder(item)}
                                 >
                                   {busyId === item.id
                                     ? "Sending…"
-                                    : "Send existing preorder to kitchen"}
+                                    : "Send waiting orders to kitchen"}
                                 </button>
                               )}
                             {item.status === "SEATED" &&
