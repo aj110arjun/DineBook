@@ -132,11 +132,13 @@ export default function ManagerOrderDetailsPage() {
   const itemCount =
     order?.items?.reduce((sum, item) => sum + Number(item.quantity || 0), 0) ||
     0;
-  const orderType = order?.is_preorder
-    ? "Reservation preorder"
-    : reservation
-      ? "Reservation order"
-      : "Walk-in order";
+  const orderType = order?.service_type === "TAKEAWAY"
+    ? "Takeaway order"
+    : order?.is_preorder
+      ? "Reservation preorder"
+      : reservation
+        ? "Reservation order"
+        : "Walk-in dine-in order";
 
   return (
     <ManagerLayout title="Order Details">

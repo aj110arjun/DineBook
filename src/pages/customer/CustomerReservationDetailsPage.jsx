@@ -17,6 +17,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
 import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
 import TransactionInvoiceButton from "../../components/TransactionInvoice.jsx";
+import { reservationFeeLineItems } from "../../lib/reservationPricing.js";
 import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
 import "../../assets/css/CustomerRestaurantReviews.css";
 import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
@@ -94,31 +95,8 @@ function reservationInvoice(reservation) {
       : hasPreorder && reservation.preorder_payment_status !== "PAID"
         ? "PARTIALLY PAID"
         : "PAID";
+  const lineItems = reservationFeeLineItems(reservation);
   const tables = reservation.tables || [];
-  const tableFees = tables.reduce(
-    (sum, table) => sum + Number(table.reservation_fee || 0),
-    0,
-  );
-  const lineItems = tables.map((table) => ({
-    description: `Table ${table.table_number}${table.floor_name ? ` · ${table.floor_name}` : ""} · ${table.capacity || 0} seats`,
-    quantity: 1,
-    unitPrice: Number(table.reservation_fee || 0),
-    amount: Number(table.reservation_fee || 0),
-  }));
-  if (!lineItems.length)
-    lineItems.push({
-      description: "Reservation table fee",
-      quantity: 1,
-      unitPrice: fee,
-      amount: fee,
-    });
-  else if (Math.abs(tableFees - fee) > 0.009)
-    lineItems.push({
-      description: "Reservation fee adjustment",
-      quantity: 1,
-      unitPrice: fee - tableFees,
-      amount: fee - tableFees,
-    });
   lineItems.push(
     ...preorderItems.map((item) => ({
       description: `Preorder · ${item.food_name}`,
@@ -803,6 +781,12 @@ export default function CustomerReservationDetailsPage() {
               <span className="reservation-payment-method">
                 {reservationPaymentText(reservation)}
               </span>
+              {Number(reservation.extra_hours) > 0 && (
+                <span className="reservation-payment-method">
+                  Base ₹{Number(reservation.base_fee_amount || 0).toFixed(2)} · Extra time: {reservation.extra_hours} hr
+                  {" "}× ₹{Number(reservation.extra_hour_rate || 0).toFixed(2)} = ₹{Number(reservation.extra_fee_amount || 0).toFixed(2)}
+                </span>
+              )}
               <TransactionInvoiceButton
                 invoice={reservationInvoice(reservation)}
               />

@@ -27,6 +27,7 @@ import { saveReservation } from "../../data/customerReservations.js";
 import "../../assets/css/CustomerReservationPage.css";
 import BookingProgress from "../../components/BookingProgress.jsx";
 import TableFloorPicker from "../../components/TableFloorPicker.jsx";
+import { sumReservationFees, tableBookingFee } from "../../lib/reservationPricing.js";
 
 const MAX_VARIANT_COUNT = 5;
 
@@ -695,12 +696,7 @@ export default function CustomerReservationPage() {
           (sum, table) => sum + table.capacity,
           0,
         ),
-        reservation_fee:
-          selectedTables.reduce(
-            (sum, table) =>
-              sum + Math.round(Number(table.reservation_fee) * 100),
-            0,
-          ) / 100,
+        ...sumReservationFees(selectedTables),
       }
     : null;
 
@@ -729,14 +725,17 @@ export default function CustomerReservationPage() {
             preorderCategoryIds.has(id),
           ))),
   );
-  const quotedFee =
-    step < tableStep
-      ? Math.min(
-          ...(availableTables.length
-            ? availableTables.map((table) => Number(table.reservation_fee))
-            : [250]),
-        )
-      : Number(selectedTable?.reservation_fee || reservation?.fee_amount || 0);
+  const lowestPricedTable = availableTables
+    .filter((table) => table.status === "available")
+    .reduce(
+      (lowest, table) =>
+        !lowest || tableBookingFee(table) < tableBookingFee(lowest) ? table : lowest,
+      null,
+    );
+  const feeQuote = step === resultStep && reservation
+    ? reservation
+    : step < tableStep ? lowestPricedTable : selectedTable;
+  const quotedFee = feeQuote ? tableBookingFee(feeQuote) : 0;
   const checkoutTotal =
     quotedFee + (fulfillmentType === "PREORDER" ? preorderTotalWithTax : 0);
   const summaryCheckoutTotal =
@@ -961,6 +960,7 @@ export default function CustomerReservationPage() {
           reservation_date: date,
           start_time: time,
           duration_minutes: Number(durationMinutes),
+          expected_fee_amount: quotedFee,
           number_of_guests: guests,
           table_ids: selectedTable.table_ids,
           fulfillment_type: fulfillmentType,
@@ -2420,15 +2420,30 @@ export default function CustomerReservationPage() {
                       label={
                         step === resultStep &&
                         reservation?.payment_status === "PAID"
-                          ? "Table reservation fee · Paid"
-                          : "Table reservation fee"
+                          ? "Reservation fee · Paid"
+                          : step < tableStep ? "Table fee from" : "Reservation fee"
                       }
                       value={
                         selectedAvailability.loading && step === 1
                           ? "Checking…"
-                          : `₹${quotedFee.toFixed(2)}`
+                          : feeQuote ? `₹${quotedFee.toFixed(2)}` : "Choose tables"
                       }
                     />
+                    {feeQuote && Number(feeQuote.extra_hours) > 0 && (
+                      <>
+                        <ReviewLine
+                          label="Base table fee · first hour"
+                          value={`₹${Number(feeQuote.base_fee_amount ?? quotedFee - Number(feeQuote.extra_fee_amount || 0)).toFixed(2)}`}
+                        />
+                        <ReviewLine
+                          label={`Extra time · ${feeQuote.extra_hours} hr × ₹${Number(feeQuote.extra_hour_rate || 0).toFixed(2)}`}
+                          value={`₹${Number(feeQuote.extra_fee_amount || 0).toFixed(2)}`}
+                        />
+                        <p className="booking-summary-footnote">
+                          Each started hour after the first is charged at the manager’s table rate.
+                        </p>
+                      </>
+                    )}
                     {isPreorder &&
                       (preorderCart.length > 0 || step === resultStep) && (
                         <>

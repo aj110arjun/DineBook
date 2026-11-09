@@ -932,6 +932,11 @@ export default function ManagerReservationsPage() {
                             {Number(item.fee_amount).toFixed(2)} ·{" "}
                             {item.payment_status}
                           </strong>
+                          {Number(item.extra_fee_amount) > 0 && (
+                            <span>
+                              Includes ₹{Number(item.extra_fee_amount).toFixed(2)} for {item.extra_hours} extra hour{item.extra_hours === 1 ? "" : "s"}
+                            </span>
+                          )}
                           <strong>
                             {item.fulfillment_type === "PREORDER"
                               ? `Preorder · ₹${Number(item.preorder_total || 0).toFixed(2)} · ${item.preorder_payment_status === "PAID" ? "Paid" : "Due at desk"}`
@@ -1225,11 +1230,13 @@ export default function ManagerReservationsPage() {
                               {order.customer_name || "Guest order"}
                             </strong>
                             <small>
-                              {order.is_preorder
-                                ? "Preorder"
-                                : order.order_source === "SPOT"
-                                  ? "Spot order"
-                                  : "Walk-in order"}{" "}
+                              {order.service_type === "TAKEAWAY"
+                                ? "Takeaway order"
+                                : order.is_preorder
+                                  ? "Preorder"
+                                  : order.order_source === "SPOT"
+                                    ? "Spot order"
+                                    : "Walk-in order"}{" "}
                               ·{" "}
                               {shortTime(
                                 new Date(order.created_at).toTimeString(),
