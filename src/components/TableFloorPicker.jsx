@@ -1,6 +1,7 @@
 import { useState } from "react";
 import "../assets/css/TableFloorPicker.css";
 import { displayTableLayout, hasTablePosition } from "../lib/tableFloorLayout.js";
+import { tableBookingFee } from "../lib/reservationPricing.js";
 
 const money = (amount) =>
   new Intl.NumberFormat("en-IN", {
@@ -35,7 +36,7 @@ export default function TableFloorPicker({
   const seats = selected.reduce((sum, table) => sum + table.capacity, 0);
   const total =
     selected.reduce(
-      (sum, table) => sum + Math.round(Number(table.reservation_fee) * 100),
+      (sum, table) => sum + Math.round(tableBookingFee(table) * 100),
       0,
     ) / 100;
 
@@ -128,7 +129,7 @@ export default function TableFloorPicker({
                 disabled={unavailable}
                 aria-pressed={isSelected}
                 aria-label={`Table ${table.table_number}, ${table.capacity} seats, ${money(
-                  table.reservation_fee,
+                  tableBookingFee(table),
                 )}, ${unavailable ? "unavailable" : "available"}`}
                 className={[
                   "floor-picker__table",
@@ -143,7 +144,7 @@ export default function TableFloorPicker({
               >
                 <strong>{table.table_number}</strong>
                 <span>{table.capacity} seats</span>
-                <small>{money(table.reservation_fee)}</small>
+                <small>{money(tableBookingFee(table))}</small>
               </button>
             );
           })}
@@ -191,6 +192,9 @@ export default function TableFloorPicker({
           <p>
             {seats} seats · {guests} guests
           </p>
+          {tables.some((table) => Number(table.extra_fee_amount) > 0) && (
+            <p>Prices include extra time for your selected dining period.</p>
+          )}
         </div>
         <strong>{money(total)}</strong>
       </div>

@@ -1,5 +1,5 @@
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Printer, Plus, Trash2 } from "lucide-react";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import { requestJson } from "../../lib/authApi.js";
@@ -21,6 +21,8 @@ export default function ManagerSpotOrderPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [serviceType, setServiceType] = useState("DINEIN");
+  const checkoutAttempt = useRef(null);
 
   useEffect(() => {
     Promise.all([

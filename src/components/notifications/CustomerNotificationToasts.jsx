@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Bell, X } from "lucide-react";
 import { requestJson } from "../../lib/authApi.js";
 import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
+import { createNotificationDelivery } from "../../lib/notificationDelivery.js";
 import "../../assets/css/notifications.css";
 
 const TOAST_DURATION = 7000;
@@ -48,35 +49,39 @@ export default function CustomerNotificationToasts() {
   const sessionRef = useRef(null);
 
   useEffect(() => {
-    const controller = new AbortController();
-    sessionRef.current = { controller, seenIds: new Set() };
+    const session = createNotificationDelivery({
+      request: requestJson,
+      onNotification: (item) => setQueue((current) => [...current, item]),
+    });
+    sessionRef.current = session;
     return () => {
-      controller.abort();
+      session.dispose();
       sessionRef.current = null;
     };
   }, []);
 
-  useRealtimeEvents({
-    onEvent: async (event) => {
+  const realtimeStatus = useRealtimeEvents({
+    onEvent: (event) => {
       if (event?.event_type !== "notification.created") return;
-      const id = event.resource_id;
-      const session = sessionRef.current;
-      if (!id || !session || session.seenIds.has(id)) return;
-
-      session.seenIds.add(id);
-      const { signal } = session.controller;
-      try {
-        const item = await requestJson(
-          `/api/notifications/${encodeURIComponent(id)}`,
-          { signal },
-        );
-        if (!signal.aborted) setQueue((current) => [...current, item]);
-      } catch {
-        // Let a replay retry this item. The bell still refreshes independently.
-        session.seenIds.delete(id);
-      }
+      return sessionRef.current?.receive(event.resource_id);
     },
+    onReady: () => sessionRef.current?.refresh(),
+    onReconnect: () => sessionRef.current?.refresh(),
   });
+
+  useEffect(() => {
+    // Poll only while live delivery is unavailable or a request needs recovery.
+    // A successful top-up must still toast when SSE cannot connect.
+    const recover = () => {
+      const session = sessionRef.current;
+      if (realtimeStatus !== "connected" || session?.needsRecovery()) {
+        session?.refresh();
+      }
+    };
+    recover();
+    const timer = window.setInterval(recover, 5000);
+    return () => window.clearInterval(timer);
+  }, [realtimeStatus]);
 
   const dismiss = useCallback((id) => {
     setQueue((current) => current.filter((item) => item.id !== id));

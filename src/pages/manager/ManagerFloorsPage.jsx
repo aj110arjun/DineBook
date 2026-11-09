@@ -37,6 +37,7 @@ export default function ManagerFloorsPage() {
   const [number, setNumber] = useState("");
   const [seats, setSeats] = useState("2");
   const [reservationFee, setReservationFee] = useState("250");
+  const [extraHourFee, setExtraHourFee] = useState("0");
   const [gridRow, setGridRow] = useState("");
   const [gridCol, setGridCol] = useState("");
   const [shape, setShape] = useState("round");
@@ -172,6 +173,7 @@ export default function ManagerFloorsPage() {
         table_number: number.trim(),
         capacity: Number(seats),
         reservation_fee: Number(reservationFee),
+        extra_hour_fee: Number(extraHourFee),
         grid_row: Number(gridRow),
         grid_col: Number(gridCol),
         table_type: shape,
@@ -201,6 +203,7 @@ export default function ManagerFloorsPage() {
     setNumber("");
     setSeats("4");
     setReservationFee("250");
+    setExtraHourFee("0");
     setGridRow("");
     setGridCol("");
     setShape("round");
@@ -236,6 +239,7 @@ export default function ManagerFloorsPage() {
     setNumber(table.table_number);
     setSeats(String(table.capacity ?? table.seats));
     setReservationFee(String(table.reservation_fee ?? 0));
+    setExtraHourFee(String(table.extra_hour_fee ?? 0));
     setGridRow(table.grid_row == null ? "" : String(table.grid_row));
     setGridCol(table.grid_col == null ? "" : String(table.grid_col));
     setShape(table.table_type || "round");
@@ -573,7 +577,7 @@ export default function ManagerFloorsPage() {
                     />
                   </label>
                   <label>
-                    Reservation Fee (₹ per table) <b>*</b>
+                    Reservation fee (₹ per table, first hour) <b>*</b>
                     <input
                       type="number"
                       min="0"
@@ -582,6 +586,19 @@ export default function ManagerFloorsPage() {
                       onChange={(e) => setReservationFee(e.target.value)}
                       required
                     />
+                  </label>
+                  <label>
+                    Extra hour fee (₹ per table) <b>*</b>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100000"
+                      step="0.01"
+                      value={extraHourFee}
+                      onChange={(event) => setExtraHourFee(event.target.value)}
+                      required
+                    />
+                    <small>Charged for each started hour after the first. Set 0 for no extra charge.</small>
                   </label>
                   <label>
                     Layout row (starts at 0) <b>*</b>

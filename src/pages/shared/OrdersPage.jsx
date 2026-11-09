@@ -427,15 +427,19 @@ export default function OrdersPage({ mode = "customer" }) {
                   <div className="chef-order-context">
                     <span>
                       <Clock3 size={15} />
-                      {order.reservation?.start_time
-                        ? `For ${order.reservation.start_time}`
-                        : "Walk-in order"}
+                      {order.service_type === "TAKEAWAY"
+                        ? "Takeaway order"
+                        : order.reservation?.start_time
+                          ? `For ${order.reservation.start_time}`
+                          : "Walk-in order"}
                     </span>
                     <span>
                       <MapPin size={15} />
-                      {order.reservation?.tables?.length
-                        ? `Table ${order.reservation.tables.map((table) => table.table_number).join(", ")}`
-                        : "No table assigned"}
+                      {order.service_type === "TAKEAWAY"
+                        ? "Pack for collection"
+                        : (order.tables || order.reservation?.tables || []).length
+                          ? `Table ${(order.tables || order.reservation?.tables || []).map((table) => table.table_number).join(", ")}`
+                          : "No table assigned"}
                     </span>
                   </div>
                 )}
@@ -967,7 +971,7 @@ function ManagerOrderCard({ order, busy, onMarkPaid, onUpdate, onOpen }) {
             ) : (
               <>
                 <Users size={14} />
-                Walk-in order
+                {order.service_type === "TAKEAWAY" ? "Takeaway order" : "Walk-in order"}
               </>
             )}
             <b className="manager-order-summary-total">{`₹${Number(order.total).toFixed(2)}`}</b>
