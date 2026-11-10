@@ -1,3 +1,4 @@
+import { formatLocalDate } from "../../lib/localDate.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -45,6 +46,7 @@ const activityStatusLabels = {
   ACCEPTED: "Accepted by kitchen",
   PREPARING: "Being prepared",
   READY: "Ready to serve",
+  SERVED: "Served",
 };
 const weekDays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 const dayKey = (date) =>
@@ -55,6 +57,7 @@ const orderTone = (status) =>
     ACCEPTED: "confirmed",
     PREPARING: "confirmed",
     READY: "completed",
+    SERVED: "completed",
     COMPLETED: "completed",
     CANCELLED: "cancelled",
     REJECTED: "cancelled",
@@ -65,6 +68,7 @@ const orderStatusLabel = (status) =>
     ACCEPTED: "Sent to kitchen",
     PREPARING: "Being prepared",
     READY: "Ready to serve",
+    SERVED: "Served",
     COMPLETED: "Served",
     CANCELLED: "Removed",
     REJECTED: "Declined by kitchen",
@@ -121,6 +125,7 @@ export default function ManagerReservationsPage() {
   );
   const [expandedId, setExpandedId] = useState("");
   const [error, setError] = useState("");
+  const [cancellationNotice, setCancellationNotice] = useState("");
   const [busyId, setBusyId] = useState("");
   const [pendingAction, setPendingAction] = useState(null);
   const [pendingOrderRemoval, setPendingOrderRemoval] = useState(null);
@@ -353,13 +358,23 @@ export default function ManagerReservationsPage() {
 
   async function update(item, action, reason = "") {
     setBusyId(item.id);
+    setCancellationNotice("");
+    setError("");
     try {
-      await requestJson(`/api/manager/reservations/${item.id}/${action}`, {
+      const result = await requestJson(`/api/manager/reservations/${item.id}/${action}`, {
         method: "POST",
         ...(action === "cancel"
           ? { body: JSON.stringify({ reason: reason.trim() || null }) }
           : {}),
       });
+      if (action === "cancel") {
+        const refund = Number(result.wallet_refund || 0);
+        setCancellationNotice(
+          refund > 0
+            ? `Reservation cancelled. ₹${refund.toFixed(2)} refunded to the customer’s wallet.`
+            : "Reservation cancelled.",
+        );
+      }
       await Promise.all([loadCalendarActivities(), loadCalendarSummary()]);
       return true;
     } catch (e) {
@@ -619,11 +634,7 @@ export default function ManagerReservationsPage() {
     month: "long",
     year: "numeric",
   }).format(month);
-  const selectedLabel = new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(`${selectedDate}T12:00:00`));
+  const selectedLabel = formatLocalDate(selectedDate);
 
   return (
     <ManagerLayout title="Reservation Management">
@@ -718,6 +729,11 @@ export default function ManagerReservationsPage() {
             {error}
           </div>
         )}
+        {cancellationNotice && (
+          <p className="reservation-cancellation-notice" role="status">
+            {cancellationNotice}
+          </p>
+        )}
         <div className="reservation-workspace">
           <div className="reservation-primary-column">
             <section className="reservation-calendar-card">
@@ -796,7 +812,7 @@ export default function ManagerReservationsPage() {
                       key={key}
                       onClick={() => setSelectedDate(key)}
                       disabled={disabled}
-                      aria-label={`${day.toLocaleDateString("en", { dateStyle: "full" })}${workingDay ? "" : ", closed"}`}
+                      aria-label={`${formatLocalDate(day)}${workingDay ? "" : ", closed"}`}
                       title={
                         disabled
                           ? currentMonth
@@ -1288,7 +1304,11 @@ export default function ManagerReservationsPage() {
                   ? "Mark guest as a no-show?"
                   : "Cancel this reservation?"
             }
-            description={`This will mark ${pendingAction.item.customer_name}'s reservation as ${pendingAction.action === "no-show" ? "a no-show" : pendingAction.action === "reject" ? "rejected" : "cancelled"}. Any eligible refund follows the existing wallet refund policy.`}
+            description={
+              pendingAction.action === "cancel"
+                ? `This will cancel ${pendingAction.item.customer_name}'s reservation and refund any paid reservation fee and preorder amount to their DineBook wallet.`
+                : `This will mark ${pendingAction.item.customer_name}'s reservation as ${pendingAction.action === "no-show" ? "a no-show" : "rejected"}.`
+            }
             confirmLabel={
               pendingAction.action === "reject"
                 ? "Reject reservation"

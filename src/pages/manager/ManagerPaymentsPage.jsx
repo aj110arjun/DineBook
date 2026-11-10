@@ -1,3 +1,4 @@
+import { formatLocalDateTime } from "../../lib/localDate.js";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
@@ -19,18 +20,7 @@ const humanize = (value) =>
     .toLowerCase()
     .replaceAll("_", " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
-const dateTime = (value) =>
-  value
-    ? new Date(value).toLocaleString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-        timeZone: "Asia/Kolkata",
-      })
-    : "—";
+const dateTime = (value) => formatLocalDateTime(value, { hour12: false });
 const readableId = (value, prefix) =>
   value
     ? `${prefix}-${String(value).replaceAll("-", "").slice(-12).toUpperCase()}`

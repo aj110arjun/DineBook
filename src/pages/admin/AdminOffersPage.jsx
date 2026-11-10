@@ -1,3 +1,4 @@
+import { formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
 import { useEffect, useState } from "react";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
 import { requestJson } from "../../lib/authApi.js";
@@ -215,7 +216,7 @@ export default function AdminOffersPage() {
                         <td>{r.status}</td>
                         <td>
                           {r.updated_at
-                            ? new Date(r.updated_at).toLocaleDateString()
+                            ? formatLocalDate(r.updated_at)
                             : "—"}
                         </td>
                       </>
@@ -233,7 +234,7 @@ export default function AdminOffersPage() {
                         <td>
                           {r.status}
                           <small>
-                            {new Date(r.created_at).toLocaleString()}
+                            {formatLocalDateTime(r.created_at, { timeStyle: "medium" })}
                           </small>
                         </td>
                       </>

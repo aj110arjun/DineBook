@@ -1,3 +1,4 @@
+import { formatLocalDate } from "../../lib/localDate.js";
 import { useEffect, useState } from "react";
 import { Eye, RefreshCw, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -206,7 +207,7 @@ export default function AdminRestaurantsPage() {
                     </td>
                     <td>
                       {restaurant.created_at
-                        ? new Date(restaurant.created_at).toLocaleDateString()
+                        ? formatLocalDate(restaurant.created_at)
                         : "—"}
                     </td>
                     <td>

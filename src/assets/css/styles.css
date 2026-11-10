@@ -4860,6 +4860,7 @@ a:focus-visible,
   color: #f4c96f;
 }
 :root[data-theme="dark"] .chef-order-status.ready,
+:root[data-theme="dark"] .chef-order-status.served,
 :root[data-theme="dark"] .chef-order-status.completed,
 :root[data-theme="dark"] .chef-dish-meta b.available {
   background: #1b3b30;
@@ -8366,7 +8367,7 @@ a:focus-visible,
 }
 .chef-pipeline-list {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
   gap: 14px;
   margin-top: 19px;
 }
@@ -8510,6 +8511,7 @@ a:focus-visible,
   color: #d97706;
 }
 .chef-order-status.ready,
+.chef-order-status.served,
 .chef-order-status.completed {
   background: #dcfce8;
   color: #16a34a;
@@ -13709,6 +13711,7 @@ a:focus-visible,
   background: #39272d;
   color: #e7c5ca;
 }
+:root[data-theme="dark"] .orders-page-chef .food-order-status.status-served,
 :root[data-theme="dark"] .orders-page-chef .food-order-status.status-completed {
   border-color: #35614f;
   background: #1d382e;
@@ -13825,11 +13828,13 @@ a:focus-visible,
   .admin-floor-table-status
 ):is(
   .ready,
+  .served,
   .completed,
   .success,
   .active,
   .paid,
   .status-ready,
+  .status-served,
   .status-completed,
   .status-success,
   .status-active,

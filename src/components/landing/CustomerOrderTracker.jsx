@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check, Clock3, CookingPot, PackageCheck, Search } from "lucide-react";
+import {
+  Check, Clock3, CookingPot, PackageCheck, Search, Utensils,
+} from "lucide-react";
 import { requestJson } from "../../lib/authApi.js";
 import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
 import "../../assets/css/CustomerOrderTracker.css";
@@ -9,6 +11,7 @@ const steps = [
   { status: "ACCEPTED", label: "Accepted", icon: Check },
   { status: "PREPARING", label: "Preparing", icon: CookingPot },
   { status: "READY", label: "Ready", icon: PackageCheck },
+  { status: "SERVED", label: "Served", icon: Utensils },
 ];
 const activeStatuses = new Set(steps.map(({ status }) => status));
 
@@ -164,6 +167,7 @@ export default function CustomerOrderTracker({ enabled }) {
             .replaceAll("_", " ")
             .toLowerCase()
             .replace(/\b\w/g, (letter) => letter.toUpperCase());
+          const currentLabel = isActive ? steps[currentIndex].label : terminalLabel;
           return (
             <article className="customer-order-progress-card" key={order.id}>
               <header>
@@ -174,7 +178,7 @@ export default function CustomerOrderTracker({ enabled }) {
                 <strong
                   className={`customer-order-current-status status-${order.status.toLowerCase()}`}
                 >
-                  {steps[currentIndex]?.label || terminalLabel}
+                  {currentLabel}
                 </strong>
               </header>
               <p className="customer-order-items-summary">
@@ -185,7 +189,7 @@ export default function CustomerOrderTracker({ enabled }) {
               {isActive || order.status === "COMPLETED" ? (
                 <ol
                   className="customer-order-status-steps"
-                  aria-label={`Order status: ${steps[currentIndex]?.label}`}
+                  aria-label={`Order status: ${currentLabel}`}
                 >
                   {steps.map((step, index) => {
                     const Icon = step.icon;

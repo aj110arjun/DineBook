@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
+import NotificationToasts from "../notifications/NotificationToasts.jsx";
 
 export default function AdminProtectedRoute({ children }) {
   const [signedIn, setSignedIn] = useState(false);
@@ -44,5 +45,10 @@ export default function AdminProtectedRoute({ children }) {
     return <Navigate to="/admin/login" replace />;
   }
 
-  return children;
+  return (
+    <>
+      <NotificationToasts />
+      {children}
+    </>
+  );
 }

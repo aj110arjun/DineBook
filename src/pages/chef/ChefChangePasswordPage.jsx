@@ -1,13 +1,13 @@
 import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useOutletContext } from "react-router-dom";
 import ChefAuthLayout from "../../components/auth/ChefAuthLayout.jsx";
 import { PasswordField } from "../../components/auth/FormField.jsx";
 import Notice from "../../components/auth/Notice.jsx";
 import { requestJson } from "../../lib/authApi.js";
 
 export default function ChefChangePasswordPage() {
-  const navigate = useNavigate();
+  const { refreshChef } = useOutletContext();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -40,7 +40,7 @@ export default function ChefChangePasswordPage() {
         }),
         fallbackMessage: "Unable to update your password.",
       });
-      navigate("/chef/dashboard", { replace: true });
+      refreshChef();
     } catch (reason) {
       setError(reason.message);
     } finally {

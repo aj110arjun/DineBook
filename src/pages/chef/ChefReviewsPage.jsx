@@ -1,3 +1,4 @@
+import { formatLocalDate } from "../../lib/localDate.js";
 import { useEffect, useState } from "react";
 import { requestJson } from "../../lib/authApi.js";
 import ChefLayout from "../../components/chef/ChefLayout.jsx";
@@ -51,7 +52,7 @@ export default function ChefReviewsPage() {
             </strong>
             <p>{r.content}</p>
             <small className="reviews-muted">
-              {new Date(r.created_at).toLocaleDateString()}
+              {formatLocalDate(r.created_at)}
             </small>
           </article>
         ))}

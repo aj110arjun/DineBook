@@ -1,3 +1,4 @@
+import { formatLocalDate } from "../../lib/localDate.js";
 import { useEffect, useState } from "react";
 import { Clock3 } from "lucide-react";
 import ChefLayout from "../../components/chef/ChefLayout.jsx";
@@ -77,9 +78,9 @@ export default function ChefServiceHoursPage() {
                     {data.exceptions.map((item) => (
                       <li key={item.id}>
                         <strong>
-                          {item.start_date}
+                          {formatLocalDate(item.start_date)}
                           {item.end_date !== item.start_date
-                            ? ` – ${item.end_date}`
+                            ? ` – ${formatLocalDate(item.end_date)}`
                             : ""}
                         </strong>
                         <span>

@@ -1,3 +1,4 @@
+import { formatLocalDateTime } from "../../lib/localDate.js";
 import { useEffect, useState } from "react";
 import { ArrowLeft, CalendarDays, CreditCard, FileText } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -14,13 +15,6 @@ const humanize = (value) =>
 const readableId = (value, prefix) =>
   value
     ? `${prefix}-${String(value).replaceAll("-", "").slice(0, 8).toUpperCase()}`
-    : "—";
-const dateLabel = (value) =>
-  value
-    ? new Intl.DateTimeFormat("en-IN", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }).format(new Date(value))
     : "—";
 const money = (value) =>
   `₹${Number(value || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -216,7 +210,7 @@ export default function CustomerTransactionDetailsPage() {
                   </h2>
                   <dl>
                     <dt>Created</dt>
-                    <dd>{dateLabel(transaction.created_at)}</dd>
+                    <dd>{formatLocalDateTime(transaction.created_at)}</dd>
                   </dl>
                 </section>
               </div>

@@ -1,14 +1,7 @@
+import { formatLocalDateTime } from "./localDate.js";
 const readableId = (value, prefix) =>
   value
     ? `${prefix}-${String(value).replaceAll("-", "").slice(0, 8).toUpperCase()}`
-    : "—";
-
-const formatDate = (value) =>
-  value
-    ? new Date(value).toLocaleString("en-IN", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      })
     : "—";
 
 const cleanText = (value) =>
@@ -119,7 +112,7 @@ function makePage(invoice, transactionId, pageNumber) {
   text(365, 740, 8, "INVOICE / RECEIPT NO.", "0.38 0.43 0.45");
   text(365, 725, 10, transactionId);
   text(365, 708, 8, "ISSUED", "0.38 0.43 0.45");
-  text(414, 708, 8, formatDate(invoice.createdAt));
+  text(414, 708, 8, formatLocalDateTime(invoice.createdAt));
   line(52, 693, 543, 693, "0.06 0.39 0.43");
 
   let tableY = 594;
@@ -305,7 +298,7 @@ export function createTransactionInvoicePdf(invoice = {}) {
         : null,
     ],
     ["Refund reference", invoice.refundReference],
-    ["Refund date", invoice.refundDate ? formatDate(invoice.refundDate) : null],
+    ["Refund date", invoice.refundDate ? formatLocalDateTime(invoice.refundDate) : null],
     ["Original payment reference", invoice.originalPaymentReference],
     ...(invoice.paymentBreakdown || []).map(({ label, value }) => [
       label,

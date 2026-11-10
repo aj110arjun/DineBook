@@ -1,3 +1,4 @@
+import { formatLocalDateTime } from "../../lib/localDate.js";
 import { useId, useState } from "react";
 import { Check, ChevronDown, Copy, Search, TicketPercent } from "lucide-react";
 import Pagination from "../Pagination.jsx";
@@ -18,14 +19,6 @@ const currency = (value) =>
     currency: "INR",
     maximumFractionDigits: 2,
   }).format(Number(value) || 0);
-const dateTime = (value) =>
-  new Date(value).toLocaleString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
 
 export default function RestaurantOffers({ offers }) {
   const headingId = useId();
@@ -134,8 +127,8 @@ export default function RestaurantOffers({ offers }) {
                   <div><dt>Minimum order</dt><dd>{currency(offer.minimum_subtotal)}</dd></div>
                   {offer.max_discount != null && <div><dt>Maximum saving</dt><dd>{currency(offer.max_discount)}</dd></div>}
                   <div><dt>Usage limit</dt><dd>{offer.per_customer_limit ? `${offer.per_customer_limit} ${Number(offer.per_customer_limit) === 1 ? "use" : "uses"} per customer` : "No per-customer limit"}</dd></div>
-                  {offer.starts_at && <div><dt>Starts</dt><dd><time dateTime={offer.starts_at}>{dateTime(offer.starts_at)}</time></dd></div>}
-                  {offer.ends_at && <div><dt>Ends</dt><dd><time dateTime={offer.ends_at}>{dateTime(offer.ends_at)}</time></dd></div>}
+                  {offer.starts_at && <div><dt>Starts</dt><dd><time dateTime={offer.starts_at}>{formatLocalDateTime(offer.starts_at)}</time></dd></div>}
+                  {offer.ends_at && <div><dt>Ends</dt><dd><time dateTime={offer.ends_at}>{formatLocalDateTime(offer.ends_at)}</time></dd></div>}
                 </dl>
               </details>
             </article>

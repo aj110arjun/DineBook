@@ -1,45 +1,63 @@
-import { useEffect, useState } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
+import NotificationToasts from "../notifications/NotificationToasts.jsx";
 
-export default function ChefProtectedRoute({ children }) {
-  const location = useLocation();
-  const [checking, setChecking] = useState(true);
-  const [authenticated, setAuthenticated] = useState(false);
-  const [mustChangePassword, setMustChangePassword] = useState(false);
+const SESSION_CHECK_INTERVAL = 50000;
+
+export default function ChefProtectedRoute() {
+  const { pathname } = useLocation();
+  const [chef, setChef] = useState(undefined);
   const [suspended, setSuspended] = useState(false);
+  const [sessionVersion, setSessionVersion] = useState(0);
+  const pendingCheck = useRef(null);
 
   useEffect(() => {
     let active = true;
-    async function checkChef(initial = false) {
+    let timer;
+
+    async function checkChef() {
+      // Share a pending check when React replays the effect in development.
+      // A password change starts a fresh check with the new session cookie.
+      if (pendingCheck.current?.version !== sessionVersion) {
+        pendingCheck.current = {
+          version: sessionVersion,
+          request: requestJson("/api/chef/me", {
+            timeout: 10000,
+            fallbackMessage: "Chef authentication required.",
+          }),
+        };
+      }
+      const check = pendingCheck.current;
       try {
-        const chef = await requestJson("/api/chef/me", {
-          method: "GET",
-          fallbackMessage: "Chef authentication required.",
-        });
+        const profile = await check.request;
         if (active) {
-          setMustChangePassword(Boolean(chef.must_change_password));
-          setAuthenticated(true);
-          if (initial) setChecking(false);
+          setChef(profile);
+          timer = window.setTimeout(checkChef, SESSION_CHECK_INTERVAL);
         }
       } catch (error) {
         if (active) {
-          setAuthenticated(false);
           setSuspended(/suspend/i.test(error.message));
-          setChecking(false);
+          setChef(null);
         }
+      } finally {
+        if (pendingCheck.current === check) pendingCheck.current = null;
       }
     }
-    checkChef(true);
-    const timer = window.setInterval(() => checkChef(false), 2000);
+    checkChef();
 
     return () => {
       active = false;
-      window.clearInterval(timer);
+      window.clearTimeout(timer);
     };
-  }, [location.pathname]);
+  }, [sessionVersion]);
 
-  if (checking) {
+  function refreshChef() {
+    setChef(undefined);
+    setSessionVersion((version) => version + 1);
+  }
+
+  if (chef === undefined) {
     return (
       <main className="landing-loading" aria-live="polite">
         <span className="loading-mark">D</span>
@@ -47,7 +65,7 @@ export default function ChefProtectedRoute({ children }) {
       </main>
     );
   }
-  if (!authenticated)
+  if (!chef)
     return (
       <Navigate
         to="/chef/login"
@@ -59,11 +77,16 @@ export default function ChefProtectedRoute({ children }) {
         }}
       />
     );
-  if (mustChangePassword && location.pathname !== "/chef/change-password") {
+  if (chef.must_change_password && pathname !== "/chef/change-password") {
     return <Navigate to="/chef/change-password" replace />;
   }
-  if (!mustChangePassword && location.pathname === "/chef/change-password") {
+  if (!chef.must_change_password && pathname === "/chef/change-password") {
     return <Navigate to="/chef/dashboard" replace />;
   }
-  return children;
+  return (
+    <>
+      {!chef.must_change_password && <NotificationToasts key={chef.id} />}
+      <Outlet context={{ chef, refreshChef }} />
+    </>
+  );
 }

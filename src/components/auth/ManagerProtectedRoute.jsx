@@ -1,8 +1,9 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { requestJson } from "../../lib/authApi.js";
+import NotificationToasts from "../notifications/NotificationToasts.jsx";
 
-export default function ManagerProtectedRoute({ children }) {
+export default function ManagerProtectedRoute() {
   const [checking, setChecking] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
   const [suspended, setSuspended] = useState(false);
@@ -68,5 +69,10 @@ export default function ManagerProtectedRoute({ children }) {
     );
   }
 
-  return children;
+  return (
+    <>
+      <NotificationToasts />
+      <Outlet />
+    </>
+  );
 }

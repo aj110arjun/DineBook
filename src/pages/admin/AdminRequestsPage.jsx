@@ -1,3 +1,4 @@
+import { formatLocalDateTime } from "../../lib/localDate.js";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, UserCheck, Check, X, RefreshCw } from "lucide-react";
@@ -228,7 +229,7 @@ export default function AdminRequestsPage() {
                   <small>
                     Registered{" "}
                     {manager.created_at
-                      ? new Date(manager.created_at).toLocaleString()
+                      ? formatLocalDateTime(manager.created_at, { timeStyle: "medium" })
                       : "recently"}
                   </small>
                 </div>

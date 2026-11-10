@@ -1,3 +1,4 @@
+import { formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useEffect, useState } from "react";
 import {
@@ -264,7 +265,7 @@ export default function AdminRestaurantDetailsPage() {
                   label="Registered"
                   value={
                     restaurant.created_at
-                      ? new Date(restaurant.created_at).toLocaleString()
+                      ? formatLocalDateTime(restaurant.created_at, { timeStyle: "medium" })
                       : null
                   }
                   icon={CalendarDays}
@@ -339,7 +340,7 @@ export default function AdminRestaurantDetailsPage() {
                           : "Closed"}
                         {day.updated_at && (
                           <small className="operating-audit">
-                            Updated {new Date(day.updated_at).toLocaleString()}
+                            Updated {formatLocalDateTime(day.updated_at, { timeStyle: "medium" })}
                             {day.updated_by ? ` · user ${day.updated_by}` : ""}
                           </small>
                         )}
@@ -365,9 +366,9 @@ export default function AdminRestaurantDetailsPage() {
                     <li key={item.id}>
                       <div>
                         <strong>
-                          {item.start_date}
+                          {formatLocalDate(item.start_date)}
                           {item.end_date !== item.start_date
-                            ? ` – ${item.end_date}`
+                            ? ` – ${formatLocalDate(item.end_date)}`
                             : ""}
                         </strong>
                         <span>
@@ -383,7 +384,7 @@ export default function AdminRestaurantDetailsPage() {
                         {item.reason && <small>{item.reason}</small>}
                         {item.updated_at && (
                           <small>
-                            Updated {new Date(item.updated_at).toLocaleString()}
+                            Updated {formatLocalDateTime(item.updated_at, { timeStyle: "medium" })}
                             {item.created_by
                               ? ` · user ${item.created_by}`
                               : ""}

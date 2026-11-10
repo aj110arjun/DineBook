@@ -44,7 +44,7 @@ function NotificationToast({ item, onDismiss }) {
   );
 }
 
-export default function CustomerNotificationToasts() {
+export default function NotificationToasts() {
   const [queue, setQueue] = useState([]);
   const sessionRef = useRef(null);
 
@@ -71,7 +71,6 @@ export default function CustomerNotificationToasts() {
 
   useEffect(() => {
     // Poll only while live delivery is unavailable or a request needs recovery.
-    // A successful top-up must still toast when SSE cannot connect.
     const recover = () => {
       const session = sessionRef.current;
       if (realtimeStatus !== "connected" || session?.needsRecovery()) {
