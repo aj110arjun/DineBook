@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { formatLocalDate } from "../../lib/localDate.js";
+import { useCallback, useEffect, useState } from "react";
 import {
   Bell,
   ChartNoAxesColumn,
@@ -17,7 +18,7 @@ import {
   Timer,
   X,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
 import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
 import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
@@ -33,7 +34,7 @@ const chefNav = [
 
 export default function ChefDashboardPage() {
   const navigate = useNavigate();
-  const [chef, setChef] = useState(null);
+  const { chef } = useOutletContext();
   const [menuCategories, setMenuCategories] = useState([]);
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
@@ -42,22 +43,7 @@ export default function ChefDashboardPage() {
   const [menuError, setMenuError] = useState("");
   const [activeNav, setActiveNav] = useState("Dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const dateLabel = useMemo(
-    () =>
-      new Intl.DateTimeFormat("en-US", {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }).format(new Date()),
-    [],
-  );
-
-  useEffect(() => {
-    requestJson("/api/chef/me", { method: "GET" })
-      .then(setChef)
-      .catch(() => navigate("/chef/login", { replace: true }));
-  }, [navigate]);
+  const dateLabel = formatLocalDate(new Date());
 
   useEffect(() => {
     let active = true;
@@ -134,6 +120,7 @@ export default function ChefDashboardPage() {
     { label: "Accepted", value: countStatus("ACCEPTED"), tone: "orange" },
     { label: "Preparing", value: countStatus("PREPARING"), tone: "orange" },
     { label: "Ready", value: countStatus("READY"), tone: "green" },
+    { label: "Served", value: countStatus("SERVED"), tone: "green" },
     { label: "Completed", value: countStatus("COMPLETED"), tone: "green" },
   ];
   const recentOrders = [...todayOrders]
@@ -149,7 +136,7 @@ export default function ChefDashboardPage() {
         minute: "2-digit",
       }),
       tone:
-        order.status === "COMPLETED"
+        ["SERVED", "COMPLETED"].includes(order.status)
           ? "green"
           : order.status === "PREPARING"
             ? "orange"

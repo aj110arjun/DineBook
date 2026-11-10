@@ -26,10 +26,6 @@ html { scroll-padding-top: 108px; }
 .ux-recovery button, .ux-recovery a { display: inline-flex; align-items: center; min-height: 44px; padding: 10px 16px; margin: 20px 12px 0 0; border: 1px solid var(--color-border); border-radius: 10px; }
 .ux-recovery button { background: var(--color-primary); color: #fff; }
 .ux-eyebrow { letter-spacing: .12em; font-size: 12px; color: var(--color-text-secondary); }
-/* Errors explain how to recover, alongside the fields that need attention. */
-.ux-form-summary { padding: 16px 20px; margin-bottom: 20px; border: 1px solid var(--color-danger); border-left-width: 4px; border-radius: 10px; color: var(--color-danger); background: var(--db-status-danger-bg); font-size: 14px; }
-.ux-form-summary ul { margin: 8px 0 0; padding-left: 18px; }
-.ux-form-summary button { padding: 4px 0; border: 0; background: transparent; text-align: left; color: inherit; text-decoration: underline; line-height: 1.5; cursor: pointer; }
 /* Clear, labelled and comfortably sized shared controls. */
 :is(.manager-nav-item, .chef-nav-item, .admin-nav-item) { text-decoration: none; }
 :is(.manager-nav-item, .admin-nav-item, .chef-sidebar-nav a, .chef-sidebar-nav button) { min-height: 44px; }

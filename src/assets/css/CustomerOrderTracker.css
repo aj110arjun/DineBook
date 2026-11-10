@@ -97,7 +97,8 @@
   background: #fff0df;
   color: #a75612;
 }
-.customer-order-current-status.status-ready {
+.customer-order-current-status.status-ready,
+.customer-order-current-status.status-served {
   background: #e8f6ed;
   color: #287446;
 }
@@ -113,7 +114,7 @@
 }
 .customer-order-status-steps {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   margin: 0;
   padding: 0;
   list-style: none;
@@ -216,7 +217,8 @@
   background: #432f20;
   color: #ffbf83;
 }
-:root[data-theme="dark"] .customer-order-current-status.status-ready {
+:root[data-theme="dark"] .customer-order-current-status.status-ready,
+:root[data-theme="dark"] .customer-order-current-status.status-served {
   background: #20392d;
   color: #9de0b5;
 }

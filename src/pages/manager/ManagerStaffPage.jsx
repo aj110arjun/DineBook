@@ -16,6 +16,9 @@ export default function ManagerStaffPage() {
   const [chefs, setChefs] = useState([]);
   const [chefsLoading, setChefsLoading] = useState(true);
   const [chefsError, setChefsError] = useState("");
+  const [resendingId, setResendingId] = useState("");
+  const [inviteError, setInviteError] = useState("");
+  const [InviteSuccess, setInviteSuccess] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -48,11 +51,29 @@ export default function ManagerStaffPage() {
     };
   }, [walletRefreshKey]);
 
+  async function resendInvitation(chefId) {
+    setResendingId(chefId);
+    setInviteError("");
+    setInviteSuccess("");
+
+    try {
+      const result = await requestJson(
+        `/api/manager/staff/${chefId}/resend-invitation`,
+        { method: "POST" },
+      );
+      setInviteSuccess(result.message);
+      setWalletRefreshKey((current) => current + 1);
+    } catch (reason) {
+      setInviteError(reason.message);
+    } finally {
+      setResendingId("");
+    }
+  }
+
   async function handleAddChef(event) {
     event.preventDefault();
 
     const formElement = event.currentTarget;
-
 
     const form = new FormData(formElement);
 
@@ -142,8 +163,8 @@ export default function ManagerStaffPage() {
                 change it at first sign-in.
               </p>
 
-              <Notice message={error} />
-              <Notice message={success} type="success" />
+              <Notice message={inviteError} />
+              <Notice message={InviteSuccess} type="success" />
 
               <button
                 type="submit"
@@ -208,6 +229,26 @@ export default function ManagerStaffPage() {
                           ? "Account enabled"
                           : "Account disabled"}
                       </small>
+
+                      {chef.invite_status === "pending" && (
+                        <small>Awaiting first sign-in</small>
+                      )}
+                      {chef.invite_status === "expired" && (
+                        <small>Invitation Expired</small>
+                      )}
+                      {chef.invite_status === "expired" &&
+                        chef.is_active &&
+                        chef.status === "ACTIVE" && (
+                          <button
+                            type="button"
+                            disabled={Boolean(resendingId)}
+                            onClick={() => resendInvitation(chef.id)}
+                          >
+                            {resendingId === chef.id
+                              ? "Sending..."
+                              : "Resend Invitation"}
+                          </button>
+                        )}
                     </div>
                   </article>
                 ))}

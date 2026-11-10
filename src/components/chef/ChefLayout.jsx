@@ -11,7 +11,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
 import NotificationBell from "../notifications/NotificationBell.jsx";
 
@@ -26,7 +26,7 @@ const navigation = [
 export default function ChefLayout({ title, children }) {
   const navigate = useNavigate();
   const { hash, pathname } = useLocation();
-  const [chef, setChef] = useState(null);
+  const { chef } = useOutletContext();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   useNavigationDisclosure(sidebarOpen, () => setSidebarOpen(false), "chef-primary-nav");
   const avatar =
@@ -37,12 +37,6 @@ export default function ChefLayout({ title, children }) {
       .map((part) => part[0])
       .join("")
       .toUpperCase() || "CA";
-
-  useEffect(() => {
-    requestJson("/api/chef/me")
-      .then(setChef)
-      .catch(() => navigate("/chef/login", { replace: true }));
-  }, [navigate]);
 
   useEffect(() => {
     if (!hash) return;

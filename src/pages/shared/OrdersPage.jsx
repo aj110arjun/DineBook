@@ -1,3 +1,4 @@
+import { formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -21,20 +22,25 @@ import Pagination from "../../components/Pagination.jsx";
 import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
 import "../../assets/css/ManagerOrdersPage.css";
 
-const managerOrderFilters = [
-  "ALL",
+const orderStatuses = [
   "PLACED",
   "ACCEPTED",
   "PREPARING",
   "READY",
+  "SERVED",
   "COMPLETED",
   "CANCELLED",
   "REJECTED",
 ];
+const managerOrderFilters = ["ALL", ...orderStatuses];
 
 const transitions = {
-  manager: { PLACED: ["ACCEPTED", "REJECTED"], READY: ["COMPLETED"] },
-  chef: { ACCEPTED: ["PREPARING"], PREPARING: ["READY"] },
+  manager: {
+    PLACED: ["ACCEPTED", "REJECTED"],
+    READY: ["COMPLETED"],
+    SERVED: ["COMPLETED"],
+  },
+  chef: { ACCEPTED: ["PREPARING"], PREPARING: ["READY"], READY: ["SERVED"] },
 };
 const statusLabel = (status) =>
   status
@@ -215,6 +221,7 @@ export default function OrdersPage({ mode = "customer" }) {
         body: JSON.stringify({ status, reason: reason.trim() || null }),
       });
       await load();
+      if (status === "SERVED") setNotice("Order marked as served.");
       return true;
     } catch (reason) {
       setNotice(reason.message);
@@ -306,13 +313,14 @@ export default function OrdersPage({ mode = "customer" }) {
                 <option value="ACTIVE">Active kitchen orders</option>
               )}
               <option value="ALL">All statuses</option>
-              {[...new Set(orders.map((order) => order.status))]
-                .sort()
-                .map((status) => (
-                  <option key={status} value={status}>
-                    {statusLabel(status)}
-                  </option>
-                ))}
+              {(mode === "chef"
+                ? orderStatuses
+                : [...new Set(orders.map((order) => order.status))].sort()
+              ).map((status) => (
+                <option key={status} value={status}>
+                  {statusLabel(status)}
+                </option>
+              ))}
             </select>
           </label>
           {mode !== "chef" && (
@@ -415,7 +423,7 @@ export default function OrdersPage({ mode = "customer" }) {
                         ? order.restaurant_name
                         : `Order from ${order.customer_name}`}
                     </h2>
-                    <small>{new Date(order.created_at).toLocaleString()}</small>
+                    <small>{formatLocalDateTime(order.created_at, { timeStyle: "medium" })}</small>
                   </div>
                   <strong
                     className={`food-order-status status-${order.status.toLowerCase()}`}
@@ -543,7 +551,9 @@ export default function OrdersPage({ mode = "customer" }) {
                             : updateOrder(order.id, status)
                         }
                       >
-                        {statusLabel(status)}
+                        {status === "SERVED"
+                          ? "Mark as served"
+                          : statusLabel(status)}
                       </button>
                     ))}
                     {mode === "chef" && order.status === "PLACED" && (
@@ -741,7 +751,7 @@ export default function OrdersPage({ mode = "customer" }) {
                 </span>
                 <span>
                   <i className="done" />
-                  Completed
+                  Served / completed
                 </span>
               </div>
               <div className="manager-orders-calendar-header">
@@ -806,7 +816,7 @@ export default function OrdersPage({ mode = "customer" }) {
                             ? "progress"
                             : status === "READY"
                               ? "ready"
-                              : status === "COMPLETED"
+                              : ["SERVED", "COMPLETED"].includes(status)
                                 ? "done"
                                 : "cancelled",
                       ),
@@ -819,7 +829,7 @@ export default function OrdersPage({ mode = "customer" }) {
                       disabled={!currentMonth}
                       className={`manager-orders-calendar-day${currentMonth ? "" : " outside"}${!currentMonth ? " disabled-date" : ""}${key === selectedOrderDate ? " selected" : ""}${key === dateKey(new Date()) ? " today" : ""}`}
                       onClick={() => setSelectedOrderDate(key)}
-                      aria-label={`${day.toLocaleDateString("en", { dateStyle: "full" })}, ${calendarOrderCounts[key] || 0} orders`}
+                      aria-label={`${formatLocalDate(day)}, ${calendarOrderCounts[key] || 0} orders`}
                     >
                       <span className="day-number">{day.getDate()}</span>
                       {calendarOrderCounts[key] > 0 && (
@@ -849,10 +859,7 @@ export default function OrdersPage({ mode = "customer" }) {
               <header>
                 <h2>
                   {mode === "chef" ? "Kitchen orders" : "Orders"} –{" "}
-                  {new Date(`${selectedOrderDate}T12:00:00`).toLocaleDateString(
-                    "en",
-                    { month: "short", day: "numeric", year: "numeric" },
-                  )}
+                  {formatLocalDate(selectedOrderDate)}
                 </h2>
                 <div>
                   <strong>{total} Orders</strong>
@@ -909,9 +916,7 @@ function ManagerOrderCard({ order, busy, onMarkPaid, onUpdate, onOpen }) {
     minute: "2-digit",
   });
   const visitDate = order.reservation?.reservation_date
-    ? new Date(
-        `${order.reservation.reservation_date}T12:00:00`,
-      ).toLocaleDateString("en-IN", { month: "short", day: "numeric" })
+    ? formatLocalDate(order.reservation.reservation_date)
     : null;
 
   return (

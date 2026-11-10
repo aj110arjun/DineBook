@@ -1,3 +1,4 @@
+import { formatLocalDate } from "../../lib/localDate.js";
 import { confirmAction } from "../../lib/confirmDialog.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useEffect, useState } from "react";
@@ -517,9 +518,9 @@ export default function ManagerOperatingHoursPage() {
                 <li key={item.id}>
                   <div>
                     <strong>
-                      {item.start_date}
+                      {formatLocalDate(item.start_date)}
                       {item.end_date !== item.start_date
-                        ? ` – ${item.end_date}`
+                        ? ` – ${formatLocalDate(item.end_date)}`
                         : ""}
                     </strong>
                     <span>

@@ -1,3 +1,4 @@
+import { formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
@@ -21,13 +22,6 @@ const statusLabel = (status) =>
     .toLowerCase()
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 const money = (value) => `₹${Number(value || 0).toFixed(2)}`;
-const dateTime = (value) =>
-  value
-    ? new Date(value).toLocaleString("en-IN", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      })
-    : "—";
 
 export default function ManagerOrderDetailsPage() {
   const { orderId } = useParams();
@@ -75,7 +69,7 @@ export default function ManagerOrderDetailsPage() {
   const actions = useMemo(() => {
     if (!order) return [];
     if (order.status === "PLACED") return ["ACCEPTED", "REJECTED"];
-    if (order.status === "READY") return ["COMPLETED"];
+    if (["READY", "SERVED"].includes(order.status)) return ["COMPLETED"];
     return [];
   }, [order]);
   const canCancel = ["PLACED", "ACCEPTED", "PREPARING"].includes(order?.status);
@@ -219,7 +213,7 @@ export default function ManagerOrderDetailsPage() {
                   <div>
                     <Clock3 />
                     <span>Created</span>
-                    <strong>{dateTime(order.created_at)}</strong>
+                    <strong>{formatLocalDateTime(order.created_at)}</strong>
                   </div>
                   <div>
                     <Package />
@@ -232,13 +226,7 @@ export default function ManagerOrderDetailsPage() {
                         <CalendarDays />
                         <span>Visit</span>
                         <strong>
-                          {reservation.reservation_date
-                            ? new Date(
-                                `${reservation.reservation_date}T12:00:00`,
-                              ).toLocaleDateString("en-IN", {
-                                dateStyle: "medium",
-                              })
-                            : "—"}
+                          {formatLocalDate(reservation.reservation_date)}
                           {reservation.start_time
                             ? ` · ${reservation.start_time}`
                             : ""}
@@ -398,11 +386,11 @@ export default function ManagerOrderDetailsPage() {
                             : ""
                         }
                       >
-                        Placed <time>{dateTime(order.created_at)}</time>
+                        Placed <time>{formatLocalDateTime(order.created_at)}</time>
                       </li>
                       <li className={order.accepted_at ? "complete" : ""}>
                         {order.reservation_id ? "Sent to kitchen" : "Accepted"}{" "}
-                        <time>{dateTime(order.accepted_at)}</time>
+                        <time>{formatLocalDateTime(order.accepted_at)}</time>
                       </li>
                       <li
                         className={
@@ -410,13 +398,13 @@ export default function ManagerOrderDetailsPage() {
                         }
                       >
                         In progress{" "}
-                        <time>{dateTime(order.preparation_started_at)}</time>
+                        <time>{formatLocalDateTime(order.preparation_started_at)}</time>
                       </li>
                       <li className={order.ready_at ? "complete" : ""}>
-                        Ready <time>{dateTime(order.ready_at)}</time>
+                        Ready <time>{formatLocalDateTime(order.ready_at)}</time>
                       </li>
                       <li className={order.completed_at ? "complete" : ""}>
-                        Completed <time>{dateTime(order.completed_at)}</time>
+                        Completed <time>{formatLocalDateTime(order.completed_at)}</time>
                       </li>
                     </ol>
                     {order.status_reason && (

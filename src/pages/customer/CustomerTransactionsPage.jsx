@@ -1,3 +1,4 @@
+import { formatLocalDateTime } from "../../lib/localDate.js";
 import { useEffect, useState } from "react";
 import { CalendarDays, CreditCard, Search } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -17,13 +18,6 @@ const statusLabel = (value) =>
     .replaceAll("_", " ")
     .toLowerCase()
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
-const dateLabel = (value) =>
-  value
-    ? new Intl.DateTimeFormat("en-IN", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }).format(new Date(value))
-    : "—";
 
 export default function CustomerTransactionsPage() {
   const navigate = useNavigate();
@@ -208,7 +202,7 @@ export default function CustomerTransactionsPage() {
                   <span>{item.description}</span>
                   <small>
                     <CalendarDays size={13} />
-                    {dateLabel(item.created_at)} ·{" "}
+                    {formatLocalDateTime(item.created_at)} ·{" "}
                     {String(item.payment_method || "—").replaceAll("_", " ")}
                   </small>
                   {item.provider_reference && (

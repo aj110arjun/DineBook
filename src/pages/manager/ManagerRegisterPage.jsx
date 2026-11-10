@@ -27,6 +27,13 @@ import ImageUploadField from "../../components/manager/ImageUploadField.jsx";
 import { FormField, PasswordField } from "../../components/auth/FormField.jsx";
 import Notice from "../../components/auth/Notice.jsx";
 
+// Limit the stored length and digit count before checking the formatting.
+const phoneNumberFormat = String.raw`\+?(?:[0-9]|\([0-9]+\))(?:[ \-]?(?:[0-9]|\([0-9]+\)))*`;
+const restaurantPhonePattern = String.raw`\s*(?=.{7,20}\s*$)(?=(?:[^0-9]*[0-9]){7,15}[^0-9]*$)${phoneNumberFormat}\s*`;
+const restaurantPhoneRegex = new RegExp(`^${restaurantPhonePattern}$`);
+const restaurantPhoneError =
+  "Enter 7–15 digits. A leading +, spaces, hyphens, and parentheses are allowed (20 characters max).";
+
 const initialApplication = {
   name: "",
   email: "",
@@ -37,7 +44,6 @@ const initialApplication = {
   restaurantDescription: "",
   cuisineType: "",
   restaurantContact: "",
-  restaurantEmail: "",
   address: "",
   city: "",
   state: "",
@@ -257,6 +263,7 @@ export default function ManagerRegisterPage() {
   const [pendingBanner, setPendingBanner] = useState(null);
 
   const [application, setApplication] = useState(initialApplication);
+  const managerEmail = application.email.trim().toLowerCase();
   const [addressLookupQuery, setAddressLookupQuery] = useState("");
   const [addressSuggestions, setAddressSuggestions] = useState([]);
   const [addressLookupBusy, setAddressLookupBusy] = useState(false);
@@ -842,7 +849,7 @@ export default function ManagerRegisterPage() {
   }
 
   async function requestEmailCode() {
-    const email = application.email.trim().toLowerCase();
+    const email = managerEmail;
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
       setFieldErrors((current) => ({
         ...current,
@@ -884,7 +891,7 @@ export default function ManagerRegisterPage() {
         withCredentials: true,
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify({
-          email: application.email.trim().toLowerCase(),
+          email: managerEmail,
           code: emailCode,
         }),
       });
@@ -973,16 +980,8 @@ export default function ManagerRegisterPage() {
           "Use letters, numbers, spaces, apostrophes, hyphens, or periods.";
       }
 
-      if (
-        !/^\+?[0-9][0-9 ()-]{5,18}[0-9]$/.test(
-          application.restaurantContact.trim(),
-        )
-      ) {
-        errors.restaurantContact = "Enter a valid restaurant phone number.";
-      }
-
-      if (!emailPattern.test(application.restaurantEmail.trim())) {
-        errors.restaurantEmail = "Enter a valid restaurant email.";
+      if (!restaurantPhoneRegex.test(application.restaurantContact)) {
+        errors.restaurantContact = restaurantPhoneError;
       }
 
       if (
@@ -1092,11 +1091,6 @@ export default function ManagerRegisterPage() {
 
     if (!validateStep(1)) return;
 
-    setApplication((current) => ({
-      ...current,
-      restaurantEmail: current.restaurantEmail || current.email,
-    }));
-
     setStep(2);
   }
 
@@ -1135,7 +1129,7 @@ export default function ManagerRegisterPage() {
 
       // Manager account
       formData.append("name", application.name);
-      formData.append("email", application.email);
+      formData.append("email", managerEmail);
       formData.append("password", application.password);
 
       // Restaurant information
@@ -1145,8 +1139,7 @@ export default function ManagerRegisterPage() {
         application.restaurantDescription,
       );
       formData.append("cuisine_type", application.cuisineType);
-      formData.append("restaurant_contact", application.restaurantContact);
-      formData.append("restaurant_email", application.restaurantEmail);
+      formData.append("restaurant_contact", application.restaurantContact.trim());
 
       // Address
       formData.append("address", application.address);
@@ -1552,38 +1545,21 @@ export default function ManagerRegisterPage() {
                 )}
               </label>
 
-              {/* Contact + Email */}
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <FormField
-                  id="restaurantContact"
-                  label="Restaurant Contact No."
-                  type="tel"
-                  placeholder="+91 98765 43210"
-                  autoComplete="tel"
-                  required
-                  pattern="[+]?[0-9][0-9 ()-]{5,18}[0-9]"
-                  patternMessage="Enter a valid phone number."
-                  value={application.restaurantContact}
-                  error={fieldErrors.restaurantContact}
-                  onChange={(event) =>
-                    updateField("restaurantContact", event.target.value)
-                  }
-                />
-
-                <FormField
-                  id="restaurantEmail"
-                  label="Restaurant Email"
-                  type="email"
-                  placeholder="hello@restaurant.com"
-                  autoComplete="email"
-                  required
-                  value={application.restaurantEmail}
-                  error={fieldErrors.restaurantEmail}
-                  onChange={(event) =>
-                    updateField("restaurantEmail", event.target.value)
-                  }
-                />
-              </div>
+              <FormField
+                id="restaurantContact"
+                label="Restaurant Phone Number"
+                type="tel"
+                placeholder="+91 98765 43210"
+                autoComplete="tel"
+                required
+                pattern={restaurantPhonePattern}
+                patternMessage={restaurantPhoneError}
+                value={application.restaurantContact}
+                error={fieldErrors.restaurantContact}
+                onChange={(event) =>
+                  updateField("restaurantContact", event.target.value)
+                }
+              />
 
               {/* Address */}
               <div className="mb-5 rounded-lg border border-stone-200 bg-stone-50 p-4">
@@ -2098,7 +2074,7 @@ export default function ManagerRegisterPage() {
                 <div className="grid grid-cols-1 gap-4 px-5 py-5 sm:grid-cols-2">
                   <ReviewItem label="Full Name" value={application.name} />
 
-                  <ReviewItem label="Email Address" value={application.email} />
+                  <ReviewItem label="Email Address" value={managerEmail} />
                 </div>
               </section>
 
@@ -2143,7 +2119,7 @@ export default function ManagerRegisterPage() {
 
                     <ReviewItem
                       label="Restaurant Email"
-                      value={application.restaurantEmail}
+                      value={managerEmail}
                     />
 
                     <ReviewItem

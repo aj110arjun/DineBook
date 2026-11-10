@@ -1,3 +1,4 @@
+import { formatLocalDate } from "../../lib/localDate.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
@@ -69,15 +70,6 @@ const todayInRestaurantTimezone = () => {
   );
   return `${values.year}-${values.month}-${values.day}`;
 };
-function displayLocalDate(value) {
-  if (!value) return "—";
-  return new Intl.DateTimeFormat("en-IN", {
-    timeZone: "Asia/Kolkata",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(new Date(`${value}T12:00:00+05:30`));
-}
 function to24Hour(value) {
   if (/^\d{2}:\d{2}$/.test(value)) return value;
   const [clock, period] = value.split(" ");
@@ -190,7 +182,7 @@ function makePassImage(qrData, reservation, restaurant) {
         drawRow("Reservation code", reservationCode(reservation), 558, true);
         drawRow(
           "Date and time",
-          `${displayLocalDate(reservation.reservation_date)} · ${shortTime(reservation.start_time)} – ${shortTime(reservation.end_time)}`,
+          `${formatLocalDate(reservation.reservation_date)} · ${shortTime(reservation.start_time)} – ${shortTime(reservation.end_time)}`,
           585,
         );
         drawRow("Guests", `${reservation.number_of_guests}`, 612);
@@ -1083,7 +1075,7 @@ export default function CustomerReservationPage() {
     }
   }
 
-  const selectedDateLabel = displayLocalDate(date);
+  const selectedDateLabel = formatLocalDate(date);
   const restaurantPhoto =
     restaurant?.images?.[0] ||
     restaurant?.image ||
@@ -1208,6 +1200,7 @@ export default function CustomerReservationPage() {
                             <button
                               type="button"
                               disabled={outside || past || closed}
+                              aria-label={formatLocalDate(day)}
                               title={
                                 closed ? "Restaurant is closed" : undefined
                               }
@@ -2251,7 +2244,7 @@ export default function CustomerReservationPage() {
                               />
                               <ReviewLine
                                 label="Date & time"
-                                value={`${displayLocalDate(reservation.reservation_date)} · ${shortTime(reservation.start_time)} – ${shortTime(reservation.end_time)}`}
+                                value={`${formatLocalDate(reservation.reservation_date)} · ${shortTime(reservation.start_time)} – ${shortTime(reservation.end_time)}`}
                               />
                               <ReviewLine
                                 label="Table"

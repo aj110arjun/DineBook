@@ -1,3 +1,4 @@
+import { formatLocalDateTime } from "../../lib/localDate.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useEffect, useState, useRef } from "react";
 import {
@@ -678,10 +679,7 @@ export default function CustomerWalletPage() {
                     </small>
                     <small>
                       <CalendarDays size={13} />
-                      {new Date(transaction.created_at).toLocaleString(
-                        "en-IN",
-                        { dateStyle: "medium", timeStyle: "short" },
-                      )}
+                      {formatLocalDateTime(transaction.created_at)}
                     </small>
                   </div>
                   <div className="customer-transaction-side">

@@ -1,3 +1,4 @@
+import { formatLocalDateTime } from "../../lib/localDate.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useCallback, useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
@@ -52,8 +53,8 @@ export function ChefRevenuePage() {
         refreshPending.current = false;
 
         const [result, walletResult] = await Promise.all([
-          requestJson("/api/manager/revenue"),
-          requestJson("/api/manager/wallet"),
+          requestJson("/api/chef/revenue"),
+          requestJson("/api/chef/wallet"),
         ]);
 
         if (!mounted.current) return;
@@ -317,10 +318,7 @@ export function ManagerRevenuePage() {
                       {wallet.transactions.slice(0, 5).map((transaction) => (
                         <tr key={transaction.id}>
                           <td>
-                            {new Date(transaction.created_at).toLocaleString(
-                              undefined,
-                              { dateStyle: "medium", timeStyle: "short" },
-                            )}
+                            {formatLocalDateTime(transaction.created_at)}
                           </td>
                           <td>
                             {transaction.description || "Wallet activity"}
@@ -613,10 +611,7 @@ function WalletTopUpPanel({ role, wallet, onRefresh }) {
                 {wallet.transactions.slice(0, 5).map((transaction) => (
                   <tr key={transaction.id}>
                     <td>
-                      {new Date(transaction.created_at).toLocaleString(
-                        undefined,
-                        { dateStyle: "medium", timeStyle: "short" },
-                      )}
+                      {formatLocalDateTime(transaction.created_at)}
                     </td>
                     <td>{transaction.description || "Wallet activity"}</td>
                     <td>{String(transaction.type || "—").toLowerCase()}</td>
@@ -667,10 +662,7 @@ function CommissionActivity({ data }) {
                 {payouts.map((row) => (
                   <tr key={row.id}>
                     <td>
-                      {new Date(row.created_at).toLocaleString(undefined, {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })}
+                      {formatLocalDateTime(row.created_at)}
                     </td>
                     <td>
                       {data.role === "ADMIN"

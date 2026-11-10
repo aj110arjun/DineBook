@@ -1,3 +1,4 @@
+import { formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
 import { confirmAction } from "../../lib/confirmDialog.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useEffect, useState, useRef } from "react";
@@ -24,15 +25,6 @@ import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
 import { ProfileFrame } from "./CustomerReservationsPage.jsx";
 import "../../assets/css/CustomerProfilePage.css";
 
-const dateText = (value) =>
-  value
-    ? new Intl.DateTimeFormat("en-IN", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }).format(new Date(`${value}T12:00:00`))
-    : "—";
 const timeText = (value) => {
   if (!value) return "—";
   const [h, m] = value.split(":").map(Number);
@@ -51,16 +43,21 @@ const paymentMethodText = (method) =>
       : method === "PAY_AT_DESK"
         ? "Pay at restaurant"
         : "—";
-const reservationPaymentText = (reservation) =>
-  reservation.payment_status === "PAID"
-    ? `Paid via ${paymentMethodText(reservation.payment_method)}`
-    : reservation.payment_status === "FAILED"
-      ? "Payment failed"
-      : "Payment pending";
+const reservationPaymentText = (reservation) => {
+  if (reservation.payment_status === "PAID")
+    return `Paid via ${paymentMethodText(reservation.payment_method)}`;
+  if (reservation.payment_status === "REFUNDED") return "Refunded to wallet";
+  if (reservation.payment_status === "FAILED") return "Payment failed";
+  return "Payment pending";
+};
 const preorderPaymentText = (reservation) => {
   if (reservation.fulfillment_type !== "PREORDER") return "Not applicable";
   if (reservation.preorder_payment_status === "PAID")
     return `Paid via ${paymentMethodText(reservation.preorder_payment_method)}`;
+  if (reservation.preorder_payment_status === "REFUNDED")
+    return "Refunded to wallet";
+  if (reservation.preorder_payment_status === "CANCELLED")
+    return "Payment cancelled";
   if (
     reservation.preorder_payment_method === "PAY_AT_DESK" &&
     reservation.preorder_payment_status === "PENDING"
@@ -132,7 +129,7 @@ function reservationInvoice(reservation) {
     relatedPrefix: "RES",
     typeLabel: "Reservation and preorder",
     documentTitle: "Reservation invoice",
-    description: `Reservation fee · ${dateText(reservation.reservation_date)} · ${timeText(reservation.start_time)}`,
+    description: `Reservation fee · ${formatLocalDate(reservation.reservation_date)} · ${timeText(reservation.start_time)}`,
     lineItems,
     subtotal: fee + preorderSubtotal,
     discountAmount: preorderDiscount,
@@ -156,7 +153,7 @@ function reservationInvoice(reservation) {
       },
       {
         label: "Reservation",
-        value: `${dateText(reservation.reservation_date)} · ${timeText(reservation.start_time)} · ${reservation.number_of_guests || 0} guests`,
+        value: `${formatLocalDate(reservation.reservation_date)} · ${timeText(reservation.start_time)} · ${reservation.number_of_guests || 0} guests`,
       },
       {
         label: "Tables booked",
@@ -354,8 +351,11 @@ export default function CustomerReservationDetailsPage() {
         `/api/customer/reservations/${reservationId}/cancel`,
         { method: "POST" },
       );
+      const refund = Number(result.wallet_refund || 0);
       setNotice(
-        `Reservation cancelled. ₹${Number(result.wallet_refund || 0).toFixed(2)} refunded to your wallet.`,
+        refund > 0
+          ? `Reservation cancelled. ₹${refund.toFixed(2)} refunded to your wallet.`
+          : "Reservation cancelled.",
       );
       setConfirmCancellation(false);
       await load();
@@ -676,7 +676,7 @@ export default function CustomerReservationDetailsPage() {
                 <div>
                   <CalendarDays aria-hidden="true" />
                   <span>Date</span>
-                  <strong>{dateText(reservation.reservation_date)}</strong>
+                  <strong>{formatLocalDate(reservation.reservation_date)}</strong>
                 </div>
                 <div>
                   <Clock3 aria-hidden="true" />
@@ -738,10 +738,7 @@ export default function CustomerReservationDetailsPage() {
                       <span>{title(stage)}</span>
                       {stamp && currentIndex >= stageIndex && (
                         <time dateTime={stamp}>
-                          {new Date(stamp).toLocaleString("en-IN", {
-                            dateStyle: "medium",
-                            timeStyle: "short",
-                          })}
+                          {formatLocalDateTime(stamp)}
                         </time>
                       )}
                     </li>
@@ -1155,10 +1152,7 @@ export default function CustomerReservationDetailsPage() {
                     {order.completed_at && (
                       <small>
                         Completed{" "}
-                        {new Date(order.completed_at).toLocaleString("en-IN", {
-                          dateStyle: "medium",
-                          timeStyle: "short",
-                        })}
+                        {formatLocalDateTime(order.completed_at)}
                       </small>
                     )}
                     {order.status_reason && (
@@ -1408,7 +1402,7 @@ export default function CustomerReservationDetailsPage() {
           resourceType="reservation"
           resourceName={reservation.restaurant_name}
           title="Cancel this reservation?"
-          description="If you cancel more than 24 hours after booking, the reservation fee is not refundable. Any paid preorder amount and other eligible refunds are credited to your DineBook wallet."
+          description="Cancel within 24 hours of booking to receive both the paid reservation fee and any paid preorder amount. After 24 hours, only the paid preorder amount is refunded. Refunds go to your DineBook wallet."
           busy={busy}
           onCancel={() => {
             if (!busy) setConfirmCancellation(false);

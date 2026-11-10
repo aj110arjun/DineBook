@@ -306,136 +306,43 @@ export default function App() {
           path="/manager"
           element={<Navigate to="/manager/dashboard" replace />}
         />
-        <Route
-          path="/manager/dashboard"
-          element={
-            <ManagerProtectedRoute>
-              <ManagerDashboardPage />
-            </ManagerProtectedRoute>
-          }
-        />
         <Route path="/manager/pending" element={<ManagerPendingPage />} />
-        <Route
-          path="/manager/restaurant-location"
-          element={
-            <ManagerProtectedRoute>
-              <ManagerRestaurantLocationPage />
-            </ManagerProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/manager/staff"
-          element={
-            <ManagerProtectedRoute>
-              <ManagerStaffPage />
-            </ManagerProtectedRoute>
-          }
-        />
-        <Route
-          path="/manager/menu"
-          element={
-            <ManagerProtectedRoute>
-              <ManagerMenuPage />
-            </ManagerProtectedRoute>
-          }
-        />
-        <Route
-          path="/manager/menu/:foodId"
-          element={
-            <ManagerProtectedRoute>
-              <ManagerMenuPage />
-            </ManagerProtectedRoute>
-          }
-        />
-        <Route
-          path="/manager/tables"
-          element={
-            <ManagerProtectedRoute>
-              <ManagerFloorsPage />
-            </ManagerProtectedRoute>
-          }
-        />
-        <Route
-          path="/manager/reservations"
-          element={
-            <ManagerProtectedRoute>
-              <ManagerReservationsPage />
-            </ManagerProtectedRoute>
-          }
-        />
-        <Route
-          path="/manager/operating-hours"
-          element={
-            <ManagerProtectedRoute>
-              <ManagerOperatingHoursPage />
-            </ManagerProtectedRoute>
-          }
-        />
-        <Route
-          path="/manager/orders"
-          element={
-            <ManagerProtectedRoute>
-              <Navigate to="/manager/reservations" replace />
-            </ManagerProtectedRoute>
-          }
-        />
-        <Route
-          path="/manager/spot-order"
-          element={
-            <ManagerProtectedRoute>
-              <ManagerSpotOrderPage />
-            </ManagerProtectedRoute>
-          }
-        />
-        <Route
-          path="/manager/payments"
-          element={
-            <ManagerProtectedRoute>
-              <ManagerPaymentsPage />
-            </ManagerProtectedRoute>
-          }
-        />
-        <Route
-          path="/manager/revenue"
-          element={
-            <ManagerProtectedRoute>
-              <ManagerRevenuePage />
-            </ManagerProtectedRoute>
-          }
-        />
-        <Route
-          path="/manager/offers"
-          element={
-            <ManagerProtectedRoute>
-              <ManagerOffersPage />
-            </ManagerProtectedRoute>
-          }
-        />
-        <Route
-          path="/manager/reviews"
-          element={
-            <ManagerProtectedRoute>
-              <ManagerReviewsPage />
-            </ManagerProtectedRoute>
-          }
-        />
-        <Route
-          path="/manager/payments/:transactionId"
-          element={
-            <ManagerProtectedRoute>
-              <ManagerPaymentsPage />
-            </ManagerProtectedRoute>
-          }
-        />
-        <Route
-          path="/manager/orders/:orderId"
-          element={
-            <ManagerProtectedRoute>
-              <ManagerOrderDetailsPage />
-            </ManagerProtectedRoute>
-          }
-        />
+        <Route element={<ManagerProtectedRoute />}>
+          <Route path="/manager/dashboard" element={<ManagerDashboardPage />} />
+          <Route
+            path="/manager/restaurant-location"
+            element={<ManagerRestaurantLocationPage />}
+          />
+          <Route path="/manager/staff" element={<ManagerStaffPage />} />
+          <Route path="/manager/menu" element={<ManagerMenuPage />} />
+          <Route path="/manager/menu/:foodId" element={<ManagerMenuPage />} />
+          <Route path="/manager/tables" element={<ManagerFloorsPage />} />
+          <Route
+            path="/manager/reservations"
+            element={<ManagerReservationsPage />}
+          />
+          <Route
+            path="/manager/operating-hours"
+            element={<ManagerOperatingHoursPage />}
+          />
+          <Route
+            path="/manager/orders"
+            element={<Navigate to="/manager/reservations" replace />}
+          />
+          <Route path="/manager/spot-order" element={<ManagerSpotOrderPage />} />
+          <Route path="/manager/payments" element={<ManagerPaymentsPage />} />
+          <Route path="/manager/revenue" element={<ManagerRevenuePage />} />
+          <Route path="/manager/offers" element={<ManagerOffersPage />} />
+          <Route path="/manager/reviews" element={<ManagerReviewsPage />} />
+          <Route
+            path="/manager/payments/:transactionId"
+            element={<ManagerPaymentsPage />}
+          />
+          <Route
+            path="/manager/orders/:orderId"
+            element={<ManagerOrderDetailsPage />}
+          />
+        </Route>
         <Route
           path="/manager/floors"
           element={<Navigate to="/manager/tables" replace />}
@@ -456,62 +363,18 @@ export default function App() {
             </PortalGuestOnlyRoute>
           }
         />
-        <Route
-          path="/chef/dashboard"
-          element={
-            <ChefProtectedRoute>
-              <ChefDashboardPage />
-            </ChefProtectedRoute>
-          }
-        />
-        <Route
-          path="/chef/orders"
-          element={
-            <ChefProtectedRoute>
-              <OrdersPage mode="chef" />
-            </ChefProtectedRoute>
-          }
-        />
-        <Route
-          path="/chef/menu"
-          element={
-            <ChefProtectedRoute>
-              <ChefMenuPage />
-            </ChefProtectedRoute>
-          }
-        />
-        <Route
-          path="/chef/menu/:foodId"
-          element={
-            <ChefProtectedRoute>
-              <ChefMenuPage />
-            </ChefProtectedRoute>
-          }
-        />
-        <Route
-          path="/chef/revenue"
-          element={
-            <ChefProtectedRoute>
-              <ChefRevenuePage />
-            </ChefProtectedRoute>
-          }
-        />
-        <Route
-          path="/chef/service-hours"
-          element={
-            <ChefProtectedRoute>
-              <ChefServiceHoursPage />
-            </ChefProtectedRoute>
-          }
-        />
-        <Route
-          path="/chef/change-password"
-          element={
-            <ChefProtectedRoute>
-              <ChefChangePasswordPage />
-            </ChefProtectedRoute>
-          }
-        />
+        <Route element={<ChefProtectedRoute />}>
+          <Route path="/chef/dashboard" element={<ChefDashboardPage />} />
+          <Route path="/chef/orders" element={<OrdersPage mode="chef" />} />
+          <Route path="/chef/menu" element={<ChefMenuPage />} />
+          <Route path="/chef/menu/:foodId" element={<ChefMenuPage />} />
+          <Route path="/chef/revenue" element={<ChefRevenuePage />} />
+          <Route path="/chef/service-hours" element={<ChefServiceHoursPage />} />
+          <Route
+            path="/chef/change-password"
+            element={<ChefChangePasswordPage />}
+          />
+        </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <ThemeToggle />

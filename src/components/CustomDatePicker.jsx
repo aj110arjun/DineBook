@@ -1,3 +1,4 @@
+import { formatLocalDate } from "../lib/localDate.js";
 import { useEffect, useRef, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -56,12 +57,7 @@ export default function CustomDatePicker({
       ),
   );
   const formattedDate = value
-    ? new Intl.DateTimeFormat("en", {
-        weekday: "short",
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      }).format(new Date(`${value}T12:00:00`))
+    ? formatLocalDate(value)
     : "Select a date";
   const minimumDate = minDate || todayKey();
   const minimumMonth = new Date(`${minimumDate}T12:00:00`);
@@ -148,6 +144,7 @@ export default function CustomDatePicker({
                   key={key}
                   disabled={disabled}
                   className={`${outsideMonth ? "outside-month " : ""}${value === key ? "selected" : ""}`}
+                  aria-label={formatLocalDate(day)}
                   aria-pressed={value === key}
                   onClick={() => {
                     onChange(key);

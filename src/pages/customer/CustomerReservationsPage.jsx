@@ -1,3 +1,4 @@
+import { formatLocalDate } from "../../lib/localDate.js";
 import { useEffect, useRef, useState } from "react";
 import {
   Bell,
@@ -27,14 +28,7 @@ const statusText = (value) =>
     .replaceAll("_", " ")
     .toLowerCase()
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
-const dateText = (value) =>
-  value
-    ? new Intl.DateTimeFormat("en-IN", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }).format(new Date(`${value}T12:00:00`))
-    : "Date not set";
+const dateText = (value) => value ? formatLocalDate(value) : "Date not set";
 const timeText = (value) => {
   if (!value) return "—";
   const [h, m] = value.split(":").map(Number);
@@ -456,14 +450,6 @@ export default function CustomerReservationsPage() {
                   <article className="reservation-row" key={item.id}>
                     <div className="reservation-date-icon">
                       <CalendarDays size={20} />
-                      <span>
-                        {new Date(
-                          `${item.reservation_date}T12:00:00`,
-                        ).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                        })}
-                      </span>
                     </div>
                     <div className="reservation-row-main">
                       <strong>

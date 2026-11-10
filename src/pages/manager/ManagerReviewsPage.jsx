@@ -1,3 +1,4 @@
+import { formatLocalDate } from "../../lib/localDate.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useEffect, useState } from "react";
 import { requestJson } from "../../lib/authApi.js";
@@ -200,7 +201,7 @@ export default function ManagerReviewsPage() {
                 {item.order_id && <p className="reviews-muted">Order: {item.order_id}</p>}
                 <small className="reviews-muted">
                   {item.customer_name} ·{" "}
-                  {new Date(item.created_at).toLocaleDateString()} ·{" "}
+                  {formatLocalDate(item.created_at)} ·{" "}
                   {item.status}
                 </small>
               </div>
@@ -210,7 +211,7 @@ export default function ManagerReviewsPage() {
                 <strong>Manager reply</strong>
                 <p>{item.reply.content}</p>
                 <small className="reviews-muted">
-                  {new Date(item.reply.updated_at).toLocaleDateString()}
+                  {formatLocalDate(item.reply.updated_at)}
                 </small>
               </div>
             )}

@@ -1,3 +1,4 @@
+import { formatLocalDateTime } from "../../lib/localDate.js";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ReceiptText, RotateCcw } from "lucide-react";
@@ -321,7 +322,7 @@ export default function AdminRestaurantPaymentsPanel({ restaurantId }) {
                   </td>
                   <td>
                     {item.created_at
-                      ? new Date(item.created_at).toLocaleString()
+                      ? formatLocalDateTime(item.created_at, { timeStyle: "medium" })
                       : "—"}
                   </td>
                   <td>

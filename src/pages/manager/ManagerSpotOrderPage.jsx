@@ -1,3 +1,4 @@
+import { formatLocalDateTime } from "../../lib/localDate.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { Printer, Plus, Trash2 } from "lucide-react";
@@ -204,7 +205,7 @@ export default function ManagerSpotOrderPage() {
                   Order #{order.id.slice(0, 8).toUpperCase()} · Table{" "}
                   {order.tables?.[0]?.table_number || "—"}
                 </p>
-                <p>{new Date(order.created_at).toLocaleString()}</p>
+                <p>{formatLocalDateTime(order.created_at, { timeStyle: "medium" })}</p>
               </div>
               <button type="button" onClick={() => window.print()}>
                 <Printer size={17} />

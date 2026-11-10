@@ -1,3 +1,4 @@
+import { formatLocalDateTime } from "../../lib/localDate.js";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import {
   Bell,
@@ -305,7 +306,7 @@ export default function NotificationBell({ role, enabled = true }) {
                             <span aria-hidden="true">·</span>
                             <time
                               dateTime={item.created_at}
-                              title={new Date(item.created_at).toLocaleString()}
+                              title={formatLocalDateTime(item.created_at, { timeStyle: "medium" })}
                             >
                               {timestamp}
                             </time>

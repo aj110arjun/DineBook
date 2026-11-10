@@ -5,7 +5,7 @@ import { MapPin, Menu, Utensils, X } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { API_BASE } from "../../lib/authApi.js";
 import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
-import CustomerNotificationToasts from "../notifications/CustomerNotificationToasts.jsx";
+import NotificationToasts from "../notifications/NotificationToasts.jsx";
 import NotificationBell from "../notifications/NotificationBell.jsx";
 
 export default function CustomerHeader({ user, onLogout }) {
@@ -66,7 +66,7 @@ export default function CustomerHeader({ user, onLogout }) {
   return (
     <header className="site-header">
       {user && user.id !== demoCustomer.id && (
-        <CustomerNotificationToasts key={user.id} />
+        <NotificationToasts key={user.id} />
       )}
       <div className="header-inner">
         {/* Brand */}

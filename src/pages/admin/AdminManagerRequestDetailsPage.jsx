@@ -1,3 +1,4 @@
+import { formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -200,7 +201,7 @@ export default function AdminManagerRequestDetailsPage() {
                   {request?.created_at && (
                     <span className="inline-flex items-center gap-2">
                       <CalendarDays size={14} />
-                      {new Date(request.created_at).toLocaleDateString()}
+                      {formatLocalDate(request.created_at)}
                     </span>
                   )}
                 </div>
@@ -290,7 +291,7 @@ export default function AdminManagerRequestDetailsPage() {
                 label="Registered On"
                 value={
                   request?.created_at
-                    ? new Date(request.created_at).toLocaleString()
+                    ? formatLocalDateTime(request.created_at, { timeStyle: "medium" })
                     : "Not provided"
                 }
               />

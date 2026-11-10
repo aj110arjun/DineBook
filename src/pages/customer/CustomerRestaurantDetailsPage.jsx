@@ -1,3 +1,4 @@
+import { formatLocalDate } from "../../lib/localDate.js";
 import { confirmAction } from "../../lib/confirmDialog.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useEffect, useState } from "react";
@@ -1048,9 +1049,7 @@ export default function CustomerRestaurantDetailsPage() {
                                   </span>
                                 </strong>
                                 <small>
-                                  {new Date(
-                                    review.created_at,
-                                  ).toLocaleDateString()}
+                                  {formatLocalDate(review.created_at)}
                                 </small>
                               </div>
                               <small className="customer-review-author">
@@ -1062,9 +1061,7 @@ export default function CustomerRestaurantDetailsPage() {
                                   <strong>Manager reply</strong>
                                   <p>{review.reply.content}</p>
                                   <small>
-                                    {new Date(
-                                      review.reply.updated_at,
-                                    ).toLocaleDateString()}
+                                    {formatLocalDate(review.reply.updated_at)}
                                   </small>
                                 </div>
                               )}

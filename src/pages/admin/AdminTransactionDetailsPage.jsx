@@ -1,3 +1,4 @@
+import { formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -17,8 +18,6 @@ const money = (value) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(
     Number(value || 0),
   );
-const dateLabel = (value) =>
-  value ? new Date(value).toLocaleString("en-IN") : "—";
 function Fields({ title, fields }) {
   return (
     <section className="transaction-detail-card">
@@ -135,8 +134,8 @@ export default function AdminTransactionDetailsPage() {
                     ["Transaction ID", item.transaction_id],
                     ["Payment method", humanize(item.payment_method)],
                     ["Refund status", humanize(item.refund_status)],
-                    ["Created", dateLabel(item.created_at)],
-                    ["Updated", dateLabel(item.updated_at)],
+                    ["Created", formatLocalDateTime(item.created_at, { timeStyle: "medium" })],
+                    ["Updated", formatLocalDateTime(item.updated_at, { timeStyle: "medium" })],
                     ["Provider order reference", item.razorpay_order_id],
                     ["Provider payment reference", item.razorpay_payment_id],
                   ]}
@@ -167,7 +166,7 @@ export default function AdminTransactionDetailsPage() {
                     ["Reservation ID", item.reservation_id],
                     ...(!order
                       ? [
-                          ["Reservation date", item.reservation_date],
+                          ["Reservation date", formatLocalDate(item.reservation_date)],
                           [
                             "Reservation status",
                             humanize(item.reservation_status),

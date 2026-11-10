@@ -1,3 +1,4 @@
+import { formatLocalDateTime } from "../../lib/localDate.js";
 import { confirmAction } from "../../lib/confirmDialog.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
@@ -752,7 +753,7 @@ export default function ManagerOffersPage() {
                         <td>{r.customer_id || "Guest"}</td>
                         <td>{money(r.discount_amount)}</td>
                         <td>{r.status}</td>
-                        <td>{new Date(r.created_at).toLocaleString()}</td>
+                        <td>{formatLocalDateTime(r.created_at, { timeStyle: "medium" })}</td>
                       </tr>
                     ))}
                   </tbody>
