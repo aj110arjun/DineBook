@@ -1,5 +1,6 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate } from "../../lib/localDate.js";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Eye, RefreshCw, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
@@ -8,20 +9,34 @@ import { requestJson } from "../../lib/authApi.js";
 
 export default function AdminRestaurantsPage() {
   const navigate = useNavigate();
-  const [restaurants, setRestaurants] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [cuisines, setCuisines] = useState([]);
-  const [locations, setLocations] = useState([]);
-  const [query, setQuery] = useState("");
-  const [cuisineFilter, setCuisineFilter] = useState("");
-  const [locationFilter, setLocationFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [sort, setSort] = useState("newest");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [refresh, setRefresh] = useState(0);
+  const [
+    {
+      restaurants, total, cuisines, locations, query, cuisineFilter,
+      locationFilter, statusFilter, sort, page, pageSize, loading, error, refresh,
+    },
+    {
+      restaurants: setRestaurants, total: setTotal, cuisines: setCuisines,
+      locations: setLocations, query: setQuery, cuisineFilter: setCuisineFilter,
+      locationFilter: setLocationFilter, statusFilter: setStatusFilter,
+      sort: setSort, page: setPage, pageSize: setPageSize, loading: setLoading,
+      error: setError, refresh: setRefresh,
+    },
+  ] = usePageState("AdminRestaurantsPage", () => ({
+    restaurants: [],
+    total: 0,
+    cuisines: [],
+    locations: [],
+    query: "",
+    cuisineFilter: "",
+    locationFilter: "",
+    statusFilter: "",
+    sort: "newest",
+    page: 1,
+    pageSize: 10,
+    loading: true,
+    error: "",
+    refresh: 0,
+  }));
 
   useEffect(() => {
     let mounted = true;

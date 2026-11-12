@@ -1,3 +1,4 @@
+import { usePageState } from "../../state/usePageState.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, CheckCircle2, Mail } from "lucide-react";
@@ -14,10 +15,18 @@ export default function CustomerEmailVerificationPage() {
     sessionStorage.getItem("dinebook-verification-email") ||
     "";
   const [code, setCode] = useState("");
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(120);
+  const [
+    { error, notice, busy, secondsLeft },
+    {
+      error: setError, notice: setNotice, busy: setBusy,
+      secondsLeft: setSecondsLeft,
+    },
+  ] = usePageState("CustomerEmailVerificationPage", () => ({
+    error: "",
+    notice: "",
+    busy: false,
+    secondsLeft: 120,
+  }));
   const inputRef = useRef(null);
 
   useEffect(() => {

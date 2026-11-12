@@ -1,5 +1,5 @@
+import { usePageState } from "../../state/usePageState.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useState } from "react";
 import { ArrowRight, Mail } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -12,9 +12,14 @@ export default function ManagerLoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [
+    { error, success, busy },
+    { error: setError, success: setSuccess, busy: setBusy },
+  ] = usePageState("ManagerLoginPage", () => ({
+    error: "",
+    success: "",
+    busy: false,
+  }));
 
   async function handleSubmit(event) {
     event.preventDefault();

@@ -1,5 +1,6 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDateTime } from "../../lib/localDate.js";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, UserCheck, Check, X, RefreshCw } from "lucide-react";
 
@@ -13,19 +14,40 @@ const requestStatuses = ["ALL", "PENDING", "APPROVED", "REJECTED"];
 export default function AdminRequestsPage() {
   const navigate = useNavigate();
 
-  const [managerRequests, setManagerRequests] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [statusCounts, setStatusCounts] = useState({});
+  const [
+    { managerRequests, total, statusCounts },
+    {
+      managerRequests: setManagerRequests, total: setTotal,
+      statusCounts: setStatusCounts,
+    },
+  ] = usePageState("AdminRequestsPage", () => ({
+    managerRequests: [],
+    total: 0,
+    statusCounts: {},
+  }));
   const requestSequence = useRef(0);
-  const [loading, setLoading] = useState(true);
-  const [processingId, setProcessingId] = useState(null);
-  const [confirmation, setConfirmation] = useState(null);
-  const [activeStatus, setActiveStatus] = useState("ALL");
-  const [error, setError] = useState("");
-  const [query, setQuery] = useState("");
-  const [sort, setSort] = useState("newest");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [
+    {
+      loading, processingId, confirmation, activeStatus, error, query, sort, page,
+      pageSize,
+    },
+    {
+      loading: setLoading, processingId: setProcessingId,
+      confirmation: setConfirmation, activeStatus: setActiveStatus,
+      error: setError, query: setQuery, sort: setSort, page: setPage,
+      pageSize: setPageSize,
+    },
+  ] = usePageState("AdminRequestsPage", () => ({
+    loading: true,
+    processingId: null,
+    confirmation: null,
+    activeStatus: "ALL",
+    error: "",
+    query: "",
+    sort: "newest",
+    page: 1,
+    pageSize: 10,
+  }));
 
   async function loadManagerRequests() {
     const sequence = ++requestSequence.current;

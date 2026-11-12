@@ -1,6 +1,7 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDateTime } from "../../lib/localDate.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
@@ -29,9 +30,14 @@ function loadRazorpayCheckout() {
 }
 
 export function ChefRevenuePage() {
-  const [data, setData] = useState(null);
-  const [wallet, setWallet] = useState(null);
-  const [error, setError] = useState("");
+  const [
+    { data, wallet, error },
+    { data: setData, wallet: setWallet, error: setError },
+  ] = usePageState("ChefRevenuePage", () => ({
+    data: null,
+    wallet: null,
+    error: "",
+  }));
   const mounted = useRef(false);
   const refreshTimer = useRef(null);
   const refreshInFlight = useRef(null);
@@ -130,12 +136,20 @@ export function ChefRevenuePage() {
 }
 
 export function ManagerRevenuePage() {
-  const [data, setData] = useState(null);
-  const [wallet, setWallet] = useState(null);
-  const [topupAmount, setTopupAmount] = useState("500");
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [walletBusy, setWalletBusy] = useState(false);
+  const [
+    { data, wallet, topupAmount, error, notice, walletBusy },
+    {
+      data: setData, wallet: setWallet, topupAmount: setTopupAmount,
+      error: setError, notice: setNotice, walletBusy: setWalletBusy,
+    },
+  ] = usePageState("ManagerRevenuePage", () => ({
+    data: null,
+    wallet: null,
+    topupAmount: "500",
+    error: "",
+    notice: "",
+    walletBusy: false,
+  }));
   const refresh = useCallback(async () => {
     const [result, walletResult] = await Promise.all([
       requestJson("/api/manager/revenue"),
@@ -351,12 +365,20 @@ export function ManagerRevenuePage() {
 }
 
 export function AdminRevenuePage() {
-  const [data, setData] = useState(null);
-  const [wallet, setWallet] = useState(null);
-  const [rate, setRate] = useState("10");
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [
+    { data, wallet, rate, error, notice, saving },
+    {
+      data: setData, wallet: setWallet, rate: setRate, error: setError,
+      notice: setNotice, saving: setSaving,
+    },
+  ] = usePageState("AdminRevenuePage", () => ({
+    data: null,
+    wallet: null,
+    rate: "10",
+    error: "",
+    notice: "",
+    saving: false,
+  }));
   const refresh = useCallback(async () => {
     const [result, walletResult] = await Promise.all([
       requestJson("/api/admin/revenue"),
@@ -455,10 +477,15 @@ export function AdminRevenuePage() {
 }
 
 function WalletTopUpPanel({ role, wallet, onRefresh }) {
-  const [amount, setAmount] = useState("500");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
+  const [
+    { amount, busy, error, notice },
+    { amount: setAmount, busy: setBusy, error: setError, notice: setNotice },
+  ] = usePageState("WalletTopUpPanel", () => ({
+    amount: "500",
+    busy: false,
+    error: "",
+    notice: "",
+  }));
   async function addMoney(event) {
     event.preventDefault();
     const numericAmount = Number(amount);

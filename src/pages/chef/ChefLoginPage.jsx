@@ -1,5 +1,5 @@
+import { usePageState } from "../../state/usePageState.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useState } from "react";
 import { ArrowRight, Mail } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -11,9 +11,14 @@ import { requestJson } from "../../lib/authApi.js";
 export default function ChefLoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [error, setError] = useState("");
-  const [fieldErrors, setFieldErrors] = useState({});
-  const [busy, setBusy] = useState(false);
+  const [
+    { error, fieldErrors, busy },
+    { error: setError, fieldErrors: setFieldErrors, busy: setBusy },
+  ] = usePageState("ChefLoginPage", () => ({
+    error: "",
+    fieldErrors: {},
+    busy: false,
+  }));
 
   function validateField(name, value) {
     if (name === "email") {

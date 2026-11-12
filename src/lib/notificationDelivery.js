@@ -1,6 +1,11 @@
 // REST recovers notifications missed while the live connection was starting or
 // reconnecting. Keep delivery IDs shared by REST and SSE to prevent two toasts.
-export function createNotificationDelivery({ request, onNotification, startedAt = Date.now() }) {
+export function createNotificationDelivery({
+  loadRecent,
+  loadNotification,
+  onNotification,
+  startedAt = Date.now(),
+}) {
   const controller = new AbortController();
   const seen = new Set();
   const pending = new Map();
@@ -18,9 +23,7 @@ export function createNotificationDelivery({ request, onNotification, startedAt 
     if (refreshPromise) return refreshPromise;
     refreshPromise = (async () => {
       try {
-        const result = await request("/api/notifications?limit=100", {
-          signal: controller.signal,
-        });
+        const result = await loadRecent(controller.signal);
         // The API returns newest first. Don't toast old history on page load.
         for (const item of [...(result.items || [])].reverse()) {
           const value = item.created_at || "";
@@ -44,9 +47,7 @@ export function createNotificationDelivery({ request, onNotification, startedAt 
     if (pending.has(id)) return pending.get(id);
     const promise = (async () => {
       try {
-        deliver(await request(`/api/notifications/${encodeURIComponent(id)}`, {
-          signal: controller.signal,
-        }));
+        deliver(await loadNotification(id, controller.signal));
       } catch {
         // The SSE cursor already advanced, so waiting for a replay loses this
         // notification. Recover through the list endpoint instead.

@@ -1,4 +1,5 @@
-import { formatLocalDate } from "../../lib/localDate.js";
+import { usePageState } from "../../state/usePageState.js";
+import { formatLocalDate, shiftLocalMonth } from "../../lib/localDate.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
@@ -28,7 +29,10 @@ import { saveReservation } from "../../data/customerReservations.js";
 import "../../assets/css/CustomerReservationPage.css";
 import BookingProgress from "../../components/BookingProgress.jsx";
 import TableFloorPicker from "../../components/TableFloorPicker.jsx";
-import { sumReservationFees, tableBookingFee } from "../../lib/reservationPricing.js";
+import {
+  sumReservationFees,
+  tableBookingFee,
+} from "../../lib/reservationPricing.js";
 
 const MAX_VARIANT_COUNT = 5;
 
@@ -242,73 +246,166 @@ export default function CustomerReservationPage() {
   const { restaurantId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const [restaurant, setRestaurant] = useState(null);
-  const [hoursExceptions, setHoursExceptions] = useState([]);
-  const [hoursLoaded, setHoursLoaded] = useState(false);
-  const [user, setUser] = useState(null);
-  const [date, setDate] = useState(
-    location.state?.date || todayInRestaurantTimezone(),
-  );
-  const [month, setMonth] = useState(() => {
-    const selected = new Date(
+  const [
+    {
+      restaurant,
+      hoursExceptions,
+      hoursLoaded,
+      user,
+      date,
+      monthTime,
+      guests,
+      time,
+      walletBalance,
+      walletLoading,
+      paymentMethod,
+      fulfillmentType,
+      preorderPaymentMethod,
+      orderTaxPercent,
+      menuCategories,
+      menuItems,
+      menuTotal,
+      menuQuery,
+      menuError,
+      menuRetry,
+      preorderVariants,
+      menuLoading,
+      preorderCart,
+      availableOffers,
+      offerCode,
+      offerPreview,
+      offerBusy,
+      durationMinutes,
+    },
+    {
+      restaurant: setRestaurant,
+      hoursExceptions: setHoursExceptions,
+      hoursLoaded: setHoursLoaded,
+      user: setUser,
+      date: setDate,
+      monthTime: setMonthTime,
+      guests: setGuests,
+      time: setTime,
+      walletBalance: setWalletBalance,
+      walletLoading: setWalletLoading,
+      paymentMethod: setPaymentMethod,
+      fulfillmentType: setFulfillmentType,
+      preorderPaymentMethod: setPreorderPaymentMethod,
+      orderTaxPercent: setOrderTaxPercent,
+      menuCategories: setMenuCategories,
+      menuItems: setMenuItems,
+      menuTotal: setMenuTotal,
+      menuQuery: setMenuQuery,
+      menuError: setMenuError,
+      menuRetry: setMenuRetry,
+      preorderVariants: setPreorderVariants,
+      menuLoading: setMenuLoading,
+      preorderCart: setPreorderCart,
+      availableOffers: setAvailableOffers,
+      offerCode: setOfferCode,
+      offerPreview: setOfferPreview,
+      offerBusy: setOfferBusy,
+      durationMinutes: setDurationMinutes,
+    },
+  ] = usePageState("CustomerReservationPage", () => ({
+    restaurant: null,
+    hoursExceptions: [],
+    hoursLoaded: false,
+    user: null,
+    date: location.state?.date || todayInRestaurantTimezone(),
+    monthTime: shiftLocalMonth(
       `${location.state?.date || todayInRestaurantTimezone()}T12:00:00`,
-    );
-    return new Date(selected.getFullYear(), selected.getMonth(), 1);
-  });
-  const [guests, setGuests] = useState(Number(location.state?.guests || 2));
-  const [time, setTime] = useState(to24Hour(location.state?.time || "20:00"));
-  const [walletBalance, setWalletBalance] = useState(0);
-  const [walletLoading, setWalletLoading] = useState(true);
-  const [paymentMethod, setPaymentMethod] = useState("WALLET");
-  const [fulfillmentType, setFulfillmentType] = useState("TABLE_ONLY");
-  const [preorderPaymentMethod, setPreorderPaymentMethod] =
-    useState("PAY_AT_DESK");
-  const [orderTaxPercent, setOrderTaxPercent] = useState(18);
-  const [menuCategories, setMenuCategories] = useState([]);
-  const [menuItems, setMenuItems] = useState([]);
-  const [menuTotal, setMenuTotal] = useState(0);
-  const [menuQuery, setMenuQuery] = useState({
-    search: "",
-    category: "",
-    diet: "",
-    sort: "name",
-    page: 1,
-    pageSize: 8,
-  });
-  const [menuError, setMenuError] = useState("");
-  const [menuRetry, setMenuRetry] = useState(0);
-  const [preorderVariants, setPreorderVariants] = useState({});
-  const [menuLoading, setMenuLoading] = useState(true);
-  const [preorderCart, setPreorderCart] = useState([]);
-
-  const [availableOffers, setAvailableOffers] = useState([]);
-  const [offerCode, setOfferCode] = useState("");
-  const [offerPreview, setOfferPreview] = useState(null);
-  const [offerBusy, setOfferBusy] = useState(false);
-  const [durationMinutes, setDurationMinutes] = useState(90);
+    ),
+    guests: Number(location.state?.guests || 2),
+    time: to24Hour(location.state?.time || "20:00"),
+    walletBalance: 0,
+    walletLoading: true,
+    paymentMethod: "WALLET",
+    fulfillmentType: "TABLE_ONLY",
+    preorderPaymentMethod: "PAY_AT_DESK",
+    orderTaxPercent: 18,
+    menuCategories: [],
+    menuItems: [],
+    menuTotal: 0,
+    menuQuery: {
+      search: "",
+      category: "",
+      diet: "",
+      sort: "name",
+      page: 1,
+      pageSize: 8,
+    },
+    menuError: "",
+    menuRetry: 0,
+    preorderVariants: {},
+    menuLoading: true,
+    preorderCart: [],
+    availableOffers: [],
+    offerCode: "",
+    offerPreview: null,
+    offerBusy: false,
+    durationMinutes: 90,
+  }));
   const durationValid =
     Number.isInteger(Number(durationMinutes)) &&
     Number(durationMinutes) >= 30 &&
     Number(durationMinutes) <= 720;
-  const [availabilityResult, setAvailabilityResult] = useState(null);
-  const [availabilityRefreshKey, setAvailabilityRefreshKey] = useState(0);
-  const [step, setStep] = useState(1);
-  const [selectedTableIds, setSelectedTableIds] = useState([]);
-  const [reservation, setReservation] = useState(null);
-  const [paymentFailureMessage, setPaymentFailureMessage] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [
+    {
+      availabilityResult,
+      availabilityRefreshKey,
+      step,
+      selectedTableIds,
+      reservation,
+      paymentFailureMessage,
+      busy,
+      error,
+    },
+    {
+      availabilityResult: setAvailabilityResult,
+      availabilityRefreshKey: setAvailabilityRefreshKey,
+      step: setStep,
+      selectedTableIds: setSelectedTableIds,
+      reservation: setReservation,
+      paymentFailureMessage: setPaymentFailureMessage,
+      busy: setBusy,
+      error: setError,
+    },
+  ] = usePageState("CustomerReservationPage", () => ({
+    availabilityResult: null,
+    availabilityRefreshKey: 0,
+    step: 1,
+    selectedTableIds: [],
+    reservation: null,
+    paymentFailureMessage: "",
+    busy: false,
+    error: "",
+  }));
   const [qrCode, setQrCode] = useState("");
   const [passDownload, setPassDownload] = useState("");
-  const [qrError, setQrError] = useState("");
+  const [{ qrError }, { qrError: setQrError }] = usePageState(
+    "CustomerReservationPage",
+    () => ({
+      qrError: "",
+    }),
+  );
   const isPreorder = fulfillmentType === "PREORDER";
   const preorderStep = isPreorder ? 2 : null;
   const tableStep = isPreorder ? 3 : 2;
   const checkoutStep = tableStep + 1;
   const resultStep = checkoutStep + 1;
   const previousStep = useRef(step);
-  const [selectedPreorderFood, setSelectedPreorderFood] = useState(null);
-  const [draftPreorderQuantities, setDraftPreorderQuantities] = useState({});
+  const [
+    { selectedPreorderFood, draftPreorderQuantities },
+    {
+      selectedPreorderFood: setSelectedPreorderFood,
+      draftPreorderQuantities: setDraftPreorderQuantities,
+    },
+  ] = usePageState("CustomerReservationPage", () => ({
+    selectedPreorderFood: null,
+    draftPreorderQuantities: {},
+  }));
+  const month = useMemo(() => new Date(monthTime), [monthTime]);
   const preorderDialogRef = useRef(null);
 
   useEffect(() => {
@@ -495,7 +592,7 @@ export default function CustomerReservationPage() {
       const candidateKey = isoDate(candidate);
       if (isOpenDate(candidateKey)) {
         setDate(candidateKey);
-        setMonth(new Date(candidate.getFullYear(), candidate.getMonth(), 1));
+        setMonthTime(shiftLocalMonth(candidate));
         break;
       }
     }
@@ -721,12 +818,17 @@ export default function CustomerReservationPage() {
     .filter((table) => table.status === "available")
     .reduce(
       (lowest, table) =>
-        !lowest || tableBookingFee(table) < tableBookingFee(lowest) ? table : lowest,
+        !lowest || tableBookingFee(table) < tableBookingFee(lowest)
+          ? table
+          : lowest,
       null,
     );
-  const feeQuote = step === resultStep && reservation
-    ? reservation
-    : step < tableStep ? lowestPricedTable : selectedTable;
+  const feeQuote =
+    step === resultStep && reservation
+      ? reservation
+      : step < tableStep
+        ? lowestPricedTable
+        : selectedTable;
   const quotedFee = feeQuote ? tableBookingFee(feeQuote) : 0;
   const checkoutTotal =
     quotedFee + (fulfillmentType === "PREORDER" ? preorderTotalWithTax : 0);
@@ -782,8 +884,7 @@ export default function CustomerReservationPage() {
 
   function chooseDate(value) {
     setDate(value);
-    const chosen = new Date(`${value}T12:00:00`);
-    setMonth(new Date(chosen.getFullYear(), chosen.getMonth(), 1));
+    setMonthTime(shiftLocalMonth(`${value}T12:00:00`));
   }
 
   function continueFromVisit() {
@@ -1149,13 +1250,8 @@ export default function CustomerReservationPage() {
                             type="button"
                             aria-label="Previous month"
                             onClick={() =>
-                              setMonth(
-                                (current) =>
-                                  new Date(
-                                    current.getFullYear(),
-                                    current.getMonth() - 1,
-                                    1,
-                                  ),
+                              setMonthTime((current) =>
+                                shiftLocalMonth(current, -1),
                               )
                             }
                           >
@@ -1166,13 +1262,8 @@ export default function CustomerReservationPage() {
                             type="button"
                             aria-label="Next month"
                             onClick={() =>
-                              setMonth(
-                                (current) =>
-                                  new Date(
-                                    current.getFullYear(),
-                                    current.getMonth() + 1,
-                                    1,
-                                  ),
+                              setMonthTime((current) =>
+                                shiftLocalMonth(current, 1),
                               )
                             }
                           >
@@ -2244,7 +2335,7 @@ export default function CustomerReservationPage() {
                               />
                               <ReviewLine
                                 label="Date & time"
-                                value={`${formatLocalDate(reservation.reservation_date)} · ${shortTime(reservation.start_time)} – ${shortTime(reservation.end_time)}`}
+                                value={`${new Date(reservation.reservation_date).toLocaleDateString("en-GB")} · ${shortTime(reservation.start_time)} – ${shortTime(reservation.end_time)}`}
                               />
                               <ReviewLine
                                 label="Table"
@@ -2414,12 +2505,16 @@ export default function CustomerReservationPage() {
                         step === resultStep &&
                         reservation?.payment_status === "PAID"
                           ? "Reservation fee · Paid"
-                          : step < tableStep ? "Table fee from" : "Reservation fee"
+                          : step < tableStep
+                            ? "Table fee from"
+                            : "Reservation fee"
                       }
                       value={
                         selectedAvailability.loading && step === 1
                           ? "Checking…"
-                          : feeQuote ? `₹${quotedFee.toFixed(2)}` : "Choose tables"
+                          : feeQuote
+                            ? `₹${quotedFee.toFixed(2)}`
+                            : "Choose tables"
                       }
                     />
                     {feeQuote && Number(feeQuote.extra_hours) > 0 && (
@@ -2433,7 +2528,8 @@ export default function CustomerReservationPage() {
                           value={`₹${Number(feeQuote.extra_fee_amount || 0).toFixed(2)}`}
                         />
                         <p className="booking-summary-footnote">
-                          Each started hour after the first is charged at the manager’s table rate.
+                          Each started hour after the first is charged at the
+                          manager’s table rate.
                         </p>
                       </>
                     )}

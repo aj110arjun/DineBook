@@ -1,6 +1,7 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   ArrowLeft,
   Building2,
@@ -56,26 +57,44 @@ export default function AdminRestaurantDetailsPage() {
   const [reason, setReason] = useModalState("");
   const [busy, setBusy] = useModalState(false);
   const [actionError, setActionError] = useModalState("");
-  const [restaurant, setRestaurant] = useState(null);
-  const [floorData, setFloorData] = useState([]);
-  const [operatingSchedule, setOperatingSchedule] = useState(null);
-  const [inspectionDate, setInspectionDate] = useState(
-    new Date().toISOString().slice(0, 10),
-  );
-  const [inspectionTime, setInspectionTime] = useState("19:00");
-  const [inspectionGuests, setInspectionGuests] = useState("2");
-  const [inspection, setInspection] = useState(null);
-  const [inspectionError, setInspectionError] = useState("");
-  const [inspectionBusy, setInspectionBusy] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [tableQuery, setTableQuery] = useState("");
-  const [tableStatus, setTableStatus] = useState("ALL");
-  const [menuQuery, setMenuQuery] = useState("");
-  const [menuCategory, setMenuCategory] = useState("ALL");
-  const [menuAvailability, setMenuAvailability] = useState("ALL");
-  const [menuSort, setMenuSort] = useState("name");
-  const [menuPage, setMenuPage] = useState(1);
+  const [
+    {
+      restaurant, floorData, operatingSchedule, inspectionDate, inspectionTime,
+      inspectionGuests, inspection, inspectionError, inspectionBusy, loading,
+      error, tableQuery, tableStatus, menuQuery, menuCategory, menuAvailability,
+      menuSort, menuPage,
+    },
+    {
+      restaurant: setRestaurant, floorData: setFloorData,
+      operatingSchedule: setOperatingSchedule, inspectionDate: setInspectionDate,
+      inspectionTime: setInspectionTime, inspectionGuests: setInspectionGuests,
+      inspection: setInspection, inspectionError: setInspectionError,
+      inspectionBusy: setInspectionBusy, loading: setLoading, error: setError,
+      tableQuery: setTableQuery, tableStatus: setTableStatus,
+      menuQuery: setMenuQuery, menuCategory: setMenuCategory,
+      menuAvailability: setMenuAvailability, menuSort: setMenuSort,
+      menuPage: setMenuPage,
+    },
+  ] = usePageState("AdminRestaurantDetailsPage", () => ({
+    restaurant: null,
+    floorData: [],
+    operatingSchedule: null,
+    inspectionDate: new Date().toISOString().slice(0, 10),
+    inspectionTime: "19:00",
+    inspectionGuests: "2",
+    inspection: null,
+    inspectionError: "",
+    inspectionBusy: false,
+    loading: true,
+    error: "",
+    tableQuery: "",
+    tableStatus: "ALL",
+    menuQuery: "",
+    menuCategory: "ALL",
+    menuAvailability: "ALL",
+    menuSort: "name",
+    menuPage: 1,
+  }));
   const menuPageSize = 10;
 
   const orderedFloors = [...floorData].sort(
@@ -84,11 +103,20 @@ export default function AdminRestaurantDetailsPage() {
         Number(right.floor_number ?? Number.MAX_SAFE_INTEGER) ||
       compareLabels(left.name, right.name),
   );
-  const [visibleMenuFoods, setVisibleMenuFoods] = useState([]);
-  const [menuTotal, setMenuTotal] = useState(0);
-  const [menuCategories, setMenuCategories] = useState([]);
-  const [menuLoading, setMenuLoading] = useState(false);
-  const [menuError, setMenuError] = useState("");
+  const [
+    { visibleMenuFoods, menuTotal, menuCategories, menuLoading, menuError },
+    {
+      visibleMenuFoods: setVisibleMenuFoods, menuTotal: setMenuTotal,
+      menuCategories: setMenuCategories, menuLoading: setMenuLoading,
+      menuError: setMenuError,
+    },
+  ] = usePageState("AdminRestaurantDetailsPage", () => ({
+    visibleMenuFoods: [],
+    menuTotal: 0,
+    menuCategories: [],
+    menuLoading: false,
+    menuError: "",
+  }));
   const menuPageCount = Math.max(1, Math.ceil(menuTotal / menuPageSize));
   useEffect(() => {
     let alive = true;

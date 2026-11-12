@@ -1,5 +1,6 @@
+import { usePageState } from "../../state/usePageState.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { ChefHat, Plus } from "lucide-react";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
@@ -9,16 +10,30 @@ import { requestJson } from "../../lib/authApi.js";
 import ManagerChefWalletTransfers from "./ManagerChefWalletTransfers.jsx";
 
 export default function ManagerStaffPage() {
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [walletRefreshKey, setWalletRefreshKey] = useState(0);
-  const [chefs, setChefs] = useState([]);
-  const [chefsLoading, setChefsLoading] = useState(true);
-  const [chefsError, setChefsError] = useState("");
-  const [resendingId, setResendingId] = useState("");
-  const [inviteError, setInviteError] = useState("");
-  const [InviteSuccess, setInviteSuccess] = useState("");
+  const [
+    {
+      saving, error, success, walletRefreshKey, chefs, chefsLoading, chefsError,
+      resendingId, inviteError, InviteSuccess,
+    },
+    {
+      saving: setSaving, error: setError, success: setSuccess,
+      walletRefreshKey: setWalletRefreshKey, chefs: setChefs,
+      chefsLoading: setChefsLoading, chefsError: setChefsError,
+      resendingId: setResendingId, inviteError: setInviteError,
+      InviteSuccess: setInviteSuccess,
+    },
+  ] = usePageState("ManagerStaffPage", () => ({
+    saving: false,
+    error: "",
+    success: "",
+    walletRefreshKey: 0,
+    chefs: [],
+    chefsLoading: true,
+    chefsError: "",
+    resendingId: "",
+    inviteError: "",
+    InviteSuccess: "",
+  }));
 
   useEffect(() => {
     let active = true;

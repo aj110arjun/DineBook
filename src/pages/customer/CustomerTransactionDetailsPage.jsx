@@ -1,5 +1,6 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDateTime } from "../../lib/localDate.js";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ArrowLeft, CalendarDays, CreditCard, FileText } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ProfileFrame } from "./CustomerReservationsPage.jsx";
@@ -23,10 +24,17 @@ export default function CustomerTransactionDetailsPage() {
   const { transactionType, transactionId } = useParams();
   const normalizedType = transactionType.replaceAll("-", "_").toUpperCase();
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [transaction, setTransaction] = useState(null);
-  const [busy, setBusy] = useState(true);
-  const [error, setError] = useState("");
+  const [
+    { user, transaction, busy, error },
+    {
+      user: setUser, transaction: setTransaction, busy: setBusy, error: setError,
+    },
+  ] = usePageState("CustomerTransactionDetailsPage", () => ({
+    user: null,
+    transaction: null,
+    busy: true,
+    error: "",
+  }));
 
   useEffect(() => {
     const readableType = transactionType.toLowerCase().replaceAll("_", "-");

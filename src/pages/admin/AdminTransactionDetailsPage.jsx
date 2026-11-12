@@ -1,5 +1,6 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
@@ -36,10 +37,15 @@ function Fields({ title, fields }) {
 
 export default function AdminTransactionDetailsPage() {
   const { restaurantId, transactionId } = useParams();
-  const [item, setItem] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [retry, setRetry] = useState(0);
+  const [
+    { item, loading, error, retry },
+    { item: setItem, loading: setLoading, error: setError, retry: setRetry },
+  ] = usePageState("AdminTransactionDetailsPage", () => ({
+    item: null,
+    loading: true,
+    error: "",
+    retry: 0,
+  }));
   useEffect(() => {
     let active = true;
     setLoading(true);

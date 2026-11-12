@@ -1,7 +1,8 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
 import { confirmAction } from "../../lib/confirmDialog.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
   ArrowLeft,
   CalendarDays,
@@ -194,28 +195,51 @@ function reservationInvoice(reservation) {
 export default function CustomerReservationDetailsPage() {
   const { reservationId } = useParams();
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [reservation, setReservation] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [reloadKey, setReloadKey] = useState(0);
-  const [confirmCancellation, setConfirmCancellation] = useState(false);
-  const [orderMenu, setOrderMenu] = useState([]);
-  const [availableOffers, setAvailableOffers] = useState([]);
-  const [cart, setCart] = useState([]);
-  const [offerCode, setOfferCode] = useState("");
-  const [offerResult, setOfferResult] = useState(null);
-  const [orderError, setOrderError] = useState("");
-  const [orderTaxPercent, setOrderTaxPercent] = useState(18);
-  const [myReviews, setMyReviews] = useState([]);
-  const [reviewForm, setReviewForm] = useState({ rating: 5, content: "" });
-  const [editingReviewId, setEditingReviewId] = useState(null);
-  const [reviewBusy, setReviewBusy] = useState(false);
-  const [reviewError, setReviewError] = useState("");
-  const [reviewMessage, setReviewMessage] = useState("");
-  const [hoverRating, setHoverRating] = useState(0);
+  const [
+    {
+      user, reservation, loading, error, notice, busy, reloadKey,
+      confirmCancellation, orderMenu, availableOffers, cart, offerCode,
+      offerResult, orderError, orderTaxPercent, myReviews, reviewForm,
+      editingReviewId, reviewBusy, reviewError, reviewMessage, hoverRating,
+    },
+    {
+      user: setUser, reservation: setReservation, loading: setLoading,
+      error: setError, notice: setNotice, busy: setBusy, reloadKey: setReloadKey,
+      confirmCancellation: setConfirmCancellation, orderMenu: setOrderMenu,
+      availableOffers: setAvailableOffers, cart: setCart, offerCode: setOfferCode,
+      offerResult: setOfferResult, orderError: setOrderError,
+      orderTaxPercent: setOrderTaxPercent, myReviews: setMyReviews,
+      reviewForm: setReviewForm, editingReviewId: setEditingReviewId,
+      reviewBusy: setReviewBusy, reviewError: setReviewError,
+      reviewMessage: setReviewMessage, hoverRating: setHoverRating,
+    },
+  ] = usePageState("CustomerReservationDetailsPage", () => ({
+    user: null,
+    reservation: null,
+    loading: true,
+    error: "",
+    notice: "",
+    busy: false,
+    reloadKey: 0,
+    confirmCancellation: false,
+    orderMenu: [],
+    availableOffers: [],
+    cart: [],
+    offerCode: "",
+    offerResult: null,
+    orderError: "",
+    orderTaxPercent: 18,
+    myReviews: [],
+    reviewForm: {
+      rating: 5,
+      content: ""
+    },
+    editingReviewId: null,
+    reviewBusy: false,
+    reviewError: "",
+    reviewMessage: "",
+    hoverRating: 0,
+  }));
   const realtimeStartedAt = useRef(Date.now());
   const realtimeRefreshTimer = useRef(null);
 

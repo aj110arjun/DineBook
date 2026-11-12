@@ -1,5 +1,6 @@
+import { usePageState } from "../../state/usePageState.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import {
   PlusCircle,
   ChevronDown,
@@ -22,32 +23,54 @@ const statusLabels = {
 };
 
 export default function ManagerFloorsPage() {
-  const [floors, setFloors] = useState([]);
-  const [floorFilter, setFloorFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [tableQuery, setTableQuery] = useState("");
-  const [capacityFilter, setCapacityFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [tableSort, setTableSort] = useState("number");
-  const [form, setForm] = useState("");
-  const [name, setName] = useState("");
-  const [floorNumber, setFloorNumber] = useState("");
-  const [description, setDescription] = useState("");
-  const [floorId, setFloorId] = useState("");
-  const [number, setNumber] = useState("");
-  const [seats, setSeats] = useState("2");
-  const [reservationFee, setReservationFee] = useState("250");
-  const [extraHourFee, setExtraHourFee] = useState("0");
-  const [gridRow, setGridRow] = useState("");
-  const [gridCol, setGridCol] = useState("");
-  const [shape, setShape] = useState("round");
-  const [tableStatus, setTableStatus] = useState("available");
-  const [editingTable, setEditingTable] = useState(null);
-  const [editingFloor, setEditingFloor] = useState(null);
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [pendingConfirmation, setPendingConfirmation] = useState(null);
+  const [
+    {
+      floors, floorFilter, statusFilter, tableQuery, capacityFilter, typeFilter,
+      tableSort, form, name, floorNumber, description, floorId, number, seats,
+      reservationFee, extraHourFee, gridRow, gridCol, shape, tableStatus,
+      editingTable, editingFloor, error, notice, saving, pendingConfirmation,
+    },
+    {
+      floors: setFloors, floorFilter: setFloorFilter,
+      statusFilter: setStatusFilter, tableQuery: setTableQuery,
+      capacityFilter: setCapacityFilter, typeFilter: setTypeFilter,
+      tableSort: setTableSort, form: setForm, name: setName,
+      floorNumber: setFloorNumber, description: setDescription,
+      floorId: setFloorId, number: setNumber, seats: setSeats,
+      reservationFee: setReservationFee, extraHourFee: setExtraHourFee,
+      gridRow: setGridRow, gridCol: setGridCol, shape: setShape,
+      tableStatus: setTableStatus, editingTable: setEditingTable,
+      editingFloor: setEditingFloor, error: setError, notice: setNotice,
+      saving: setSaving, pendingConfirmation: setPendingConfirmation,
+    },
+  ] = usePageState("ManagerFloorsPage", () => ({
+    floors: [],
+    floorFilter: "all",
+    statusFilter: "all",
+    tableQuery: "",
+    capacityFilter: "all",
+    typeFilter: "all",
+    tableSort: "number",
+    form: "",
+    name: "",
+    floorNumber: "",
+    description: "",
+    floorId: "",
+    number: "",
+    seats: "2",
+    reservationFee: "250",
+    extraHourFee: "0",
+    gridRow: "",
+    gridCol: "",
+    shape: "round",
+    tableStatus: "available",
+    editingTable: null,
+    editingFloor: null,
+    error: "",
+    notice: "",
+    saving: false,
+    pendingConfirmation: null,
+  }));
   const load = useCallback(
     () =>
       requestJson("/api/manager/floors")

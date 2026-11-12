@@ -1,5 +1,5 @@
+import { usePageState } from "../../state/usePageState.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useState } from "react";
 import { ArrowRight, Mail } from "lucide-react";
 import {
   Link,
@@ -19,15 +19,14 @@ export default function CustomerLoginPage() {
   const location = useLocation();
   const returnTo = location.state?.from || "/customer";
   const [searchParams] = useSearchParams();
-  const [error, setError] = useState(() =>
-    searchParams.get("google") === "failed"
-      ? "Google sign-in could not be completed. Please try again."
-      : searchParams.get("google") === "unavailable"
-        ? "This Google account cannot sign in as a customer."
-        : "",
-  );
-  const [success, setSuccess] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [
+    { error, success, busy },
+    { error: setError, success: setSuccess, busy: setBusy },
+  ] = usePageState("CustomerLoginPage", () => ({
+    error: searchParams.get("google") === "failed" ? "Google sign-in could not be completed. Please try again." : searchParams.get("google") === "unavailable" ? "This Google account cannot sign in as a customer." : "",
+    success: "",
+    busy: false,
+  }));
   function enterDemoCustomer() {
     sessionStorage.setItem(demoSessionKey, "active");
     navigate(returnTo, { replace: true });

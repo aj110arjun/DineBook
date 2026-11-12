@@ -1,5 +1,6 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDateTime } from "../../lib/localDate.js";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -38,20 +39,34 @@ function StatusBadge({ status }) {
 
 export default function ManagerPaymentsPage() {
   const { transactionId } = useParams();
-  const [transactions, setTransactions] = useState([]);
-  const [transaction, setTransaction] = useState(null);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [query, setQuery] = useState("");
-  const [status, setStatus] = useState("ALL");
-  const [transactionType, setTransactionType] = useState("ALL");
-  const [paymentMethod, setPaymentMethod] = useState("ALL");
-  const [refundStatus, setRefundStatus] = useState("ALL");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [sort, setSort] = useState("newest");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [
+    {
+      transactions, transaction, total, page, query, status, transactionType,
+      paymentMethod, refundStatus, dateFrom, dateTo, sort, loading, error,
+    },
+    {
+      transactions: setTransactions, transaction: setTransaction, total: setTotal,
+      page: setPage, query: setQuery, status: setStatus,
+      transactionType: setTransactionType, paymentMethod: setPaymentMethod,
+      refundStatus: setRefundStatus, dateFrom: setDateFrom, dateTo: setDateTo,
+      sort: setSort, loading: setLoading, error: setError,
+    },
+  ] = usePageState("ManagerPaymentsPage", () => ({
+    transactions: [],
+    transaction: null,
+    total: 0,
+    page: 1,
+    query: "",
+    status: "ALL",
+    transactionType: "ALL",
+    paymentMethod: "ALL",
+    refundStatus: "ALL",
+    dateFrom: "",
+    dateTo: "",
+    sort: "newest",
+    loading: true,
+    error: "",
+  }));
   const pageSize = 10;
 
   useEffect(() => {

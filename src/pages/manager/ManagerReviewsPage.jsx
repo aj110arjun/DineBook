@@ -1,6 +1,7 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate } from "../../lib/localDate.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { requestJson } from "../../lib/authApi.js";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import "../../assets/css/ReviewsPage.css";
@@ -8,19 +9,40 @@ import "../../assets/css/ReviewsPage.css";
 const flagReasons = ["ABUSIVE", "HARASSMENT", "MISLEADING", "SPAM", "OTHER"];
 
 export default function ManagerReviewsPage() {
-  const [data, setData] = useState({ items: [], total: 0 });
-  const [error, setError] = useState("");
-  const [page, setPage] = useState(0);
-  const [filter, setFilter] = useState({ rating: "", status: "", search: "" });
-  const [replyDrafts, setReplyDrafts] = useState({});
-  const [replySaving, setReplySaving] = useState({});
-  const [replyErrors, setReplyErrors] = useState({});
-  const [flagging, setFlagging] = useState({});
-  const [flagSaving, setFlagSaving] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [refresh, setRefresh] = useState(0);
-  const [flagErrors, setFlagErrors] = useState({});
-  const [flagForms, setFlagForms] = useState({});
+  const [
+    {
+      data, error, page, filter, replyDrafts, replySaving, replyErrors, flagging,
+      flagSaving, loading, refresh, flagErrors, flagForms,
+    },
+    {
+      data: setData, error: setError, page: setPage, filter: setFilter,
+      replyDrafts: setReplyDrafts, replySaving: setReplySaving,
+      replyErrors: setReplyErrors, flagging: setFlagging,
+      flagSaving: setFlagSaving, loading: setLoading, refresh: setRefresh,
+      flagErrors: setFlagErrors, flagForms: setFlagForms,
+    },
+  ] = usePageState("ManagerReviewsPage", () => ({
+    data: {
+      items: [],
+      total: 0
+    },
+    error: "",
+    page: 0,
+    filter: {
+      rating: "",
+      status: "",
+      search: ""
+    },
+    replyDrafts: {},
+    replySaving: {},
+    replyErrors: {},
+    flagging: {},
+    flagSaving: {},
+    loading: true,
+    refresh: 0,
+    flagErrors: {},
+    flagForms: {},
+  }));
 
   useEffect(() => {
     let active = true;

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { usePageState } from "../../state/usePageState.js";
+import { useEffect, useMemo } from "react";
 import { Heart, Search } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
@@ -13,15 +14,27 @@ import "../../assets/css/CustomerProfilePage.css";
 
 export default function CustomerSavedRestaurantsPage() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [restaurants, setRestaurants] = useState([]);
-  const [savedIds, setSavedIds] = useState(getSavedRestaurantIds);
-  const [query, setQuery] = useState("");
-  const [cuisine, setCuisine] = useState("ALL");
-  const [sort, setSort] = useState("name");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [reloadKey, setReloadKey] = useState(0);
+  const [
+    {
+      user, restaurants, savedIds, query, cuisine, sort, loading, error,
+      reloadKey,
+    },
+    {
+      user: setUser, restaurants: setRestaurants, savedIds: setSavedIds,
+      query: setQuery, cuisine: setCuisine, sort: setSort, loading: setLoading,
+      error: setError, reloadKey: setReloadKey,
+    },
+  ] = usePageState("CustomerSavedRestaurantsPage", () => ({
+    user: null,
+    restaurants: [],
+    savedIds: getSavedRestaurantIds(),
+    query: "",
+    cuisine: "ALL",
+    sort: "name",
+    loading: true,
+    error: "",
+    reloadKey: 0,
+  }));
 
   useEffect(
     () =>

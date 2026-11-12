@@ -5,7 +5,7 @@ import { MapPin, Menu, Utensils, X } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { API_BASE } from "../../lib/authApi.js";
 import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
-import NotificationToasts from "../notifications/NotificationToasts.jsx";
+import NotificationSession from "../notifications/NotificationSession.jsx";
 import NotificationBell from "../notifications/NotificationBell.jsx";
 
 export default function CustomerHeader({ user, onLogout }) {
@@ -63,11 +63,8 @@ export default function CustomerHeader({ user, onLogout }) {
 
   const closeMenu = () => setMenuOpen(false);
 
-  return (
+  const header = (
     <header className="site-header">
-      {user && user.id !== demoCustomer.id && (
-        <NotificationToasts key={user.id} />
-      )}
       <div className="header-inner">
         {/* Brand */}
         <Link to="/customer" className="site-brand" onClick={closeMenu}>
@@ -168,10 +165,6 @@ export default function CustomerHeader({ user, onLogout }) {
                 My reservations
               </Link>
             )}
-
-            <Link to="/customer#how-it-works" onClick={closeMenu}>
-              How it works
-            </Link>
           </div>
 
           {/* Account */}
@@ -217,5 +210,11 @@ export default function CustomerHeader({ user, onLogout }) {
         </nav>
       </div>
     </header>
+  );
+
+  return user && user.id !== demoCustomer.id ? (
+    <NotificationSession key={user.id}>{header}</NotificationSession>
+  ) : (
+    header
   );
 }

@@ -1,3 +1,4 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate } from "../../lib/localDate.js";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -127,28 +128,52 @@ export function ProfileFrame({
 
 export default function CustomerReservationsPage() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [items, setItems] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [restaurants, setRestaurants] = useState([]);
-  const [busy, setBusy] = useState(true);
-  const [error, setError] = useState("");
-  const [filter, setFilter] = useState("ALL");
-  const [restaurantFilter, setRestaurantFilter] = useState("ALL");
-  const [query, setQuery] = useState("");
-  const [period, setPeriod] = useState("ALL");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [sort, setSort] = useState("created-newest");
-  const [page, setPage] = useState(1);
-  const [selectedPass, setSelectedPass] = useState(null);
+  const [
+    {
+      user, items, total, restaurants, busy, error, filter, restaurantFilter,
+      query, period, dateFrom, dateTo, sort, page, selectedPass,
+    },
+    {
+      user: setUser, items: setItems, total: setTotal,
+      restaurants: setRestaurants, busy: setBusy, error: setError,
+      filter: setFilter, restaurantFilter: setRestaurantFilter, query: setQuery,
+      period: setPeriod, dateFrom: setDateFrom, dateTo: setDateTo, sort: setSort,
+      page: setPage, selectedPass: setSelectedPass,
+    },
+  ] = usePageState("CustomerReservationsPage", () => ({
+    user: null,
+    items: [],
+    total: 0,
+    restaurants: [],
+    busy: true,
+    error: "",
+    filter: "ALL",
+    restaurantFilter: "ALL",
+    query: "",
+    period: "ALL",
+    dateFrom: "",
+    dateTo: "",
+    sort: "created-newest",
+    page: 1,
+    selectedPass: null,
+  }));
   const [passQr, setPassQr] = useState("");
-  const [passError, setPassError] = useState("");
+  const [
+    { passError },
+    { passError: setPassError },
+  ] = usePageState("CustomerReservationsPage", () => ({
+    passError: "",
+  }));
   const pageSize = 10;
   const requestSequence = useRef(0);
   const realtimeStartedAt = useRef(Date.now());
   const realtimeRefreshTimer = useRef(null);
-  const [realtimeReloadKey, setRealtimeReloadKey] = useState(0);
+  const [
+    { realtimeReloadKey },
+    { realtimeReloadKey: setRealtimeReloadKey },
+  ] = usePageState("CustomerReservationsPage", () => ({
+    realtimeReloadKey: 0,
+  }));
 
   useEffect(() => {
     return () => {

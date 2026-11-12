@@ -1,6 +1,7 @@
-import { formatLocalDate } from "../../lib/localDate.js";
+import { usePageState } from "../../state/usePageState.js";
+import { formatLocalDate, shiftLocalMonth } from "../../lib/localDate.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   AlertTriangle,
@@ -94,57 +95,86 @@ const consolidateDeskOrderLines = (lines) => {
 };
 
 export default function ManagerReservationsPage() {
-  const [items, setItems] = useState([]);
-  const [orders, setOrders] = useState([]);
-  const [calendarDays, setCalendarDays] = useState({});
-  const [tables, setTables] = useState([]);
-  const [reservationTotal, setReservationTotal] = useState(0);
-  const [reservationGuestCount, setReservationGuestCount] = useState(0);
-  const [ordersTotal, setOrdersTotal] = useState(0);
-  const [calendarLoading, setCalendarLoading] = useState(true);
-  const [workingDays, setWorkingDays] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(dayKey(new Date()));
-  const [month, setMonth] = useState(() => {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), 1);
-  });
-  const [tableFilter, setTableFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [guestFilter, setGuestFilter] = useState("all");
-  const [reservationSort, setReservationSort] = useState("time");
-  const [listPage, setListPage] = useState(1);
-  const [orderPage, setOrderPage] = useState(1);
-  const [listPageSize, setListPageSize] = useState(10);
-  const [query, setQuery] = useState(
-    () =>
-      new URLSearchParams(window.location.search).get("reservationId") || "",
-  );
-  const [debouncedQuery, setDebouncedQuery] = useState(
-    () =>
-      new URLSearchParams(window.location.search).get("reservationId") || "",
-  );
-  const [expandedId, setExpandedId] = useState("");
-  const [error, setError] = useState("");
-  const [cancellationNotice, setCancellationNotice] = useState("");
-  const [busyId, setBusyId] = useState("");
-  const [pendingAction, setPendingAction] = useState(null);
-  const [pendingOrderRemoval, setPendingOrderRemoval] = useState(null);
-  const [actionReason, setActionReason] = useState("");
-  const [scannerOpen, setScannerOpen] = useState(false);
-  const [scanValue, setScanValue] = useState("");
-  const [scanBusy, setScanBusy] = useState(false);
-  const [scanError, setScanError] = useState("");
-  const [foodReservation, setFoodReservation] = useState(null);
-  const [deskOrderReservation, setDeskOrderReservation] = useState(null);
-  const [deskOrderKey, setDeskOrderKey] = useState("");
-  const [deskOrderLines, setDeskOrderLines] = useState([]);
-  const [reservationOrders, setReservationOrders] = useState({});
-  const [ordersLoadingId, setOrdersLoadingId] = useState("");
-  const [menu, setMenu] = useState([]);
-  const [menuBusy, setMenuBusy] = useState(false);
-  const [variantId, setVariantId] = useState("");
-  const [foodQuantity, setFoodQuantity] = useState(1);
-  const [cameraActive, setCameraActive] = useState(false);
+  const [
+    {
+      items, orders, calendarDays, tables, reservationTotal,
+      reservationGuestCount, ordersTotal, calendarLoading, workingDays,
+      selectedDate, monthTime, tableFilter, statusFilter, guestFilter,
+      reservationSort, listPage, orderPage, listPageSize, query, debouncedQuery,
+      expandedId, error, cancellationNotice, busyId, pendingAction,
+      pendingOrderRemoval, actionReason, scannerOpen, scanValue, scanBusy,
+      scanError, foodReservation, deskOrderReservation, deskOrderKey,
+      deskOrderLines, reservationOrders, ordersLoadingId, menu, menuBusy,
+      variantId, foodQuantity, cameraActive,
+    },
+    {
+      items: setItems, orders: setOrders, calendarDays: setCalendarDays,
+      tables: setTables, reservationTotal: setReservationTotal,
+      reservationGuestCount: setReservationGuestCount,
+      ordersTotal: setOrdersTotal, calendarLoading: setCalendarLoading,
+      workingDays: setWorkingDays, selectedDate: setSelectedDate,
+      monthTime: setMonthTime, tableFilter: setTableFilter,
+      statusFilter: setStatusFilter, guestFilter: setGuestFilter,
+      reservationSort: setReservationSort, listPage: setListPage,
+      orderPage: setOrderPage, listPageSize: setListPageSize, query: setQuery,
+      debouncedQuery: setDebouncedQuery, expandedId: setExpandedId,
+      error: setError, cancellationNotice: setCancellationNotice,
+      busyId: setBusyId, pendingAction: setPendingAction,
+      pendingOrderRemoval: setPendingOrderRemoval, actionReason: setActionReason,
+      scannerOpen: setScannerOpen, scanValue: setScanValue, scanBusy: setScanBusy,
+      scanError: setScanError, foodReservation: setFoodReservation,
+      deskOrderReservation: setDeskOrderReservation,
+      deskOrderKey: setDeskOrderKey, deskOrderLines: setDeskOrderLines,
+      reservationOrders: setReservationOrders,
+      ordersLoadingId: setOrdersLoadingId, menu: setMenu, menuBusy: setMenuBusy,
+      variantId: setVariantId, foodQuantity: setFoodQuantity,
+      cameraActive: setCameraActive,
+    },
+  ] = usePageState("ManagerReservationsPage", () => ({
+    items: [],
+    orders: [],
+    calendarDays: {},
+    tables: [],
+    reservationTotal: 0,
+    reservationGuestCount: 0,
+    ordersTotal: 0,
+    calendarLoading: true,
+    workingDays: null,
+    selectedDate: dayKey(new Date()),
+    monthTime: shiftLocalMonth(Date.now()),
+    tableFilter: "all",
+    statusFilter: "all",
+    guestFilter: "all",
+    reservationSort: "time",
+    listPage: 1,
+    orderPage: 1,
+    listPageSize: 10,
+    query: new URLSearchParams(window.location.search).get("reservationId") || "",
+    debouncedQuery: new URLSearchParams(window.location.search).get("reservationId") || "",
+    expandedId: "",
+    error: "",
+    cancellationNotice: "",
+    busyId: "",
+    pendingAction: null,
+    pendingOrderRemoval: null,
+    actionReason: "",
+    scannerOpen: false,
+    scanValue: "",
+    scanBusy: false,
+    scanError: "",
+    foodReservation: null,
+    deskOrderReservation: null,
+    deskOrderKey: "",
+    deskOrderLines: [],
+    reservationOrders: {},
+    ordersLoadingId: "",
+    menu: [],
+    menuBusy: false,
+    variantId: "",
+    foodQuantity: 1,
+    cameraActive: false,
+  }));
+  const month = useMemo(() => new Date(monthTime), [monthTime]);
   const cameraRef = useRef(null);
   const videoRef = useRef(null);
   const scanActiveRef = useRef(false);
@@ -238,7 +268,7 @@ export default function ManagerReservationsPage() {
         setOrdersTotal(result.orders.total || 0);
         if (result.reservation_lookup_date) {
           setSelectedDate(result.reservation_lookup_date);
-          setMonth(new Date(`${result.reservation_lookup_date}T12:00:00`));
+          setMonthTime(new Date(`${result.reservation_lookup_date}T12:00:00`).getTime());
           setExpandedId(result.reservations.items?.[0]?.id || "");
         }
         setError("");
@@ -427,8 +457,7 @@ export default function ManagerReservationsPage() {
       );
       setQuery(reservation.id);
       setSelectedDate(reservation.reservation_date);
-      const date = new Date(`${reservation.reservation_date}T12:00:00`);
-      setMonth(new Date(date.getFullYear(), date.getMonth(), 1));
+      setMonthTime(shiftLocalMonth(`${reservation.reservation_date}T12:00:00`));
       setExpandedId(reservation.id);
       loadReservationOrders(reservation.id);
       setScannerOpen(false);
@@ -624,10 +653,7 @@ export default function ManagerReservationsPage() {
     );
 
   function moveMonth(direction) {
-    setMonth(
-      (current) =>
-        new Date(current.getFullYear(), current.getMonth() + direction, 1),
-    );
+    setMonthTime((current) => shiftLocalMonth(current, direction));
   }
 
   const monthTitle = new Intl.DateTimeFormat("en", {

@@ -1,7 +1,8 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate } from "../../lib/localDate.js";
 import { confirmAction } from "../../lib/confirmDialog.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   Accessibility,
   Armchair,
@@ -41,54 +42,114 @@ const detailTabs = [
 export default function CustomerRestaurantDetailsPage() {
   const { restaurantId, section } = useParams();
   const navigate = useNavigate();
-  const [restaurant, setRestaurant] = useState(null);
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [bookingOpen, setBookingOpen] = useState(false);
-  const [myReservations, setMyReservations] = useState([]);
-  const [selectedOrderReservationId, setSelectedOrderReservationId] =
-    useState("");
-  const [restaurantReviews, setRestaurantReviews] = useState([]);
-  const [reviewLoading, setReviewLoading] = useState(false);
-  const [loadedReviewScope, setLoadedReviewScope] = useState(null);
+  const [
+    {
+      restaurant, user, loading, error, bookingOpen, myReservations,
+      selectedOrderReservationId, restaurantReviews, reviewLoading,
+      loadedReviewScope,
+    },
+    {
+      restaurant: setRestaurant, user: setUser, loading: setLoading,
+      error: setError, bookingOpen: setBookingOpen,
+      myReservations: setMyReservations,
+      selectedOrderReservationId: setSelectedOrderReservationId,
+      restaurantReviews: setRestaurantReviews, reviewLoading: setReviewLoading,
+      loadedReviewScope: setLoadedReviewScope,
+    },
+  ] = usePageState("CustomerRestaurantDetailsPage", () => ({
+    restaurant: null,
+    user: null,
+    loading: true,
+    error: "",
+    bookingOpen: false,
+    myReservations: [],
+    selectedOrderReservationId: "",
+    restaurantReviews: [],
+    reviewLoading: false,
+    loadedReviewScope: null,
+  }));
   const reviewScope = `${restaurantId}:${user?.id || user?.email || "guest"}`;
-  const [reviewError, setReviewError] = useState("");
-  const [reviewMessage, setReviewMessage] = useState("");
-  const [reviewCooldownUntil, setReviewCooldownUntil] = useState(null);
-  const [reviewBusy, setReviewBusy] = useState(false);
-  const [reviewForm, setReviewForm] = useState({ rating: 5, content: "" });
-  const [hoverRating, setHoverRating] = useState(0);
-  const [editingReviewId, setEditingReviewId] = useState(null);
-  const [flaggingReviewId, setFlaggingReviewId] = useState(null);
-  const [flagReason, setFlagReason] = useState("SPAM");
-  const [flagExplanation, setFlagExplanation] = useState("");
-  const [reservationStatusFilter, setReservationStatusFilter] = useState("ALL");
-  const [reservationDateFilter, setReservationDateFilter] = useState("");
-  const [reservationSort, setReservationSort] = useState("NEWEST");
-  const [reservationPage, setReservationPage] = useState(1);
-  const [selectedReservation, setSelectedReservation] = useState(null);
-  const [pendingReservationCancellation, setPendingReservationCancellation] =
-    useState(null);
-  const [cancellingReservation, setCancellingReservation] = useState(false);
-  const [menuCategories, setMenuCategories] = useState([]);
-  const [restaurantOffers, setRestaurantOffers] = useState([]);
-  const [floors, setFloors] = useState([]);
-  const [menuLoading, setMenuLoading] = useState(false);
-  const [menuError, setMenuError] = useState("");
-  const [selectedMenuCategoryId, setSelectedMenuCategoryId] = useState("");
-  const [menuQuery, setMenuQuery] = useState("");
-  const [menuSort, setMenuSort] = useState("name");
-  const [menuPage, setMenuPage] = useState(1);
+  const [
+    {
+      reviewError, reviewMessage, reviewCooldownUntil, reviewBusy, reviewForm,
+      hoverRating, editingReviewId, flaggingReviewId, flagReason, flagExplanation,
+      reservationStatusFilter, reservationDateFilter, reservationSort,
+      reservationPage, selectedReservation, pendingReservationCancellation,
+      cancellingReservation, menuCategories, restaurantOffers, floors,
+      menuLoading, menuError, selectedMenuCategoryId, menuQuery, menuSort,
+      menuPage,
+    },
+    {
+      reviewError: setReviewError, reviewMessage: setReviewMessage,
+      reviewCooldownUntil: setReviewCooldownUntil, reviewBusy: setReviewBusy,
+      reviewForm: setReviewForm, hoverRating: setHoverRating,
+      editingReviewId: setEditingReviewId, flaggingReviewId: setFlaggingReviewId,
+      flagReason: setFlagReason, flagExplanation: setFlagExplanation,
+      reservationStatusFilter: setReservationStatusFilter,
+      reservationDateFilter: setReservationDateFilter,
+      reservationSort: setReservationSort, reservationPage: setReservationPage,
+      selectedReservation: setSelectedReservation,
+      pendingReservationCancellation: setPendingReservationCancellation,
+      cancellingReservation: setCancellingReservation,
+      menuCategories: setMenuCategories, restaurantOffers: setRestaurantOffers,
+      floors: setFloors, menuLoading: setMenuLoading, menuError: setMenuError,
+      selectedMenuCategoryId: setSelectedMenuCategoryId, menuQuery: setMenuQuery,
+      menuSort: setMenuSort, menuPage: setMenuPage,
+    },
+  ] = usePageState("CustomerRestaurantDetailsPage", () => ({
+    reviewError: "",
+    reviewMessage: "",
+    reviewCooldownUntil: null,
+    reviewBusy: false,
+    reviewForm: {
+      rating: 5,
+      content: ""
+    },
+    hoverRating: 0,
+    editingReviewId: null,
+    flaggingReviewId: null,
+    flagReason: "SPAM",
+    flagExplanation: "",
+    reservationStatusFilter: "ALL",
+    reservationDateFilter: "",
+    reservationSort: "NEWEST",
+    reservationPage: 1,
+    selectedReservation: null,
+    pendingReservationCancellation: null,
+    cancellingReservation: false,
+    menuCategories: [],
+    restaurantOffers: [],
+    floors: [],
+    menuLoading: false,
+    menuError: "",
+    selectedMenuCategoryId: "",
+    menuQuery: "",
+    menuSort: "name",
+    menuPage: 1,
+  }));
   const activeSection = detailTabs.some((tab) => tab.id === section)
     ? section
     : "about";
-  const [reservationTotal, setReservationTotal] = useState(0);
-  const [reservationListError, setReservationListError] = useState("");
-  const [reservationListLoading, setReservationListLoading] = useState(false);
-  const [seatedReservations, setSeatedReservations] = useState([]);
-  const [visibleMenuFoods, setVisibleMenuFoods] = useState([]);
-  const [menuTotal, setMenuTotal] = useState(0);
+  const [
+    {
+      reservationTotal, reservationListError, reservationListLoading,
+      seatedReservations, visibleMenuFoods, menuTotal,
+    },
+    {
+      reservationTotal: setReservationTotal,
+      reservationListError: setReservationListError,
+      reservationListLoading: setReservationListLoading,
+      seatedReservations: setSeatedReservations,
+      visibleMenuFoods: setVisibleMenuFoods, menuTotal: setMenuTotal,
+    },
+  ] = usePageState("CustomerRestaurantDetailsPage", () => ({
+    reservationTotal: 0,
+    reservationListError: "",
+    reservationListLoading: false,
+    seatedReservations: [],
+    visibleMenuFoods: [],
+    menuTotal: 0,
+  }));
   const reservationsPerPage = 4;
   const reservationPageCount = Math.max(
     1,

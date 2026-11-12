@@ -1,7 +1,8 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDateTime } from "../../lib/localDate.js";
 import { confirmAction } from "../../lib/confirmDialog.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Tag, Plus, Search, RefreshCw, MoreVertical } from "lucide-react";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
@@ -36,24 +37,40 @@ const localDateInput = (value) => {
 };
 
 export default function ManagerOffersPage() {
-  const [offers, setOffers] = useState([]);
-  const [menu, setMenu] = useState([]);
-  const [form, setForm] = useState(null);
-  const [query, setQuery] = useState("");
-  const [status, setStatus] = useState("ALL");
-  const [redemptionView, setRedemptionView] = useState(null);
-  const [sort, setSort] = useState("created_at");
-  const [discountFilter, setDiscountFilter] = useState("ALL");
-  const [scopeFilter, setScopeFilter] = useState("ALL");
-  const [validFrom, setValidFrom] = useState("");
-  const [validTo, setValidTo] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [formError, setFormError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [page, setPage] = useState(0);
-  const [total, setTotal] = useState(0);
+  const [
+    {
+      offers, menu, form, query, status, redemptionView, sort, discountFilter,
+      scopeFilter, validFrom, validTo, loading, busy, error, formError, notice,
+      page, total,
+    },
+    {
+      offers: setOffers, menu: setMenu, form: setForm, query: setQuery,
+      status: setStatus, redemptionView: setRedemptionView, sort: setSort,
+      discountFilter: setDiscountFilter, scopeFilter: setScopeFilter,
+      validFrom: setValidFrom, validTo: setValidTo, loading: setLoading,
+      busy: setBusy, error: setError, formError: setFormError, notice: setNotice,
+      page: setPage, total: setTotal,
+    },
+  ] = usePageState("ManagerOffersPage", () => ({
+    offers: [],
+    menu: [],
+    form: null,
+    query: "",
+    status: "ALL",
+    redemptionView: null,
+    sort: "created_at",
+    discountFilter: "ALL",
+    scopeFilter: "ALL",
+    validFrom: "",
+    validTo: "",
+    loading: true,
+    busy: false,
+    error: "",
+    formError: "",
+    notice: "",
+    page: 0,
+    total: 0,
+  }));
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -80,9 +97,9 @@ export default function ManagerOffersPage() {
       setOffers(data.items || []);
       setTotal(data.total || 0);
       setMenu(menuData);
-      setFormError("");
+      setError("");
     } catch (e) {
-      setFormError(e.message);
+      setError(e.message);
     } finally {
       setLoading(false);
     }
@@ -96,8 +113,21 @@ export default function ManagerOffersPage() {
     validFrom,
     validTo,
   ]);
-  const [actionMenu, setActionMenu] = useState(null);
+  const [
+    { actionMenu },
+    { actionMenu: setActionMenu },
+  ] = usePageState("ManagerOffersPage", () => ({
+    actionMenu: null,
+  }));
   const actionMenuRef = useRef(null);
+  const formErrorRef = useRef(null);
+
+  useEffect(() => {
+    if (form && formError) {
+      formErrorRef.current?.focus();
+      formErrorRef.current?.scrollIntoView({ block: "nearest" });
+    }
+  }, [formError, Boolean(form)]);
 
   function openActions(event, offer) {
     const trigger = event.currentTarget;
@@ -271,7 +301,7 @@ export default function ManagerOffersPage() {
       );
       await load();
     } catch (e) {
-      setFormError(e?.message || "Failed to toggle offer.");
+      setError(e?.message || "Failed to toggle offer.");
     }
   }
   async function showRedemptions(offer) {
@@ -281,10 +311,11 @@ export default function ManagerOffersPage() {
       );
       setRedemptionView({ offer, rows: data.items || [] });
     } catch (e) {
-      setFormError(e?.message || "Failed to fetch redemptions.");
+      setError(e?.message || "Failed to fetch redemptions.");
     }
   }
   function edit(o) {
+    setFormError("");
     setForm({
       ...blank,
       ...o,
@@ -309,13 +340,13 @@ export default function ManagerOffersPage() {
               per order.
             </p>
           </div>
-          <button onClick={() => setForm({ ...blank })}>
+          <button onClick={() => { setFormError(""); setForm({ ...blank }); }}>
             <Plus size={17} /> Create offer
           </button>
         </div>
-        {formError && !form && (
+        {error && (
           <p role="alert" className="offer-alert">
-            {formError}
+            {error}
           </p>
         )}
         {notice && (
@@ -533,9 +564,9 @@ export default function ManagerOffersPage() {
           document.body,
         )}
       {form && (
-        <div className="offer-modal-backdrop">
+        <div className="offer-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="offer-form-title">
           <CustomForm className="offer-form" onSubmit={save}>
-            <h2>{form.id ? "Edit offer" : "Create offer"}</h2>
+            <h2 id="offer-form-title">{form.id ? "Edit offer" : "Create offer"}</h2>
             <div className="offer-form-grid">
               <label>
                 Title
@@ -715,6 +746,11 @@ export default function ManagerOffersPage() {
                   </label>
                 ))}
               </fieldset>
+            )}
+            {formError && (
+              <p className="offer-alert" role="alert" tabIndex={-1} ref={formErrorRef}>
+                {formError}
+              </p>
             )}
             <div className="offer-form-actions">
               <button type="button" onClick={() => setForm(null)}>

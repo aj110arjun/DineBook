@@ -1,5 +1,5 @@
+import { usePageState } from "../../state/usePageState.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useState } from "react";
 import { ArrowRight, Mail } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../../components/auth/AuthLayout.jsx";
@@ -61,10 +61,18 @@ function validatePassword(password) {
 
 export default function CustomerRegisterPage() {
   const navigate = useNavigate();
-  const [error, setError] = useState("");
-  const [fieldErrors, setFieldErrors] = useState({});
-  const [success, setSuccess] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [
+    { error, fieldErrors, success, busy },
+    {
+      error: setError, fieldErrors: setFieldErrors, success: setSuccess,
+      busy: setBusy,
+    },
+  ] = usePageState("CustomerRegisterPage", () => ({
+    error: "",
+    fieldErrors: {},
+    success: "",
+    busy: false,
+  }));
 
   function clearFieldError(field) {
     setFieldErrors((current) => {

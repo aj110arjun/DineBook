@@ -1,5 +1,6 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate } from "../../lib/localDate.js";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import {
   Bell,
   ChartNoAxesColumn,
@@ -35,14 +36,27 @@ const chefNav = [
 export default function ChefDashboardPage() {
   const navigate = useNavigate();
   const { chef } = useOutletContext();
-  const [menuCategories, setMenuCategories] = useState([]);
-  const [orders, setOrders] = useState([]);
-  const [ordersLoading, setOrdersLoading] = useState(true);
-  const [ordersError, setOrdersError] = useState("");
-  const [menuLoading, setMenuLoading] = useState(true);
-  const [menuError, setMenuError] = useState("");
-  const [activeNav, setActiveNav] = useState("Dashboard");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [
+    {
+      menuCategories, orders, ordersLoading, ordersError, menuLoading, menuError,
+      activeNav, sidebarOpen,
+    },
+    {
+      menuCategories: setMenuCategories, orders: setOrders,
+      ordersLoading: setOrdersLoading, ordersError: setOrdersError,
+      menuLoading: setMenuLoading, menuError: setMenuError,
+      activeNav: setActiveNav, sidebarOpen: setSidebarOpen,
+    },
+  ] = usePageState("ChefDashboardPage", () => ({
+    menuCategories: [],
+    orders: [],
+    ordersLoading: true,
+    ordersError: "",
+    menuLoading: true,
+    menuError: "",
+    activeNav: "Dashboard",
+    sidebarOpen: false,
+  }));
   const dateLabel = formatLocalDate(new Date());
 
   useEffect(() => {

@@ -1,28 +1,66 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDateTime } from "../../lib/localDate.js";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ReceiptText, RotateCcw } from "lucide-react";
 import "../../assets/css/AdminTransactionsPage.css";
 import Pagination from "../../components/Pagination.jsx";
+import CustomDatePicker from "../../components/CustomDatePicker.jsx";
 import { requestJson } from "../../lib/authApi.js";
 
 export default function AdminRestaurantPaymentsPanel({ restaurantId }) {
-  const [transactions, setTransactions] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [query, setQuery] = useState("");
-  const [status, setStatus] = useState("ALL");
-  const [transactionType, setTransactionType] = useState("ALL");
-  const [paymentMethod, setPaymentMethod] = useState("ALL");
-  const [refundStatus, setRefundStatus] = useState("ALL");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [sort, setSort] = useState("newest");
-
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [restaurantFilter, setRestaurantFilter] = useState("");
-  const [restaurants, setRestaurants] = useState([]);
+  const [
+    {
+      transactions,
+      total,
+      page,
+      query,
+      status,
+      transactionType,
+      paymentMethod,
+      refundStatus,
+      dateFrom,
+      dateTo,
+      sort,
+      loading,
+      error,
+      restaurantFilter,
+      restaurants,
+    },
+    {
+      transactions: setTransactions,
+      total: setTotal,
+      page: setPage,
+      query: setQuery,
+      status: setStatus,
+      transactionType: setTransactionType,
+      paymentMethod: setPaymentMethod,
+      refundStatus: setRefundStatus,
+      dateFrom: setDateFrom,
+      dateTo: setDateTo,
+      sort: setSort,
+      loading: setLoading,
+      error: setError,
+      restaurantFilter: setRestaurantFilter,
+      restaurants: setRestaurants,
+    },
+  ] = usePageState("AdminRestaurantPaymentsPanel", () => ({
+    transactions: [],
+    total: 0,
+    page: 1,
+    query: "",
+    status: "ALL",
+    transactionType: "ALL",
+    paymentMethod: "ALL",
+    refundStatus: "ALL",
+    dateFrom: "",
+    dateTo: "",
+    sort: "newest",
+    loading: true,
+    error: "",
+    restaurantFilter: "",
+    restaurants: [],
+  }));
   const global = !restaurantId;
   const PAGE_SIZE_DEFAULT = 10;
 
@@ -226,30 +264,32 @@ export default function AdminRestaurantPaymentsPanel({ restaurantId }) {
             <option value="REFUNDED">Refunded</option>
           </select>
         </label>
-        <label className="transaction-field">
+        <div className="transaction-field">
           <span>From date</span>
-          <input
-            aria-label="From date"
-            type="date"
+          <CustomDatePicker
+            label="From date"
+            placeholder="dd/mm/yyyy"
             value={dateFrom}
-            onChange={(event) => {
+            allowPastDates
+            onChange={(value) => {
               setPage(1);
-              setDateFrom(event.target.value);
+              setDateFrom(value);
             }}
           />
-        </label>
-        <label className="transaction-field">
+        </div>
+        <div className="transaction-field">
           <span>To date</span>
-          <input
-            aria-label="To date"
-            type="date"
+          <CustomDatePicker
+            label="To date"
+            placeholder="dd/mm/yyyy"
             value={dateTo}
-            onChange={(event) => {
+            allowPastDates
+            onChange={(value) => {
               setPage(1);
-              setDateTo(event.target.value);
+              setDateTo(value);
             }}
           />
-        </label>
+        </div>
         <label className="transaction-field">
           <span>Sort by</span>
           <select
@@ -322,7 +362,9 @@ export default function AdminRestaurantPaymentsPanel({ restaurantId }) {
                   </td>
                   <td>
                     {item.created_at
-                      ? formatLocalDateTime(item.created_at, { timeStyle: "medium" })
+                      ? formatLocalDateTime(item.created_at, {
+                          timeStyle: "medium",
+                        })
                       : "—"}
                   </td>
                   <td>

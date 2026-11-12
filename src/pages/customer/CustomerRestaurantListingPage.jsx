@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { usePageState } from "../../state/usePageState.js";
+import { useEffect } from "react";
 import { MapPin, Search, SlidersHorizontal, Users } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
@@ -12,25 +13,51 @@ const PAGE_SIZE = 6;
 
 export default function CustomerRestaurantListingPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [restaurants, setRestaurants] = useState([]);
-  const [totalRestaurants, setTotalRestaurants] = useState(0);
-  const [cuisineOptions, setCuisineOptions] = useState([]);
-  const [locationOptions, setLocationOptions] = useState([]);
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [query, setQuery] = useState(() => searchParams.get("search") || "");
-  const [searchTerm, setSearchTerm] = useState(query);
-  const [cuisines, setCuisines] = useState(() => searchParams.getAll("cuisine"));
-  const [locations, setLocations] = useState(() => searchParams.getAll("location"));
-  const [sort, setSort] = useState("newest");
-  const [page, setPage] = useState(1);
-  const [guestCount, setGuestCount] = useState("4");
-  const [customerLocation, setCustomerLocation] = useState(null);
-  const [locationBusy, setLocationBusy] = useState(false);
-  const [locationError, setLocationError] = useState("");
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [
+    {
+      restaurants, totalRestaurants, cuisineOptions, locationOptions, user,
+      loading, error, query,
+    },
+    {
+      restaurants: setRestaurants, totalRestaurants: setTotalRestaurants,
+      cuisineOptions: setCuisineOptions, locationOptions: setLocationOptions,
+      user: setUser, loading: setLoading, error: setError, query: setQuery,
+    },
+  ] = usePageState("CustomerRestaurantListingPage", () => ({
+    restaurants: [],
+    totalRestaurants: 0,
+    cuisineOptions: [],
+    locationOptions: [],
+    user: null,
+    loading: true,
+    error: "",
+    query: searchParams.get("search") || "",
+  }));
+  const [
+    {
+      searchTerm, cuisines, locations, sort, page, guestCount, customerLocation,
+      locationBusy, locationError, filtersOpen, refreshKey,
+    },
+    {
+      searchTerm: setSearchTerm, cuisines: setCuisines, locations: setLocations,
+      sort: setSort, page: setPage, guestCount: setGuestCount,
+      customerLocation: setCustomerLocation, locationBusy: setLocationBusy,
+      locationError: setLocationError, filtersOpen: setFiltersOpen,
+      refreshKey: setRefreshKey,
+    },
+  ] = usePageState("CustomerRestaurantListingPage", () => ({
+    searchTerm: query,
+    cuisines: searchParams.getAll("cuisine"),
+    locations: searchParams.getAll("location"),
+    sort: "newest",
+    page: 1,
+    guestCount: "4",
+    customerLocation: null,
+    locationBusy: false,
+    locationError: "",
+    filtersOpen: false,
+    refreshKey: 0,
+  }));
 
   useEffect(() => {
     const value = searchParams.get("search") || "";
