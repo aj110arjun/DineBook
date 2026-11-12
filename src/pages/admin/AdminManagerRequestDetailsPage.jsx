@@ -1,5 +1,6 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -26,12 +27,21 @@ export default function AdminManagerRequestDetailsPage() {
   const navigate = useNavigate();
   const { requestId } = useParams();
 
-  const [request, setRequest] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState(false);
-  const [confirmationAction, setConfirmationAction] = useState(null);
-  const [previewDocument, setPreviewDocument] = useState(null);
-  const [error, setError] = useState("");
+  const [
+    { request, loading, processing, confirmationAction, previewDocument, error },
+    {
+      request: setRequest, loading: setLoading, processing: setProcessing,
+      confirmationAction: setConfirmationAction,
+      previewDocument: setPreviewDocument, error: setError,
+    },
+  ] = usePageState("AdminManagerRequestDetailsPage", () => ({
+    request: null,
+    loading: true,
+    processing: false,
+    confirmationAction: null,
+    previewDocument: null,
+    error: "",
+  }));
 
   async function loadRequest() {
     setLoading(true);
@@ -337,17 +347,6 @@ export default function AdminManagerRequestDetailsPage() {
                 value={restaurant.email}
               />
 
-              <InfoItem
-                icon={User}
-                label="Seating Capacity"
-                value={restaurant.capacity}
-              />
-
-              <InfoItem
-                icon={Store}
-                label="Dining Tables"
-                value={restaurant.tables}
-              />
             </div>
 
             <div className="mt-6 border-t border-gray-100 pt-5">

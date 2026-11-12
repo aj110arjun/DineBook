@@ -1,5 +1,6 @@
+import { usePageState } from "../../state/usePageState.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { ArrowRightLeft } from "lucide-react";
 import { requestJson } from "../../lib/authApi.js";
 import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
@@ -8,14 +9,23 @@ const money = (amount) =>
   `₹${Number(amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export default function ManagerChefWalletTransfers() {
-  const [data, setData] = useState(null);
-  const [wallet, setWallet] = useState(null);
-  const [chefId, setChefId] = useState("");
-  const [amount, setAmount] = useState("");
-  const [idempotencyKey, setIdempotencyKey] = useState("");
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [
+    { data, wallet, chefId, amount, idempotencyKey, error, notice, saving },
+    {
+      data: setData, wallet: setWallet, chefId: setChefId, amount: setAmount,
+      idempotencyKey: setIdempotencyKey, error: setError, notice: setNotice,
+      saving: setSaving,
+    },
+  ] = usePageState("ManagerChefWalletTransfers", () => ({
+    data: null,
+    wallet: null,
+    chefId: "",
+    amount: "",
+    idempotencyKey: "",
+    error: "",
+    notice: "",
+    saving: false,
+  }));
 
   const refresh = useCallback(async () => {
     const [revenue, walletData] = await Promise.all([

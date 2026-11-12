@@ -1,18 +1,27 @@
+import { usePageState } from "../../state/usePageState.js";
 import { GEOCODING_BASE_URL } from "../../lib/serviceConfig.js";
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { MapPin, Save } from "lucide-react";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import { requestJson } from "../../lib/authApi.js";
 
 export default function ManagerRestaurantLocationPage() {
-  const [query, setQuery] = useState("");
-  const [pin, setPin] = useState(null);
-  const [suggestions, setSuggestions] = useState([]);
-  const [busy, setBusy] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [
+    { query, pin, suggestions, busy, saving, message, error },
+    {
+      query: setQuery, pin: setPin, suggestions: setSuggestions, busy: setBusy,
+      saving: setSaving, message: setMessage, error: setError,
+    },
+  ] = usePageState("ManagerRestaurantLocationPage", () => ({
+    query: "",
+    pin: null,
+    suggestions: [],
+    busy: false,
+    saving: false,
+    message: "",
+    error: "",
+  }));
 
   useEffect(() => {
     let active = true;

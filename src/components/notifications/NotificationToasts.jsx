@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Bell, X } from "lucide-react";
-import { requestJson } from "../../lib/authApi.js";
+import { useDispatch, useSelector } from "react-redux";
 import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
 import { createNotificationDelivery } from "../../lib/notificationDelivery.js";
+import { notificationTags, notificationsApi } from "../../state/notificationsApi.js";
+import { clearToasts, dismissToast, enqueueToast } from "../../state/notificationToasts.js";
 import "../../assets/css/notifications.css";
 
 const TOAST_DURATION = 7000;
@@ -44,29 +46,67 @@ function NotificationToast({ item, onDismiss }) {
   );
 }
 
-export default function NotificationToasts() {
-  const [queue, setQueue] = useState([]);
+export default function NotificationToasts({ scope }) {
+  const dispatch = useDispatch();
+  const item = useSelector((state) => state.notificationToasts[scope]?.[0]);
   const sessionRef = useRef(null);
+  const refreshTimer = useRef(null);
+
+  const scheduleRefresh = useCallback(() => {
+    window.clearTimeout(refreshTimer.current);
+    refreshTimer.current = window.setTimeout(() => {
+      dispatch(notificationsApi.util.invalidateTags(notificationTags(scope)));
+    }, 400);
+  }, [dispatch, scope]);
 
   useEffect(() => {
+    async function fetchNotification(endpoint, args, signal) {
+      const query = dispatch(endpoint.initiate(args, {
+        subscribe: false,
+        forceRefetch: true,
+      }));
+      const abort = () => query.abort();
+      signal.addEventListener("abort", abort, { once: true });
+      try {
+        return await query.unwrap();
+      } finally {
+        signal.removeEventListener("abort", abort);
+      }
+    }
+
     const session = createNotificationDelivery({
-      request: requestJson,
-      onNotification: (item) => setQueue((current) => [...current, item]),
+      loadRecent: (signal) => fetchNotification(
+        notificationsApi.endpoints.getNotifications, { scope, unread: false }, signal,
+      ),
+      loadNotification: (id, signal) => fetchNotification(
+        notificationsApi.endpoints.getNotification, { scope, id }, signal,
+      ),
+      onNotification: (notification) => {
+        dispatch(enqueueToast({ scope, item: notification }));
+        scheduleRefresh();
+      },
     });
     sessionRef.current = session;
     return () => {
+      window.clearTimeout(refreshTimer.current);
       session.dispose();
       sessionRef.current = null;
+      dispatch(clearToasts(scope));
+      dispatch(notificationsApi.util.resetApiState());
     };
-  }, []);
+  }, [dispatch, scope, scheduleRefresh]);
 
   const realtimeStatus = useRealtimeEvents({
     onEvent: (event) => {
       if (event?.event_type !== "notification.created") return;
+      scheduleRefresh();
       return sessionRef.current?.receive(event.resource_id);
     },
     onReady: () => sessionRef.current?.refresh(),
-    onReconnect: () => sessionRef.current?.refresh(),
+    onReconnect: () => {
+      scheduleRefresh();
+      return sessionRef.current?.refresh();
+    },
   });
 
   useEffect(() => {
@@ -83,9 +123,8 @@ export default function NotificationToasts() {
   }, [realtimeStatus]);
 
   const dismiss = useCallback((id) => {
-    setQueue((current) => current.filter((item) => item.id !== id));
-  }, []);
-  const item = queue[0];
+    dispatch(dismissToast({ scope, id }));
+  }, [dispatch, scope]);
 
   return createPortal(
     <div

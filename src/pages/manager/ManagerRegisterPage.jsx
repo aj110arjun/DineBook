@@ -1,4 +1,4 @@
-import CustomForm from "../../components/forms/CustomForm.jsx";
+import { usePageState } from "../../state/usePageState.js";
 import {
   GEOCODING_BASE_URL,
   POSTAL_API_BASE_URL,
@@ -26,23 +26,22 @@ import ImageCropDialog from "../../components/manager/ImageCropDialog.jsx";
 import ImageUploadField from "../../components/manager/ImageUploadField.jsx";
 import { FormField, PasswordField } from "../../components/auth/FormField.jsx";
 import Notice from "../../components/auth/Notice.jsx";
+import { countryCallingCodes } from "../../lib/countryCallingCodes.js";
 
-// Limit the stored length and digit count before checking the formatting.
-const phoneNumberFormat = String.raw`\+?(?:[0-9]|\([0-9]+\))(?:[ \-]?(?:[0-9]|\([0-9]+\)))*`;
-const restaurantPhonePattern = String.raw`\s*(?=.{7,20}\s*$)(?=(?:[^0-9]*[0-9]){7,15}[^0-9]*$)${phoneNumberFormat}\s*`;
-const restaurantPhoneRegex = new RegExp(`^${restaurantPhonePattern}$`);
-const restaurantPhoneError =
-  "Enter 7–15 digits. A leading +, spaces, hyphens, and parentheses are allowed (20 characters max).";
+import {
+  getManagerRegistrationStepErrors,
+  getRestaurantContactErrors,
+  formatRestaurantPhoneNumber,
+} from "../../lib/managerRegistrationValidation.js";
 
 const initialApplication = {
   name: "",
   email: "",
-  password: "",
-  confirmPassword: "",
 
   restaurantName: "",
   restaurantDescription: "",
   cuisineType: "",
+  restaurantCountryCode: "+91",
   restaurantContact: "",
   address: "",
   city: "",
@@ -251,27 +250,67 @@ function ReviewDocument({ label, file, required = false }) {
 }
 
 export default function ManagerRegisterPage() {
-  const [step, setStep] = useState(1);
+  const [
+    { step },
+    { step: setStep },
+  ] = usePageState("ManagerRegisterPage", () => ({
+    step: 1,
+  }));
   const navigate = useNavigate();
-  const [error, setError] = useState("");
-  const [fieldErrors, setFieldErrors] = useState({});
-  const [submitting, setSubmitting] = useState(false);
+  const [
+    { error, fieldErrors, submitting },
+    { error: setError, fieldErrors: setFieldErrors, submitting: setSubmitting },
+  ] = usePageState("ManagerRegisterPage", () => ({
+    error: "",
+    fieldErrors: {},
+    submitting: false,
+  }));
+  const [credentials, setCredentials] = useState({ password: "", confirmPassword: "" });
   const [emailCode, setEmailCode] = useState("");
-  const [emailCodeSent, setEmailCodeSent] = useState(false);
-  const [emailVerified, setEmailVerified] = useState(false);
-  const [emailBusy, setEmailBusy] = useState(false);
+  const [
+    { emailCodeSent, emailVerified, emailBusy },
+    {
+      emailCodeSent: setEmailCodeSent, emailVerified: setEmailVerified,
+      emailBusy: setEmailBusy,
+    },
+  ] = usePageState("ManagerRegisterPage", () => ({
+    emailCodeSent: false,
+    emailVerified: false,
+    emailBusy: false,
+  }));
   const [pendingBanner, setPendingBanner] = useState(null);
 
-  const [application, setApplication] = useState(initialApplication);
+  const [
+    { application },
+    { application: setApplication },
+  ] = usePageState("ManagerRegisterPage", () => ({
+    application: initialApplication,
+  }));
   const managerEmail = application.email.trim().toLowerCase();
-  const [addressLookupQuery, setAddressLookupQuery] = useState("");
-  const [addressSuggestions, setAddressSuggestions] = useState([]);
-  const [addressLookupBusy, setAddressLookupBusy] = useState(false);
-  const [addressLookupError, setAddressLookupError] = useState("");
-  const [pinLookupMessage, setPinLookupMessage] = useState("");
-  const [pinToLookup, setPinToLookup] = useState("");
-  const [locationBusy, setLocationBusy] = useState(false);
-  const [locationMessage, setLocationMessage] = useState("");
+  const [
+    {
+      addressLookupQuery, addressSuggestions, addressLookupBusy,
+      addressLookupError, pinLookupMessage, pinToLookup, locationBusy,
+      locationMessage,
+    },
+    {
+      addressLookupQuery: setAddressLookupQuery,
+      addressSuggestions: setAddressSuggestions,
+      addressLookupBusy: setAddressLookupBusy,
+      addressLookupError: setAddressLookupError,
+      pinLookupMessage: setPinLookupMessage, pinToLookup: setPinToLookup,
+      locationBusy: setLocationBusy, locationMessage: setLocationMessage,
+    },
+  ] = usePageState("ManagerRegisterPage", () => ({
+    addressLookupQuery: "",
+    addressSuggestions: [],
+    addressLookupBusy: false,
+    addressLookupError: "",
+    pinLookupMessage: "",
+    pinToLookup: "",
+    locationBusy: false,
+    locationMessage: "",
+  }));
   const locationRequest = useRef(0);
   useEffect(
     () => () => {
@@ -634,11 +673,19 @@ export default function ManagerRegisterPage() {
     },
   };
 
-  const [hours, setHours] = useState(initialHours);
-  const [capacity, setCapacity] = useState("");
-  const [tables, setTables] = useState("");
+  const [
+    { hours },
+    { hours: setHours },
+  ] = usePageState("ManagerRegisterPage", () => ({
+    hours: initialHours,
+  }));
   const [interiorMedia, setInteriorMedia] = useState(null);
   function updateField(field, value) {
+    if (field === "password" || field === "confirmPassword") {
+      setCredentials((current) => ({ ...current, [field]: value }));
+      setFieldErrors((current) => ({ ...current, [field]: "" }));
+      return;
+    }
     if (["address", "city", "state", "pinCode"].includes(field)) {
       locationRequest.current += 1;
       setLocationBusy(false);
@@ -648,7 +695,19 @@ export default function ManagerRegisterPage() {
     if (field === "city" || field === "state") {
       setPinToLookup("");
     }
-    setFieldErrors((current) => ({ ...current, [field]: "" }));
+    if (field === "restaurantCountryCode" || field === "restaurantContact") {
+      const phoneErrors = getRestaurantContactErrors(
+        field === "restaurantCountryCode" ? value : application.restaurantCountryCode,
+        field === "restaurantContact" ? value : application.restaurantContact,
+      );
+      setFieldErrors((current) => ({
+        ...current,
+        restaurantCountryCode: phoneErrors.restaurantCountryCode || "",
+        restaurantContact: phoneErrors.restaurantContact || "",
+      }));
+    } else {
+      setFieldErrors((current) => ({ ...current, [field]: "" }));
+    }
     if (field === "email") {
       setEmailCode("");
       setEmailCodeSent(false);
@@ -835,7 +894,7 @@ export default function ManagerRegisterPage() {
   function handleDocumentsContinue(event) {
     event.preventDefault();
 
-    if (!validateStep(3)) return;
+    if (!validateStep(3, event.currentTarget)) return;
 
     setStep(4);
   }
@@ -843,7 +902,7 @@ export default function ManagerRegisterPage() {
   function handleOperatingHoursContinue(event) {
     event.preventDefault();
 
-    if (!validateStep(4)) return;
+    if (!validateStep(4, event.currentTarget)) return;
 
     setStep(5);
   }
@@ -899,6 +958,7 @@ export default function ManagerRegisterPage() {
       if (response.status < 200 || response.status >= 300)
         throw new Error(data?.detail || "Unable to verify this email.");
       setEmailVerified(true);
+      setFieldErrors((current) => ({ ...current, email: "" }));
       setError("");
     } catch (reason) {
       setError(reason.message);
@@ -908,188 +968,48 @@ export default function ManagerRegisterPage() {
   }
 
   function getStepErrors(stepNumber) {
-    const errors = {};
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-
-    function checkLength(field, label, minimum, maximum) {
-      const value = application[field].trim();
-
-      if (value.length < minimum || value.length > maximum) {
-        errors[field] =
-          `${label} must contain ${minimum}–${maximum} characters.`;
-      }
-    }
-
-    function checkFile(field, file, label, types, maxMB, required = false) {
-      if (!file) {
-        if (required) errors[field] = `Upload ${label}.`;
-        return;
-      }
-
-      if (!types.includes(file.type)) {
-        errors[field] = `${label}: choose a valid file type.`;
-      } else if (file.size > maxMB * 1024 * 1024) {
-        errors[field] = `${label} must be ${maxMB} MB or smaller.`;
-      }
-    }
-
-    if (stepNumber === 1) {
-      checkLength("name", "Full name", 2, 120);
-
-      if (
-        application.name.trim() &&
-        !/^[\p{L}\s'.-]+$/u.test(application.name.trim())
-      ) {
-        errors.name = "Use letters, spaces, apostrophes, hyphens, or periods.";
-      }
-
-      if (!emailPattern.test(application.email.trim())) {
-        errors.email = "Enter a valid email address.";
-      } else if (!emailVerified) {
-        errors.email = "Verify your email before continuing.";
-      }
-
-      const password = application.password;
-
-      if (password.length < 10 || password.length > 128) {
-        errors.password = "Password must contain 10–128 characters.";
-      } else if (!/\p{L}/u.test(password) || !/[^\p{L}\s]/u.test(password)) {
-        errors.password = "Include a letter and a number or symbol.";
-      }
-
-      if (!application.confirmPassword) {
-        errors.confirmPassword = "Confirm your password.";
-      } else if (password !== application.confirmPassword) {
-        errors.confirmPassword = "Passwords do not match.";
-      }
-    }
-
-    if (stepNumber === 2) {
-      checkLength("restaurantName", "Restaurant name", 2, 255);
-      checkLength("restaurantDescription", "Description", 1, 2000);
-      checkLength("cuisineType", "Cuisine type", 2, 100);
-      checkLength("address", "Address", 2, 500);
-      checkLength("city", "City", 2, 100);
-      checkLength("state", "State", 2, 100);
-
-      if (
-        application.restaurantName.trim() &&
-        !/^[\p{L}\p{N}\s'.-]+$/u.test(application.restaurantName.trim())
-      ) {
-        errors.restaurantName =
-          "Use letters, numbers, spaces, apostrophes, hyphens, or periods.";
-      }
-
-      if (!restaurantPhoneRegex.test(application.restaurantContact)) {
-        errors.restaurantContact = restaurantPhoneError;
-      }
-
-      if (
-        !/^[A-Za-z0-9][A-Za-z0-9 -]{1,18}[A-Za-z0-9]$/.test(
-          application.pinCode.trim(),
-        )
-      ) {
-        errors.pinCode = "Enter a valid PIN or ZIP code.";
-      }
-    }
-
-    if (stepNumber === 3) {
-      const pdfTypes = ["application/pdf"];
-      const imageTypes = ["image/jpeg", "image/png"];
-
-      checkFile(
-        "fssaiLicense",
-        documents.fssaiLicense,
-        "your FSSAI or food safety document",
-        pdfTypes,
-        5,
-        true,
-      );
-
-      checkFile(
-        "businessRegistration",
-        documents.businessRegistration,
-        "your business registration certificate",
-        pdfTypes,
-        5,
-        true,
-      );
-
-      checkFile(
-        "ownerIdentity",
-        documents.ownerIdentity,
-        "your owner identity proof",
-        pdfTypes,
-        5,
-        true,
-      );
-
-      checkFile(
-        "gstCertificate",
-        documents.gstCertificate,
-        "your GST certificate",
-        pdfTypes,
-        5,
-      );
-
-      checkFile(
-        "brandingImages",
-        documents.brandingImages,
-        "your cropped restaurant banner",
-        imageTypes,
-        10,
-        true,
-      );
-    }
-
-    if (stepNumber === 4) {
-      if (!Number.isSafeInteger(Number(capacity)) || Number(capacity) < 1) {
-        errors.capacity =
-          "Enter a seating capacity as a positive whole number.";
-      }
-
-      if (!Number.isSafeInteger(Number(tables)) || Number(tables) < 1) {
-        errors.tables =
-          "Enter the number of tables as a positive whole number.";
-      }
-
-      const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
-
-      Object.entries(hours).forEach(([day, schedule]) => {
-        if (
-          schedule.enabled &&
-          (!timePattern.test(schedule.open) ||
-            !timePattern.test(schedule.close))
-        ) {
-          errors[`${day}Hours`] = `Enter opening and closing times for ${day}.`;
-        }
-      });
-
-      checkFile(
-        "interiorMedia",
-        interiorMedia,
-        "your interior image",
-        ["image/jpeg", "image/png"],
-        10,
-      );
-    }
-
-    return errors;
+    return getManagerRegistrationStepErrors(stepNumber, {
+      application, credentials, emailVerified, documents, hours,
+      interiorMedia,
+    });
   }
 
-  function validateStep(stepNumber) {
+  function handleFieldBlur(event) {
+    // Button actions must finish before new error messages can move them.
+    // Continue validates the entire step in its submit handler.
+    if (event.relatedTarget?.closest("button")) return;
+
+    const field = event.target.dataset.validationField || event.target.name;
+    if (!field) return;
+
+    const errors = getStepErrors(step);
+    setFieldErrors((current) => ({ ...current, [field]: errors[field] || "" }));
+  }
+
+  function validateStep(stepNumber, form) {
     const errors = getStepErrors(stepNumber);
 
     setFieldErrors(errors);
     setError("");
 
-    return Object.keys(errors).length === 0;
+    const firstError = Object.keys(errors)[0];
+    if (firstError) {
+      const field = Array.from(form.elements).find(
+        (element) => (element.dataset.validationField || element.name) === firstError,
+      );
+      if (field) field.focus();
+      else requestAnimationFrame(() => {
+        form.querySelector('[role="alert"]')?.scrollIntoView({ block: "center", behavior: "smooth" });
+      });
+    }
+
+    return !firstError;
   }
 
   function handlePersonalContinue(event) {
     event.preventDefault();
 
-    if (!validateStep(1)) return;
+    if (!validateStep(1, event.currentTarget)) return;
 
     setStep(2);
   }
@@ -1097,7 +1017,7 @@ export default function ManagerRegisterPage() {
   function handleRestaurantContinue(event) {
     event.preventDefault();
 
-    if (!validateStep(2)) return;
+    if (!validateStep(2, event.currentTarget)) return;
 
     setStep(3);
   }
@@ -1130,7 +1050,7 @@ export default function ManagerRegisterPage() {
       // Manager account
       formData.append("name", application.name);
       formData.append("email", managerEmail);
-      formData.append("password", application.password);
+      formData.append("password", credentials.password);
 
       // Restaurant information
       formData.append("restaurant_name", application.restaurantName);
@@ -1139,7 +1059,9 @@ export default function ManagerRegisterPage() {
         application.restaurantDescription,
       );
       formData.append("cuisine_type", application.cuisineType);
-      formData.append("restaurant_contact", application.restaurantContact.trim());
+      formData.append("restaurant_contact", formatRestaurantPhoneNumber(
+        application.restaurantCountryCode, application.restaurantContact,
+      ));
 
       // Address
       formData.append("address", application.address);
@@ -1151,9 +1073,6 @@ export default function ManagerRegisterPage() {
         formData.append("longitude", application.longitude);
       }
 
-      // Restaurant capacity
-      formData.append("capacity", capacity);
-      formData.append("tables", tables);
       // Operating hours
       Object.entries(hours).forEach(([day, schedule]) => {
         formData.append(`${day}_enabled`, String(schedule.enabled));
@@ -1295,7 +1214,7 @@ export default function ManagerRegisterPage() {
               personal account details.
             </p>
 
-            <CustomForm onSubmit={handlePersonalContinue} noValidate>
+            <form onSubmit={handlePersonalContinue} onBlur={handleFieldBlur} noValidate>
               <FormField
                 id="name"
                 label="Full Name"
@@ -1388,7 +1307,7 @@ export default function ManagerRegisterPage() {
                 minLength={10}
                 maxLength={128}
                 required
-                value={application.password}
+                value={credentials.password}
                 error={fieldErrors.password}
                 onChange={(event) =>
                   updateField("password", event.target.value)
@@ -1403,7 +1322,7 @@ export default function ManagerRegisterPage() {
                 minLength={10}
                 maxLength={128}
                 required
-                value={application.confirmPassword}
+                value={credentials.confirmPassword}
                 error={fieldErrors.confirmPassword}
                 onChange={(event) =>
                   updateField("confirmPassword", event.target.value)
@@ -1419,7 +1338,7 @@ export default function ManagerRegisterPage() {
                 Continue
                 <ArrowRight size={16} />
               </button>
-            </CustomForm>
+            </form>
 
             <p className="mt-6 text-center text-sm text-stone-500">
               Already have a manager account?{" "}
@@ -1444,7 +1363,7 @@ export default function ManagerRegisterPage() {
               Fill out the public-facing details for your establishment.
             </p>
 
-            <CustomForm onSubmit={handleRestaurantContinue} noValidate>
+            <form onSubmit={handleRestaurantContinue} onBlur={handleFieldBlur} noValidate>
               {/* Restaurant Name */}
               <FormField
                 id="restaurantName"
@@ -1475,13 +1394,6 @@ export default function ManagerRegisterPage() {
                   required
                   value={application.restaurantDescription}
                   aria-invalid={Boolean(fieldErrors.restaurantDescription)}
-                  onInvalid={(event) => {
-                    event.preventDefault();
-                    setFieldErrors((current) => ({
-                      ...current,
-                      restaurantDescription: "Enter a restaurant description.",
-                    }));
-                  }}
                   onChange={(event) =>
                     updateField("restaurantDescription", event.target.value)
                   }
@@ -1509,13 +1421,6 @@ export default function ManagerRegisterPage() {
                   required
                   value={application.cuisineType}
                   aria-invalid={Boolean(fieldErrors.cuisineType)}
-                  onInvalid={(event) => {
-                    event.preventDefault();
-                    setFieldErrors((current) => ({
-                      ...current,
-                      cuisineType: "Choose a cuisine type.",
-                    }));
-                  }}
                   onChange={(event) =>
                     updateField("cuisineType", event.target.value)
                   }
@@ -1545,21 +1450,46 @@ export default function ManagerRegisterPage() {
                 )}
               </label>
 
-              <FormField
-                id="restaurantContact"
-                label="Restaurant Phone Number"
-                type="tel"
-                placeholder="+91 98765 43210"
-                autoComplete="tel"
-                required
-                pattern={restaurantPhonePattern}
-                patternMessage={restaurantPhoneError}
-                value={application.restaurantContact}
-                error={fieldErrors.restaurantContact}
-                onChange={(event) =>
-                  updateField("restaurantContact", event.target.value)
-                }
-              />
+              <div className="grid grid-cols-[minmax(100px,1fr)_minmax(0,2fr)] gap-3">
+                <div className="mb-4" data-validation-container>
+                  <label htmlFor="restaurantCountryCode" className="mb-2 block text-sm font-medium text-ink">
+                    Country Code
+                  </label>
+                  <select
+                    id="restaurantCountryCode"
+                    name="restaurantCountryCode"
+                    autoComplete="tel-country-code"
+                    required
+                    value={application.restaurantCountryCode}
+                    aria-invalid={Boolean(fieldErrors.restaurantCountryCode)}
+                    aria-describedby={fieldErrors.restaurantCountryCode ? "restaurantCountryCode-error" : undefined}
+                    onChange={(event) => updateField("restaurantCountryCode", event.target.value)}
+                    className={`h-12 w-full rounded-lg border bg-white px-3 text-sm text-ink outline-none transition focus:border-wine focus:ring-2 focus:ring-wine/10 ${fieldErrors.restaurantCountryCode ? "border-red-400" : "border-stone-200"}`}
+                  >
+                    {countryCallingCodes.map(({ value, label }) => (
+                      <option key={value} value={value}>{value} {label}</option>
+                    ))}
+                  </select>
+                  {fieldErrors.restaurantCountryCode && (
+                    <p id="restaurantCountryCode-error" className="mt-1.5 text-xs font-medium text-red-600" role="alert">
+                      {fieldErrors.restaurantCountryCode}
+                    </p>
+                  )}
+                </div>
+                <FormField
+                  id="restaurantContact"
+                  label="Restaurant Phone Number"
+                  type="tel"
+                  placeholder="98765 43210"
+                  autoComplete="tel-national"
+                  required
+                  value={application.restaurantContact}
+                  error={fieldErrors.restaurantContact}
+                  onChange={(event) =>
+                    updateField("restaurantContact", event.target.value)
+                  }
+                />
+              </div>
 
               {/* Address */}
               <div className="mb-5 rounded-lg border border-stone-200 bg-stone-50 p-4">
@@ -1758,7 +1688,7 @@ export default function ManagerRegisterPage() {
                   <ArrowRight size={16} />
                 </button>
               </div>
-            </CustomForm>
+            </form>
           </>
         )}
 
@@ -1773,7 +1703,7 @@ export default function ManagerRegisterPage() {
               Upload official merchant documents as PDF files only (Max 5MB).
             </p>
 
-            <CustomForm onSubmit={handleDocumentsContinue} noValidate>
+            <form onSubmit={handleDocumentsContinue} onBlur={handleFieldBlur} noValidate>
               <DocumentCard
                 title="FSSAI License / Food Safety"
                 description="Upload your food safety or FSSAI license as a PDF."
@@ -1859,7 +1789,7 @@ export default function ManagerRegisterPage() {
                   <ArrowRight size={16} />
                 </button>
               </div>
-            </CustomForm>
+            </form>
           </>
         )}
         {/* STEP 4 */}
@@ -1870,10 +1800,10 @@ export default function ManagerRegisterPage() {
             </h2>
 
             <p className="mb-7 mt-2 text-sm leading-6 text-stone-500">
-              Configure weekly timing schedules and floor capabilities.
+              Configure your restaurant’s weekly operating hours.
             </p>
 
-            <CustomForm onSubmit={handleOperatingHoursContinue} noValidate>
+            <form onSubmit={handleOperatingHoursContinue} onBlur={handleFieldBlur} noValidate>
               {/* Weekly Timing Schedule */}
               <div className="mb-7">
                 <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-ink">
@@ -1892,6 +1822,7 @@ export default function ManagerRegisterPage() {
 
                       <input
                         type="time"
+                        data-validation-field={`${day}Hours`}
                         value={schedule.open}
                         disabled={!schedule.enabled}
                         required={schedule.enabled}
@@ -1909,6 +1840,7 @@ export default function ManagerRegisterPage() {
 
                       <input
                         type="time"
+                        data-validation-field={`${day}Hours`}
                         value={schedule.close}
                         disabled={!schedule.enabled}
                         required={schedule.enabled}
@@ -1946,48 +1878,6 @@ export default function ManagerRegisterPage() {
                       )}
                     </div>
                   ))}
-                </div>
-              </div>
-
-              {/* Seating & Capacity */}
-              <div className="mb-7">
-                <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-ink">
-                  Seating & Capacity
-                </h3>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <FormField
-                    id="capacity"
-                    label="Total Seating Capacity"
-                    type="number"
-                    placeholder="45"
-                    required
-                    min={1}
-                    value={capacity}
-                    error={fieldErrors.capacity}
-                    onChange={(event) => {
-                      setCapacity(event.target.value);
-                      setFieldErrors((current) => ({
-                        ...current,
-                        capacity: "",
-                      }));
-                    }}
-                  />
-
-                  <FormField
-                    id="tables"
-                    label="No. of Dining Tables"
-                    type="number"
-                    placeholder="12"
-                    required
-                    min={1}
-                    value={tables}
-                    error={fieldErrors.tables}
-                    onChange={(event) => {
-                      setTables(event.target.value);
-                      setFieldErrors((current) => ({ ...current, tables: "" }));
-                    }}
-                  />
                 </div>
               </div>
 
@@ -2034,7 +1924,7 @@ export default function ManagerRegisterPage() {
                   <ArrowRight size={16} />
                 </button>
               </div>
-            </CustomForm>
+            </form>
           </>
         )}
         {/* STEP 5 - REVIEW */}
@@ -2049,7 +1939,7 @@ export default function ManagerRegisterPage() {
               application for admin approval.
             </p>
 
-            <CustomForm onSubmit={handleFinalSubmit}>
+            <form onSubmit={handleFinalSubmit} noValidate>
               {/* Personal Details */}
               <section className="mb-5 rounded-xl border border-stone-200 bg-white">
                 <div className="flex items-center justify-between border-b border-stone-100 px-5 py-4">
@@ -2124,7 +2014,9 @@ export default function ManagerRegisterPage() {
 
                     <ReviewItem
                       label="Restaurant Contact"
-                      value={application.restaurantContact}
+                      value={formatRestaurantPhoneNumber(
+                        application.restaurantCountryCode, application.restaurantContact,
+                      )}
                     />
 
                     <ReviewItem
@@ -2239,40 +2131,6 @@ export default function ManagerRegisterPage() {
                 </div>
               </section>
 
-              {/* Capacity */}
-              <section className="mb-5 rounded-xl border border-stone-200 bg-white">
-                <div className="flex items-center justify-between border-b border-stone-100 px-5 py-4">
-                  <div>
-                    <h3 className="text-sm font-semibold text-ink">
-                      Seating & Capacity
-                    </h3>
-                    <p className="mt-1 text-xs text-stone-400">
-                      Restaurant floor information
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setStep(4)}
-                    className="text-xs font-semibold text-wine hover:text-ink"
-                  >
-                    Edit
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 px-5 py-5 sm:grid-cols-2">
-                  <ReviewItem
-                    label="Total Seating Capacity"
-                    value={`${capacity} seats`}
-                  />
-
-                  <ReviewItem
-                    label="Dining Tables"
-                    value={`${tables} tables`}
-                  />
-                </div>
-              </section>
-
               {/* Confirmation */}
               <div className="mb-6 flex gap-3 rounded-xl bg-stone-50 p-4">
                 <ShieldCheck size={19} className="mt-0.5 shrink-0 text-wine" />
@@ -2312,7 +2170,7 @@ export default function ManagerRegisterPage() {
                   {!submitting && <ArrowRight size={16} />}
                 </button>
               </div>
-            </CustomForm>
+            </form>
           </>
         )}
       </div>

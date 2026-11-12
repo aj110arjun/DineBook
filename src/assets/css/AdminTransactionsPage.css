@@ -72,7 +72,8 @@
   grid-column: span 2;
 }
 .admin-transactions-panel .transaction-field input,
-.admin-transactions-panel .transaction-field select {
+.admin-transactions-panel .transaction-field select,
+.admin-transactions-panel .transaction-field .custom-date-trigger {
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
@@ -85,10 +86,15 @@
   font: inherit;
   font-size: 14px;
 }
+.admin-transactions-panel .transaction-field .custom-date-trigger {
+  min-height: 44px;
+  background-image: none;
+  box-shadow: none;
+}
 .transaction-field input::placeholder {
   color: var(--color-text-muted);
 }
-.transaction-field :is(input, select):focus-visible,
+.transaction-field :is(input, select, .custom-date-trigger):focus-visible,
 .transactions-reset:focus-visible {
   outline: 2px solid var(--color-primary, #b76b79);
   outline-offset: 3px;

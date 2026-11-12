@@ -1,3 +1,4 @@
+import { usePageState } from "../../state/usePageState.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -10,10 +11,17 @@ import { API_BASE, requestJson } from "../../lib/authApi.js";
 
 export default function CustomerChangePasswordPage() {
   const navigate = useNavigate();
-  const [checking, setChecking] = useState(true);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [
+    { checking, error, success, busy },
+    {
+      checking: setChecking, error: setError, success: setSuccess, busy: setBusy,
+    },
+  ] = usePageState("CustomerChangePasswordPage", () => ({
+    checking: true,
+    error: "",
+    success: "",
+    busy: false,
+  }));
   const [newPassword, setNewPassword] = useState("");
 
   useEffect(() => {

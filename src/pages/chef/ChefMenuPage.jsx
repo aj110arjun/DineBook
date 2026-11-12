@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { usePageState } from "../../state/usePageState.js";
+import { useEffect, useMemo } from "react";
 import { ArrowLeft, Search, Utensils } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import ChefLayout from "../../components/chef/ChefLayout.jsx";
@@ -7,11 +8,19 @@ import { requestJson } from "../../lib/authApi.js";
 export default function ChefMenuPage() {
   const { foodId } = useParams();
   const navigate = useNavigate();
-  const [categories, setCategories] = useState([]);
-  const [query, setQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("ALL");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [
+    { categories, query, categoryFilter, loading, error },
+    {
+      categories: setCategories, query: setQuery,
+      categoryFilter: setCategoryFilter, loading: setLoading, error: setError,
+    },
+  ] = usePageState("ChefMenuPage", () => ({
+    categories: [],
+    query: "",
+    categoryFilter: "ALL",
+    loading: true,
+    error: "",
+  }));
 
   useEffect(() => {
     let active = true;

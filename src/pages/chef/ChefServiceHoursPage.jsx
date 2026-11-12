@@ -1,5 +1,6 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate } from "../../lib/localDate.js";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Clock3 } from "lucide-react";
 import ChefLayout from "../../components/chef/ChefLayout.jsx";
 import { requestJson } from "../../lib/authApi.js";
@@ -7,9 +8,14 @@ import { requestJson } from "../../lib/authApi.js";
 const displayDay = (day) => day.charAt(0).toUpperCase() + day.slice(1);
 
 export default function ChefServiceHoursPage() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [
+    { data, loading, error },
+    { data: setData, loading: setLoading, error: setError },
+  ] = usePageState("ChefServiceHoursPage", () => ({
+    data: null,
+    loading: true,
+    error: "",
+  }));
   useEffect(() => {
     let active = true;
     const load = () =>

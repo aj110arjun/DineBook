@@ -1,5 +1,6 @@
-import { formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { usePageState } from "../../state/usePageState.js";
+import { formatLocalDate, formatLocalDateTime, shiftLocalMonth } from "../../lib/localDate.js";
+import { useEffect, useMemo, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   CalendarDays,
@@ -56,46 +57,56 @@ export default function OrdersPage({ mode = "customer" }) {
   const location = useLocation();
   const navigate = useNavigate();
   const initialParams = new URLSearchParams(location.search);
-  const [orders, setOrders] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [totalGuests, setTotalGuests] = useState(0);
-  const [calendarOrderCounts, setCalendarOrderCounts] = useState({});
-  const [calendarStatuses, setCalendarStatuses] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState("");
-  const [notice, setNotice] = useState("");
-  const [pendingAction, setPendingAction] = useState(null);
-  const [actionReason, setActionReason] = useState("");
-  const [search, setSearch] = useState(() => initialParams.get("search") || "");
-  const [headerUser, setHeaderUser] = useState(null);
-  const [managerStatusFilter, setManagerStatusFilter] = useState(
-    () => initialParams.get("status") || "ALL",
-  );
-  const [statusFilter, setStatusFilter] = useState(
-    mode === "chef" ? "ACTIVE" : "ALL",
-  );
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [sort, setSort] = useState(mode === "chef" ? "oldest" : "newest");
-  const [page, setPage] = useState(() =>
-    Math.max(1, Number(initialParams.get("page") || 1)),
-  );
-  const [pageSize, setPageSize] = useState(() =>
-    Math.max(1, Number(initialParams.get("pageSize") || 10)),
-  );
-  const [selectedOrderDate, setSelectedOrderDate] = useState(
-    () => initialParams.get("date") || dateKey(new Date()),
-  );
-  const [orderMonth, setOrderMonth] = useState(() => {
-    const value = initialParams.get("month");
-    if (value && /^\d{4}-\d{2}$/.test(value)) {
-      const [year, month] = value.split("-").map(Number);
-      return new Date(year, month - 1, 1);
-    }
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), 1);
-  });
+  const [
+    {
+      orders, total, totalGuests, calendarOrderCounts, calendarStatuses, loading,
+      error, busy, notice, pendingAction, actionReason, search, headerUser,
+      managerStatusFilter, statusFilter, dateFrom, dateTo, sort, page, pageSize,
+      selectedOrderDate, orderMonthTime,
+    },
+    {
+      orders: setOrders, total: setTotal, totalGuests: setTotalGuests,
+      calendarOrderCounts: setCalendarOrderCounts,
+      calendarStatuses: setCalendarStatuses, loading: setLoading, error: setError,
+      busy: setBusy, notice: setNotice, pendingAction: setPendingAction,
+      actionReason: setActionReason, search: setSearch, headerUser: setHeaderUser,
+      managerStatusFilter: setManagerStatusFilter, statusFilter: setStatusFilter,
+      dateFrom: setDateFrom, dateTo: setDateTo, sort: setSort, page: setPage,
+      pageSize: setPageSize, selectedOrderDate: setSelectedOrderDate,
+      orderMonthTime: setOrderMonthTime,
+    },
+  ] = usePageState("OrdersPage", () => ({
+    orders: [],
+    total: 0,
+    totalGuests: 0,
+    calendarOrderCounts: {},
+    calendarStatuses: {},
+    loading: true,
+    error: "",
+    busy: "",
+    notice: "",
+    pendingAction: null,
+    actionReason: "",
+    search: initialParams.get("search") || "",
+    headerUser: null,
+    managerStatusFilter: initialParams.get("status") || "ALL",
+    statusFilter: mode === "chef" ? "ACTIVE" : "ALL",
+    dateFrom: "",
+    dateTo: "",
+    sort: mode === "chef" ? "oldest" : "newest",
+    page: Math.max(1, Number(initialParams.get("page") || 1)),
+    pageSize: Math.max(1, Number(initialParams.get("pageSize") || 10)),
+    selectedOrderDate: initialParams.get("date") || dateKey(new Date()),
+    orderMonthTime: (() => {
+      const value = initialParams.get("month");
+      if (value && /^\d{4}-\d{2}$/.test(value)) {
+        const [year, month] = value.split("-").map(Number);
+        return new Date(year, month - 1, 1).getTime();
+      }
+      return shiftLocalMonth(Date.now());
+    })(),
+  }));
+  const orderMonth = useMemo(() => new Date(orderMonthTime), [orderMonthTime]);
   const pageFilterKey = JSON.stringify([
     search,
     statusFilter,
@@ -212,13 +223,17 @@ export default function OrdersPage({ mode = "customer" }) {
         .catch(() => setHeaderUser(null));
   }, [mode]);
 
-  async function updateOrder(orderId, status, reason = "") {
+  async function updateOrder(orderId, status, reason = "", deskRefundConfirmed = false) {
     setBusy(orderId);
     setNotice("");
     try {
       await requestJson(`${endpoint}/${orderId}/status`, {
         method: "PATCH",
-        body: JSON.stringify({ status, reason: reason.trim() || null }),
+        body: JSON.stringify({
+          status,
+          reason: reason.trim() || null,
+          desk_refund_confirmed: deskRefundConfirmed,
+        }),
       });
       await load();
       if (status === "SERVED") setNotice("Order marked as served.");
@@ -248,13 +263,19 @@ export default function OrdersPage({ mode = "customer" }) {
     }
   }
 
+  const deskRefundRequired =
+    mode === "manager" &&
+    pendingAction?.order.payment_method === "PAY_AT_DESK" &&
+    pendingAction.order.payment_status === "PAID" &&
+    !pendingAction.order.customer_id;
+
   async function confirmOrderAction(reason = "") {
     if (!pendingAction) return;
     const { order, status, kind } = pendingAction;
     const completed =
       kind === "cancel"
         ? await cancelOrder(order.id, reason)
-        : await updateOrder(order.id, status, reason);
+        : await updateOrder(order.id, status, reason, deskRefundRequired);
     if (completed) setPendingAction(null);
   }
 
@@ -295,7 +316,9 @@ export default function OrdersPage({ mode = "customer" }) {
       {(mode === "admin" || mode === "customer" || mode === "chef") && (
         <div className="orders-search">
           <label>
-            Search order ID, restaurant, customer, or item
+            {mode === "chef"
+              ? "Search order ID, customer, or item"
+              : "Search order ID, restaurant, customer, or item"}
             <input
               type="search"
               value={search}
@@ -310,7 +333,7 @@ export default function OrdersPage({ mode = "customer" }) {
               onChange={(event) => setStatusFilter(event.target.value)}
             >
               {mode === "chef" && (
-                <option value="ACTIVE">Active kitchen orders</option>
+                <option value="ACTIVE">Active orders</option>
               )}
               <option value="ALL">All statuses</option>
               {(mode === "chef"
@@ -421,7 +444,7 @@ export default function OrdersPage({ mode = "customer" }) {
                     <h2>
                       {mode === "customer"
                         ? order.restaurant_name
-                        : `Order from ${order.customer_name}`}
+                        : `Order from ${order.customer_name || "Guest"}`}
                     </h2>
                     <small>{formatLocalDateTime(order.created_at, { timeStyle: "medium" })}</small>
                   </div>
@@ -551,7 +574,13 @@ export default function OrdersPage({ mode = "customer" }) {
                             : updateOrder(order.id, status)
                         }
                       >
-                        {status === "SERVED"
+                        {busy === order.id
+                          ? "Updating…"
+                          : mode === "chef" && status === "PREPARING"
+                            ? "Start preparing"
+                            : mode === "chef" && status === "READY"
+                              ? "Mark ready"
+                              : status === "SERVED"
                           ? "Mark as served"
                           : statusLabel(status)}
                       </button>
@@ -607,14 +636,18 @@ export default function OrdersPage({ mode = "customer" }) {
               : "Cancel this order?"
           }
           description={
-            pendingAction.status === "REJECTED"
-              ? "The order will be rejected and cannot continue through preparation."
-              : "The order will be cancelled. Any eligible refund will be credited to the customer’s DineBook wallet."
+            deskRefundRequired
+              ? "Refund the guest at the desk before confirming."
+              : pendingAction.status === "REJECTED"
+                ? "The order will be rejected and cannot continue through preparation."
+                : "The order will be cancelled. Any eligible refund will be credited to the customer’s DineBook wallet."
           }
           confirmLabel={
-            pendingAction.status === "REJECTED"
-              ? "Reject order"
-              : "Cancel order"
+            deskRefundRequired
+              ? "Confirm desk refund"
+              : pendingAction.status === "REJECTED"
+                ? "Reject order"
+                : "Cancel order"
           }
           requireReason
           reasonLabel={
@@ -762,18 +795,24 @@ export default function OrdersPage({ mode = "customer" }) {
                   }).format(orderMonth)}
                 </h2>
                 <div>
+                  {mode === "chef" && (
+                    <button
+                      type="button"
+                      className="chef-orders-today"
+                      onClick={() => {
+                        const today = new Date();
+                        setSelectedOrderDate(dateKey(today));
+                        setOrderMonthTime(shiftLocalMonth(today.getTime()));
+                      }}
+                    >
+                      Today
+                    </button>
+                  )}
                   <button
                     type="button"
                     aria-label="Previous month"
                     onClick={() =>
-                      setOrderMonth(
-                        (month) =>
-                          new Date(
-                            month.getFullYear(),
-                            month.getMonth() - 1,
-                            1,
-                          ),
-                      )
+                      setOrderMonthTime((month) => shiftLocalMonth(month, -1))
                     }
                   >
                     <ChevronLeft size={18} />
@@ -782,14 +821,7 @@ export default function OrdersPage({ mode = "customer" }) {
                     type="button"
                     aria-label="Next month"
                     onClick={() =>
-                      setOrderMonth(
-                        (month) =>
-                          new Date(
-                            month.getFullYear(),
-                            month.getMonth() + 1,
-                            1,
-                          ),
-                      )
+                      setOrderMonthTime((month) => shiftLocalMonth(month, 1))
                     }
                   >
                     <ChevronRight size={18} />
@@ -829,6 +861,7 @@ export default function OrdersPage({ mode = "customer" }) {
                       disabled={!currentMonth}
                       className={`manager-orders-calendar-day${currentMonth ? "" : " outside"}${!currentMonth ? " disabled-date" : ""}${key === selectedOrderDate ? " selected" : ""}${key === dateKey(new Date()) ? " today" : ""}`}
                       onClick={() => setSelectedOrderDate(key)}
+                      aria-pressed={key === selectedOrderDate}
                       aria-label={`${formatLocalDate(day)}, ${calendarOrderCounts[key] || 0} orders`}
                     >
                       <span className="day-number">{day.getDate()}</span>

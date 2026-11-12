@@ -36,3 +36,8 @@ export function formatLocalDateTime(value, timeOptions = {}) {
   });
   return dateLabel + ", " + time;
 }
+
+export function shiftLocalMonth(value, offset = 0) {
+  const date = new Date(value);
+  return new Date(date.getFullYear(), date.getMonth() + offset, 1).getTime();
+}

@@ -1,28 +1,44 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDateTime } from "../../lib/localDate.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Printer, Plus, Trash2 } from "lucide-react";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import "../../assets/css/ManagerSpotOrderPage.css";
 
 export default function ManagerSpotOrderPage() {
-  const [floors, setFloors] = useState([]);
-  const [menu, setMenu] = useState([]);
-  const [guestName, setGuestName] = useState("");
-  const [tableId, setTableId] = useState("");
-  const [variantId, setVariantId] = useState("");
-  const [quantity, setQuantity] = useState(1);
-  const [lines, setLines] = useState([]);
-  const [order, setOrder] = useState(null);
-  const [offers, setOffers] = useState([]);
-  const [offerCode, setOfferCode] = useState("");
-  const [quote, setQuote] = useState(null);
-  const [quoteError, setQuoteError] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [serviceType, setServiceType] = useState("DINEIN");
+  const [
+    {
+      floors, menu, guestName, tableId, variantId, quantity, lines, order, offers,
+      offerCode, quote, quoteError, loading, saving, error, serviceType,
+    },
+    {
+      floors: setFloors, menu: setMenu, guestName: setGuestName,
+      tableId: setTableId, variantId: setVariantId, quantity: setQuantity,
+      lines: setLines, order: setOrder, offers: setOffers,
+      offerCode: setOfferCode, quote: setQuote, quoteError: setQuoteError,
+      loading: setLoading, saving: setSaving, error: setError,
+      serviceType: setServiceType,
+    },
+  ] = usePageState("ManagerSpotOrderPage", () => ({
+    floors: [],
+    menu: [],
+    guestName: "",
+    tableId: "",
+    variantId: "",
+    quantity: 1,
+    lines: [],
+    order: null,
+    offers: [],
+    offerCode: "",
+    quote: null,
+    quoteError: "",
+    loading: true,
+    saving: false,
+    error: "",
+    serviceType: "DINEIN",
+  }));
   const checkoutAttempt = useRef(null);
 
   useEffect(() => {

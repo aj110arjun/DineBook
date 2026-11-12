@@ -1,5 +1,5 @@
+import { usePageState } from "../../state/usePageState.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useState } from "react";
 import { ArrowLeft, ArrowRight, Mail } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../../components/auth/AuthLayout.jsx";
@@ -42,11 +42,19 @@ export default function CustomerRecoveryPage({ role = "customer" }) {
   const navigate = useNavigate();
   const config = portalSettings[role] || portalSettings.customer;
   const Layout = config.Layout;
-  const [email, setEmail] = useState("");
-  const [codeSent, setCodeSent] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
+  const [
+    { email, codeSent, busy, error, notice },
+    {
+      email: setEmail, codeSent: setCodeSent, busy: setBusy, error: setError,
+      notice: setNotice,
+    },
+  ] = usePageState("CustomerRecoveryPage", () => ({
+    email: "",
+    codeSent: false,
+    busy: false,
+    error: "",
+    notice: "",
+  }));
 
   async function requestCode(event) {
     event.preventDefault();

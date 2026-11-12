@@ -1,5 +1,5 @@
 import { formatLocalDateTime } from "../../lib/localDate.js";
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   Bell,
   BellOff,
@@ -13,8 +13,13 @@ import {
   X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { requestJson } from "../../lib/authApi.js";
-import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
+import {
+  useGetNotificationsQuery,
+  useGetUnreadCountQuery,
+  useMarkReadMutation,
+  useMarkAllReadMutation,
+} from "../../state/notificationsApi.js";
+import { useNotificationScope } from "./NotificationSession.jsx";
 import "../../assets/css/notifications.css";
 
 const PREFIX = {
@@ -57,73 +62,32 @@ const ago = (value) => {
 
 export default function NotificationBell({ role, enabled = true }) {
   const [open, setOpen] = useState(false);
-  const [items, setItems] = useState([]);
-  const [count, setCount] = useState(0);
-  const [error, setError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [filter, setFilter] = useState("unread");
-  const [loading, setLoading] = useState(true);
-  const [marking, setMarking] = useState(false);
   const wrapRef = useRef(null);
   const bellRef = useRef(null);
-  const requestId = useRef(0);
-  const refreshTimer = useRef(null);
-  const refreshInFlight = useRef(false);
-  const pendingRefresh = useRef(null);
   const panelId = useId();
   const navigate = useNavigate();
-  const refresh = useCallback(async () => {
-    if (!enabled) return;
-    if (refreshInFlight.current) {
-      // Keep only the latest refresh, including its current filter.
-      pendingRefresh.current = refresh;
-      return;
-    }
-    refreshInFlight.current = true;
-    const currentRequest = ++requestId.current;
-    setLoading(true);
-    try {
-      const [list, unread] = await Promise.all([
-        requestJson(
-          `/api/notifications?limit=8${filter === "unread" ? "&unread=true" : ""}`,
-        ),
-        requestJson("/api/notifications/unread-count"),
-      ]);
-      if (currentRequest !== requestId.current) return;
-      setItems(list.items || []);
-      setCount(unread.count || 0);
-      setError("");
-    } catch (e) {
-      if (currentRequest === requestId.current) setError(e.message);
-    } finally {
-      refreshInFlight.current = false;
-      if (currentRequest === requestId.current) setLoading(false);
-      const nextRefresh = pendingRefresh.current;
-      pendingRefresh.current = null;
-      if (nextRefresh) await nextRefresh();
-    }
-  }, [enabled, filter]);
-  const scheduleRefresh = useCallback(() => {
-    window.clearTimeout(refreshTimer.current);
-    refreshTimer.current = window.setTimeout(refresh, 400);
-  }, [refresh]);
+  const scope = useNotificationScope();
+  const skip = !enabled || !scope;
+  const list = useGetNotificationsQuery(
+    { scope, unread: filter === "unread" },
+    { skip },
+  );
+  const unread = useGetUnreadCountQuery(scope, { skip });
+  const [markRead] = useMarkReadMutation();
+  const [markAllRead, { isLoading: marking }] = useMarkAllReadMutation();
+  const items = list.currentData?.items?.slice(0, 8) || [];
+  const count = unread.currentData?.count || 0;
+  const loading = list.isFetching || unread.isFetching;
+  const error = actionError || list.error?.message || unread.error?.message;
 
-  useRealtimeEvents({
-    enabled,
-    onEvent: (event) => {
-      if (event?.event_type === "notification.created") scheduleRefresh();
-    },
-    onReconnect: scheduleRefresh,
-  });
-  useEffect(() => {
-    // Invalidate results for the previous filter or a previous mount.
-    requestId.current += 1;
-    refresh();
-    return () => {
-      window.clearTimeout(refreshTimer.current);
-      pendingRefresh.current = null;
-      requestId.current += 1;
-    };
-  }, [refresh]);
+  function refresh() {
+    if (skip) return;
+    setActionError("");
+    list.refetch();
+    unread.refetch();
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -145,28 +109,22 @@ export default function NotificationBell({ role, enabled = true }) {
   }, [open]);
 
   async function markAll() {
-    setMarking(true);
+    setActionError("");
     try {
-      await requestJson("/api/notifications/read-all", { method: "PATCH" });
-      await refresh();
+      await markAllRead(scope).unwrap();
     } catch (e) {
-      setError(e.message);
-    } finally {
-      setMarking(false);
+      setActionError(e.message);
     }
   }
   async function openItem(item) {
+    setActionError("");
     try {
-      if (!item.is_read)
-        await requestJson(`/api/notifications/${item.id}/read`, {
-          method: "PATCH",
-        });
+      if (!item.is_read) await markRead({ scope, id: item.id }).unwrap();
     } catch (e) {
-      setError(e.message);
+      setActionError(e.message);
     }
     setOpen(false);
     navigate(pathFor(item, role));
-    refresh();
   }
   if (!enabled) return null;
   return (

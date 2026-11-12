@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { usePageState } from "../../state/usePageState.js";
 import { useNavigate } from "react-router-dom";
 import AdminPrimaryNav from "../../components/admin/AdminPrimaryNav.jsx";
 import NotificationBell from "../../components/notifications/NotificationBell.jsx";
@@ -55,7 +55,12 @@ const activities = [
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [
+    { sidebarOpen },
+    { sidebarOpen: setSidebarOpen },
+  ] = usePageState("AdminDashboardPage", () => ({
+    sidebarOpen: false,
+  }));
 
   async function handleLogout() {
     try {

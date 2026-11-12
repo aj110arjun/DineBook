@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { usePageState } from "../../state/usePageState.js";
+import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
 import CuisineGrid from "../../components/landing/CuisineGrid.jsx";
@@ -23,13 +24,27 @@ const cuisineMatches = {
 
 export default function CustomerLandingPage() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [restaurants, setRestaurants] = useState([]);
-  const [restaurantsLoading, setRestaurantsLoading] = useState(true);
-  const [restaurantsError, setRestaurantsError] = useState("");
-  const [restaurantRefresh, setRestaurantRefresh] = useState(0);
-  const [selectedCuisine, setSelectedCuisine] = useState("");
+  const [
+    {
+      user, loading, restaurants, restaurantsLoading, restaurantsError,
+      restaurantRefresh, selectedCuisine,
+    },
+    {
+      user: setUser, loading: setLoading, restaurants: setRestaurants,
+      restaurantsLoading: setRestaurantsLoading,
+      restaurantsError: setRestaurantsError,
+      restaurantRefresh: setRestaurantRefresh,
+      selectedCuisine: setSelectedCuisine,
+    },
+  ] = usePageState("CustomerLandingPage", () => ({
+    user: null,
+    loading: true,
+    restaurants: [],
+    restaurantsLoading: true,
+    restaurantsError: "",
+    restaurantRefresh: 0,
+    selectedCuisine: "",
+  }));
   const isDemoSession =
     import.meta.env.DEV && sessionStorage.getItem(demoSessionKey) === "active";
 

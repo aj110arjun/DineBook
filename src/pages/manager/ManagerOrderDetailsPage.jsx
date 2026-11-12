@@ -1,5 +1,6 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import {
   ArrowLeft,
   CalendarDays,
@@ -27,13 +28,22 @@ export default function ManagerOrderDetailsPage() {
   const { orderId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const [order, setOrder] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState("");
-  const [confirmAction, setConfirmAction] = useState("");
-  const [actionReason, setActionReason] = useState("");
+  const [
+    { order, loading, error, busy, notice, confirmAction, actionReason },
+    {
+      order: setOrder, loading: setLoading, error: setError, busy: setBusy,
+      notice: setNotice, confirmAction: setConfirmAction,
+      actionReason: setActionReason,
+    },
+  ] = usePageState("ManagerOrderDetailsPage", () => ({
+    order: null,
+    loading: true,
+    error: "",
+    busy: false,
+    notice: "",
+    confirmAction: "",
+    actionReason: "",
+  }));
   const backToOrders =
     location.state?.returnTo ||
     new URLSearchParams(location.search).get("returnTo") ||
@@ -73,12 +83,16 @@ export default function ManagerOrderDetailsPage() {
     return [];
   }, [order]);
   const canCancel = ["PLACED", "ACCEPTED", "PREPARING"].includes(order?.status);
+  const deskRefundRequired =
+    order?.payment_method === "PAY_AT_DESK" &&
+    order.payment_status === "PAID" &&
+    !order.customer_id;
   const canMarkPaid =
     order?.payment_method === "PAY_AT_DESK" &&
     order?.payment_status === "PENDING" &&
     !["CANCELLED", "REJECTED"].includes(order?.status);
 
-  async function updateStatus(status, reason = "") {
+  async function updateStatus(status, reason = "", deskRefundConfirmed = false) {
     setBusy(true);
     setError("");
     setNotice("");
@@ -87,7 +101,11 @@ export default function ManagerOrderDetailsPage() {
         `/api/manager/orders/${encodeURIComponent(order.id)}/status`,
         {
           method: "PATCH",
-          body: JSON.stringify({ status, reason: reason.trim() || null }),
+          body: JSON.stringify({
+            status,
+            reason: reason.trim() || null,
+            desk_refund_confirmed: deskRefundConfirmed,
+          }),
         },
       );
       setOrder(result);
@@ -465,12 +483,16 @@ export default function ManagerOrderDetailsPage() {
                       : "Cancel this order?"
                   }
                   description={
-                    confirmAction === "reject"
-                      ? "The order will be rejected and cannot continue through preparation."
-                      : "The order will be cancelled. Any eligible refund will be credited to the customer’s DineBook wallet."
+                    deskRefundRequired
+                      ? "Refund the guest at the desk before confirming."
+                      : confirmAction === "reject"
+                        ? "The order will be rejected and cannot continue through preparation."
+                        : "The order will be cancelled. Any eligible refund will be credited to the customer’s DineBook wallet."
                   }
                   confirmLabel={
-                    confirmAction === "reject" ? "Reject order" : "Cancel order"
+                    deskRefundRequired
+                      ? "Confirm desk refund"
+                      : confirmAction === "reject" ? "Reject order" : "Cancel order"
                   }
                   requireReason
                   reasonLabel={
@@ -488,6 +510,7 @@ export default function ManagerOrderDetailsPage() {
                     updateStatus(
                       confirmAction === "reject" ? "REJECTED" : "CANCELLED",
                       reason,
+                      deskRefundRequired,
                     )
                   }
                 />

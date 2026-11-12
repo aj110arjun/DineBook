@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { usePageState } from "../../state/usePageState.js";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   CalendarDays,
@@ -70,8 +71,13 @@ const popularItems = [
 
 export default function ManagerDashboardPage() {
   const navigate = useNavigate();
-  const [managerName, setManagerName] = useState("");
-  const [restaurantName, setRestaurantName] = useState("");
+  const [
+    { managerName, restaurantName },
+    { managerName: setManagerName, restaurantName: setRestaurantName },
+  ] = usePageState("ManagerDashboardPage", () => ({
+    managerName: "",
+    restaurantName: "",
+  }));
   useEffect(() => {
     let active = true;
     requestJson("/api/auth/manager/me")

@@ -1,13 +1,22 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate } from "../../lib/localDate.js";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { requestJson } from "../../lib/authApi.js";
 import ChefLayout from "../../components/chef/ChefLayout.jsx";
 import "../../assets/css/ReviewsPage.css";
 export default function ChefReviewsPage() {
-  const [data, setData] = useState({ items: [], total: 0 }),
-    [rating, setRating] = useState(""),
-    [page, setPage] = useState(0),
-    [error, setError] = useState("");
+  const [
+    { data, rating, page, error },
+    { data: setData, rating: setRating, page: setPage, error: setError },
+  ] = usePageState("ChefReviewsPage", () => ({
+    data: {
+      items: [],
+      total: 0
+    },
+    rating: "",
+    page: 0,
+    error: "",
+  }));
   useEffect(() => {
     requestJson(
       `/api/chef/reviews?offset=${page * 20}&limit=20${rating ? `&rating=${rating}` : ""}`,

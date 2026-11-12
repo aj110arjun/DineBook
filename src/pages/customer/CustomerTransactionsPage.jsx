@@ -1,5 +1,6 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDateTime } from "../../lib/localDate.js";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { CalendarDays, CreditCard, Search } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import Pagination from "../../components/Pagination.jsx";
@@ -21,18 +22,31 @@ const statusLabel = (value) =>
 
 export default function CustomerTransactionsPage() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [transactions, setTransactions] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [query, setQuery] = useState("");
-  const [type, setType] = useState("ALL");
-  const [status, setStatus] = useState("ALL");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [busy, setBusy] = useState(true);
-  const [error, setError] = useState("");
+  const [
+    {
+      user, transactions, total, query, type, status, dateFrom, dateTo, page,
+      pageSize, busy, error,
+    },
+    {
+      user: setUser, transactions: setTransactions, total: setTotal,
+      query: setQuery, type: setType, status: setStatus, dateFrom: setDateFrom,
+      dateTo: setDateTo, page: setPage, pageSize: setPageSize, busy: setBusy,
+      error: setError,
+    },
+  ] = usePageState("CustomerTransactionsPage", () => ({
+    user: null,
+    transactions: [],
+    total: 0,
+    query: "",
+    type: "ALL",
+    status: "ALL",
+    dateFrom: "",
+    dateTo: "",
+    page: 1,
+    pageSize: 10,
+    busy: true,
+    error: "",
+  }));
 
   useEffect(() => {
     let alive = true;

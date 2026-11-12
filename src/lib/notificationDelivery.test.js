@@ -9,7 +9,7 @@ test("recovers a wallet toast missed by the live stream without replaying histor
   const delivered = [];
   const old = { ...credit, id: "old", created_at: "2026-11-08T07:59:59Z" };
   const delivery = createNotificationDelivery({ startedAt,
-    request: async () => ({ items: [credit, old] }),
+    loadRecent: async () => ({ items: [credit, old] }),
     onNotification: (item) => delivered.push(item),
   });
   await delivery.refresh();
@@ -22,10 +22,10 @@ test("recovers a wallet toast missed by the live stream without replaying histor
 test("recovers a failed detail fetch through the list API", async () => {
   const delivered = [];
   const delivery = createNotificationDelivery({ startedAt,
-    request: async (path) => {
-      if (!path.includes("?")) throw new Error("Temporary failure");
-      return { items: [credit] };
+    loadNotification: async () => {
+      throw new Error("Temporary failure");
     },
+    loadRecent: async () => ({ items: [credit] }),
     onNotification: (item) => delivered.push(item),
   });
   await delivery.receive(credit.id);
@@ -38,11 +38,16 @@ test("retries temporary failures and handles UTC timestamps without a suffix", a
   let available = false;
   const delivered = [];
   const item = { ...credit, created_at: "2026-11-08T08:00:01" };
+  async function loadRecent() {
+    if (!available) throw new Error("Offline");
+    return { items: [item] };
+  }
   const delivery = createNotificationDelivery({ startedAt,
-    request: async () => {
-      if (!available) throw new Error("Offline");
-      return { items: [item] };
+    loadNotification: async () => {
+      const result = await loadRecent();
+      return result.items[0];
     },
+    loadRecent,
     onNotification: (notification) => delivered.push(notification),
   });
   await delivery.receive(item.id);
@@ -56,7 +61,8 @@ test("retries temporary failures and handles UTC timestamps without a suffix", a
 test("simultaneous live and REST delivery only toast once", async () => {
   const delivered = [];
   const delivery = createNotificationDelivery({ startedAt,
-    request: async (path) => path.includes("?") ? { items: [credit] } : credit,
+    loadRecent: async () => ({ items: [credit] }),
+    loadNotification: async () => credit,
     onNotification: (item) => delivered.push(item),
   });
   await Promise.all([delivery.receive(credit.id), delivery.receive(credit.id), delivery.refresh()]);
@@ -69,8 +75,8 @@ test("unmount aborts pending requests and prevents late toasts", async () => {
   let signal;
   const delivered = [];
   const delivery = createNotificationDelivery({ startedAt,
-    request: (_path, options) => {
-      signal = options.signal;
+    loadNotification: (_id, requestSignal) => {
+      signal = requestSignal;
       return new Promise((resolve) => { finish = resolve; });
     },
     onNotification: (item) => delivered.push(item),

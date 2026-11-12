@@ -1,3 +1,4 @@
+import { usePageState } from "../../state/usePageState.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -20,8 +21,13 @@ import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
 import { requestJson } from "../../lib/authApi.js";
 
 function CategoryForm({ category, onCancel, onSaved }) {
-  const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [
+    { error, saving },
+    { error: setError, saving: setSaving },
+  ] = usePageState("CategoryForm", () => ({
+    error: "",
+    saving: false,
+  }));
   async function submit(event) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -115,8 +121,13 @@ function CategoryForm({ category, onCancel, onSaved }) {
 }
 
 function FoodForm({ food, categories, initialCategoryId, onCancel, onSaved }) {
-  const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [
+    { error, saving },
+    { error: setError, saving: setSaving },
+  ] = usePageState("FoodForm", () => ({
+    error: "",
+    saving: false,
+  }));
   async function submit(event) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -225,12 +236,21 @@ function FoodForm({ food, categories, initialCategoryId, onCancel, onSaved }) {
 }
 
 function FoodExtras({ food, onChanged, defaultOpen = false }) {
-  const [open, setOpen] = useState(defaultOpen);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [imageMessage, setImageMessage] = useState("");
-  const [editing, setEditing] = useState(null);
-  const [confirmation, setConfirmation] = useState(null);
+  const [
+    { open, busy, error, imageMessage, editing, confirmation },
+    {
+      open: setOpen, busy: setBusy, error: setError,
+      imageMessage: setImageMessage, editing: setEditing,
+      confirmation: setConfirmation,
+    },
+  ] = usePageState("FoodExtras", () => ({
+    open: defaultOpen,
+    busy: false,
+    error: "",
+    imageMessage: "",
+    editing: null,
+    confirmation: null,
+  }));
   const [cropFile, setCropFile] = useState(null);
   async function saveVariant(event) {
     event.preventDefault();
@@ -539,16 +559,29 @@ function FoodExtras({ food, onChanged, defaultOpen = false }) {
 export default function ManagerMenuPage() {
   const navigate = useNavigate();
   const { foodId } = useParams();
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [query, setQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("ALL");
-  const [availabilityFilter, setAvailabilityFilter] = useState("ALL");
-  const [menuSort, setMenuSort] = useState("name");
-  const [modal, setModal] = useState(null);
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [busyId, setBusyId] = useState("");
+  const [
+    {
+      categories, loading, error, query, categoryFilter, availabilityFilter,
+      menuSort, modal, deleteTarget, busyId,
+    },
+    {
+      categories: setCategories, loading: setLoading, error: setError,
+      query: setQuery, categoryFilter: setCategoryFilter,
+      availabilityFilter: setAvailabilityFilter, menuSort: setMenuSort,
+      modal: setModal, deleteTarget: setDeleteTarget, busyId: setBusyId,
+    },
+  ] = usePageState("ManagerMenuPage", () => ({
+    categories: [],
+    loading: true,
+    error: "",
+    query: "",
+    categoryFilter: "ALL",
+    availabilityFilter: "ALL",
+    menuSort: "name",
+    modal: null,
+    deleteTarget: null,
+    busyId: "",
+  }));
   const loadMenu = useCallback(async () => {
     setLoading(true);
     try {

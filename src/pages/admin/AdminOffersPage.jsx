@@ -1,21 +1,35 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
 import { requestJson } from "../../lib/authApi.js";
 
 export default function AdminOffersPage() {
-  const [tab, setTab] = useState("offers");
-  const [rows, setRows] = useState([]);
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [page, setPage] = useState(0);
-  const [total, setTotal] = useState(0);
-  const [discountType, setDiscountType] = useState("");
-  const [restaurantId, setRestaurantId] = useState("");
-  const [validFrom, setValidFrom] = useState("");
-  const [validTo, setValidTo] = useState("");
+  const [
+    {
+      tab, rows, search, status, loading, error, page, total, discountType,
+      restaurantId, validFrom, validTo,
+    },
+    {
+      tab: setTab, rows: setRows, search: setSearch, status: setStatus,
+      loading: setLoading, error: setError, page: setPage, total: setTotal,
+      discountType: setDiscountType, restaurantId: setRestaurantId,
+      validFrom: setValidFrom, validTo: setValidTo,
+    },
+  ] = usePageState("AdminOffersPage", () => ({
+    tab: "offers",
+    rows: [],
+    search: "",
+    status: "",
+    loading: false,
+    error: "",
+    page: 0,
+    total: 0,
+    discountType: "",
+    restaurantId: "",
+    validFrom: "",
+    validTo: "",
+  }));
   useEffect(() => {
     let active = true;
     setLoading(true);

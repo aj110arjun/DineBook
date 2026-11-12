@@ -1,5 +1,5 @@
+import { usePageState } from "../../state/usePageState.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import ChefAuthLayout from "../../components/auth/ChefAuthLayout.jsx";
 import { PasswordField } from "../../components/auth/FormField.jsx";
@@ -8,8 +8,13 @@ import { requestJson } from "../../lib/authApi.js";
 
 export default function ChefChangePasswordPage() {
   const { refreshChef } = useOutletContext();
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [
+    { error, busy },
+    { error: setError, busy: setBusy },
+  ] = usePageState("ChefChangePasswordPage", () => ({
+    error: "",
+    busy: false,
+  }));
 
   async function handleSubmit(event) {
     event.preventDefault();

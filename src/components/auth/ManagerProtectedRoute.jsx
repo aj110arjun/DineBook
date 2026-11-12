@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { requestJson } from "../../lib/authApi.js";
-import NotificationToasts from "../notifications/NotificationToasts.jsx";
+import NotificationSession from "../notifications/NotificationSession.jsx";
 
 export default function ManagerProtectedRoute() {
   const [checking, setChecking] = useState(true);
@@ -70,9 +70,8 @@ export default function ManagerProtectedRoute() {
   }
 
   return (
-    <>
-      <NotificationToasts />
+    <NotificationSession>
       <Outlet />
-    </>
+    </NotificationSession>
   );
 }

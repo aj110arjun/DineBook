@@ -1,3 +1,4 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDateTime } from "../../lib/localDate.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useEffect, useState, useRef } from "react";
@@ -35,25 +36,50 @@ function loadRazorpayCheckout() {
 
 export default function CustomerWalletPage() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [wallet, setWallet] = useState(null);
-  const [error, setError] = useState("");
-  const [amount, setAmount] = useState("500");
-  const [topupBusy, setTopupBusy] = useState(false);
-  const [notice, setNotice] = useState("");
+  const [
+    { user, wallet, error, amount, topupBusy, notice },
+    {
+      user: setUser, wallet: setWallet, error: setError, amount: setAmount,
+      topupBusy: setTopupBusy, notice: setNotice,
+    },
+  ] = usePageState("CustomerWalletPage", () => ({
+    user: null,
+    wallet: null,
+    error: "",
+    amount: "500",
+    topupBusy: false,
+    notice: "",
+  }));
   const [pendingVerification, setPendingVerification] = useState(null);
-  const [activityQuery, setActivityQuery] = useState("");
-  const [activityType, setActivityType] = useState("ALL");
-  const [activityFrom, setActivityFrom] = useState("");
-  const [activityTo, setActivityTo] = useState("");
-  const [activitySort, setActivitySort] = useState("newest");
-  const [activityPage, setActivityPage] = useState(1);
-  const [activityPageSize, setActivityPageSize] = useState(10);
-  const [activityTransactions, setActivityTransactions] = useState([]);
-  const [activityTotal, setActivityTotal] = useState(0);
-  const [activityLoading, setActivityLoading] = useState(false);
-  const [activityError, setActivityError] = useState("");
-  const [activityRefresh, setActivityRefresh] = useState(0);
+  const [
+    {
+      activityQuery, activityType, activityFrom, activityTo, activitySort,
+      activityPage, activityPageSize, activityTransactions, activityTotal,
+      activityLoading, activityError, activityRefresh,
+    },
+    {
+      activityQuery: setActivityQuery, activityType: setActivityType,
+      activityFrom: setActivityFrom, activityTo: setActivityTo,
+      activitySort: setActivitySort, activityPage: setActivityPage,
+      activityPageSize: setActivityPageSize,
+      activityTransactions: setActivityTransactions,
+      activityTotal: setActivityTotal, activityLoading: setActivityLoading,
+      activityError: setActivityError, activityRefresh: setActivityRefresh,
+    },
+  ] = usePageState("CustomerWalletPage", () => ({
+    activityQuery: "",
+    activityType: "ALL",
+    activityFrom: "",
+    activityTo: "",
+    activitySort: "newest",
+    activityPage: 1,
+    activityPageSize: 10,
+    activityTransactions: [],
+    activityTotal: 0,
+    activityLoading: false,
+    activityError: "",
+    activityRefresh: 0,
+  }));
   const realTimeStartedAt = useRef(Date.now());
   const realtimeRefreshTimer = useRef(null);
   const walletRefreshPromise = useRef(null);

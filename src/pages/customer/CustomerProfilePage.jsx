@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { usePageState } from "../../state/usePageState.js";
+import { useEffect } from "react";
 import {
   Bell,
   CalendarDays,
@@ -42,31 +43,42 @@ const diets = [
 export default function CustomerProfilePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [user, setUser] = useState(null);
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    dob: "",
-    gender: "",
-  });
-  const [prefs, setPrefs] = useState(preferenceDefaults);
-  const [saved, setSaved] = useState(false);
+  const [
+    { user, form, prefs, saved },
+    { user: setUser, form: setForm, prefs: setPrefs, saved: setSaved },
+  ] = usePageState("CustomerProfilePage", () => ({
+    user: null,
+    form: {
+      name: "",
+      email: "",
+      phone: "",
+      dob: "",
+      gender: ""
+    },
+    prefs: preferenceDefaults,
+    saved: false,
+  }));
   const section =
     { "#notifications": "Notification Settings" }[location.hash] ||
     "Personal Information";
-  const [notifications, setNotifications] = useState(() => {
-    try {
-      return (
-        JSON.parse(localStorage.getItem("dinebook-notification-settings")) || {
+  const [
+    { notifications },
+    { notifications: setNotifications },
+  ] = usePageState("CustomerProfilePage", () => ({
+    notifications: (() => {
+      try {
+        return JSON.parse(localStorage.getItem("dinebook-notification-settings")) || {
           reservationUpdates: true,
-          offers: true,
-        }
-      );
-    } catch {
-      return { reservationUpdates: true, offers: true };
-    }
-  });
+          offers: true
+        };
+      } catch {
+        return {
+          reservationUpdates: true,
+          offers: true
+        };
+      }
+    })(),
+  }));
 
   useEffect(() => {
     let alive = true;

@@ -1,7 +1,8 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate } from "../../lib/localDate.js";
 import { confirmAction } from "../../lib/confirmDialog.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Plus, Save, Trash2 } from "lucide-react";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import { requestJson } from "../../lib/authApi.js";
@@ -18,22 +19,37 @@ const days = [
 ];
 
 export default function ManagerOperatingHoursPage() {
-  const [schedule, setSchedule] = useState(null);
-  const [draft, setDraft] = useState([]);
-  const [exceptions, setExceptions] = useState([]);
-  const [form, setForm] = useState({
-    start_date: "",
-    end_date: "",
-    is_closed: true,
-    periods: [{ opens: "09:00", closes: "17:00" }],
-    reason: "",
-    internal_note: "",
-  });
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [editingException, setEditingException] = useState(null);
+  const [
+    {
+      schedule, draft, exceptions, form, loading, saving, error, notice,
+      editingException,
+    },
+    {
+      schedule: setSchedule, draft: setDraft, exceptions: setExceptions,
+      form: setForm, loading: setLoading, saving: setSaving, error: setError,
+      notice: setNotice, editingException: setEditingException,
+    },
+  ] = usePageState("ManagerOperatingHoursPage", () => ({
+    schedule: null,
+    draft: [],
+    exceptions: [],
+    form: {
+      start_date: "",
+      end_date: "",
+      is_closed: true,
+      periods: [{
+        opens: "09:00",
+        closes: "17:00"
+      }],
+      reason: "",
+      internal_note: ""
+    },
+    loading: true,
+    saving: false,
+    error: "",
+    notice: "",
+    editingException: null,
+  }));
   const hasUnsavedSchedule =
     Boolean(schedule) &&
     JSON.stringify(

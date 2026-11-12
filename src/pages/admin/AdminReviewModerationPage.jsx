@@ -1,6 +1,7 @@
+import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDateTime } from "../../lib/localDate.js";
 import { confirmAction } from "../../lib/confirmDialog.js";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { requestJson } from "../../lib/authApi.js";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
 import Pagination from "../../components/Pagination.jsx";
@@ -24,22 +25,34 @@ function splitReviewAtReportedQuotes(content, explanation) {
 }
 
 export default function AdminReviewModerationPage() {
-  const [data, setData] = useState({ items: [], total: 0 });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [actionError, setActionError] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [query, setQuery] = useState({
-    page: 1,
-    pageSize: 25,
-    search: "",
-    status: "PENDING",
-    reason: "",
-    rating: "",
-    sort: "oldest",
-  });
-  const [refresh, setRefresh] = useState(0);
-  const [reasons, setReasons] = useState({});
+  const [
+    { data, loading, error, actionError, busy, query, refresh, reasons },
+    {
+      data: setData, loading: setLoading, error: setError,
+      actionError: setActionError, busy: setBusy, query: setQuery,
+      refresh: setRefresh, reasons: setReasons,
+    },
+  ] = usePageState("AdminReviewModerationPage", () => ({
+    data: {
+      items: [],
+      total: 0
+    },
+    loading: true,
+    error: "",
+    actionError: "",
+    busy: false,
+    query: {
+      page: 1,
+      pageSize: 25,
+      search: "",
+      status: "PENDING",
+      reason: "",
+      rating: "",
+      sort: "oldest"
+    },
+    refresh: 0,
+    reasons: {},
+  }));
 
   useEffect(() => {
     const controller = new AbortController();

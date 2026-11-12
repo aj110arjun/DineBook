@@ -17,6 +17,8 @@ export default function CustomDatePicker({
   minDate = todayKey(),
   required = false,
   validationLabel = label,
+  placeholder = "Select a Date",
+  allowPastDates = false,
 }) {
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(() => {
@@ -56,9 +58,7 @@ export default function CustomDatePicker({
         gridStart.getDate() + index,
       ),
   );
-  const formattedDate = value
-    ? formatLocalDate(value)
-    : "Select a date";
+  const formattedDate = value ? formatLocalDate(value) : "Select a date";
   const minimumDate = minDate || todayKey();
   const minimumMonth = new Date(`${minimumDate}T12:00:00`);
   const minimumMonthStart = new Date(

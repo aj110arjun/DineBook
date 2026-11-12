@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
-import NotificationToasts from "../notifications/NotificationToasts.jsx";
+import NotificationSession from "../notifications/NotificationSession.jsx";
 
 const SESSION_CHECK_INTERVAL = 50000;
 
@@ -83,10 +83,8 @@ export default function ChefProtectedRoute() {
   if (!chef.must_change_password && pathname === "/chef/change-password") {
     return <Navigate to="/chef/dashboard" replace />;
   }
-  return (
-    <>
-      {!chef.must_change_password && <NotificationToasts key={chef.id} />}
-      <Outlet context={{ chef, refreshChef }} />
-    </>
+  const outlet = <Outlet context={{ chef, refreshChef }} />;
+  return chef.must_change_password ? outlet : (
+    <NotificationSession key={chef.id}>{outlet}</NotificationSession>
   );
 }
