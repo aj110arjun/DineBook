@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { usePageState } from "../../state/usePageState.js";
+import CustomForm from "../../components/forms/CustomForm.jsx";
 import { ArrowRight, Mail } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -6,20 +7,23 @@ import ManagerAuthLayout from "../../components/auth/ManagerAuthLayout.jsx";
 import { FormField, PasswordField } from "../../components/auth/FormField.jsx";
 import Notice from "../../components/auth/Notice.jsx";
 import { requestJson } from "../../lib/authApi.js";
-import DevQuickLogin from "../../components/auth/DevQuickLogin.jsx";
 
 export default function ManagerLoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [
+    { error, success, busy },
+    { error: setError, success: setSuccess, busy: setBusy },
+  ] = usePageState("ManagerLoginPage", () => ({
+    error: "",
+    success: "",
+    busy: false,
+  }));
 
   async function handleSubmit(event) {
     event.preventDefault();
 
-    if (!event.currentTarget.reportValidity()) return;
 
     setError("");
     setSuccess("");
@@ -62,7 +66,7 @@ export default function ManagerLoginPage() {
         Sign in to access your DineBook restaurant management portal.
       </p>
 
-      <form onSubmit={handleSubmit} noValidate>
+      <CustomForm onSubmit={handleSubmit} noValidate>
         <FormField
           id="email"
           name="email"
@@ -84,7 +88,12 @@ export default function ManagerLoginPage() {
         />
 
         <div className="mb-5 -mt-2 text-right text-xs">
-          <Link className="font-medium text-wine hover:underline" to="/manager/recovery">Forgot password?</Link>
+          <Link
+            className="font-medium text-wine hover:underline"
+            to="/manager/recovery"
+          >
+            Forgot password?
+          </Link>
         </div>
 
         <Notice message={error} />
@@ -98,8 +107,7 @@ export default function ManagerLoginPage() {
           {busy ? "Signing in…" : "Sign In to Manager Portal"}
           {!busy && <ArrowRight size={16} />}
         </button>
-      </form>
-      <DevQuickLogin portal="manager" onSuccess={() => navigate("/manager/dashboard", { replace: true })} />
+      </CustomForm>
 
       <p className="mt-6 text-center text-sm text-stone-500">
         Don't have a manager account?{" "}

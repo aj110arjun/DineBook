@@ -1,16 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { usePageState } from "../../state/usePageState.js";
+import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
 import CuisineGrid from "../../components/landing/CuisineGrid.jsx";
-import DishSection from "../../components/landing/DishSection.jsx";
 import HeroBanner from "../../components/landing/HeroBanner.jsx";
 import HowItWorks from "../../components/landing/HowItWorks.jsx";
 import LandingFooter from "../../components/landing/LandingFooter.jsx";
-import PromoBanner from "../../components/landing/PromoBanner.jsx";
 import RestaurantSection from "../../components/landing/RestaurantSection.jsx";
-import Testimonials from "../../components/landing/Testimonials.jsx";
 import CustomerOrderTracker from "../../components/landing/CustomerOrderTracker.jsx";
-import { signatureDishes, testimonials } from "../../data/landingData.js";
 import { requestJson } from "../../lib/authApi.js";
 import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
 
@@ -27,15 +24,29 @@ const cuisineMatches = {
 
 export default function CustomerLandingPage() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [restaurants, setRestaurants] = useState([]);
-  const [restaurantsLoading, setRestaurantsLoading] = useState(true);
-  const [restaurantsError, setRestaurantsError] = useState("");
-  const [restaurantRefresh, setRestaurantRefresh] = useState(0);
-  const [selectedCuisine, setSelectedCuisine] = useState("");
-  const [toast, setToast] = useState("");
-  const isDemoSession = import.meta.env.DEV && sessionStorage.getItem(demoSessionKey) === "active";
+  const [
+    {
+      user, loading, restaurants, restaurantsLoading, restaurantsError,
+      restaurantRefresh, selectedCuisine,
+    },
+    {
+      user: setUser, loading: setLoading, restaurants: setRestaurants,
+      restaurantsLoading: setRestaurantsLoading,
+      restaurantsError: setRestaurantsError,
+      restaurantRefresh: setRestaurantRefresh,
+      selectedCuisine: setSelectedCuisine,
+    },
+  ] = usePageState("CustomerLandingPage", () => ({
+    user: null,
+    loading: true,
+    restaurants: [],
+    restaurantsLoading: true,
+    restaurantsError: "",
+    restaurantRefresh: 0,
+    selectedCuisine: "",
+  }));
+  const isDemoSession =
+    import.meta.env.DEV && sessionStorage.getItem(demoSessionKey) === "active";
 
   useEffect(() => {
     let mounted = true;
@@ -93,7 +104,10 @@ export default function CustomerLandingPage() {
   }, [restaurantRefresh]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setRestaurantRefresh((value) => value + 1), 3000);
+    const timer = window.setInterval(
+      () => setRestaurantRefresh((value) => value + 1),
+      30000,
+    );
     return () => window.clearInterval(timer);
   }, []);
 
@@ -108,11 +122,6 @@ export default function CustomerLandingPage() {
       );
     return restaurants.filter(matches);
   }, [restaurants, selectedCuisine]);
-
-  function notifyReservation(restaurant) {
-    setToast(`Table reservations at ${restaurant.name} are coming soon.`);
-    window.setTimeout(() => setToast(""), 3600);
-  }
 
   if (loading)
     return (
@@ -133,26 +142,21 @@ export default function CustomerLandingPage() {
           id="restaurants-near-you"
           eyebrow="DISCOVER YOUR NEXT TABLE"
           title="Restaurants to Explore"
-          restaurants={matchingRestaurants}
-          emptyMessage={selectedCuisine ? `No approved ${selectedCuisine} restaurants are available yet. Choose another cuisine to explore.` : "No approved restaurants are available yet."}
+          restaurants={matchingRestaurants.slice(0, 4)}
+          emptyMessage={
+            selectedCuisine
+              ? `No approved ${selectedCuisine} restaurants are available yet. Choose another cuisine to explore.`
+              : "No approved restaurants are available yet."
+          }
           loading={restaurantsLoading}
           error={restaurantsError}
           onRetry={() => setRestaurantRefresh((value) => value + 1)}
-          onReserve={notifyReservation}
-          actionLabel="Explore Nearby"
-          actionHref="#restaurants-near-you"
+          actionLabel="View All Restaurants"
+          actionHref="/customer/restaurants"
         />
-        <DishSection dishes={signatureDishes} />
-        <PromoBanner />
         <HowItWorks />
-        <Testimonials testimonials={testimonials} />
       </main>
       <LandingFooter />
-      {toast && (
-        <div className="landing-toast" role="status">
-          {toast}
-        </div>
-      )}
     </div>
   );
 }

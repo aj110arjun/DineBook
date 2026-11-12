@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { usePageState } from "../../state/usePageState.js";
+import CustomForm from "../../components/forms/CustomForm.jsx";
+import { useCallback, useEffect, useMemo } from "react";
 import {
   PlusCircle,
   ChevronDown,
@@ -21,29 +23,54 @@ const statusLabels = {
 };
 
 export default function ManagerFloorsPage() {
-  const [floors, setFloors] = useState([]);
-  const [floorFilter, setFloorFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [tableQuery, setTableQuery] = useState("");
-  const [capacityFilter, setCapacityFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [tableSort, setTableSort] = useState("number");
-  const [form, setForm] = useState("");
-  const [name, setName] = useState("");
-  const [floorNumber, setFloorNumber] = useState("");
-  const [description, setDescription] = useState("");
-  const [floorId, setFloorId] = useState("");
-  const [number, setNumber] = useState("");
-  const [seats, setSeats] = useState("2");
-  const [reservationFee, setReservationFee] = useState("250");
-  const [shape, setShape] = useState("round");
-  const [tableStatus, setTableStatus] = useState("available");
-  const [editingTable, setEditingTable] = useState(null);
-  const [editingFloor, setEditingFloor] = useState(null);
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [pendingConfirmation, setPendingConfirmation] = useState(null);
+  const [
+    {
+      floors, floorFilter, statusFilter, tableQuery, capacityFilter, typeFilter,
+      tableSort, form, name, floorNumber, description, floorId, number, seats,
+      reservationFee, extraHourFee, gridRow, gridCol, shape, tableStatus,
+      editingTable, editingFloor, error, notice, saving, pendingConfirmation,
+    },
+    {
+      floors: setFloors, floorFilter: setFloorFilter,
+      statusFilter: setStatusFilter, tableQuery: setTableQuery,
+      capacityFilter: setCapacityFilter, typeFilter: setTypeFilter,
+      tableSort: setTableSort, form: setForm, name: setName,
+      floorNumber: setFloorNumber, description: setDescription,
+      floorId: setFloorId, number: setNumber, seats: setSeats,
+      reservationFee: setReservationFee, extraHourFee: setExtraHourFee,
+      gridRow: setGridRow, gridCol: setGridCol, shape: setShape,
+      tableStatus: setTableStatus, editingTable: setEditingTable,
+      editingFloor: setEditingFloor, error: setError, notice: setNotice,
+      saving: setSaving, pendingConfirmation: setPendingConfirmation,
+    },
+  ] = usePageState("ManagerFloorsPage", () => ({
+    floors: [],
+    floorFilter: "all",
+    statusFilter: "all",
+    tableQuery: "",
+    capacityFilter: "all",
+    typeFilter: "all",
+    tableSort: "number",
+    form: "",
+    name: "",
+    floorNumber: "",
+    description: "",
+    floorId: "",
+    number: "",
+    seats: "2",
+    reservationFee: "250",
+    extraHourFee: "0",
+    gridRow: "",
+    gridCol: "",
+    shape: "round",
+    tableStatus: "available",
+    editingTable: null,
+    editingFloor: null,
+    error: "",
+    notice: "",
+    saving: false,
+    pendingConfirmation: null,
+  }));
   const load = useCallback(
     () =>
       requestJson("/api/manager/floors")
@@ -78,12 +105,34 @@ export default function ManagerFloorsPage() {
   const shownFloors = floors.filter(
     (floor) => floorFilter === "all" || floor.id === floorFilter,
   );
-  const visibleTables = (floor) => floor.tables.filter((table) =>
-    (statusFilter === "all" || table.status === statusFilter)
-    && (capacityFilter === "all" || (capacityFilter === "8+" ? Number(table.capacity ?? table.seats) >= 8 : Number(table.capacity ?? table.seats) === Number(capacityFilter)))
-    && (typeFilter === "all" || table.table_type === typeFilter)
-    && (!tableQuery.trim() || `${table.table_number} ${table.id} ${floor.floor_name || floor.name} ${table.table_type || ""}`.toLowerCase().includes(tableQuery.trim().toLowerCase())),
-  ).sort((left, right) => tableSort === "capacity" ? Number(left.capacity ?? left.seats) - Number(right.capacity ?? right.seats) : tableSort === "status" ? String(left.status).localeCompare(String(right.status)) : String(left.table_number || "").localeCompare(String(right.table_number || ""), undefined, { numeric: true }));
+  const visibleTables = (floor) =>
+    floor.tables
+      .filter(
+        (table) =>
+          (statusFilter === "all" || table.status === statusFilter) &&
+          (capacityFilter === "all" ||
+            (capacityFilter === "8+"
+              ? Number(table.capacity ?? table.seats) >= 8
+              : Number(table.capacity ?? table.seats) ===
+                Number(capacityFilter))) &&
+          (typeFilter === "all" || table.table_type === typeFilter) &&
+          (!tableQuery.trim() ||
+            `${table.table_number} ${table.id} ${floor.floor_name || floor.name} ${table.table_type || ""}`
+              .toLowerCase()
+              .includes(tableQuery.trim().toLowerCase())),
+      )
+      .sort((left, right) =>
+        tableSort === "capacity"
+          ? Number(left.capacity ?? left.seats) -
+            Number(right.capacity ?? right.seats)
+          : tableSort === "status"
+            ? String(left.status).localeCompare(String(right.status))
+            : String(left.table_number || "").localeCompare(
+                String(right.table_number || ""),
+                undefined,
+                { numeric: true },
+              ),
+      );
 
   async function addFloor(event) {
     event.preventDefault();
@@ -147,6 +196,9 @@ export default function ManagerFloorsPage() {
         table_number: number.trim(),
         capacity: Number(seats),
         reservation_fee: Number(reservationFee),
+        extra_hour_fee: Number(extraHourFee),
+        grid_row: Number(gridRow),
+        grid_col: Number(gridCol),
         table_type: shape,
         status: tableStatus,
       };
@@ -174,6 +226,9 @@ export default function ManagerFloorsPage() {
     setNumber("");
     setSeats("4");
     setReservationFee("250");
+    setExtraHourFee("0");
+    setGridRow("");
+    setGridCol("");
     setShape("round");
     setTableStatus("available");
     setEditingTable(null);
@@ -207,6 +262,9 @@ export default function ManagerFloorsPage() {
     setNumber(table.table_number);
     setSeats(String(table.capacity ?? table.seats));
     setReservationFee(String(table.reservation_fee ?? 0));
+    setExtraHourFee(String(table.extra_hour_fee ?? 0));
+    setGridRow(table.grid_row == null ? "" : String(table.grid_row));
+    setGridCol(table.grid_col == null ? "" : String(table.grid_col));
     setShape(table.table_type || "round");
     setTableStatus(table.status);
     setError("");
@@ -296,10 +354,65 @@ export default function ManagerFloorsPage() {
           ))}
         </section>
         <div className="table-layout-toolbar">
-          <label className="table-layout-search"><Search size={15} /><input type="search" value={tableQuery} onChange={(event) => setTableQuery(event.target.value)} placeholder="Search table or floor" aria-label="Search tables" /></label>
-          <label className="table-layout-select"><span className="sr-only">Sort tables</span><select value={tableSort} onChange={(event) => setTableSort(event.target.value)}><option value="number">Table number</option><option value="capacity">Capacity</option><option value="status">Status</option></select><ChevronDown size={15} /></label>
-          <label className="table-layout-select"><span className="sr-only">Filter by capacity</span><select value={capacityFilter} onChange={(event) => setCapacityFilter(event.target.value)}><option value="all">All capacities</option>{[2, 4, 6].map((value) => <option key={value} value={String(value)}>{value} seats</option>)}<option value="8+">8+ seats</option></select><ChevronDown size={15} /></label>
-          <label className="table-layout-select"><span className="sr-only">Filter by table type</span><select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}><option value="all">All table types</option>{[...new Set(allTables.map((table) => table.table_type).filter(Boolean))].sort().map((type) => <option key={type} value={type}>{type}</option>)}</select><ChevronDown size={15} /></label>
+          <label className="table-layout-search">
+            <Search size={15} />
+            <input
+              type="search"
+              value={tableQuery}
+              onChange={(event) => setTableQuery(event.target.value)}
+              placeholder="Search table or floor"
+              aria-label="Search tables"
+            />
+          </label>
+          <label className="table-layout-select">
+            <span className="sr-only">Sort tables</span>
+            <select
+              value={tableSort}
+              onChange={(event) => setTableSort(event.target.value)}
+            >
+              <option value="number">Table number</option>
+              <option value="capacity">Capacity</option>
+              <option value="status">Status</option>
+            </select>
+            <ChevronDown size={15} />
+          </label>
+          <label className="table-layout-select">
+            <span className="sr-only">Filter by capacity</span>
+            <select
+              value={capacityFilter}
+              onChange={(event) => setCapacityFilter(event.target.value)}
+            >
+              <option value="all">All capacities</option>
+              {[2, 4, 6].map((value) => (
+                <option key={value} value={String(value)}>
+                  {value} seats
+                </option>
+              ))}
+              <option value="8+">8+ seats</option>
+            </select>
+            <ChevronDown size={15} />
+          </label>
+          <label className="table-layout-select">
+            <span className="sr-only">Filter by table type</span>
+            <select
+              value={typeFilter}
+              onChange={(event) => setTypeFilter(event.target.value)}
+            >
+              <option value="all">All table types</option>
+              {[
+                ...new Set(
+                  allTables.map((table) => table.table_type).filter(Boolean),
+                ),
+              ]
+                .sort()
+                .map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+            </select>
+            <ChevronDown size={15} />
+          </label>
           <label className="table-layout-select">
             <span className="sr-only">Filter tables by status</span>
             <select
@@ -347,7 +460,7 @@ export default function ManagerFloorsPage() {
               if (event.target === event.currentTarget && !saving) setForm("");
             }}
           >
-            <form
+            <CustomForm
               className="table-entry-modal"
               onSubmit={addFloor}
               aria-labelledby="add-floor-title"
@@ -421,7 +534,7 @@ export default function ManagerFloorsPage() {
                       : "Save Floor"}
                 </button>
               </footer>
-            </form>
+            </CustomForm>
           </div>
         )}
 
@@ -451,7 +564,7 @@ export default function ManagerFloorsPage() {
                 <strong>{editingTable ? "Edit Table" : "Add Table"}</strong>
               </div>
               <div className="table-entry-grid">
-                <form className="table-spec-form" onSubmit={addTable}>
+                <CustomForm className="table-spec-form" onSubmit={addTable}>
                   <h2 id="add-table-title">Table Specifications</h2>
                   <label>
                     Table Name / Number <b>*</b>
@@ -487,8 +600,38 @@ export default function ManagerFloorsPage() {
                     />
                   </label>
                   <label>
-                    Reservation Fee (₹ per table) <b>*</b>
-                    <input type="number" min="0" step="0.01" value={reservationFee} onChange={(e) => setReservationFee(e.target.value)} required />
+                    Reservation fee (₹ per table, first hour) <b>*</b>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={reservationFee}
+                      onChange={(e) => setReservationFee(e.target.value)}
+                      required
+                    />
+                  </label>
+                  <label>
+                    Extra hour fee (₹ per table) <b>*</b>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100000"
+                      step="0.01"
+                      value={extraHourFee}
+                      onChange={(event) => setExtraHourFee(event.target.value)}
+                      required
+                    />
+                    <small>Charged for each started hour after the first. Set 0 for no extra charge.</small>
+                  </label>
+                  <label>
+                    Layout row (starts at 0) <b>*</b>
+                    <input type="number" min="0" max="100" step="1" required
+                      value={gridRow} onChange={(event) => setGridRow(event.target.value)} />
+                  </label>
+                  <label>
+                    Layout column (starts at 0) <b>*</b>
+                    <input type="number" min="0" max="100" step="1" required
+                      value={gridCol} onChange={(event) => setGridCol(event.target.value)} />
                   </label>
                   <label>
                     Floor / Zone <b>*</b>
@@ -510,11 +653,13 @@ export default function ManagerFloorsPage() {
                       value={tableStatus}
                       onChange={(e) => setTableStatus(e.target.value)}
                     >
-                      {Object.entries(statusLabels).filter(([key]) => editingTable || key !== "inactive").map(([key, label]) => (
-                        <option key={key} value={key}>
-                          {label}
-                        </option>
-                      ))}
+                      {Object.entries(statusLabels)
+                        .filter(([key]) => editingTable || key !== "inactive")
+                        .map(([key, label]) => (
+                          <option key={key} value={key}>
+                            {label}
+                          </option>
+                        ))}
                     </select>
                   </label>
                   {error && (
@@ -527,7 +672,12 @@ export default function ManagerFloorsPage() {
                       <button
                         type="button"
                         className="table-delete-button"
-                        onClick={() => setPendingConfirmation({ type: "table", item: editingTable })}
+                        onClick={() =>
+                          setPendingConfirmation({
+                            type: "table",
+                            item: editingTable,
+                          })
+                        }
                         disabled={saving}
                       >
                         <Trash2 size={15} /> Delete Table
@@ -552,7 +702,7 @@ export default function ManagerFloorsPage() {
                           : "Save Table"}
                     </button>
                   </footer>
-                </form>
+                </CustomForm>
                 <section className="table-preview-card">
                   <h2>Visual Layout Preview</h2>
                   <div className="table-preview-canvas">
@@ -608,42 +758,42 @@ export default function ManagerFloorsPage() {
             </h2>
             <div className="live-floor-scroll">
               {shownFloors.map((floor) => {
-              const tables = visibleTables(floor);
-              return (
-                <div className="live-floor" key={floor.id}>
-                  <h3>{floor.floor_name || floor.name}</h3>
-                  {tables.length ? (
-                    <div className="live-floor-map">
-                      {tables.map((table, index) => (
-                        <button
-                          type="button"
-                          title="Edit table"
-                          onClick={() => openEditTable(table, floor)}
-                          className={`live-table ${table.status} ${table.table_type || (index % 4 === 0 ? "round" : index % 4 === 1 ? "square" : "rectangle")}`}
-                          key={table.id}
-                        >
-                          <strong>
-                            {table.table_number.toUpperCase().startsWith("T-")
-                              ? table.table_number
-                              : `T-${table.table_number}`}
-                          </strong>
-                          <span>
-                            {table.capacity ?? table.seats}{" "}
-                            {(table.capacity ?? table.seats) === 1
-                              ? "Seat"
-                              : "Seats"}
-                          </span>
-                          <small>{statusLabels[table.status]}</small>
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="table-layout-empty">
-                      No tables match this view.
-                    </p>
-                  )}
-                </div>
-              );
+                const tables = visibleTables(floor);
+                return (
+                  <div className="live-floor" key={floor.id}>
+                    <h3>{floor.floor_name || floor.name}</h3>
+                    {tables.length ? (
+                      <div className="live-floor-map">
+                        {tables.map((table, index) => (
+                          <button
+                            type="button"
+                            title="Edit table"
+                            onClick={() => openEditTable(table, floor)}
+                            className={`live-table ${table.status} ${table.table_type || (index % 4 === 0 ? "round" : index % 4 === 1 ? "square" : "rectangle")}`}
+                            key={table.id}
+                          >
+                            <strong>
+                              {table.table_number.toUpperCase().startsWith("T-")
+                                ? table.table_number
+                                : `T-${table.table_number}`}
+                            </strong>
+                            <span>
+                              {table.capacity ?? table.seats}{" "}
+                              {(table.capacity ?? table.seats) === 1
+                                ? "Seat"
+                                : "Seats"}
+                            </span>
+                            <small>{statusLabels[table.status]}</small>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="table-layout-empty">
+                        No tables match this view.
+                      </p>
+                    )}
+                  </div>
+                );
               })}
             </div>
             {floors.length === 0 && (
@@ -675,7 +825,9 @@ export default function ManagerFloorsPage() {
               </button>
             </header>
             {floors.map((floor) => {
-              const free = floor.tables.filter((table) => table.status === "available").length;
+              const free = floor.tables.filter(
+                (table) => table.status === "available",
+              ).length;
               return (
                 <div
                   className={`floor-selection-row ${floorFilter === floor.id ? "active" : ""}`}
@@ -707,7 +859,9 @@ export default function ManagerFloorsPage() {
                       type="button"
                       aria-label={`Deactivate ${floor.floor_name || floor.name}`}
                       title="Deactivate floor"
-                      onClick={() => setPendingConfirmation({ type: "floor", item: floor })}
+                      onClick={() =>
+                        setPendingConfirmation({ type: "floor", item: floor })
+                      }
                     >
                       <Trash2 size={14} />
                     </button>
@@ -723,7 +877,39 @@ export default function ManagerFloorsPage() {
           </section>
         </div>
       </div>
-      {pendingConfirmation && <ConfirmActionDialog action="deactivate" resourceType={pendingConfirmation.type === "table" ? "dining table" : "floor"} resourceName={pendingConfirmation.type === "table" ? `Table ${pendingConfirmation.item.table_number}` : pendingConfirmation.item.floor_name || pendingConfirmation.item.name} title={pendingConfirmation.type === "table" ? "Deactivate this table?" : "Deactivate this floor?"} description={pendingConfirmation.type === "table" ? "This table will be removed from new reservations. Existing reservations and table history will be preserved. You can reactivate it by editing its status." : "This floor will be hidden from active floor lists. Floor records and reservation history will be preserved."} busy={saving} onCancel={() => { if (!saving) setPendingConfirmation(null); }} onConfirm={() => pendingConfirmation.type === "table" ? removeTable() : deactivateFloor(pendingConfirmation.item)} />}
+      {pendingConfirmation && (
+        <ConfirmActionDialog
+          action="deactivate"
+          resourceType={
+            pendingConfirmation.type === "table" ? "dining table" : "floor"
+          }
+          resourceName={
+            pendingConfirmation.type === "table"
+              ? `Table ${pendingConfirmation.item.table_number}`
+              : pendingConfirmation.item.floor_name ||
+                pendingConfirmation.item.name
+          }
+          title={
+            pendingConfirmation.type === "table"
+              ? "Deactivate this table?"
+              : "Deactivate this floor?"
+          }
+          description={
+            pendingConfirmation.type === "table"
+              ? "This table will be removed from new reservations. Existing reservations and table history will be preserved. You can reactivate it by editing its status."
+              : "This floor will be hidden from active floor lists. Floor records and reservation history will be preserved."
+          }
+          busy={saving}
+          onCancel={() => {
+            if (!saving) setPendingConfirmation(null);
+          }}
+          onConfirm={() =>
+            pendingConfirmation.type === "table"
+              ? removeTable()
+              : deactivateFloor(pendingConfirmation.item)
+          }
+        />
+      )}
     </ManagerLayout>
   );
 }

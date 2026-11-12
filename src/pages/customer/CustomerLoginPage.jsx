@@ -1,34 +1,40 @@
-import { useState } from "react";
+import { usePageState } from "../../state/usePageState.js";
+import CustomForm from "../../components/forms/CustomForm.jsx";
 import { ArrowRight, Mail } from "lucide-react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import AuthLayout from "../../components/auth/AuthLayout.jsx";
 import { FormField, PasswordField } from "../../components/auth/FormField.jsx";
 import Notice from "../../components/auth/Notice.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import { demoSessionKey } from "../../data/demoCustomer.js";
 import GoogleSignInButton from "../../components/auth/GoogleSignInButton.jsx";
-import DevQuickLogin from "../../components/auth/DevQuickLogin.jsx";
 
 export default function CustomerLoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = location.state?.from || "/customer";
   const [searchParams] = useSearchParams();
-  const [error, setError] = useState(() =>
-    searchParams.get("google") === "failed"
-      ? "Google sign-in could not be completed. Please try again."
-      : searchParams.get("google") === "unavailable"
-        ? "This Google account cannot sign in as a customer."
-        : "",
-  );
-  const [success, setSuccess] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [
+    { error, success, busy },
+    { error: setError, success: setSuccess, busy: setBusy },
+  ] = usePageState("CustomerLoginPage", () => ({
+    error: searchParams.get("google") === "failed" ? "Google sign-in could not be completed. Please try again." : searchParams.get("google") === "unavailable" ? "This Google account cannot sign in as a customer." : "",
+    success: "",
+    busy: false,
+  }));
   function enterDemoCustomer() {
     sessionStorage.setItem(demoSessionKey, "active");
-    navigate("/customer");
+    navigate(returnTo, { replace: true });
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
-    if (!event.currentTarget.reportValidity()) return;
+
     setError("");
     setSuccess("");
     setBusy(true);
@@ -46,7 +52,7 @@ export default function CustomerLoginPage() {
       setSuccess(
         `Welcome back, ${user.name || "DineBook guest"}. Your sign-in was successful.`,
       );
-      window.setTimeout(() => navigate("/customer"), 500);
+      window.setTimeout(() => navigate(returnTo, { replace: true }), 500);
     } catch (reason) {
       setError(reason.message);
     } finally {
@@ -60,7 +66,7 @@ export default function CustomerLoginPage() {
       <p className="mb-7 mt-2 text-sm leading-6 text-stone-500">
         Please enter your credentials to access your DineBook account.
       </p>
-      <form onSubmit={handleSubmit} noValidate>
+      <CustomForm onSubmit={handleSubmit} noValidate>
         <FormField
           id="email"
           label="Email Address"
@@ -106,11 +112,10 @@ export default function CustomerLoginPage() {
           <span className="h-px flex-1 bg-stone-200" />
         </div>
         <GoogleSignInButton
-          onSuccess={() => navigate("/customer", { replace: true })}
+          onSuccess={() => navigate(returnTo, { replace: true })}
           onError={setError}
         />
-      </form>
-      <DevQuickLogin portal="customer" onSuccess={() => navigate("/customer", { replace: true })} />
+      </CustomForm>
       <p className="mt-7 border-t border-stone-100 pt-5 text-center text-sm text-stone-500">
         New to DineBook?{" "}
         <Link

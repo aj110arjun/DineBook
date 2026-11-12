@@ -1,13 +1,37 @@
-import { useState } from "react";
-import { ChevronDown, MapPin, Menu, Utensils, X } from "lucide-react";
+import useNavigationDisclosure from "../../hooks/useNavigationDisclosure.js";
+import axios from "axios";
+import { useState, useEffect } from "react";
+import { MapPin, Menu, Utensils, X } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { API_BASE } from "../../lib/authApi.js";
-import { demoSessionKey } from "../../data/demoCustomer.js";
+import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
+import NotificationSession from "../notifications/NotificationSession.jsx";
+import NotificationBell from "../notifications/NotificationBell.jsx";
 
 export default function CustomerHeader({ user, onLogout }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  useNavigationDisclosure(
+    menuOpen,
+    () => setMenuOpen(false),
+    "customer-primary-nav",
+  );
+
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 1281px)");
+
+    function closeOnDsktop() {
+      if (desktop.matches) setMenuOpen(false);
+    }
+
+    closeOnDsktop();
+    desktop.addEventListener("change", closeOnDsktop);
+
+    return () => {
+      desktop.removeEventListener("change", closeOnDsktop);
+    };
+  }, []);
 
   async function signOut() {
     try {
@@ -22,9 +46,11 @@ export default function CustomerHeader({ user, onLogout }) {
       }
 
       // Real backend logout
-      await fetch(`${API_BASE}/api/auth/logout`, {
+      await axios.request({
+        url: `${API_BASE}/api/auth/logout`,
+        validateStatus: () => true,
         method: "POST",
-        credentials: "include",
+        withCredentials: true,
       });
     } catch (error) {
       console.error("Logout failed:", error);
@@ -37,7 +63,7 @@ export default function CustomerHeader({ user, onLogout }) {
 
   const closeMenu = () => setMenuOpen(false);
 
-  return (
+  const header = (
     <header className="site-header">
       <div className="header-inner">
         {/* Brand */}
@@ -65,50 +91,94 @@ export default function CustomerHeader({ user, onLogout }) {
           aria-label="Main navigation"
         >
           {/* Location */}
-          <label className="location-select">
-            <MapPin size={13} />
-
-            <select aria-label="Choose location" defaultValue="Mumbai, BKC">
-              <option>Mumbai, BKC</option>
-              <option>Mumbai, Fort</option>
-              <option>Mumbai, Bandra</option>
-              <option>Dubai, DIFC</option>
-            </select>
-
-            <ChevronDown size={12} />
-          </label>
+          <Link
+            className="location-select"
+            to="/customer/restaurants"
+            onClick={closeMenu}
+          >
+            <MapPin size={15} aria-hidden="true" /> Find nearby
+          </Link>
 
           {/* Navigation links */}
           <div className="nav-links">
-            <Link className={location.pathname === "/customer" ? "active" : ""} to="/customer" onClick={closeMenu}>
+            <Link
+              className={location.pathname === "/customer" ? "active" : ""}
+              aria-current={
+                location.pathname === "/customer" ? "page" : undefined
+              }
+              to="/customer"
+              onClick={closeMenu}
+            >
               Discover
             </Link>
 
-            <Link className={location.pathname.startsWith("/customer/restaurants") ? "active" : ""} to="/customer/restaurants" onClick={closeMenu}>
+            <Link
+              className={
+                location.pathname.startsWith("/customer/restaurants")
+                  ? "active"
+                  : ""
+              }
+              aria-current={
+                location.pathname.startsWith("/customer/restaurants")
+                  ? "page"
+                  : undefined
+              }
+              to="/customer/restaurants"
+              onClick={closeMenu}
+            >
               Restaurants
             </Link>
 
-            <Link to="/customer#offers" onClick={closeMenu}>
-              Offers
-            </Link>
-
-            <Link to="/customer#how-it-works" onClick={closeMenu}>
-              Wallet
-            </Link>
-            {user && <Link className={location.pathname === "/customer/profile/orders" ? "active" : ""} to="/customer/profile/orders" onClick={closeMenu}>Orders</Link>}
+            {user && (
+              <Link
+                className={
+                  location.pathname === "/customer/saved-restaurants"
+                    ? "active"
+                    : ""
+                }
+                aria-current={
+                  location.pathname === "/customer/saved-restaurants"
+                    ? "page"
+                    : undefined
+                }
+                to="/customer/saved-restaurants"
+                onClick={closeMenu}
+              >
+                Saved places
+              </Link>
+            )}
+            {user && (
+              <Link
+                className={
+                  location.pathname === "/customer/profile/reservations"
+                    ? "active"
+                    : ""
+                }
+                to="/customer/profile/reservations"
+                onClick={closeMenu}
+                aria-current={
+                  location.pathname.startsWith("/customer/profile/reservations")
+                    ? "page"
+                    : undefined
+                }
+              >
+                My reservations
+              </Link>
+            )}
           </div>
 
           {/* Account */}
           <div className="account-nav">
             {user ? (
               <>
-                <button className="text-button" onClick={signOut}>
-                  Sign out
-                </button>
+                <NotificationBell role="customer" enabled={Boolean(user)} />
 
                 <button
                   className="profile-button"
-                  onClick={() => { closeMenu(); navigate("/customer/profile"); }}
+                  onClick={() => {
+                    closeMenu();
+                    navigate("/customer/profile");
+                  }}
                 >
                   {user?.name?.split(" ")[0] || "Profile"}
                 </button>
@@ -140,5 +210,11 @@ export default function CustomerHeader({ user, onLogout }) {
         </nav>
       </div>
     </header>
+  );
+
+  return user && user.id !== demoCustomer.id ? (
+    <NotificationSession key={user.id}>{header}</NotificationSession>
+  ) : (
+    header
   );
 }

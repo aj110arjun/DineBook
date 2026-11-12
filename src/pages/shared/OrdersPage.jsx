@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { usePageState } from "../../state/usePageState.js";
+import { formatLocalDate, formatLocalDateTime, shiftLocalMonth } from "../../lib/localDate.js";
+import { useEffect, useMemo, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   CalendarDays,
@@ -19,22 +21,27 @@ import { requestJson } from "../../lib/authApi.js";
 import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
 import Pagination from "../../components/Pagination.jsx";
 import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
-import "./ManagerOrdersPage.css";
+import "../../assets/css/ManagerOrdersPage.css";
 
-const managerOrderFilters = [
-  "ALL",
+const orderStatuses = [
   "PLACED",
   "ACCEPTED",
   "PREPARING",
   "READY",
+  "SERVED",
   "COMPLETED",
   "CANCELLED",
   "REJECTED",
 ];
+const managerOrderFilters = ["ALL", ...orderStatuses];
 
 const transitions = {
-  manager: { PLACED: ["ACCEPTED", "REJECTED"], READY: ["COMPLETED"] },
-  chef: { ACCEPTED: ["PREPARING"], PREPARING: ["READY"] },
+  manager: {
+    PLACED: ["ACCEPTED", "REJECTED"],
+    READY: ["COMPLETED"],
+    SERVED: ["COMPLETED"],
+  },
+  chef: { ACCEPTED: ["PREPARING"], PREPARING: ["READY"], READY: ["SERVED"] },
 };
 const statusLabel = (status) =>
   status
@@ -50,42 +57,56 @@ export default function OrdersPage({ mode = "customer" }) {
   const location = useLocation();
   const navigate = useNavigate();
   const initialParams = new URLSearchParams(location.search);
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState("");
-  const [notice, setNotice] = useState("");
-  const [pendingAction, setPendingAction] = useState(null);
-  const [actionReason, setActionReason] = useState("");
-  const [search, setSearch] = useState(() => initialParams.get("search") || "");
-  const [headerUser, setHeaderUser] = useState(null);
-  const [managerStatusFilter, setManagerStatusFilter] = useState(
-    () => initialParams.get("status") || "ALL",
-  );
-  const [statusFilter, setStatusFilter] = useState(
-    mode === "chef" ? "ACTIVE" : "ALL",
-  );
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [sort, setSort] = useState(mode === "chef" ? "oldest" : "newest");
-  const [page, setPage] = useState(() =>
-    Math.max(1, Number(initialParams.get("page") || 1)),
-  );
-  const [pageSize, setPageSize] = useState(() =>
-    Math.max(1, Number(initialParams.get("pageSize") || 10)),
-  );
-  const [selectedOrderDate, setSelectedOrderDate] = useState(
-    () => initialParams.get("date") || dateKey(new Date()),
-  );
-  const [orderMonth, setOrderMonth] = useState(() => {
-    const value = initialParams.get("month");
-    if (value && /^\d{4}-\d{2}$/.test(value)) {
-      const [year, month] = value.split("-").map(Number);
-      return new Date(year, month - 1, 1);
-    }
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), 1);
-  });
+  const [
+    {
+      orders, total, totalGuests, calendarOrderCounts, calendarStatuses, loading,
+      error, busy, notice, pendingAction, actionReason, search, headerUser,
+      managerStatusFilter, statusFilter, dateFrom, dateTo, sort, page, pageSize,
+      selectedOrderDate, orderMonthTime,
+    },
+    {
+      orders: setOrders, total: setTotal, totalGuests: setTotalGuests,
+      calendarOrderCounts: setCalendarOrderCounts,
+      calendarStatuses: setCalendarStatuses, loading: setLoading, error: setError,
+      busy: setBusy, notice: setNotice, pendingAction: setPendingAction,
+      actionReason: setActionReason, search: setSearch, headerUser: setHeaderUser,
+      managerStatusFilter: setManagerStatusFilter, statusFilter: setStatusFilter,
+      dateFrom: setDateFrom, dateTo: setDateTo, sort: setSort, page: setPage,
+      pageSize: setPageSize, selectedOrderDate: setSelectedOrderDate,
+      orderMonthTime: setOrderMonthTime,
+    },
+  ] = usePageState("OrdersPage", () => ({
+    orders: [],
+    total: 0,
+    totalGuests: 0,
+    calendarOrderCounts: {},
+    calendarStatuses: {},
+    loading: true,
+    error: "",
+    busy: "",
+    notice: "",
+    pendingAction: null,
+    actionReason: "",
+    search: initialParams.get("search") || "",
+    headerUser: null,
+    managerStatusFilter: initialParams.get("status") || "ALL",
+    statusFilter: mode === "chef" ? "ACTIVE" : "ALL",
+    dateFrom: "",
+    dateTo: "",
+    sort: mode === "chef" ? "oldest" : "newest",
+    page: Math.max(1, Number(initialParams.get("page") || 1)),
+    pageSize: Math.max(1, Number(initialParams.get("pageSize") || 10)),
+    selectedOrderDate: initialParams.get("date") || dateKey(new Date()),
+    orderMonthTime: (() => {
+      const value = initialParams.get("month");
+      if (value && /^\d{4}-\d{2}$/.test(value)) {
+        const [year, month] = value.split("-").map(Number);
+        return new Date(year, month - 1, 1).getTime();
+      }
+      return shiftLocalMonth(Date.now());
+    })(),
+  }));
+  const orderMonth = useMemo(() => new Date(orderMonthTime), [orderMonthTime]);
   const pageFilterKey = JSON.stringify([
     search,
     statusFilter,
@@ -104,60 +125,8 @@ export default function OrdersPage({ mode = "customer" }) {
     chef: "/api/chef/orders",
     admin: "/api/admin/orders",
   }[mode];
-  const matchingOrders = useMemo(() => {
-    const needle = search.trim().toLowerCase();
-    return orders
-      .filter((order) => {
-        const itemNames = (order.items || [])
-          .map((item) => item.food_name)
-          .join(" ");
-        const haystack =
-          `${order.id} ${order.restaurant_name || ""} ${order.customer_name || ""} ${order.customer_email || ""} ${itemNames} ${order.reservation?.tables?.map((table) => table.table_number).join(" ") || ""}`.toLowerCase();
-        const created = new Date(order.created_at).toLocaleDateString("en-CA");
-        const statusMatches =
-          mode === "manager"
-            ? managerStatusFilter === "ALL" ||
-              order.status === managerStatusFilter
-            : statusFilter === "ALL" ||
-              (statusFilter === "ACTIVE"
-                ? ["PLACED", "ACCEPTED", "PREPARING", "READY"].includes(
-                    order.status,
-                  )
-                : order.status === statusFilter);
-        const dateMatches =
-          ((mode !== "manager" && mode !== "chef") ||
-            orderDateKey(order) === selectedOrderDate) &&
-          (!dateFrom || created >= dateFrom) &&
-          (!dateTo || created <= dateTo);
-        return (
-          (!needle || haystack.includes(needle)) && statusMatches && dateMatches
-        );
-      })
-      .sort((left, right) => {
-        if (sort === "amount-low" || sort === "amount-high") {
-          const delta = Number(left.total || 0) - Number(right.total || 0);
-          return sort === "amount-low" ? delta : -delta;
-        }
-        const delta =
-          Date.parse(left.created_at || 0) - Date.parse(right.created_at || 0);
-        return sort === "oldest" ? delta : -delta;
-      });
-  }, [
-    orders,
-    search,
-    statusFilter,
-    managerStatusFilter,
-    selectedOrderDate,
-    mode,
-    dateFrom,
-    dateTo,
-    sort,
-  ]);
-  const pageCount = Math.max(1, Math.ceil(matchingOrders.length / pageSize));
-  const visibleOrders = matchingOrders.slice(
-    (page - 1) * pageSize,
-    page * pageSize,
-  );
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const visibleOrders = orders;
   useEffect(() => {
     if (previousPageFilterKey.current !== pageFilterKey) {
       previousPageFilterKey.current = pageFilterKey;
@@ -165,8 +134,8 @@ export default function OrdersPage({ mode = "customer" }) {
     }
   }, [pageFilterKey]);
   useEffect(() => {
-    if (page > pageCount) setPage(pageCount);
-  }, [page, pageCount]);
+    if (!loading && page > pageCount) setPage(pageCount);
+  }, [page, pageCount, loading]);
   useEffect(() => {
     if (mode !== "manager" || location.pathname !== "/manager/orders") return;
     const params = new URLSearchParams();
@@ -212,25 +181,26 @@ export default function OrdersPage({ mode = "customer" }) {
         ),
     );
   }, [orderMonth]);
-  const calendarOrderCounts = useMemo(
-    () =>
-      orders.reduce((counts, order) => {
-        const key = orderDateKey(order);
-        counts[key] = (counts[key] || 0) + 1;
-        return counts;
-      }, {}),
-    [orders],
-  );
 
   async function load() {
     const sequence = ++loadSequence.current;
     setLoading(true);
     setError("");
     try {
-      const orderData = await requestJson(
-        mode === "admin" ? `${endpoint}?limit=500` : endpoint,
-      );
-      if (sequence === loadSequence.current) setOrders(orderData);
+      const params = new URLSearchParams({ page, page_size: pageSize, search, status: mode === "manager" ? managerStatusFilter : statusFilter, sort });
+      if (dateFrom) params.set("date_from", dateFrom);
+      if (dateTo) params.set("date_to", dateTo);
+      if (mode === "manager" || mode === "chef") params.set("selected_date", selectedOrderDate);
+      params.set("calendar_from", dateKey(calendarDays[0]));
+      params.set("calendar_to", dateKey(calendarDays[calendarDays.length - 1]));
+      const orderData = await requestJson(`${endpoint}?${params}`);
+      if (sequence === loadSequence.current) {
+        setOrders(orderData.items);
+        setTotal(orderData.total);
+        setTotalGuests(orderData.guests);
+        setCalendarOrderCounts(orderData.calendar_counts);
+        setCalendarStatuses(orderData.calendar_statuses);
+      }
     } catch (reason) {
       if (sequence === loadSequence.current) setError(reason.message);
     } finally {
@@ -244,7 +214,8 @@ export default function OrdersPage({ mode = "customer" }) {
   });
   useEffect(() => {
     load();
-  }, [endpoint]);
+    return () => { loadSequence.current += 1; };
+  }, [endpoint, page, pageFilterKey, orderMonth]);
   useEffect(() => {
     if (mode === "customer")
       requestJson("/api/customer/me")
@@ -252,17 +223,20 @@ export default function OrdersPage({ mode = "customer" }) {
         .catch(() => setHeaderUser(null));
   }, [mode]);
 
-  async function updateOrder(orderId, status, reason = "") {
+  async function updateOrder(orderId, status, reason = "", deskRefundConfirmed = false) {
     setBusy(orderId);
     setNotice("");
     try {
-      const updated = await requestJson(`${endpoint}/${orderId}/status`, {
+      await requestJson(`${endpoint}/${orderId}/status`, {
         method: "PATCH",
-        body: JSON.stringify({ status, reason: reason.trim() || null }),
+        body: JSON.stringify({
+          status,
+          reason: reason.trim() || null,
+          desk_refund_confirmed: deskRefundConfirmed,
+        }),
       });
-      setOrders((current) =>
-        current.map((order) => (order.id === orderId ? updated : order)),
-      );
+      await load();
+      if (status === "SERVED") setNotice("Order marked as served.");
       return true;
     } catch (reason) {
       setNotice(reason.message);
@@ -275,13 +249,11 @@ export default function OrdersPage({ mode = "customer" }) {
   async function cancelOrder(orderId, reason) {
     setBusy(orderId);
     try {
-      const updated = await requestJson(`${endpoint}/${orderId}/cancel`, {
+      await requestJson(`${endpoint}/${orderId}/cancel`, {
         method: "POST",
         body: JSON.stringify({ reason: reason.trim() }),
       });
-      setOrders((current) =>
-        current.map((order) => (order.id === orderId ? updated : order)),
-      );
+      await load();
       return true;
     } catch (reason) {
       setNotice(reason.message);
@@ -291,13 +263,19 @@ export default function OrdersPage({ mode = "customer" }) {
     }
   }
 
+  const deskRefundRequired =
+    mode === "manager" &&
+    pendingAction?.order.payment_method === "PAY_AT_DESK" &&
+    pendingAction.order.payment_status === "PAID" &&
+    !pendingAction.order.customer_id;
+
   async function confirmOrderAction(reason = "") {
     if (!pendingAction) return;
     const { order, status, kind } = pendingAction;
     const completed =
       kind === "cancel"
         ? await cancelOrder(order.id, reason)
-        : await updateOrder(order.id, status, reason);
+        : await updateOrder(order.id, status, reason, deskRefundRequired);
     if (completed) setPendingAction(null);
   }
 
@@ -322,12 +300,10 @@ export default function OrdersPage({ mode = "customer" }) {
   async function markPaid(orderId) {
     setBusy(orderId);
     try {
-      const updated = await requestJson(`${endpoint}/${orderId}/mark-paid`, {
+      await requestJson(`${endpoint}/${orderId}/mark-paid`, {
         method: "POST",
       });
-      setOrders((current) =>
-        current.map((order) => (order.id === orderId ? updated : order)),
-      );
+      await load();
     } catch (reason) {
       setNotice(reason.message);
     } finally {
@@ -340,7 +316,9 @@ export default function OrdersPage({ mode = "customer" }) {
       {(mode === "admin" || mode === "customer" || mode === "chef") && (
         <div className="orders-search">
           <label>
-            Search order ID, restaurant, customer, or item
+            {mode === "chef"
+              ? "Search order ID, customer, or item"
+              : "Search order ID, restaurant, customer, or item"}
             <input
               type="search"
               value={search}
@@ -355,16 +333,17 @@ export default function OrdersPage({ mode = "customer" }) {
               onChange={(event) => setStatusFilter(event.target.value)}
             >
               {mode === "chef" && (
-                <option value="ACTIVE">Active kitchen orders</option>
+                <option value="ACTIVE">Active orders</option>
               )}
               <option value="ALL">All statuses</option>
-              {[...new Set(orders.map((order) => order.status))]
-                .sort()
-                .map((status) => (
-                  <option key={status} value={status}>
-                    {statusLabel(status)}
-                  </option>
-                ))}
+              {(mode === "chef"
+                ? orderStatuses
+                : [...new Set(orders.map((order) => order.status))].sort()
+              ).map((status) => (
+                <option key={status} value={status}>
+                  {statusLabel(status)}
+                </option>
+              ))}
             </select>
           </label>
           {mode !== "chef" && (
@@ -465,9 +444,9 @@ export default function OrdersPage({ mode = "customer" }) {
                     <h2>
                       {mode === "customer"
                         ? order.restaurant_name
-                        : `Order from ${order.customer_name}`}
+                        : `Order from ${order.customer_name || "Guest"}`}
                     </h2>
-                    <small>{new Date(order.created_at).toLocaleString()}</small>
+                    <small>{formatLocalDateTime(order.created_at, { timeStyle: "medium" })}</small>
                   </div>
                   <strong
                     className={`food-order-status status-${order.status.toLowerCase()}`}
@@ -479,15 +458,19 @@ export default function OrdersPage({ mode = "customer" }) {
                   <div className="chef-order-context">
                     <span>
                       <Clock3 size={15} />
-                      {order.reservation?.start_time
-                        ? `For ${order.reservation.start_time}`
-                        : "Walk-in order"}
+                      {order.service_type === "TAKEAWAY"
+                        ? "Takeaway order"
+                        : order.reservation?.start_time
+                          ? `For ${order.reservation.start_time}`
+                          : "Walk-in order"}
                     </span>
                     <span>
                       <MapPin size={15} />
-                      {order.reservation?.tables?.length
-                        ? `Table ${order.reservation.tables.map((table) => table.table_number).join(", ")}`
-                        : "No table assigned"}
+                      {order.service_type === "TAKEAWAY"
+                        ? "Pack for collection"
+                        : (order.tables || order.reservation?.tables || []).length
+                          ? `Table ${(order.tables || order.reservation?.tables || []).map((table) => table.table_number).join(", ")}`
+                          : "No table assigned"}
                     </span>
                   </div>
                 )}
@@ -560,19 +543,20 @@ export default function OrdersPage({ mode = "customer" }) {
                     </div>
                   </div>
                 )}
-                {mode === "customer" && order.status === "PLACED" && (
-                  <button
-                    className="food-order-cancel"
-                    type="button"
-                    disabled={busy === order.id}
-                    onClick={() => {
-                      setActionReason("");
-                      setPendingAction({ kind: "cancel", order });
-                    }}
-                  >
-                    Cancel order
-                  </button>
-                )}
+                {mode === "customer" &&
+                  (order.can_customer_cancel ?? (order.status === "PLACED")) && (
+                    <button
+                      className="food-order-cancel"
+                      type="button"
+                      disabled={busy === order.id}
+                      onClick={() => {
+                        setActionReason("");
+                        setPendingAction({ kind: "cancel", order });
+                      }}
+                    >
+                      Cancel order
+                    </button>
+                  )}
                 {(mode === "manager" || mode === "chef") && (
                   <div className="food-order-actions">
                     {(transitions[mode][order.status] || []).map((status) => (
@@ -590,7 +574,15 @@ export default function OrdersPage({ mode = "customer" }) {
                             : updateOrder(order.id, status)
                         }
                       >
-                        {statusLabel(status)}
+                        {busy === order.id
+                          ? "Updating…"
+                          : mode === "chef" && status === "PREPARING"
+                            ? "Start preparing"
+                            : mode === "chef" && status === "READY"
+                              ? "Mark ready"
+                              : status === "SERVED"
+                          ? "Mark as served"
+                          : statusLabel(status)}
                       </button>
                     ))}
                     {mode === "chef" && order.status === "PLACED" && (
@@ -624,13 +616,12 @@ export default function OrdersPage({ mode = "customer" }) {
           )}
         </div>
       )}
-      {!loading && !error && matchingOrders.length > 0 && (
+      {!loading && !error && total > 0 && (
         <Pagination
           page={page}
           pageSize={pageSize}
-          total={matchingOrders.length}
+          total={total}
           onPageChange={setPage}
-          onPageSizeChange={setPageSize}
           label="orders"
         />
       )}
@@ -645,14 +636,18 @@ export default function OrdersPage({ mode = "customer" }) {
               : "Cancel this order?"
           }
           description={
-            pendingAction.status === "REJECTED"
-              ? "The order will be rejected and cannot continue through preparation."
-              : "The order will be cancelled. Any eligible refund will be credited to the customer’s DineBook wallet."
+            deskRefundRequired
+              ? "Refund the guest at the desk before confirming."
+              : pendingAction.status === "REJECTED"
+                ? "The order will be rejected and cannot continue through preparation."
+                : "The order will be cancelled. Any eligible refund will be credited to the customer’s DineBook wallet."
           }
           confirmLabel={
-            pendingAction.status === "REJECTED"
-              ? "Reject order"
-              : "Cancel order"
+            deskRefundRequired
+              ? "Confirm desk refund"
+              : pendingAction.status === "REJECTED"
+                ? "Reject order"
+                : "Cancel order"
           }
           requireReason
           reasonLabel={
@@ -789,7 +784,7 @@ export default function OrdersPage({ mode = "customer" }) {
                 </span>
                 <span>
                   <i className="done" />
-                  Completed
+                  Served / completed
                 </span>
               </div>
               <div className="manager-orders-calendar-header">
@@ -800,18 +795,24 @@ export default function OrdersPage({ mode = "customer" }) {
                   }).format(orderMonth)}
                 </h2>
                 <div>
+                  {mode === "chef" && (
+                    <button
+                      type="button"
+                      className="chef-orders-today"
+                      onClick={() => {
+                        const today = new Date();
+                        setSelectedOrderDate(dateKey(today));
+                        setOrderMonthTime(shiftLocalMonth(today.getTime()));
+                      }}
+                    >
+                      Today
+                    </button>
+                  )}
                   <button
                     type="button"
                     aria-label="Previous month"
                     onClick={() =>
-                      setOrderMonth(
-                        (month) =>
-                          new Date(
-                            month.getFullYear(),
-                            month.getMonth() - 1,
-                            1,
-                          ),
-                      )
+                      setOrderMonthTime((month) => shiftLocalMonth(month, -1))
                     }
                   >
                     <ChevronLeft size={18} />
@@ -820,14 +821,7 @@ export default function OrdersPage({ mode = "customer" }) {
                     type="button"
                     aria-label="Next month"
                     onClick={() =>
-                      setOrderMonth(
-                        (month) =>
-                          new Date(
-                            month.getFullYear(),
-                            month.getMonth() + 1,
-                            1,
-                          ),
-                      )
+                      setOrderMonthTime((month) => shiftLocalMonth(month, 1))
                     }
                   >
                     <ChevronRight size={18} />
@@ -845,19 +839,16 @@ export default function OrdersPage({ mode = "customer" }) {
                 {calendarDays.map((day) => {
                   const key = dateKey(day);
                   const currentMonth = day.getMonth() === orderMonth.getMonth();
-                  const dayOrders = orders.filter(
-                    (order) => orderDateKey(order) === key,
-                  );
                   const statusDots = [
                     ...new Set(
-                      dayOrders.map((order) =>
-                        order.status === "PLACED"
+                      (calendarStatuses[key] || []).map((status) =>
+                        status === "PLACED"
                           ? "placed"
-                          : ["ACCEPTED", "PREPARING"].includes(order.status)
+                          : ["ACCEPTED", "PREPARING"].includes(status)
                             ? "progress"
-                            : order.status === "READY"
+                            : status === "READY"
                               ? "ready"
-                              : order.status === "COMPLETED"
+                              : ["SERVED", "COMPLETED"].includes(status)
                                 ? "done"
                                 : "cancelled",
                       ),
@@ -870,7 +861,8 @@ export default function OrdersPage({ mode = "customer" }) {
                       disabled={!currentMonth}
                       className={`manager-orders-calendar-day${currentMonth ? "" : " outside"}${!currentMonth ? " disabled-date" : ""}${key === selectedOrderDate ? " selected" : ""}${key === dateKey(new Date()) ? " today" : ""}`}
                       onClick={() => setSelectedOrderDate(key)}
-                      aria-label={`${day.toLocaleDateString("en", { dateStyle: "full" })}, ${calendarOrderCounts[key] || 0} orders`}
+                      aria-pressed={key === selectedOrderDate}
+                      aria-label={`${formatLocalDate(day)}, ${calendarOrderCounts[key] || 0} orders`}
                     >
                       <span className="day-number">{day.getDate()}</span>
                       {calendarOrderCounts[key] > 0 && (
@@ -900,24 +892,13 @@ export default function OrdersPage({ mode = "customer" }) {
               <header>
                 <h2>
                   {mode === "chef" ? "Kitchen orders" : "Orders"} –{" "}
-                  {new Date(`${selectedOrderDate}T12:00:00`).toLocaleDateString(
-                    "en",
-                    { month: "short", day: "numeric", year: "numeric" },
-                  )}
+                  {formatLocalDate(selectedOrderDate)}
                 </h2>
                 <div>
-                  <strong>{matchingOrders.length} Orders</strong>
+                  <strong>{total} Orders</strong>
                   <strong>
-                    {matchingOrders.reduce(
-                      (items, order) =>
-                        items +
-                        order.items.reduce(
-                          (sum, item) => sum + Number(item.quantity || 0),
-                          0,
-                        ),
-                      0,
-                    )}{" "}
-                    Items
+                    {totalGuests}{" "}
+                    Guests
                   </strong>
                 </div>
               </header>
@@ -968,9 +949,7 @@ function ManagerOrderCard({ order, busy, onMarkPaid, onUpdate, onOpen }) {
     minute: "2-digit",
   });
   const visitDate = order.reservation?.reservation_date
-    ? new Date(
-        `${order.reservation.reservation_date}T12:00:00`,
-      ).toLocaleDateString("en-IN", { month: "short", day: "numeric" })
+    ? formatLocalDate(order.reservation.reservation_date)
     : null;
 
   return (
@@ -1030,7 +1009,7 @@ function ManagerOrderCard({ order, busy, onMarkPaid, onUpdate, onOpen }) {
             ) : (
               <>
                 <Users size={14} />
-                Walk-in order
+                {order.service_type === "TAKEAWAY" ? "Takeaway order" : "Walk-in order"}
               </>
             )}
             <b className="manager-order-summary-total">{`₹${Number(order.total).toFixed(2)}`}</b>

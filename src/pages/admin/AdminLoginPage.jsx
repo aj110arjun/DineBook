@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { usePageState } from "../../state/usePageState.js";
+import CustomForm from "../../components/forms/CustomForm.jsx";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Mail } from "lucide-react";
 import AdminAuthLayout from "../../components/auth/AdminAuthLayout.jsx";
@@ -8,13 +9,17 @@ import { requestJson } from "../../lib/authApi.js";
 
 export default function AdminLoginPage() {
   const navigate = useNavigate();
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [
+    { error, success, busy },
+    { error: setError, success: setSuccess, busy: setBusy },
+  ] = usePageState("AdminLoginPage", () => ({
+    error: "",
+    success: "",
+    busy: false,
+  }));
   async function handleSubmit(event) {
     event.preventDefault();
 
-    if (!event.currentTarget.reportValidity()) return;
 
     setError("");
     setSuccess("");
@@ -52,7 +57,7 @@ export default function AdminLoginPage() {
         Sign in to access the DineBook administration portal.
       </p>
 
-      <form onSubmit={handleSubmit} noValidate>
+      <CustomForm onSubmit={handleSubmit} noValidate>
         <FormField
           id="email"
           label="Admin Email Address"
@@ -92,7 +97,7 @@ export default function AdminLoginPage() {
           {busy ? "Signing in…" : "Access Administrator Console"}
           {!busy && <ArrowRight size={16} />}
         </button>
-      </form>
+      </CustomForm>
     </AdminAuthLayout>
   );
 }

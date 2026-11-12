@@ -1,56 +1,17 @@
+import useNavigationDisclosure from "../../hooks/useNavigationDisclosure.js";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import PortalBreadcrumb from "../PortalBreadcrumb.jsx";
+import AdminPrimaryNav from "./AdminPrimaryNav.jsx";
 import { requestJson } from "../../lib/authApi.js";
-import {
-  Activity,
-  Bell,
-  ChartNoAxesCombined,
-  FileText,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  Settings,
-  ShieldCheck,
-  SlidersHorizontal,
-  Store,
-  Users,
-  WalletCards,
-  X,
-} from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
+import NotificationBell from "../notifications/NotificationBell.jsx";
 
-const navigation = [
-  {
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    path: "/admin/dashboard",
-  },
-  {
-    label: "Restaurants",
-    icon: Store,
-    path: "/admin/restaurants",
-  },
-  { label: "Users", icon: Users },
-  { label: "Payments", icon: WalletCards },
-  { label: "Offers", icon: ShieldCheck },
-  { label: "Reviews & Reports", icon: FileText },
-  { label: "Analytics", icon: ChartNoAxesCombined },
-  { label: "Notifications", icon: Bell },
-  { label: "Activity Logs", icon: Activity },
-  { label: "Settings", icon: Settings },
-  { label: "Requests", icon: SlidersHorizontal, path: "/admin/requests" },
-  { label: "Profile", icon: Users },
-];
-
-export default function AdminLayout({
-  children,
-  title = "Dashboard",
-  activePath,
-}) {
+export default function AdminLayout({ children, title = "Dashboard" }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  useNavigationDisclosure(sidebarOpen, () => setSidebarOpen(false), "admin-primary-nav");
 
   async function handleLogout() {
     try {
@@ -64,8 +25,15 @@ export default function AdminLayout({
   }
 
   return (
-    <main className="admin-dashboard">
-      {sidebarOpen && <button className="admin-sidebar-scrim" type="button" aria-label="Close navigation" onClick={() => setSidebarOpen(false)} />}
+    <main className="admin-dashboard db-portal-shell">
+      {sidebarOpen && (
+        <button
+          className="admin-sidebar-scrim"
+          type="button"
+          aria-label="Close navigation"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
       <aside className={`admin-sidebar${sidebarOpen ? " is-open" : ""}`}>
         <div className="admin-sidebar-brand">
           <div className="admin-brand-mark">
@@ -78,19 +46,8 @@ export default function AdminLayout({
           </div>
         </div>
 
-        <nav id="admin-primary-nav" className="admin-nav" aria-label="Administrator navigation">
-          {navigation.map(({ label, icon: Icon, path }) => (
-            <button
-              key={label}
-              type="button"
-              className={`admin-nav-item ${activePath === path || pathname === path ? "active" : ""}`}
-              onClick={() => { if (path) navigate(path); setSidebarOpen(false); }}
-            >
-              <Icon size={16} />
-              <span>{label}</span>
-            </button>
-          ))}
-
+        <div id="admin-primary-nav">
+          <AdminPrimaryNav onNavigate={() => setSidebarOpen(false)} />
           <button
             type="button"
             className="admin-nav-item"
@@ -99,46 +56,53 @@ export default function AdminLayout({
             <LogOut size={16} />
             <span>Logout</span>
           </button>
-        </nav>
+        </div>
 
         <div className="admin-sidebar-user">
-          <div className="admin-avatar">MC</div>
+          <div className="admin-avatar" aria-hidden="true">AD</div>
 
           <div>
-            <strong>Maya Chen</strong>
+            <strong>Administrator</strong>
             <span>Super Admin</span>
           </div>
         </div>
       </aside>
 
-      <section className="admin-dashboard-main">
-        <header className="admin-topbar">
-          <button className="admin-mobile-nav-toggle" type="button" aria-label={sidebarOpen ? "Close navigation" : "Open navigation"} aria-expanded={sidebarOpen} aria-controls="admin-primary-nav" onClick={() => setSidebarOpen((open) => !open)}>
+      <section className="admin-dashboard-main db-portal-main">
+        <header className="admin-topbar db-portal-topbar">
+          <button
+            className="admin-mobile-nav-toggle"
+            type="button"
+            aria-label={sidebarOpen ? "Close navigation" : "Open navigation"}
+            aria-expanded={sidebarOpen}
+            aria-controls="admin-primary-nav"
+            onClick={() => setSidebarOpen((open) => !open)}
+          >
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
           <h1>{title}</h1>
 
           <div className="admin-topbar-actions">
-            <div className="admin-search">
-              <span>⌕</span>
-              <input
-                type="search"
-                placeholder="Search platform..."
-                aria-label="Search platform"
-              />
-            </div>
-
-            <button
-              type="button"
-              className="admin-notification-button"
-              aria-label="Notifications"
-            >
-              <Bell size={18} />
-            </button>
+            <NotificationBell role="admin" />
           </div>
         </header>
 
-        <PortalBreadcrumb home={{ label: "Admin", to: "/admin/dashboard" }} items={pathname.startsWith("/admin/requests/") ? [{ label: "Requests", to: "/admin/requests" }, { label: title }] : pathname.startsWith("/admin/restaurants/") ? [{ label: "Restaurants", to: "/admin/restaurants" }, { label: title }] : [{ label: title }]} className="admin-breadcrumb" />
+        <PortalBreadcrumb
+          home={{ label: "Admin", to: "/admin/dashboard" }}
+          items={
+            pathname.startsWith("/admin/transactions/")
+              ? [{ label: "Transactions", to: "/admin/transactions" }, { label: title }]
+              : pathname.startsWith("/admin/requests/")
+              ? [{ label: "Requests", to: "/admin/requests" }, { label: title }]
+              : pathname.startsWith("/admin/restaurants/")
+                ? [
+                    { label: "Restaurants", to: "/admin/restaurants" },
+                    { label: title },
+                  ]
+                : [{ label: title }]
+          }
+          className="admin-breadcrumb"
+        />
         {children}
       </section>
     </main>

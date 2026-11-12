@@ -1,0 +1,84 @@
+import { usePageState } from "../../state/usePageState.js";
+import { formatLocalDate } from "../../lib/localDate.js";
+import { useEffect } from "react";
+import { requestJson } from "../../lib/authApi.js";
+import ChefLayout from "../../components/chef/ChefLayout.jsx";
+import "../../assets/css/ReviewsPage.css";
+export default function ChefReviewsPage() {
+  const [
+    { data, rating, page, error },
+    { data: setData, rating: setRating, page: setPage, error: setError },
+  ] = usePageState("ChefReviewsPage", () => ({
+    data: {
+      items: [],
+      total: 0
+    },
+    rating: "",
+    page: 0,
+    error: "",
+  }));
+  useEffect(() => {
+    requestJson(
+      `/api/chef/reviews?offset=${page * 20}&limit=20${rating ? `&rating=${rating}` : ""}`,
+    )
+      .then(setData)
+      .catch((e) => setError(e.message));
+  }, [page, rating]);
+  return (
+    <ChefLayout title="Reviews">
+      <main className="reviews-page">
+        <h2>Guest feedback</h2>
+        <p>
+          Average rating: {data.average_rating ?? "—"} · {data.total} reviews
+        </p>
+        <div className="reviews-toolbar">
+          <label>
+            Rating{" "}
+            <select
+              value={rating}
+              onChange={(e) => {
+                setRating(e.target.value);
+                setPage(0);
+              }}
+            >
+              <option value="">All</option>
+              {[5, 4, 3, 2, 1].map((x) => (
+                <option key={x}>{x}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+        {error && (
+          <p role="alert" className="reviews-error">
+            {error}
+          </p>
+        )}
+        {data.items.map((r) => (
+          <article className="reviews-card" key={r.id}>
+            <strong>
+              {"★".repeat(r.rating)}
+              {"☆".repeat(5 - r.rating)} {r.food_name && `· ${r.food_name}`}
+            </strong>
+            <p>{r.content}</p>
+            <small className="reviews-muted">
+              {formatLocalDate(r.created_at)}
+            </small>
+          </article>
+        ))}
+        {!error && !data.items.length && <p>No published feedback yet.</p>}
+        <div className="reviews-pager">
+          <button disabled={!page} onClick={() => setPage((p) => p - 1)}>
+            Previous
+          </button>
+          <span>Page {page + 1}</span>
+          <button
+            disabled={(page + 1) * 20 >= data.total}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Next
+          </button>
+        </div>
+      </main>
+    </ChefLayout>
+  );
+}

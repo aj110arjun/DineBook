@@ -4,13 +4,13 @@ import { Link } from "react-router-dom";
 const stories = {
   login: {
     tag: "DINEBOOK FOR GUESTS",
-    title: "Secure Your Table at the World’s Best Bistros",
-    body: "Access vetted tables, book premium dining experiences, and keep every memorable evening in one place.",
+    title: "Your next meal, all in one place",
+    body: "Sign in to reserve tables, manage your visits and keep track of your orders.",
   },
   register: {
     tag: "YOUR NEXT GREAT EVENING",
-    title: "Access the World’s Most Coveted Tables",
-    body: "Create your guest account to discover exceptional restaurants and make every reservation feel effortless.",
+    title: "Make room for your next meal",
+    body: "Create an account to discover restaurants, save your favorites and manage your reservations.",
   },
   verification: {
     tag: "ONE LAST STEP",
@@ -24,7 +24,7 @@ const stories = {
   },
   password: {
     tag: "GUEST ACCOUNT SECURITY",
-    title: "Enhance Your Culinary Profile Security",
+    title: "Keep your account secure",
     body: "Keep your account secure with a strong password that protects your dining plans and personal details.",
   },
 };
@@ -33,7 +33,7 @@ function Brand() {
   return (
     <Link
       className="inline-flex items-center gap-3 text-xl font-semibold tracking-tight text-white"
-      to="/customer/login"
+      to="/customer"
       aria-label="DineBook home"
     >
       <span className="grid h-10 w-10 place-items-center rounded-full border border-white/25 bg-white/10 text-gold">
@@ -49,12 +49,12 @@ export default function AuthLayout({ view, children }) {
 
   return (
     <main className="min-h-screen bg-cream font-sans text-ink lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(440px,0.82fr)]">
-      <section className="relative flex min-h-[300px] flex-col justify-between overflow-hidden bg-ink px-7 py-8 text-white sm:px-12 sm:py-10 lg:min-h-screen lg:px-[12%] lg:py-12">
+      <section className="auth-story relative flex min-h-[300px] flex-col justify-between overflow-hidden bg-ink px-7 py-8 text-white sm:px-12 sm:py-10 lg:min-h-screen lg:px-[12%] lg:py-12">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(198,166,107,.2),transparent_55%),linear-gradient(135deg,rgba(87,46,53,.55),transparent_65%)]" />
         <div className="relative z-10">
           <Brand />
         </div>
-        <div className="relative z-10 my-12 max-w-xl lg:my-0">
+        <div className="auth-story-copy relative z-10 my-12 max-w-xl lg:my-0">
           <span className="text-[11px] font-semibold uppercase tracking-[0.25em] text-gold">
             {story.tag}
           </span>

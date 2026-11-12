@@ -1,8 +1,9 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { requestJson } from "../../lib/authApi.js";
+import NotificationSession from "../notifications/NotificationSession.jsx";
 
-export default function ManagerProtectedRoute({ children }) {
+export default function ManagerProtectedRoute() {
   const [checking, setChecking] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
   const [suspended, setSuspended] = useState(false);
@@ -36,7 +37,7 @@ export default function ManagerProtectedRoute({ children }) {
     }
 
     checkManager(true);
-    const timer = window.setInterval(() => checkManager(false), 2000);
+    const timer = window.setInterval(() => checkManager(false), 50000);
 
     return () => {
       active = false;
@@ -59,8 +60,18 @@ export default function ManagerProtectedRoute({ children }) {
       : hadSession.current
         ? "Your session has ended. Please sign in again."
         : undefined;
-    return <Navigate to="/manager/login" replace state={notice ? { notice } : null} />;
+    return (
+      <Navigate
+        to="/manager/login"
+        replace
+        state={notice ? { notice } : null}
+      />
+    );
   }
 
-  return children;
+  return (
+    <NotificationSession>
+      <Outlet />
+    </NotificationSession>
+  );
 }

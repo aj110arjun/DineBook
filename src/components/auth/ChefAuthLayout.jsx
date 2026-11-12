@@ -8,7 +8,9 @@ export default function ChefAuthLayout({ children }) {
         <div className="manager-story-overlay chef-story-overlay" />
         <div className="manager-brand">
           <Link to="/chef/login" className="brand">
-            <span className="brand-mark"><Utensils size={15} /></span>
+            <span className="brand-mark">
+              <Utensils size={15} />
+            </span>
             <span>DineBook</span>
           </Link>
         </div>
@@ -18,7 +20,10 @@ export default function ChefAuthLayout({ children }) {
             <ChefHat size={12} /> CHEF PORTAL
           </span>
           <h1>Bring Your Kitchen to Life</h1>
-          <p>Sign in to manage your kitchen profile and stay connected with the restaurants you serve.</p>
+          <p>
+            Sign in to manage your kitchen profile and stay connected with the
+            restaurants you serve.
+          </p>
         </div>
 
         <footer>© 2026 DineBook Premium Dining Network</footer>
