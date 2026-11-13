@@ -43,11 +43,6 @@ const navigationGroups = [
   {
     label: "Restaurant setup",
     items: [
-      {
-        label: "Restaurant details",
-        icon: Store,
-        to: "/manager/restaurant-location",
-      },
       { label: "Opening hours", icon: Clock3, to: "/manager/operating-hours" },
       { label: "Tables & floors", icon: Table2, to: "/manager/tables" },
       { label: "Menu", icon: Utensils, to: "/manager/menu" },
@@ -145,9 +140,14 @@ export default function ManagerLayout({ children, title = "Dashboard" }) {
           ))}
         </nav>
         <div className="manager-sidebar-bottom">
-          <Link to="/manager/profile" className={`manager-nav-item ${pathname === "/manager/profile" ? "active" : ""}`}
-            aria-current={pathname === "/manager/profile" ? "page" : undefined} onClick={() => setSidebarOpen(false)}>
-            <UserRound size={16} /><span>Profile</span>
+          <Link
+            to="/manager/profile"
+            className={`manager-nav-item ${pathname === "/manager/profile" ? "active" : ""}`}
+            aria-current={pathname === "/manager/profile" ? "page" : undefined}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <UserRound size={16} />
+            <span>Profile</span>
           </Link>
           <Link
             to="/manager/settings"
