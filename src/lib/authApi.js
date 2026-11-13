@@ -61,12 +61,15 @@ export async function requestJson(
     }
     throw new Error(
       "Can’t reach DineBook right now. Check that the service is running and try again.",
+      { cause: reason },
     );
   }
 
   const data = response.data || {};
   if (response.status < 200 || response.status >= 300) {
-    throw new Error(getErrorMessage(data?.detail, fallbackMessage));
+    const error = new Error(getErrorMessage(data?.detail, fallbackMessage));
+    error.status = response.status;
+    throw error;
   }
   return data;
 }
