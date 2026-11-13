@@ -1,5 +1,7 @@
 import { usePageState } from "../../state/usePageState.js";
 import { useEffect, useMemo } from "react";
+import { useDispatch } from "react-redux";
+import { setCustomerSession, clearCustomerSession } from "../../state/customerSession.js";
 import { useNavigate } from "react-router-dom";
 import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
 import CuisineGrid from "../../components/landing/CuisineGrid.jsx";
@@ -23,6 +25,7 @@ const cuisineMatches = {
 };
 
 export default function CustomerLandingPage() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [
     {
@@ -64,12 +67,14 @@ export default function CustomerLandingPage() {
       .then((currentUser) => {
         if (mounted) {
           setUser(currentUser);
+          dispatch(setCustomerSession(currentUser));
         }
       })
-      .catch(() => {
+      .catch((reason) => {
         // Not logged in is perfectly valid for the landing page.
         if (mounted) {
           setUser(null);
+          if (reason.status === 401 || reason.status === 403) dispatch(clearCustomerSession());
         }
       })
       .finally(() => {
@@ -80,7 +85,7 @@ export default function CustomerLandingPage() {
     return () => {
       mounted = false;
     };
-  }, [navigate]);
+  }, [navigate, dispatch]);
 
   useEffect(() => {
     let mounted = true;

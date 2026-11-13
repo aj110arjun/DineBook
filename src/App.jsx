@@ -10,6 +10,8 @@ import CustomerRestaurantDetailsPage from "./pages/customer/CustomerRestaurantDe
 import CustomerReservationPage from "./pages/customer/CustomerReservationPage.jsx";
 import CustomerRestaurantListingPage from "./pages/customer/CustomerRestaurantListingPage.jsx";
 import CustomerProfilePage from "./pages/customer/CustomerProfilePage.jsx";
+import CustomerSettingsPage from "./pages/customer/CustomerSettingsPage.jsx";
+import { useCustomerPreferences } from "./components/customer/CustomerPreferences.jsx";
 import CustomerSavedRestaurantsPage from "./pages/customer/CustomerSavedRestaurantsPage.jsx";
 import CustomerWalletPage from "./pages/customer/CustomerWalletPage.jsx";
 import CustomerReservationsPage from "./pages/customer/CustomerReservationsPage.jsx";
@@ -44,7 +46,6 @@ import ChefMenuPage from "./pages/chef/ChefMenuPage.jsx";
 import ChefChangePasswordPage from "./pages/chef/ChefChangePasswordPage.jsx";
 import ChefProtectedRoute from "./components/auth/ChefProtectedRoute.jsx";
 import PortalGuestOnlyRoute from "./components/auth/PortalGuestOnlyRoute.jsx";
-import ThemeToggle from "./components/ThemeToggle.jsx";
 import OrdersPage from "./pages/shared/OrdersPage.jsx";
 import ManagerOrderDetailsPage from "./pages/manager/ManagerOrderDetailsPage.jsx";
 import ManagerSpotOrderPage from "./pages/manager/ManagerSpotOrderPage.jsx";
@@ -61,11 +62,13 @@ import {
 } from "./pages/shared/RevenueWalletPage.jsx";
 
 export default function App() {
+  useCustomerPreferences();
   return (
     <>
       <Routes>
         <Route path="/" element={<Navigate to="/customer" replace />} />
         <Route path="/customer" element={<CustomerLandingPage />} />
+        <Route path="/customer/settings" element={<ProtectedRoute><CustomerSettingsPage /></ProtectedRoute>} />
         <Route
           path="/customer/profile"
           element={
@@ -377,7 +380,6 @@ export default function App() {
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
-      <ThemeToggle />
     </>
   );
 }

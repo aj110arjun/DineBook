@@ -1,5 +1,7 @@
 import { usePageState } from "../../state/usePageState.js";
 import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { setCustomerSession, clearCustomerSession } from "../../state/customerSession.js";
 import { MapPin, Search, SlidersHorizontal, Users } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
@@ -12,6 +14,7 @@ import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
 const PAGE_SIZE = 6;
 
 export default function CustomerRestaurantListingPage() {
+  const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
   const [
     {
@@ -147,12 +150,19 @@ export default function CustomerRestaurantListingPage() {
     }
     let mounted = true;
     requestJson("/api/customer/me")
-      .then((data) => mounted && setUser(data))
-      .catch(() => mounted && setUser(null));
+      .then((data) => {
+        if (mounted) { setUser(data); dispatch(setCustomerSession(data)); }
+      })
+      .catch((reason) => {
+        if (mounted) {
+          setUser(null);
+          if (reason.status === 401 || reason.status === 403) dispatch(clearCustomerSession());
+        }
+      });
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [dispatch]);
 
   const visibleRestaurants = restaurants;
 

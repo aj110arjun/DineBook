@@ -7,7 +7,8 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test:invoice": "node --test src/lib/transactionInvoicePdf.test.js"
+    "test:invoice": "node --test src/lib/transactionInvoicePdf.test.js",
+    "test:settings": "node --test src/lib/customerSettings.test.js src/lib/localDate.test.js"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.14.0",

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Clock3 } from "lucide-react";
+import { formatWallTime } from "../lib/localDate.js";
+import { useCustomerPreferences } from "./customer/CustomerPreferences.jsx";
 
 const pad = (value) => String(value).padStart(2, "0");
 
@@ -21,6 +23,9 @@ export default function CustomTimePicker({
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
   const parts = partsFromTime(value);
+  const preferences = useCustomerPreferences();
+  const use24h = preferences?.active && preferences.general.time_format === "24h";
+  const selectedHour = use24h ? Number((value || "20:00").split(":")[0]) : parts.hour;
 
   useEffect(() => {
     if (!open) return undefined;
@@ -42,16 +47,16 @@ export default function CustomTimePicker({
   }, [open]);
 
   function update(next) {
-    let hour = next.hour % 12;
-    if (next.period === "PM") hour += 12;
+    let hour = use24h ? next.hour : next.hour % 12;
+    if (!use24h && next.period === "PM") hour += 12;
     onChange(`${pad(hour)}:${pad(next.minute)}`);
   }
 
   const choices = [
     {
       name: "Hour",
-      values: Array.from({ length: 12 }, (_, index) => index + 1),
-      selected: parts.hour,
+      values: Array.from({ length: use24h ? 24 : 12 }, (_, index) => use24h ? index : index + 1),
+      selected: selectedHour,
       format: pad,
     },
     {
@@ -66,7 +71,7 @@ export default function CustomTimePicker({
       selected: parts.period,
       format: (value) => value,
     },
-  ];
+  ].filter(({ name }) => !use24h || name !== "Period");
 
   return (
     <div
@@ -83,12 +88,12 @@ export default function CustomTimePicker({
         onClick={() => setOpen((current) => !current)}
       >
         <span>
-          {pad(parts.hour)}:{pad(parts.minute)} <b>{parts.period}</b>
+          {preferences?.active ? formatWallTime(value || "20:00") : <>{pad(parts.hour)}:{pad(parts.minute)} <b>{parts.period}</b></>}
         </span>
         <Clock3 size={17} aria-hidden="true" />
       </button>
       {open && (
-        <div className="custom-time-popover" role="dialog" aria-label={label}>
+        <div className={`custom-time-popover${use24h ? " is-24h" : ""}`} role="dialog" aria-label={label}>
           {choices.map(({ name, values, selected, format }) => (
             <div className="custom-time-column" key={name} aria-label={name}>
               <span className="custom-time-column-label">{name}</span>
@@ -105,7 +110,7 @@ export default function CustomTimePicker({
                     className={selected === choice ? "selected" : ""}
                     key={choice}
                     onClick={() => {
-                      update({ ...parts, [name.toLowerCase()]: choice });
+                      update({ ...parts, hour: selectedHour, [name.toLowerCase()]: choice });
                     }}
                   >
                     {format(choice)}

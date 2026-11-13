@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Bell,
+  Settings,
   CalendarDays,
   Camera,
   CreditCard,
@@ -18,6 +18,7 @@ import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
 import ImageCropDialog from "../../components/manager/ImageCropDialog.jsx";
 import Notice from "../../components/auth/Notice.jsx";
 import { requestJson } from "../../lib/authApi.js";
+import { formatLocalDate } from "../../lib/localDate.js";
 import {
   profileForm,
   profilePatch,
@@ -58,7 +59,7 @@ const navItems = [
   ["Saved Restaurants", Heart, "/customer/saved-restaurants"],
   ["Booking History", CalendarDays, "/customer/profile/reservations"],
   ["Payment Transactions", CreditCard, "/customer/profile/transactions"],
-  ["Notification Settings", Bell, "/customer/profile#notifications"],
+  ["Settings", Settings, "/customer/settings"],
   ["Wallet", Wallet, "/customer/profile/wallet"],
 ];
 
@@ -73,18 +74,6 @@ function readPreferences() {
     /* Use empty preferences until the customer chooses them. */
   }
   return preferenceDefaults;
-}
-
-function readNotifications() {
-  try {
-    return {
-      reservationUpdates: true,
-      offers: true,
-      ...JSON.parse(localStorage.getItem("dinebook-notification-settings")),
-    };
-  } catch {
-    return { reservationUpdates: true, offers: true };
-  }
 }
 
 function Avatar({ user, src = user?.avatar_url, small = false }) {
@@ -224,11 +213,7 @@ function PersonalInformation({ user, onPersist, onSessionExpired }) {
     (removeAvatar && Boolean(user.avatar_url));
   const joined =
     user.created_at && !Number.isNaN(Date.parse(user.created_at))
-      ? new Date(user.created_at).toLocaleDateString("en-IN", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        })
+      ? formatLocalDate(user.created_at)
       : null;
 
   return (
@@ -460,12 +445,11 @@ export default function CustomerProfilePage() {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.customerSession.user);
   const [prefs, setPrefs] = useState(readPreferences);
-  const [notifications, setNotifications] = useState(readNotifications);
   const [preferencesMessage, setPreferencesMessage] = useState("");
-  const section =
-    location.hash === "#notifications"
-      ? "Notification Settings"
-      : "Personal Information";
+  const section = "Personal Information";
+  useEffect(() => {
+    if (location.hash === "#notifications") navigate("/customer/settings", { replace: true });
+  }, [location.hash, navigate]);
 
   function sessionExpired() {
     dispatch(clearCustomerSession());
@@ -631,42 +615,7 @@ export default function CustomerProfilePage() {
                 </button>
               </div>
             </section>
-            <section
-              className="profile-card preference-card"
-              id="notifications"
-            >
-              <h2>Notification Settings</h2>
-              <p>Choose which updates you want to receive on this device.</p>
-              <div className="seating-options">
-                {[
-                  ["reservationUpdates", "Reservation updates"],
-                  ["offers", "Offers and restaurant news"],
-                ].map(([key, label]) => (
-                  <label key={key}>
-                    <input
-                      type="checkbox"
-                      checked={notifications[key]}
-                      onChange={(event) => {
-                        const next = {
-                          ...notifications,
-                          [key]: event.target.checked,
-                        };
-                        setNotifications(next);
-                        try {
-                          localStorage.setItem(
-                            "dinebook-notification-settings",
-                            JSON.stringify(next),
-                          );
-                        } catch {
-                          /* Settings still apply for this visit. */
-                        }
-                      }}
-                    />
-                    {label}
-                  </label>
-                ))}
-              </div>
-            </section>
+
           </div>
         </div>
       </main>

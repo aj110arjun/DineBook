@@ -1,6 +1,6 @@
 import useNavigationDisclosure from "../../hooks/useNavigationDisclosure.js";
 import { useState, useEffect } from "react";
-import { MapPin, Menu, Utensils, X } from "lucide-react";
+import { MapPin, Menu, Settings, Utensils, X } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { demoCustomer } from "../../data/demoCustomer.js";
 import NotificationSession from "../notifications/NotificationSession.jsx";
@@ -145,6 +145,9 @@ export default function CustomerHeader({ user }) {
             {user ? (
               <>
                 <NotificationBell role="customer" enabled={Boolean(user)} />
+                <Link to="/customer/settings" aria-label="Settings" title="Settings" onClick={closeMenu}>
+                  <Settings size={19} aria-hidden="true" />
+                </Link>
 
                 <button
                   className="profile-button"
