@@ -44,6 +44,7 @@ import ManagerFloorsPage from "./pages/manager/ManagerFloorsPage.jsx";
 import ManagerReservationsPage from "./pages/manager/ManagerReservationsPage.jsx";
 import ChefLoginPage from "./pages/chef/ChefLoginPage.jsx";
 import ChefDashboardPage from "./pages/chef/ChefDashboardPage.jsx";
+import ChefSettingsPage from "./pages/chef/ChefSettingsPage.jsx";
 import ChefMenuPage from "./pages/chef/ChefMenuPage.jsx";
 import ChefChangePasswordPage from "./pages/chef/ChefChangePasswordPage.jsx";
 import ChefProtectedRoute from "./components/auth/ChefProtectedRoute.jsx";
@@ -372,6 +373,7 @@ export default function App() {
         />
         <Route element={<ChefProtectedRoute />}>
           <Route path="/chef/dashboard" element={<ChefDashboardPage />} />
+          <Route path="/chef/settings" element={<ChefSettingsPage />} />
           <Route path="/chef/orders" element={<OrdersPage mode="chef" />} />
           <Route path="/chef/menu" element={<ChefMenuPage />} />
           <Route path="/chef/menu/:foodId" element={<ChefMenuPage />} />

@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createChefDashboardLoader, createKitchenActions, elapsedLabel, kitchenInstant, preparationLabel } from "./chefDashboard.js";
+import { setAccountDateTimePreferences } from "./localDate.js";
 
 const deferred = () => { let resolve, reject; const promise = new Promise((yes, no) => { resolve = yes; reject = no; }); return { promise, resolve, reject }; };
 const params = { period: "today", status: "ACTIVE", page: 1, page_size: 8 };
@@ -13,6 +14,18 @@ test("preparation and age labels preserve missing measurements and true zeros", 
   assert.equal(elapsedLabel(-5), "Less than 1 min");
   assert.equal(elapsedLabel(3660), "1 hr 1 min");
   assert.match(kitchenInstant("2026-11-12T18:30:00Z", "Asia/Kolkata", true), /13 Nov/);
+});
+
+test("kitchen activity follows chef formatting while reservation arrivals stay restaurant local", () => {
+  setAccountDateTimePreferences({ date_format: "YYYY-MM-DD", time_format: "24h", timezone: "America/Los_Angeles" });
+  try {
+    const instant = "2026-11-12T18:30:00Z";
+    assert.equal(kitchenInstant(instant, "Asia/Kolkata", true), "2026-11-12, 10:30");
+    assert.equal(kitchenInstant(instant, "Asia/Kolkata"), "10:30");
+    assert.equal(kitchenInstant(instant, "Asia/Kolkata", true, { restaurantLocal: true }), "2026-11-13, 00:00");
+  } finally {
+    setAccountDateTimePreferences(null);
+  }
 });
 
 test("refresh requests coalesce and use server filters and bounded pagination", async () => {

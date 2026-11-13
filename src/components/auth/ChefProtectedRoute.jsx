@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
 import NotificationSession from "../notifications/NotificationSession.jsx";
+import { useAccountPreferences } from "../preferences/AccountPreferences.jsx";
 
 const SESSION_CHECK_INTERVAL = 50000;
 
 export default function ChefProtectedRoute() {
+  const preferences = useAccountPreferences();
   const { pathname } = useLocation();
   const [chef, setChef] = useState(undefined);
   const [suspended, setSuspended] = useState(false);
@@ -51,6 +53,10 @@ export default function ChefProtectedRoute() {
       window.clearTimeout(timer);
     };
   }, [sessionVersion]);
+
+  useEffect(() => {
+    preferences?.setChefId(chef && !chef.must_change_password && pathname !== "/chef/change-password" ? chef.id : null);
+  }, [chef?.id, chef?.must_change_password, pathname, preferences?.setChefId]);
 
   function refreshChef() {
     setChef(undefined);

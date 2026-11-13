@@ -1,5 +1,5 @@
 import { usePageState } from "../../state/usePageState.js";
-import { formatLocalDate } from "../../lib/localDate.js";
+import { formatLocalDate, formatWallTime } from "../../lib/localDate.js";
 import { useEffect } from "react";
 import { Clock3 } from "lucide-react";
 import ChefLayout from "../../components/chef/ChefLayout.jsx";
@@ -51,7 +51,7 @@ export default function ChefServiceHoursPage() {
                   <strong>
                     {data.today?.is_open
                       ? data.today.periods
-                          .map((item) => `${item.opens}–${item.closes}`)
+                          .map((item) => `${formatWallTime(item.opens)}–${formatWallTime(item.closes)}`)
                           .join(" · ")
                       : "Closed today"}
                   </strong>
@@ -67,7 +67,7 @@ export default function ChefServiceHoursPage() {
                       {day.periods.length ? (
                         day.periods.map((period, index) => (
                           <span key={index}>
-                            {period.opens} – {period.closes}
+                            {formatWallTime(period.opens)} – {formatWallTime(period.closes)}
                           </span>
                         ))
                       ) : (
@@ -95,7 +95,7 @@ export default function ChefServiceHoursPage() {
                             : item.periods
                                 .map(
                                   (period) =>
-                                    `${period.opens}–${period.closes}`,
+                                    `${formatWallTime(period.opens)}–${formatWallTime(period.closes)}`,
                                 )
                                 .join(" · ")}
                         </span>

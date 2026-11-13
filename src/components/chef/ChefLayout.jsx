@@ -9,6 +9,7 @@ import {
   List,
   LogOut,
   Menu,
+  Settings,
   X,
 } from "lucide-react";
 import { Link, useLocation, useNavigate, useOutletContext } from "react-router-dom";
@@ -21,6 +22,7 @@ const navigation = [
   { label: "Menu", icon: List, to: "/chef/menu" },
   { label: "Service Hours", icon: Clock3, to: "/chef/service-hours" },
   { label: "Revenue & Wallet", icon: ChartNoAxesColumn, to: "/chef/revenue" },
+  { label: "Settings", icon: Settings, to: "/chef/settings" },
 ];
 
 export default function ChefLayout({ title, children }) {
