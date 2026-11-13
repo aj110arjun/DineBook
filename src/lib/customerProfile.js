@@ -64,17 +64,18 @@ export function profilePatch(current, form) {
 
 // Persist each successful response immediately. If the second request fails, a retry
 // only needs to save the outstanding photo change and the shared identity stays accurate.
-export async function saveCustomerProfile({
+export async function saveAccountProfile({
   current,
   form,
   file,
   removeAvatar,
   request,
   onPersist,
+  basePath = "/api/customer/profile",
 }) {
   const patch = profilePatch(current, form);
   if (Object.keys(patch).length) {
-    current = await request("/api/customer/profile", {
+    current = await request(basePath, {
       method: "PATCH",
       body: patch,
       fallbackMessage: "Unable to save your profile.",
@@ -84,14 +85,14 @@ export async function saveCustomerProfile({
   if (file) {
     const body = new FormData();
     body.append("image", file);
-    current = await request("/api/customer/profile/avatar", {
+    current = await request(`${basePath}/avatar`, {
       method: "POST",
       body,
       fallbackMessage: "Unable to save your profile photo.",
     });
     onPersist(current);
   } else if (removeAvatar && current.avatar_url) {
-    current = await request("/api/customer/profile/avatar", {
+    current = await request(`${basePath}/avatar`, {
       method: "DELETE",
       fallbackMessage: "Unable to remove your profile photo.",
     });
@@ -99,3 +100,5 @@ export async function saveCustomerProfile({
   }
   return current;
 }
+
+export const saveCustomerProfile = saveAccountProfile;

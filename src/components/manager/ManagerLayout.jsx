@@ -10,10 +10,12 @@ import {
   Clock3,
   Star,
   Store,
+  Settings,
   Table2,
   Tag,
   Utensils,
   Users,
+  UserRound,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -143,6 +145,19 @@ export default function ManagerLayout({ children, title = "Dashboard" }) {
           ))}
         </nav>
         <div className="manager-sidebar-bottom">
+          <Link to="/manager/profile" className={`manager-nav-item ${pathname === "/manager/profile" ? "active" : ""}`}
+            aria-current={pathname === "/manager/profile" ? "page" : undefined} onClick={() => setSidebarOpen(false)}>
+            <UserRound size={16} /><span>Profile</span>
+          </Link>
+          <Link
+            to="/manager/settings"
+            className={`manager-nav-item ${pathname === "/manager/settings" ? "active" : ""}`}
+            aria-current={pathname === "/manager/settings" ? "page" : undefined}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Settings size={16} />
+            <span>Settings</span>
+          </Link>
           <button
             className="manager-nav-item"
             type="button"

@@ -1,5 +1,5 @@
 import { usePageState } from "../../state/usePageState.js";
-import { formatLocalDate, shiftLocalMonth } from "../../lib/localDate.js";
+import { formatLocalDate, formatWallTime, shiftLocalMonth } from "../../lib/localDate.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
@@ -74,12 +74,7 @@ const orderStatusLabel = (status) =>
     CANCELLED: "Removed",
     REJECTED: "Declined by kitchen",
   })[status] || "Order update pending";
-const shortTime = (value) => {
-  if (!value) return "";
-  const [h, m] = value.slice(0, 5).split(":").map(Number);
-  const period = h >= 12 ? "PM" : "AM";
-  return `${String(h % 12 || 12).padStart(2, "0")}:${String(m).padStart(2, "0")} ${period}`;
-};
+const shortTime = formatWallTime;
 const consolidateDeskOrderLines = (lines) => {
   const quantities = new Map();
   lines.forEach(({ variant_id, quantity }) => {

@@ -99,3 +99,15 @@ test("unmount cancels pending data and suppresses later state changes", async ()
   await result;
   assert.equal(states.length, 1);
 });
+
+test("manager display preferences format activity without changing business date filters", async () => {
+  const { setAccountDateTimePreferences } = await import("./localDate.js");
+  try {
+    setAccountDateTimePreferences({ date_format: "YYYY-MM-DD", time_format: "24h", timezone: "America/Los_Angeles" });
+    assert.equal(formatDate("2026-11-13"), "2026-11-13");
+    assert.equal(formatInstant("2026-11-13T00:30:00Z"), "2026-11-12, 16:30");
+    assert.equal(businessDate(new Date("2026-11-12T19:00:00Z")), "2026-11-13");
+  } finally {
+    setAccountDateTimePreferences(null);
+  }
+});

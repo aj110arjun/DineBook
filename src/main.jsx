@@ -6,7 +6,7 @@ import App from "./App.jsx";
 import { store } from "./state/store.js";
 import AppExperience, { AppErrorBoundary } from "./components/AppExperience.jsx";
 import ConfirmDialogHost from "./components/ConfirmDialogHost.jsx";
-import CustomerPreferencesProvider from "./components/customer/CustomerPreferences.jsx";
+import AccountPreferencesProvider from "./components/preferences/AccountPreferences.jsx";
 import "./assets/css/index.css";
 import "./assets/css/styles.css";
 import "./assets/css/design-system.css";
@@ -25,7 +25,7 @@ createRoot(document.getElementById("root")).render(
       <BrowserRouter>
         <AppExperience />
         <AppErrorBoundary>
-          <CustomerPreferencesProvider><App /></CustomerPreferencesProvider>
+          <AccountPreferencesProvider><App /></AccountPreferencesProvider>
           <ConfirmDialogHost />
         </AppErrorBoundary>
       </BrowserRouter>

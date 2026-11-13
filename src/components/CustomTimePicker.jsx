@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Clock3 } from "lucide-react";
 import { formatWallTime } from "../lib/localDate.js";
-import { useCustomerPreferences } from "./customer/CustomerPreferences.jsx";
+import { useAccountPreferences } from "./preferences/AccountPreferences.jsx";
 
 const pad = (value) => String(value).padStart(2, "0");
 
@@ -23,7 +23,7 @@ export default function CustomTimePicker({
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
   const parts = partsFromTime(value);
-  const preferences = useCustomerPreferences();
+  const preferences = useAccountPreferences();
   const use24h = preferences?.active && preferences.general.time_format === "24h";
   const selectedHour = use24h ? Number((value || "20:00").split(":")[0]) : parts.hour;
 

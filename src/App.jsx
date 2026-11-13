@@ -11,7 +11,7 @@ import CustomerReservationPage from "./pages/customer/CustomerReservationPage.js
 import CustomerRestaurantListingPage from "./pages/customer/CustomerRestaurantListingPage.jsx";
 import CustomerProfilePage from "./pages/customer/CustomerProfilePage.jsx";
 import CustomerSettingsPage from "./pages/customer/CustomerSettingsPage.jsx";
-import { useCustomerPreferences } from "./components/customer/CustomerPreferences.jsx";
+import { useAccountPreferences } from "./components/preferences/AccountPreferences.jsx";
 import CustomerSavedRestaurantsPage from "./pages/customer/CustomerSavedRestaurantsPage.jsx";
 import CustomerWalletPage from "./pages/customer/CustomerWalletPage.jsx";
 import CustomerReservationsPage from "./pages/customer/CustomerReservationsPage.jsx";
@@ -33,6 +33,8 @@ import AdminOffersPage from "./pages/admin/AdminOffersPage.jsx";
 import ManagerRegisterPage from "./pages/manager/ManagerRegisterPage.jsx";
 import ManagerLoginPage from "./pages/manager/ManagerLoginPage.jsx";
 import ManagerDashboardPage from "./pages/manager/ManagerDashboardPage.jsx";
+import ManagerSettingsPage from "./pages/manager/ManagerSettingsPage.jsx";
+import ManagerProfilePage from "./pages/manager/ManagerProfilePage.jsx";
 import ManagerRestaurantLocationPage from "./pages/manager/ManagerRestaurantLocationPage.jsx";
 import ManagerProtectedRoute from "./components/auth/ManagerProtectedRoute.jsx";
 import ManagerPendingPage from "./pages/manager/ManagerPendingPage.jsx";
@@ -62,7 +64,7 @@ import {
 } from "./pages/shared/RevenueWalletPage.jsx";
 
 export default function App() {
-  useCustomerPreferences();
+  useAccountPreferences();
   return (
     <>
       <Routes>
@@ -312,6 +314,8 @@ export default function App() {
         <Route path="/manager/pending" element={<ManagerPendingPage />} />
         <Route element={<ManagerProtectedRoute />}>
           <Route path="/manager/dashboard" element={<ManagerDashboardPage />} />
+          <Route path="/manager/settings" element={<ManagerSettingsPage />} />
+          <Route path="/manager/profile" element={<ManagerProfilePage />} />
           <Route
             path="/manager/restaurant-location"
             element={<ManagerRestaurantLocationPage />}

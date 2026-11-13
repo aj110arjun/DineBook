@@ -1,3 +1,5 @@
+import { formatLocalDate, formatLocalDateTime, getAccountDateTimePreferences } from "./localDate.js";
+
 export const BUSINESS_TIMEZONE = "Asia/Kolkata";
 export const PERIOD_PRESETS = [
   ["today", "Today"], ["last7", "Last 7 Days"], ["last30", "Last 30 Days"],
@@ -36,8 +38,12 @@ const currency = new Intl.NumberFormat("en-IN", { style: "currency", currency: "
 const numbers = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 });
 export const formatCurrency = (value) => currency.format(Number(value || 0));
 export const formatNumber = (value) => numbers.format(Number(value || 0));
-export const formatDate = (value) => new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`));
-export const formatInstant = (value) => new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: BUSINESS_TIMEZONE }).format(new Date(value.endsWith("Z") || /[+-]\d\d:\d\d$/.test(value) ? value : `${value}Z`));
+export const formatDate = (value) => getAccountDateTimePreferences()
+  ? formatLocalDate(value)
+  : new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`));
+export const formatInstant = (value) => getAccountDateTimePreferences()
+  ? formatLocalDateTime(value)
+  : new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: BUSINESS_TIMEZONE }).format(new Date(value.endsWith("Z") || /[+-]\d\d:\d\d$/.test(value) ? value : `${value}Z`));
 export const statusLabel = (value) => value.toLowerCase().replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 export function formatBucket(value, group) {
   if (group === "year") return value.slice(0, 4);
