@@ -1,5 +1,5 @@
 import { usePageState } from "../../state/usePageState.js";
-import { formatCalendarDate, formatLocalDate, formatLocalDateTime, shiftLocalMonth } from "../../lib/localDate.js";
+import { formatCalendarDate, formatLocalDate, formatLocalDateTime, formatLocalTime, shiftLocalMonth } from "../../lib/localDate.js";
 import { useEffect, useMemo, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -944,10 +944,7 @@ function ManagerOrderCard({ order, busy, onMarkPaid, onUpdate, onOpen }) {
     (sum, item) => sum + Number(item.quantity || 0),
     0,
   );
-  const placedTime = new Date(order.created_at).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const placedTime = formatLocalTime(order.created_at);
   const visitDate = order.reservation?.reservation_date
     ? formatLocalDate(order.reservation.reservation_date)
     : null;

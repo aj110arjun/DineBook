@@ -17,6 +17,9 @@ export function setCustomerDateTimePreferences(preferences) {
   customerPreferences = preferences;
 }
 
+export const setAccountDateTimePreferences = setCustomerDateTimePreferences;
+export const getAccountDateTimePreferences = () => customerPreferences;
+
 export function parseTimestamp(value) {
   if (value == null || value === "") return new Date(NaN);
   // API datetimes are UTC. Older responses may omit the UTC suffix.

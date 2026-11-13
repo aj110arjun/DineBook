@@ -123,3 +123,31 @@ test("timezone options contain valid IANA identifiers and UTC", () => {
   assert.ok(zones.includes("UTC"));
   for (const timeZone of zones) assert.doesNotThrow(() => new Intl.DateTimeFormat("en", { timeZone }));
 });
+
+test("manager settings reuse the store with manager-scoped API paths", async () => {
+  const calls = [];
+  let response = defaults();
+  const store = createCustomerSettingsStore(async (path, options) => {
+    calls.push([path, options]);
+    if (options) response = { ...response, general: { ...response.general, ...options.body } };
+    return structuredClone(response);
+  }, "/api/manager/settings");
+  await store.load();
+  assert.equal(calls[0][0], "/api/manager/settings");
+  assert.equal(await store.save("general", "theme", "dark"), true);
+  assert.equal(calls[1][0], "/api/manager/settings/general");
+  assert.equal(store.getSnapshot().settings.general.theme, "dark");
+});
+
+test("manager responses cannot change a customer or a later manager's store", async () => {
+  const pending = deferred();
+  const oldManager = createCustomerSettingsStore(() => pending.promise, "/api/manager/settings");
+  const customer = createCustomerSettingsStore(async () => defaults());
+  const newManager = createCustomerSettingsStore(async () => defaults(), "/api/manager/settings");
+  const loading = oldManager.load();
+  await Promise.all([customer.load(), newManager.load()]);
+  pending.resolve({ ...defaults(), general: { ...DEFAULT_GENERAL, theme: "dark" } });
+  await loading;
+  assert.equal(customer.getSnapshot().settings.general.theme, "system");
+  assert.equal(newManager.getSnapshot().settings.general.theme, "system");
+});

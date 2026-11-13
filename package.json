@@ -9,7 +9,9 @@
     "preview": "vite preview --host 0.0.0.0",
     "test:invoice": "node --test src/lib/transactionInvoicePdf.test.js",
     "test:settings": "node --test src/lib/customerSettings.test.js src/lib/localDate.test.js",
-    "test:dashboard": "node --test src/lib/managerDashboard.test.js src/lib/managerDashboard.render.test.js"
+    "test:dashboard": "node --test src/lib/managerDashboard.test.js src/lib/managerDashboard.render.test.js",
+    "test:manager-settings": "node --test src/lib/customerSettings.test.js src/lib/managerSettings.render.test.js src/lib/managerDashboard.test.js",
+    "test:manager-profile": "node --test src/lib/managerProfile.test.js src/lib/managerProfile.render.test.js src/lib/customerProfile.test.js"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.14.0",

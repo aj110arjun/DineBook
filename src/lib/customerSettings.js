@@ -20,8 +20,8 @@ export function timezoneOptions() {
   return [...new Set(["UTC", browserTimezone(), ...zones])].sort();
 }
 
-// One store per authenticated customer; detached responses cannot affect a later account.
-export function createCustomerSettingsStore(request) {
+// One store per authenticated account; detached responses cannot affect a later account.
+export function createAccountSettingsStore(request, basePath = "/api/customer/settings") {
   let snapshot = { settings: null, loading: false, pending: null, error: null, success: "" };
   let loadingPromise = null;
   const listeners = new Set();
@@ -33,7 +33,7 @@ export function createCustomerSettingsStore(request) {
   function load() {
     if (loadingPromise) return loadingPromise;
     publish({ loading: true, error: null });
-    loadingPromise = request("/api/customer/settings")
+    loadingPromise = request(basePath)
       .then((settings) => publish({ settings, error: null }))
       .catch((error) => publish({ error }))
       .finally(() => {
@@ -50,7 +50,7 @@ export function createCustomerSettingsStore(request) {
       ...(section === "general" ? { settings: { ...previous, general: { ...previous.general, [key]: value } } } : {}),
     });
     try {
-      const settings = await request(`/api/customer/settings/${section}`, { method: "PATCH", body: { [key]: value } });
+      const settings = await request(`${basePath}/${section}`, { method: "PATCH", body: { [key]: value } });
       publish({ settings, success: "Settings saved." });
       return true;
     } catch (error) {
@@ -67,3 +67,6 @@ export function createCustomerSettingsStore(request) {
     load, save,
   };
 }
+
+// Preserve existing customer imports while sharing the same persistence flow.
+export const createCustomerSettingsStore = createAccountSettingsStore;

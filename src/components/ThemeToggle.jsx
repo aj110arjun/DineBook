@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
-import { useCustomerPreferences } from "./customer/CustomerPreferences.jsx";
+import { useAccountPreferences } from "./preferences/AccountPreferences.jsx";
 
 export default function ThemeToggle() {
-  const preferences = useCustomerPreferences();
+  const preferences = useAccountPreferences();
   const [error, setError] = useState("");
   const [dark, setDark] = useState(
     () => document.documentElement.dataset.theme === "dark",

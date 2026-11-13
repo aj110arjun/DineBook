@@ -6,6 +6,7 @@ import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
 import { BarChart, DonutChart, EmptyState } from "../../components/manager/DashboardCharts.jsx";
 import useManagerDashboard from "../../hooks/useManagerDashboard.js";
+import { formatWallTime } from "../../lib/localDate.js";
 import { comparison, formatCurrency, formatDate, formatInstant, formatNumber, PERIOD_PRESETS, presetPeriod, STATUS_COLORS, statusLabel, validatePeriod } from "../../lib/managerDashboard.js";
 import "../../assets/css/ManagerDashboardPage.css";
 
@@ -149,7 +150,7 @@ export function DashboardContent({ data, sort, setSort, navigate }) {
     <div className="manager-bottom-grid">
       <Panel title="Upcoming Reservations" subtitle="Live · Next scheduled arrivals" action={<button type="button" onClick={() => navigate("/manager/reservations")}>View all</button>}>
         {live.upcoming_reservations.length ? <div className="manager-list">{live.upcoming_reservations.map((reservation) => <div className="manager-list-row" key={reservation.id}>
-          <div><strong>RES-{reservation.id.slice(0, 8).toUpperCase()}</strong><span>{reservation.guests} guests · {statusLabel(reservation.status)}</span></div><b>{formatDate(reservation.date)}<br />{reservation.time} IST</b>
+          <div><strong>RES-{reservation.id.slice(0, 8).toUpperCase()}</strong><span>{reservation.guests} guests · {statusLabel(reservation.status)}</span></div><b>{formatDate(reservation.date)}<br />{formatWallTime(reservation.time)} IST</b>
         </div>)}</div> : <EmptyState>No upcoming reservations.</EmptyState>}
       </Panel>
       <Panel title="Recent Active Orders" subtitle="Live · Most recently placed" action={<button type="button" onClick={() => navigate("/manager/reservations")}>View reservations &amp; orders</button>}>

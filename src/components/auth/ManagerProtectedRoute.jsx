@@ -2,8 +2,10 @@ import { Navigate, Outlet } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { requestJson } from "../../lib/authApi.js";
 import NotificationSession from "../notifications/NotificationSession.jsx";
+import { useAccountPreferences } from "../preferences/AccountPreferences.jsx";
 
 export default function ManagerProtectedRoute() {
+  const preferences = useAccountPreferences();
   const [checking, setChecking] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
   const [suspended, setSuspended] = useState(false);
@@ -14,12 +16,13 @@ export default function ManagerProtectedRoute() {
 
     async function checkManager(initial = false) {
       try {
-        await requestJson("/api/auth/manager/me", {
+        const manager = await requestJson("/api/auth/manager/me", {
           method: "GET",
           fallbackMessage: "Manager authentication required.",
         });
 
         if (active) {
+          preferences?.setManagerId(manager.id);
           setAuthenticated(true);
           hadSession.current = true;
           if (initial) setChecking(false);
