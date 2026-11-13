@@ -1,0 +1,105 @@
+.chef-live-dashboard { display: grid; gap: 22px; color: var(--color-text-primary); min-width: 0; }
+.chef-live-dashboard h2, .chef-live-dashboard h3, .chef-live-dashboard p { margin: 0; }
+.kitchen-welcome, .kitchen-row, .kitchen-analytics-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.kitchen-welcome h2 { font-size: clamp(22px, 3vw, 30px); }
+.kitchen-welcome p { margin-top: 7px; color: var(--color-text-secondary); }
+.kitchen-refresh-info { display: flex; align-items: flex-end; flex-direction: column; gap: 6px; font-size: 12px; color: var(--color-text-secondary); }
+.kitchen-header-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.kitchen-header-controls .theme-toggle { position: static; width: auto; height: auto; box-shadow: none; }
+.chef-live-dashboard button, .chef-live-dashboard select { min-height: 42px; border: 1px solid var(--color-border); border-radius: 9px; padding: 8px 12px; background: var(--color-surface); color: var(--color-text-primary); font: inherit; font-size: 12px; }
+.chef-live-dashboard button { cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+.chef-live-dashboard button:disabled { cursor: default; opacity: .55; }
+.chef-live-dashboard :is(button, select, summary, [tabindex]):focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+.kitchen-connection { display: inline-flex; align-items: center; gap: 7px; }
+.kitchen-connection i { width: 7px; height: 7px; border-radius: 50%; background: var(--color-warning); }
+.kitchen-connection i.connected { background: var(--color-success); }
+.kitchen-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; }
+.kitchen-kpi, .kitchen-panel { min-width: 0; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 16px; box-shadow: var(--shadow-card); }
+.kitchen-kpi { padding: 19px; }
+.kitchen-kpi > div { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--color-primary); }
+.kitchen-kpi h3 { font-size: 12px; font-weight: 600; color: var(--color-text-secondary); }
+.kitchen-kpi > strong { display: block; font-size: clamp(23px, 2vw, 30px); margin: 14px 0 8px; overflow-wrap: anywhere; }
+.kitchen-kpi p, .kitchen-note { font-size: 12px; line-height: 1.7; color: var(--color-text-secondary); }
+.kitchen-operations-grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.kitchen-panel { padding: 20px; }
+.kitchen-panel-heading { display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 13px; margin-bottom: 18px; }
+.kitchen-panel h3 { font-size: 16px; }
+.kitchen-panel-heading p { color: var(--color-text-secondary); font-size: 12px; line-height: 1.6; margin-top: 6px; }
+.kitchen-filter { display: grid; gap: 5px; font-size: 12px; color: var(--color-text-secondary); }
+.kitchen-queue { display: grid; gap: 14px; }
+.kitchen-order-card { min-width: 0; padding: 16px; background: var(--color-surface-raised); border: 1px solid var(--color-border); border-left: 3px solid #a57b19; border-radius: 11px; }
+.kitchen-order-card.status-preparing { border-left-color: #ef7917; }
+.kitchen-order-card.status-ready { border-left-color: #2675c9; }
+.kitchen-order-card.status-placed { border-left-color: #858585; }
+.kitchen-row > strong { font-size: 14px; }
+.kitchen-status { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 20px; font-size: 11px; background: var(--db-status-neutral-bg); color: var(--db-status-neutral-text); }
+.kitchen-status i { height: 7px; width: 7px; border-radius: 50%; }
+.kitchen-status.preparing, .kitchen-status.accepted { background: var(--db-status-warning-bg); color: var(--db-status-warning-text); }
+.kitchen-status.ready, .kitchen-status.confirmed { background: var(--db-status-info-bg); color: var(--db-status-info-text); }
+.chef-live-dashboard .kitchen-table-label { font-size: 12px; margin: 10px 0; color: var(--color-text-secondary); }
+.kitchen-order-time { font-size: 11px; color: var(--color-text-secondary); }
+.kitchen-order-time span { display: inline-flex; align-items: center; gap: 5px; }
+.kitchen-age-priority { display: inline-block; font-size: 10px; margin-top: 10px; padding: 4px 7px; border: 1px solid var(--color-border); border-radius: 5px; color: var(--color-warning); }
+.chef-live-dashboard .kitchen-item-count { font-size: 11px; color: var(--color-text-muted); margin-top: 12px; }
+.kitchen-items { list-style: none; padding: 0; display: grid; gap: 7px; font-size: 13px; margin: 8px 0 14px; }
+.kitchen-items li { overflow-wrap: anywhere; line-height: 1.5; }
+.kitchen-items li > strong { color: var(--color-primary); }
+.kitchen-items li > span { font-size: 12px; color: var(--color-text-secondary); }
+.chef-live-dashboard .kitchen-instructions { padding: 10px; margin: 10px 0; border-radius: 7px; background: var(--db-status-warning-bg); color: var(--db-status-warning-text); white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; line-height: 1.6; }
+.kitchen-order-details { font-size: 12px; margin: 12px 0; }
+.kitchen-order-details summary, .kitchen-methodology summary { cursor: pointer; min-height: 32px; padding: 7px 0; }
+.kitchen-order-details dl { display: grid; gap: 8px; }
+.kitchen-order-details dd { margin: 4px 0 0; overflow-wrap: anywhere; color: var(--color-text-secondary); }
+.kitchen-order-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--color-text-muted); }
+.chef-live-dashboard .kitchen-order-actions button { background: var(--color-primary); color: var(--color-surface); border-color: transparent; }
+.kitchen-all-orders { margin-top: 14px; width: 100%; }
+.chef-live-dashboard .shared-pagination { margin-top: 16px; gap: 10px; flex-wrap: wrap; }
+.chef-live-dashboard .admin-pagination-controls { flex-wrap: wrap; gap: 8px; }
+.kitchen-reservations { display: grid; gap: 18px; }
+.kitchen-reservations article + article { border-top: 1px solid var(--color-border); padding-top: 18px; }
+.kitchen-reservations p { font-size: 12px; margin-top: 9px; color: var(--color-text-secondary); line-height: 1.6; }
+.kitchen-reservations p svg { vertical-align: middle; margin-right: 4px; }
+.kitchen-preorder { background: var(--color-surface-raised); border-radius: 8px; padding: 12px; margin-top: 12px; font-size: 12px; }
+.kitchen-preorder ul { margin-bottom: 0; }
+.kitchen-analytics-heading h2 { font-size: 20px; }
+.kitchen-analytics-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 20px; }
+.kitchen-analytics-grid > :last-child { grid-column: 1 / -1; }
+.kitchen-chart-scroll { overflow-x: auto; max-width: 100%; }
+.kitchen-hourly-chart { min-width: 660px; width: 100%; height: 215px; }
+.kitchen-prep-chart { min-width: 440px; width: 100%; height: 220px; }
+.kitchen-chart-scroll text { fill: var(--color-text-secondary); font: 10px var(--font-sans); }
+.kitchen-chart-scroll rect:focus, .kitchen-chart-scroll g:focus { outline: none; stroke: var(--color-accent); stroke-width: 2px; }
+.chef-live-dashboard .manager-chart-scroll { margin-inline: 0; }
+.chef-live-dashboard .manager-dashboard-status-chart { padding: 10px 0; }
+.chef-live-dashboard .manager-order-legend div { color: var(--color-text-secondary); }
+.chef-live-dashboard .manager-analytics-donut { border: 0; position: relative; flex-shrink: 0; }
+.chef-live-dashboard .manager-analytics-donut strong { color: var(--color-text-primary); }
+.kitchen-performance { display: grid; gap: 0; margin: 0 0 14px; }
+.kitchen-performance > div { display: flex; justify-content: space-between; gap: 16px; padding: 15px 0; border-bottom: 1px solid var(--color-border); font-size: 13px; }
+.kitchen-performance dt { color: var(--color-text-secondary); }
+.kitchen-performance dd { margin: 0; text-align: right; font-weight: 600; }
+.kitchen-activity { margin: 0; padding: 0; list-style: none; display: grid; gap: 18px; }
+.kitchen-activity li { display: flex; align-items: start; gap: 10px; }
+.kitchen-event-icon { display: inline-flex; padding: 7px; background: var(--color-surface-raised); border-radius: 50%; }
+.kitchen-activity li > div { display: grid; gap: 5px; font-size: 12px; }
+.kitchen-activity li span, .kitchen-activity time { color: var(--color-text-secondary); font-size: 11px; }
+.kitchen-methodology { color: var(--color-text-secondary); font-size: 12px; line-height: 1.8; }
+.kitchen-methodology ul { padding-left: 20px; }
+.kitchen-feedback { background: var(--db-status-success-bg); color: var(--db-status-success-text); padding: 14px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-size: 13px; }
+.kitchen-feedback.error { background: var(--db-status-danger-bg); color: var(--db-status-danger-text); }
+.kitchen-loading > span { display: block; margin-bottom: 16px; color: var(--color-text-secondary); }
+.kitchen-skeleton { height: 138px; border-radius: 16px; background: var(--color-border); }
+@media (min-width: 1600px) { .kitchen-kpis { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+@media (max-width: 1100px) { .kitchen-operations-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 760px) {
+  .chef-live-dashboard { padding-inline: 16px; }
+  .kitchen-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .kitchen-kpi { padding: 14px; }
+  .kitchen-analytics-grid { grid-template-columns: minmax(0, 1fr); }
+  .kitchen-refresh-info { align-items: flex-start; }
+  .kitchen-panel { padding: 14px; }
+  .kitchen-analytics-heading { align-items: flex-start; }
+  .chef-live-dashboard .shared-pagination { align-items: flex-start; }
+  .chef-live-dashboard .admin-pagination-controls { width: 100%; }
+}
+@media (max-width: 380px) { .kitchen-kpis { grid-template-columns: minmax(0, 1fr); } }
