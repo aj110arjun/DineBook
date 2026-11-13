@@ -6,15 +6,18 @@ import App from "./App.jsx";
 import { store } from "./state/store.js";
 import AppExperience, { AppErrorBoundary } from "./components/AppExperience.jsx";
 import ConfirmDialogHost from "./components/ConfirmDialogHost.jsx";
+import CustomerPreferencesProvider from "./components/customer/CustomerPreferences.jsx";
 import "./assets/css/index.css";
 import "./assets/css/styles.css";
 import "./assets/css/design-system.css";
 import "./assets/css/layout-refresh.css";
 import "./assets/css/ux-improvements.css";
 
-const savedTheme = window.localStorage.getItem("dinebook-theme");
-document.documentElement.dataset.theme =
-  savedTheme === "dark" ? "dark" : "light";
+try {
+  document.documentElement.dataset.theme = window.localStorage.getItem("dinebook-theme") === "dark" ? "dark" : "light";
+} catch {
+  document.documentElement.dataset.theme = "light";
+}
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -22,7 +25,7 @@ createRoot(document.getElementById("root")).render(
       <BrowserRouter>
         <AppExperience />
         <AppErrorBoundary>
-          <App />
+          <CustomerPreferencesProvider><App /></CustomerPreferencesProvider>
           <ConfirmDialogHost />
         </AppErrorBoundary>
       </BrowserRouter>

@@ -1,8 +1,10 @@
 import { usePageState } from "../../state/usePageState.js";
-import { formatLocalDate } from "../../lib/localDate.js";
+import { formatWallTime, formatLocalDate } from "../../lib/localDate.js";
 import { useEffect, useRef, useState } from "react";
+import { useDispatch } from "react-redux";
+import { clearCustomerSession } from "../../state/customerSession.js";
 import {
-  Bell,
+  Settings,
   CalendarDays,
   ChevronRight,
   Clock3,
@@ -30,11 +32,7 @@ const statusText = (value) =>
     .toLowerCase()
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 const dateText = (value) => value ? formatLocalDate(value) : "Date not set";
-const timeText = (value) => {
-  if (!value) return "—";
-  const [h, m] = value.split(":").map(Number);
-  return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
-};
+const timeText = (value) => formatWallTime(value);
 const reservationCode = (reservation) =>
   reservation?.reservation_code ||
   `RES-${String(reservation?.id || "")
@@ -50,6 +48,7 @@ export function ProfileFrame({
 }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const selected = location.pathname.endsWith("/transactions")
     ? "Payment Transactions"
     : location.hash === "#activity"
@@ -60,7 +59,7 @@ export function ProfileFrame({
     ["Saved Restaurants", "/customer/saved-restaurants", Heart],
     ["Booking History", "/customer/profile/reservations", CalendarDays],
     ["Payment Transactions", "/customer/profile/transactions", CreditCard],
-    ["Notification Settings", "/customer/profile#notifications", Bell],
+    ["Settings", "/customer/settings", Settings],
     ["Wallet", "/customer/profile/wallet", Wallet],
   ];
   function logout() {
@@ -69,12 +68,16 @@ export function ProfileFrame({
       sessionStorage.getItem(demoSessionKey) === "active"
     ) {
       sessionStorage.removeItem(demoSessionKey);
+      dispatch(clearCustomerSession());
       navigate("/customer/login");
       return;
     }
     requestJson("/api/auth/logout", { method: "POST" })
       .catch(() => {})
-      .finally(() => navigate("/customer/login"));
+      .finally(() => {
+        dispatch(clearCustomerSession());
+        navigate("/customer/login");
+      });
   }
   return (
     <div
@@ -93,10 +96,7 @@ export function ProfileFrame({
           <aside className="profile-sidebar db-portal-surface">
             <div className="profile-identity">
               <div className="profile-avatar">
-                <img
-                  src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=240&h=240&fit=crop&crop=faces"
-                  alt=""
-                />
+                {user?.avatar_url ? <img src={user.avatar_url} alt="" /> : <span aria-hidden="true">{user?.name?.slice(0, 1) || "D"}</span>}
               </div>
               <strong>{user?.name || "Your Profile"}</strong>
               <span>{user?.email || ""}</span>
@@ -107,6 +107,7 @@ export function ProfileFrame({
                   key={label}
                   to={to}
                   className={selected === label ? "selected" : ""}
+                  aria-current={selected === label ? "page" : undefined}
                 >
                   <Icon size={17} />
                   {label}

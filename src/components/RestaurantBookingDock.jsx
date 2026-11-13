@@ -1,4 +1,4 @@
-import { formatLocalDate } from "../lib/localDate.js";
+import { formatLocalDate, formatWallTime } from "../lib/localDate.js";
 import { useEffect, useRef, useState } from "react";
 import { CalendarDays, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -40,12 +40,7 @@ export default function RestaurantBookingDock({ restaurant, open, onOpenChange }
   }, [open]);
 
   const dateLabel = formatLocalDate(date);
-  const timeLabel = new Intl.DateTimeFormat("en-IN", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-    timeZone: "Asia/Kolkata",
-  }).format(new Date(`${date}T${time}:00+05:30`));
+  const timeLabel = formatWallTime(time);
 
   return (
     <>

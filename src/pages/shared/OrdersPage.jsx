@@ -1,5 +1,5 @@
 import { usePageState } from "../../state/usePageState.js";
-import { formatLocalDate, formatLocalDateTime, shiftLocalMonth } from "../../lib/localDate.js";
+import { formatCalendarDate, formatLocalDate, formatLocalDateTime, shiftLocalMonth } from "../../lib/localDate.js";
 import { useEffect, useMemo, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -862,7 +862,7 @@ export default function OrdersPage({ mode = "customer" }) {
                       className={`manager-orders-calendar-day${currentMonth ? "" : " outside"}${!currentMonth ? " disabled-date" : ""}${key === selectedOrderDate ? " selected" : ""}${key === dateKey(new Date()) ? " today" : ""}`}
                       onClick={() => setSelectedOrderDate(key)}
                       aria-pressed={key === selectedOrderDate}
-                      aria-label={`${formatLocalDate(day)}, ${calendarOrderCounts[key] || 0} orders`}
+                      aria-label={`${formatCalendarDate(day)}, ${calendarOrderCounts[key] || 0} orders`}
                     >
                       <span className="day-number">{day.getDate()}</span>
                       {calendarOrderCounts[key] > 0 && (

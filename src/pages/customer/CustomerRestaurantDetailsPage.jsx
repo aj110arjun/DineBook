@@ -1,5 +1,5 @@
 import { usePageState } from "../../state/usePageState.js";
-import { formatLocalDate } from "../../lib/localDate.js";
+import { formatLocalDate, formatLocalTime, formatWallTime } from "../../lib/localDate.js";
 import { confirmAction } from "../../lib/confirmDialog.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useEffect } from "react";
@@ -476,10 +476,7 @@ export default function CustomerRestaurantDetailsPage() {
     reviewCooldownUntil && Date.parse(reviewCooldownUntil) > Date.now(),
   );
   const reviewCooldownTime = reviewCooldownActive
-    ? new Date(reviewCooldownUntil).toLocaleTimeString([], {
-        hour: "numeric",
-        minute: "2-digit",
-      })
+    ? formatLocalTime(reviewCooldownUntil)
     : "";
 
   return (
@@ -676,10 +673,10 @@ export default function CustomerRestaurantDetailsPage() {
                                       ? hour.periods
                                           .map(
                                             (period) =>
-                                              `${period.opens} – ${period.closes}`,
+                                              `${formatWallTime(period.opens)} – ${formatWallTime(period.closes)}`,
                                           )
                                           .join(" · ")
-                                      : `${hour.opens || "—"} – ${hour.closes || "—"}`
+                                      : `${formatWallTime(hour.opens)} – ${formatWallTime(hour.closes)}`
                                     : "Closed"}
                                 </span>
                               </div>

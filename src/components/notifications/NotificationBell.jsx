@@ -1,4 +1,4 @@
-import { formatLocalDateTime } from "../../lib/localDate.js";
+import { formatLocalDateTime, parseTimestamp } from "../../lib/localDate.js";
 import { useEffect, useId, useRef, useState } from "react";
 import {
   Bell,
@@ -49,10 +49,10 @@ const pathFor = (item, role) => {
     : prefix;
 };
 const ago = (value) => {
-  if (!value || Number.isNaN(new Date(value).getTime())) return "";
+  if (!value || Number.isNaN(parseTimestamp(value).getTime())) return "";
   const seconds = Math.max(
     0,
-    Math.floor((Date.now() - new Date(value).getTime()) / 1000),
+    Math.floor((Date.now() - parseTimestamp(value).getTime()) / 1000),
   );
   if (seconds < 60) return "Just now";
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;

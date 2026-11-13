@@ -1,5 +1,5 @@
 import { usePageState } from "../../state/usePageState.js";
-import { formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
+import { formatWallTime, formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
 import { confirmAction } from "../../lib/confirmDialog.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useEffect, useRef } from "react";
@@ -26,11 +26,7 @@ import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
 import { ProfileFrame } from "./CustomerReservationsPage.jsx";
 import "../../assets/css/CustomerProfilePage.css";
 
-const timeText = (value) => {
-  if (!value) return "—";
-  const [h, m] = value.split(":").map(Number);
-  return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
-};
+const timeText = (value) => formatWallTime(value);
 const title = (value) =>
   (value || "")
     .replaceAll("_", " ")
@@ -185,7 +181,7 @@ function reservationInvoice(reservation) {
           ]
         : []),
     ],
-    createdAt: reservation.created_at,
+    createdAt: reservation.timestamps?.created_at || reservation.created_at,
     merchantName: "DineBook",
     customerName: reservation.customer_name,
     customerEmail: reservation.customer_email,
@@ -750,10 +746,10 @@ export default function CustomerReservationDetailsPage() {
                   ].indexOf(stage);
                   const stamp =
                     stage === "SEATED"
-                      ? reservation.checked_in_at
+                      ? reservation.timestamps?.checked_in_at || reservation.checked_in_at
                       : stage === "COMPLETED"
-                        ? reservation.completed_at
-                        : reservation.created_at;
+                        ? reservation.timestamps?.completed_at || reservation.completed_at
+                        : reservation.timestamps?.created_at || reservation.created_at;
                   return (
                     <li
                       key={stage}
@@ -1152,7 +1148,7 @@ export default function CustomerReservationDetailsPage() {
                             : undefined,
                         providerReference: order.razorpay_payment_id,
                         providerOrderReference: order.razorpay_order_id,
-                        createdAt: order.created_at,
+                        createdAt: order.timestamps?.created_at || order.created_at,
                         merchantName:
                           order.restaurant_name || reservation.restaurant_name,
                         merchantLocation:
@@ -1176,7 +1172,7 @@ export default function CustomerReservationDetailsPage() {
                     {order.completed_at && (
                       <small>
                         Completed{" "}
-                        {formatLocalDateTime(order.completed_at)}
+                        {formatLocalDateTime(order.timestamps?.completed_at || order.completed_at)}
                       </small>
                     )}
                     {order.status_reason && (
