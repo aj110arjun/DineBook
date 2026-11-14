@@ -73,3 +73,15 @@ test("negative revenue remains visible with data tooltips", () => {
   assert.match(html, /manager-chart-baseline/);
   assert.match(html, /Scroll to view all dates/);
 });
+
+test("a single short review retains its rating, full distribution, and text", () => {
+  const data = structuredClone(fixture);
+  data.reviews = { total: 1, average: "5", distribution: [1, 2, 3, 4, 5].map((rating) => ({ status: String(rating), count: rating === 5 ? 1 : 0 })),
+    recent: [{ id: "review-one", rating: 5, content: "hello", created_at: "2026-11-10T00:00:00Z" }] };
+  const html = render(data);
+  assert.match(html, /Published rating distribution/);
+  assert.match(html, /aria-label="5 stars: 1 review"/);
+  for (const rating of [1, 2, 3, 4]) assert.ok(html.includes(`aria-label="${rating} stars: 0 reviews"`));
+  assert.match(html, /hello/);
+  assert.match(html, /1 review<\/span>/);
+});

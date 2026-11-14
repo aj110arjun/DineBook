@@ -1,0 +1,18 @@
+.chef-profile-page { width: 100%; max-width: 1280px; margin-inline: auto; }
+.chef-profile-sections { display: grid; gap: 24px; align-items: start; }
+.chef-profile-page .portal-breadcrumb { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 13px; }
+.chef-profile-page .portal-breadcrumb-item { display: inline-flex; align-items: center; gap: 10px; }
+.chef-profile-page .manager-profile-card { width: 100%; }
+.chef-profile-page .manager-profile-button:not(.secondary) { color: var(--color-background); }
+.chef-profile-page .manager-profile-button:not(.secondary):hover:not(:disabled) { background: var(--color-primary-strong); }
+.chef-profile-section-icon { color: var(--color-primary); flex-shrink: 0; }
+.chef-profile-workplace { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.chef-profile-workplace > strong { font-size: 19px; overflow-wrap: anywhere; }
+.chef-profile-workplace > span { border: 1px solid var(--color-border); border-radius: 20px; padding: 5px 10px; background: var(--color-surface-raised); color: var(--color-text-secondary); font-size: 12px; }
+.chef-profile-address { display: flex; align-items: start; gap: 8px; margin: 16px 0 0; color: var(--color-text-secondary); font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; }
+.chef-profile-address svg { margin-top: 3px; flex-shrink: 0; color: var(--color-text-muted); }
+.chef-profile-assignment-note { margin: 24px 0 0; padding-top: 20px; border-top: 1px solid var(--color-border); }
+.chef-avatar-large { overflow: hidden; }
+.chef-avatar-large img { width: 100%; height: 100%; object-fit: cover; }
+@media (min-width: 1200px) { .chef-profile-sections { grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); } }
+@media (max-width: 680px) { .chef-profile-page { padding-inline: 14px; } .chef-profile-page .manager-profile-identity { flex-wrap: wrap; } .chef-profile-page .manager-profile-identity > div:last-child { flex: 1 1 180px; } }

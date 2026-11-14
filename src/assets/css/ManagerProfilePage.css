@@ -36,6 +36,8 @@
 .manager-profile-photo-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 12px; }
 .manager-profile-photo-controls small { flex-basis: 100%; }
 .manager-profile-loading { min-height: 190px; display: grid; place-items: center; color: var(--color-text-muted); }
+.manager-profile-card .image-crop-dialog { max-height: calc(100dvh - 32px); overflow-y: auto; }
+.manager-profile-card .image-crop-preview { width: min(100%, max(180px, calc(100dvh - 330px))); margin-inline: auto; }
 .restaurant-profile-card { overflow: hidden; padding: 0; }
 .restaurant-profile-cover { height: clamp(150px, 20vw, 240px); background: var(--color-surface-raised); color: var(--color-text-muted); border-bottom: 1px solid var(--color-border); }
 .restaurant-profile-cover img { width: 100%; height: 100%; object-fit: cover; }

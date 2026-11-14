@@ -12,6 +12,7 @@
     "test:dashboard": "node --test src/lib/managerDashboard.test.js src/lib/managerDashboard.render.test.js",
     "test:chef-dashboard": "node --test src/lib/chefDashboard.test.js src/lib/chefDashboard.render.test.js",
     "test:chef-settings": "node --test src/lib/customerSettings.test.js src/lib/chefSettings.render.test.js src/lib/chefDashboard.test.js src/lib/localDate.test.js",
+    "test:chef-profile": "node --test src/lib/chefProfile.render.test.js src/lib/customerProfile.test.js src/lib/managerProfile.render.test.js",
     "test:manager-settings": "node --test src/lib/customerSettings.test.js src/lib/managerSettings.render.test.js src/lib/managerDashboard.test.js",
     "test:manager-profile": "node --test src/lib/managerProfile.test.js src/lib/managerProfile.render.test.js src/lib/customerProfile.test.js"
   },
