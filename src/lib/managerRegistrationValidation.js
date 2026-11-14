@@ -44,10 +44,20 @@ export function getRestaurantContactErrors(countryCode, number) {
   return errors;
 }
 
+export function isManagerEmailVerified(email, verification, now = Date.now()) {
+  return Boolean(
+    typeof verification?.verification_token === "string" &&
+    verification.verification_token.length > 0 &&
+    typeof verification.email === "string" &&
+    verification.email.trim().toLowerCase() === email.trim().toLowerCase() &&
+    Date.parse(verification.expires_at) > now,
+  );
+}
+
 export function getManagerRegistrationStepErrors(stepNumber, {
   application,
   credentials,
-  emailVerified,
+  emailVerification,
   documents,
   hours,
   interiorMedia,
@@ -91,7 +101,7 @@ export function getManagerRegistrationStepErrors(stepNumber, {
 
     if (!emailPattern.test(application.email.trim())) {
       errors.email = "Enter a valid email address.";
-    } else if (!emailVerified) {
+    } else if (!isManagerEmailVerified(application.email, emailVerification)) {
       errors.email = "Verify your email before continuing.";
     }
 
@@ -208,6 +218,10 @@ export function getManagerRegistrationStepErrors(stepNumber, {
       ["image/jpeg", "image/png"],
       10,
     );
+  }
+
+  if (stepNumber !== 1 && !isManagerEmailVerified(application.email, emailVerification)) {
+    errors.email = "Verify your email before continuing.";
   }
 
   return errors;

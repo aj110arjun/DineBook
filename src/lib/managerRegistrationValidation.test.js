@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   getManagerRegistrationStepErrors, getRestaurantPhoneError,
   getRestaurantContactErrors, formatRestaurantPhoneNumber,
+  isManagerEmailVerified,
 } from "./managerRegistrationValidation.js";
 
 function validRegistration() {
@@ -15,7 +16,11 @@ function validRegistration() {
       address: "12 Market Road", city: "Kochi", state: "Kerala", pinCode: "682001",
     },
     credentials: { password: "Restaurant123", confirmPassword: "Restaurant123" },
-    emailVerified: true,
+    emailVerification: {
+      email: "manager@example.com",
+      verification_token: "example-registration-token",
+      expires_at: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+    },
     documents: {
       fssaiLicense: pdf, businessRegistration: pdf, ownerIdentity: pdf,
       gstCertificate: null, brandingImages: { type: "image/jpeg", size: 1024 },
@@ -27,7 +32,7 @@ function validRegistration() {
 
 test("each valid step can continue independently of incomplete later steps", () => {
   const data = validRegistration();
-  for (const step of [1, 2, 3, 4]) {
+  for (const step of [1, 2, 3, 4, 5]) {
     assert.deepEqual(getManagerRegistrationStepErrors(step, data), {});
   }
   data.documents = {};
@@ -38,12 +43,36 @@ test("each valid step can continue independently of incomplete later steps", () 
 test("personal details report all errors together before continuing", () => {
   const data = validRegistration();
   data.application.name = " ";
-  data.emailVerified = false;
+  data.emailVerification = null;
   data.credentials = { password: "short", confirmPassword: "different" };
   const errors = getManagerRegistrationStepErrors(1, data);
   assert.deepEqual(Object.keys(errors), ["name", "email", "password", "confirmPassword"]);
   assert.match(errors.email, /Verify your email/);
   assert.match(errors.confirmPassword, /do not match/);
+});
+
+test("every step requires a current token bound to the application's email", () => {
+  const data = validRegistration();
+  const valid = data.emailVerification;
+  for (const emailVerification of [
+    null, true, {}, { ...valid, verification_token: "" },
+    { ...valid, email: "another@example.com" },
+    { ...valid, expires_at: new Date(Date.now() - 1000).toISOString() },
+    { ...valid, expires_at: "invalid" },
+  ]) {
+    data.emailVerification = emailVerification;
+    for (const step of [1, 2, 3, 4, 5]) {
+      assert.match(getManagerRegistrationStepErrors(step, data).email, /Verify your email/);
+    }
+  }
+});
+
+test("verification normalizes the email and expires at its stated time", () => {
+  const verification = validRegistration().emailVerification;
+  const expiry = Date.parse(verification.expires_at);
+  assert.equal(isManagerEmailVerified(" Manager@Example.com ", verification, expiry - 1), true);
+  assert.equal(isManagerEmailVerified("manager@example.com", verification, expiry), false);
+  assert.equal(isManagerEmailVerified("changed@example.com", verification, expiry - 1), false);
 });
 
 test("blur validation catches name symbols and password complexity", () => {
@@ -70,6 +99,7 @@ test("registration accepts eight-character passwords and rejects shorter passwor
 test("restaurant details report required and format errors in one pass", () => {
   const data = validRegistration();
   for (const field of Object.keys(data.application)) data.application[field] = " ";
+  data.application.email = "manager@example.com";
   const errors = getManagerRegistrationStepErrors(2, data);
   assert.deepEqual(Object.keys(errors).sort(), [
     "restaurantName", "restaurantDescription", "cuisineType", "address", "city",
