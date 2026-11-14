@@ -1,0 +1,7 @@
+.admin-settings-page { max-width: 1120px; }
+.admin-settings-page .customer-settings-heading h2 { margin: 8px 0; font-family: var(--font-display); font-size: clamp(26px, 4vw, 34px); }
+.admin-settings-page .profile-card { color: var(--color-text-primary); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card); }
+.admin-settings-page .customer-settings-card { margin-top: 20px; }
+.admin-settings-page .customer-settings-card > header { flex-wrap: nowrap; }
+.admin-settings-page .customer-setting-switch { cursor: pointer; }
+.admin-settings-page .customer-setting-switch:disabled { cursor: wait; }

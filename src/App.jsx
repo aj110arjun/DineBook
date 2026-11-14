@@ -61,6 +61,7 @@ import ManagerReviewsPage from "./pages/manager/ManagerReviewsPage.jsx";
 import AdminReviewModerationPage from "./pages/admin/AdminReviewModerationPage.jsx";
 import {AdminRevenuePage, ChefRevenuePage, ManagerRevenuePage} from "./pages/shared/RevenueWalletPage.jsx";
 import AdminProfilePage from "./pages/admin/AdminProfilePage.jsx"
+import AdminSettingsPage from "./pages/admin/AdminSettingsPage.jsx";
 
 
 export default function App() {
@@ -301,6 +302,10 @@ export default function App() {
               <AdminProfilePage />
             </AdminProtectedRoute>
           } 
+        />
+        <Route
+          path="/admin/settings"
+          element={<AdminProtectedRoute><AdminSettingsPage /></AdminProtectedRoute>}
         />
         <Route path="/manager/register" element={<ManagerRegisterPage />} />
         <Route

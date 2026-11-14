@@ -1,6 +1,7 @@
 import {
   FileText,
   LayoutDashboard,
+  Settings,
   SlidersHorizontal,
   Store,
   WalletCards,
@@ -35,15 +36,12 @@ const groups = [
     ],
   },
   {
-  label: "Account",
-  items: [
-    {
-      label: "Profile",
-      icon: UserRound,
-      path: "/admin/profile",
-    },
-  ],
-},
+    label: "Account",
+    items: [
+      { label: "Profile", icon: UserRound, path: "/admin/profile" },
+      { label: "Settings", icon: Settings, path: "/admin/settings" },
+    ],
+  },
 ];
 
 export default function AdminPrimaryNav({ onNavigate }) {
