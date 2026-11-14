@@ -1304,7 +1304,7 @@ export default function ManagerRegisterPage() {
                 label="Password"
                 placeholder="Create a password"
                 autoComplete="new-password"
-                minLength={10}
+                minLength={8}
                 maxLength={128}
                 required
                 value={credentials.password}
@@ -1319,7 +1319,7 @@ export default function ManagerRegisterPage() {
                 label="Confirm Password"
                 placeholder="Re-enter your password"
                 autoComplete="new-password"
-                minLength={10}
+                minLength={8}
                 maxLength={128}
                 required
                 value={credentials.confirmPassword}

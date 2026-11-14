@@ -34,18 +34,22 @@ export default function CustomerChangePasswordPage() {
         signal: controller.signal,
       })
       .then((response) => {
-        if (response.status < 200 || response.status >= 300)
+        if (response.status < 200 || response.status >= 300) {
           navigate("/customer/login", { replace: true });
+        } else if (!response.data?.can_change_password) {
+          navigate("/customer/settings", { replace: true });
+        } else {
+          setChecking(false);
+        }
       })
       .catch((reason) => {
         if (!axios.isCancel(reason))
           navigate("/customer/login", { replace: true });
-      })
-      .finally(() => setChecking(false));
+      });
     return () => controller.abort();
   }, [navigate]);
 
-  const hasLength = newPassword.length >= 10;
+  const hasLength = newPassword.length >= 8;
   const hasMix = /\p{L}/u.test(newPassword) && /[^\p{L}\s]/u.test(newPassword);
   const strength = !newPassword
     ? 0
@@ -65,7 +69,7 @@ export default function CustomerChangePasswordPage() {
     }
     if (!hasLength || !hasMix) {
       setError(
-        "Choose a password with at least 10 characters, including a letter and a number or symbol.",
+        "Choose a password with at least 8 characters, including a letter and a number or symbol.",
       );
       return;
     }
@@ -141,7 +145,7 @@ export default function CustomerChangePasswordPage() {
         </div>
         <ul className="mb-5 space-y-1 text-xs text-stone-500">
           <li className={hasLength ? "text-emerald-700" : ""}>
-            At least 10 characters long
+            At least 8 characters long
           </li>
           <li className={hasMix ? "text-emerald-700" : ""}>
             Includes letters and a number or symbol
@@ -152,7 +156,7 @@ export default function CustomerChangePasswordPage() {
           label="Confirm New Password"
           placeholder="Enter your new password again"
           autoComplete="new-password"
-          minLength={10}
+          minLength={8}
           maxLength={128}
           required
         />

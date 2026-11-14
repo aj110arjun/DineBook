@@ -21,12 +21,12 @@ export default function ChefChangePasswordPage() {
     const form = new FormData(event.currentTarget);
     const password = form.get("password");
     if (
-      password.length < 10 ||
+      password.length < 8 ||
       !/\p{L}/u.test(password) ||
       !/[^\p{L}\s]/u.test(password)
     ) {
       setError(
-        "Use at least 10 characters, including a letter and a number or symbol.",
+        "Use at least 8 characters, including a letter and a number or symbol.",
       );
       return;
     }
@@ -72,9 +72,9 @@ export default function ChefChangePasswordPage() {
         <PasswordField
           id="password"
           label="New Password"
-          placeholder="At least 10 characters, with a letter and number or symbol"
+          placeholder="At least 8 characters, with a letter and number or symbol"
           autoComplete="new-password"
-          minLength={10}
+          minLength={8}
           maxLength={128}
           required
         />
@@ -83,7 +83,7 @@ export default function ChefChangePasswordPage() {
           label="Confirm New Password"
           placeholder="Enter the new password again"
           autoComplete="new-password"
-          minLength={10}
+          minLength={8}
           maxLength={128}
           required
         />

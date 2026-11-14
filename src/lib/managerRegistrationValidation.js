@@ -97,8 +97,8 @@ export function getManagerRegistrationStepErrors(stepNumber, {
 
     const { password, confirmPassword } = credentials;
 
-    if (password.length < 10 || password.length > 128) {
-      errors.password = "Password must contain 10–128 characters.";
+    if (password.length < 8 || password.length > 128) {
+      errors.password = "Password must contain 8–128 characters.";
     } else if (!/\p{L}/u.test(password) || !/[^\p{L}\s]/u.test(password)) {
       errors.password = "Include a letter and a number or symbol.";
     }

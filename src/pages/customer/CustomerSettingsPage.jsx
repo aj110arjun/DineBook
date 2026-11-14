@@ -2,6 +2,7 @@ import { useSelector } from "react-redux";
 import { Bell, CalendarDays, CreditCard, ShieldCheck, Star, Tag, UtensilsCrossed } from "lucide-react";
 import { useCustomerPreferences } from "../../components/customer/CustomerPreferences.jsx";
 import Notice from "../../components/auth/Notice.jsx";
+import ChangePasswordSection from "../../components/preferences/ChangePasswordSection.jsx";
 import { ProfileFrame } from "./CustomerReservationsPage.jsx";
 import { GeneralSettingsSection, ToggleSetting } from "../../components/preferences/SettingsControls.jsx";
 import "../../assets/css/CustomerSettingsPage.css";
@@ -34,15 +35,14 @@ const groups = [
   ]],
 ];
 
-export default function CustomerSettingsPage() {
-  const user = useSelector((state) => state.customerSession.user);
-  const preferences = useCustomerPreferences();
+export function CustomerSettingsContent({ preferences, user }) {
   const { settings, loading, pending, error, success, load, save } = preferences;
   const disabled = Boolean(pending) || loading;
 
-  return <ProfileFrame user={user} active="Settings" variant="customer-settings-page">
+  return <>
     <header className="customer-settings-heading"><span className="eyebrow">YOUR ACCOUNT</span><h1>Settings</h1>
       <p>Manage your notification preferences and application settings.</p></header>
+    {user?.can_change_password && <ChangePasswordSection key={preferences.accountId} role="customer" />}
     <Notice message={success} type="success" />
     {error && <div><Notice message={error.message || "Unable to load or save settings."} />
       {!settings && <button className="db-portal-button db-portal-control" type="button" disabled={loading} onClick={load}>Try again</button>}</div>}
@@ -57,6 +57,14 @@ export default function CustomerSettingsPage() {
       </section>
       <GeneralSettingsSection preferences={preferences} />
     </>}
-    <p className="customer-settings-save-state" role="status">{pending ? "Saving your preference…" : settings ? "Changes are saved automatically to your account." : ""}</p>
+    <p className="customer-settings-save-state" role="status">{pending ? "Saving your preference…" : settings ? "Appearance and notification preferences are saved automatically to your account." : ""}</p>
+  </>;
+}
+
+export default function CustomerSettingsPage() {
+  const user = useSelector((state) => state.customerSession.user);
+  const preferences = useCustomerPreferences();
+  return <ProfileFrame user={user} active="Settings" variant="customer-settings-page">
+    <CustomerSettingsContent preferences={preferences} user={user} />
   </ProfileFrame>;
 }

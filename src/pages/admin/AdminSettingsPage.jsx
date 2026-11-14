@@ -1,6 +1,7 @@
 import { Bell, ShieldCheck } from "lucide-react";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
 import Notice from "../../components/auth/Notice.jsx";
+import ChangePasswordSection from "../../components/preferences/ChangePasswordSection.jsx";
 import { useAccountPreferences } from "../../components/preferences/AccountPreferences.jsx";
 import { GeneralSettingsSection, ToggleSetting } from "../../components/preferences/SettingsControls.jsx";
 import "../../assets/css/AdminSettingsPage.css";
@@ -23,6 +24,8 @@ export function AdminSettingsContent({ preferences }) {
         <h2>Settings</h2>
         <p>Manage your preferences and the appearance of the Admin Portal.</p>
       </header>
+
+      <ChangePasswordSection key={preferences.accountId} role="admin" />
 
       <Notice message={success} type="success" />
 
@@ -97,7 +100,7 @@ export function AdminSettingsContent({ preferences }) {
       )}
 
       <p className="customer-settings-save-state" role="status">
-        {pending ? "Saving your preference…" : settings ? "Changes are saved automatically to your account." : ""}
+        {pending ? "Saving your preference…" : settings ? "Appearance and notification preferences are saved automatically to your account." : ""}
       </p>
     </>
   );
