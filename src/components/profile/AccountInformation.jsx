@@ -10,7 +10,11 @@ import { profileStatus } from "../../lib/managerProfile.js";
 import { Detail, ProfileAvatar, ProfileField, useImagePreview } from "../manager/profile/ProfileParts.jsx";
 
 export default function AccountInformation({ account, role, onPersist, onAuthError }) {
-  const label = role === "chef" ? "Chef" : "Manager";
+  const label = {
+    chef: "Chef",
+    manager: "Manager",
+    admin: "Admin"
+    }[role] || "Account";
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(() => profileForm(account));
   const [file, setFile] = useState(null);

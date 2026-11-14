@@ -6,11 +6,24 @@ import AdminPrimaryNav from "./AdminPrimaryNav.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import { LogOut, Menu, X } from "lucide-react";
 import NotificationBell from "../notifications/NotificationBell.jsx";
+import { useAdminSession } from "./AdminSessionContext.jsx";
+
 
 export default function AdminLayout({ children, title = "Dashboard" }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { admin } = useAdminSession();
+  const [failedAvatar, setFailedAvatar] = useState(null);
+
+  const initials =
+    admin.name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase() || "AD";
   useNavigationDisclosure(sidebarOpen, () => setSidebarOpen(false), "admin-primary-nav");
 
   async function handleLogout() {
@@ -59,13 +72,24 @@ export default function AdminLayout({ children, title = "Dashboard" }) {
         </div>
 
         <div className="admin-sidebar-user">
-          <div className="admin-avatar" aria-hidden="true">AD</div>
-
-          <div>
-            <strong>Administrator</strong>
-            <span>Super Admin</span>
-          </div>
+        <div className="admin-avatar" aria-hidden="true">
+          {admin.avatar_url && failedAvatar !== admin.avatar_url ? (
+            <img
+              src={admin.avatar_url}
+              alt=""
+              onError={() => setFailedAvatar(admin.avatar_url)}
+            />
+          ) : (
+            initials
+          )}
         </div>
+
+        <div>
+          <strong>{admin.name}</strong>
+          <span>Admin</span>
+        </div>
+      </div>
+      
       </aside>
 
       <section className="admin-dashboard-main db-portal-main">

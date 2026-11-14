@@ -4,6 +4,7 @@ import {
   SlidersHorizontal,
   Store,
   WalletCards,
+  UserRound
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -33,6 +34,16 @@ const groups = [
       { label: "Revenue & wallet", icon: WalletCards, path: "/admin/revenue" },
     ],
   },
+  {
+  label: "Account",
+  items: [
+    {
+      label: "Profile",
+      icon: UserRound,
+      path: "/admin/profile",
+    },
+  ],
+},
 ];
 
 export default function AdminPrimaryNav({ onNavigate }) {
