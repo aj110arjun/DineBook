@@ -230,6 +230,20 @@ export function ManagerRevenuePage() {
       setWalletBusy(false);
     }
   }
+  async function settleCommission() {
+    setWalletBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      const result = await requestJson("/api/manager/revenue/commission-payouts", { method: "POST" });
+      await refresh();
+      setNotice(`${money(result.amount)} in outstanding commission settled to the admin wallet.`);
+    } catch (reason) {
+      setError(reason.message);
+    } finally {
+      setWalletBusy(false);
+    }
+  }
   return (
     <ManagerLayout title="Revenue & wallets">
       <RevenueContent
@@ -244,9 +258,9 @@ export function ManagerRevenuePage() {
             <h2>Admin commission</h2>
             <p>
               {Number(data.commission_percent).toFixed(2)}% of each confirmed
-              reservation fee, preorder, and food order is automatically
-              transferred to the admin wallet. Desk payments deduct commission
-              from your wallet when you confirm payment.
+              reservation fee, preorder, and food order is recorded as platform
+              commission. Digital purchases settle automatically. Pay-at-restaurant
+              commission stays outstanding until you settle it from your wallet.
             </p>
           </div>
           <div className="commission-due">
@@ -254,10 +268,12 @@ export function ManagerRevenuePage() {
             <strong>{money(data.admin_commission_paid_out)}</strong>
           </div>
           {Number(data.admin_commission_outstanding) > 0 && (
-            <p>
-              Historical commission awaiting settlement:{" "}
-              {money(data.admin_commission_outstanding)}
-            </p>
+            <div>
+              <p>Commission awaiting settlement: {money(data.admin_commission_outstanding)}</p>
+              <button className="wallet-topup-button" type="button" disabled={walletBusy} onClick={settleCommission}>
+                {walletBusy ? "Please wait…" : "Settle outstanding commission"}
+              </button>
+            </div>
           )}
           <CommissionActivity data={data} />
         </section>
@@ -428,8 +444,9 @@ export function AdminRevenuePage() {
           <div>
             <h2>Commission activity</h2>
             <p>
-              Commission is transferred automatically when a payment is
-              confirmed. Refund reversals are reflected in the net amount.
+              Digital-purchase commission settles automatically. Pay-at-restaurant
+              commission remains receivable until the manager settles it.
+              Refund reversals are reflected in the net amount.
             </p>
           </div>
           <CommissionActivity data={data} />
@@ -786,9 +803,9 @@ function RevenueContent({ data, error, title, description }) {
           )}
           {data.role === "ADMIN" && (
             <article>
-              <span>Historical commission outstanding</span>
+              <span>Commission outstanding</span>
               <strong>{money(data.admin_commission_outstanding)}</strong>
-              <small>Awaiting historical settlement</small>
+              <small>Awaiting settlement</small>
             </article>
           )}
           {data.role === "ADMIN" && (

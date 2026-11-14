@@ -1,0 +1,123 @@
+.admin-analytics { display: grid; gap: 18px; color: var(--color-text-primary); }
+.admin-analytics-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.admin-eyebrow { color: var(--color-text-muted); font-size: 11px; letter-spacing: .12em; font-weight: 700; }
+.admin-analytics-heading h2 { font-size: clamp(24px, 2.5vw, 32px); margin: 7px 0; line-height: 1.2; }
+.admin-analytics-heading p { margin: 0; color: var(--color-text-secondary); font-size: 13px; line-height: 1.6; }
+.admin-analytics-updated { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--color-text-muted); }
+.admin-live-dot { height: 7px; width: 7px; flex-shrink: 0; border-radius: 50%; background: var(--color-success); }
+.admin-analytics-filters, .admin-analytics-custom, .admin-restaurant-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; }
+.admin-analytics-filters { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 13px; padding: 14px; }
+.admin-analytics label { display: grid; gap: 5px; color: var(--color-text-secondary); font-size: 11px; }
+.admin-analytics :is(input, select) { min-height: 38px; border: 1px solid var(--color-border); border-radius: 8px; padding: 7px 10px; background: var(--color-surface); color: var(--color-text-primary); font: inherit; font-size: 12px; max-width: 100%; min-width: 0; }
+.admin-analytics button { min-height: 38px; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-surface-raised); color: var(--color-text-primary); font: inherit; font-size: 12px; cursor: pointer; }
+.admin-analytics button:disabled { opacity: .5; cursor: default; }
+.admin-analytics .admin-analytics-refresh { margin-left: auto; display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--color-primary); color: var(--color-surface); }
+.admin-analytics-custom { flex-basis: 100%; padding-top: 10px; border-top: 1px solid var(--color-border); }
+.admin-period-label { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin: -8px 0 0; font-size: 11px; color: var(--color-text-secondary); }
+.admin-period-label span { color: var(--color-text-muted); }
+.admin-section-heading { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+.admin-section-heading h3 { font-size: 13px; margin: 0; }
+.admin-section-heading span { font-size: 11px; color: var(--color-text-muted); }
+.admin-kpi-grid { display: grid; gap: 12px; margin-top: -7px; }
+.admin-account-kpis { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.admin-period-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.admin-kpi { padding: 14px 16px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); min-width: 0; }
+.admin-kpi > div { display: flex; align-items: start; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
+.admin-kpi svg { flex-shrink: 0; color: var(--color-accent); }
+.admin-kpi > strong { display: block; margin: 9px 0 5px; font-size: clamp(21px, 2vw, 28px); font-weight: 700; line-height: 1.25; letter-spacing: -.03em; overflow-wrap: anywhere; }
+.admin-kpi small { color: var(--color-text-muted); font-size: 10px; line-height: 1.5; display: block; }
+.admin-analytics-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 18px; }
+.admin-analytics-panel { border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-surface); min-width: 0; overflow: hidden; }
+.admin-analytics-panel > header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: start; gap: 12px; padding: 16px 16px 0; }
+.admin-analytics-panel h3 { margin: 0; font-size: 14px; line-height: 1.4; }
+.admin-analytics-panel header p { margin: 4px 0 0; font-size: 11px; color: var(--color-text-muted); line-height: 1.6; }
+.admin-analytics a { color: var(--color-link); font-size: 12px; text-decoration: none; }
+.admin-analytics a:hover { text-decoration: underline; }
+.admin-inline-totals { display: grid; grid-template-columns: repeat(auto-fit, minmax(125px, 1fr)); margin: 0; gap: 12px; padding: 15px 16px; }
+.admin-inline-totals div { min-width: 0; }
+.admin-inline-totals dt { color: var(--color-text-secondary); font-size: 11px; line-height: 1.5; }
+.admin-inline-totals dd { margin: 4px 0 0; font-size: 13px; font-weight: 650; overflow-wrap: anywhere; }
+.admin-trend { padding-top: 12px; }
+.admin-trend-toggles { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 16px; }
+.admin-trend-toggles button { display: flex; align-items: center; gap: 6px; min-height: 30px; padding: 5px 8px; font-size: 10px; }
+.admin-trend-toggles button[aria-pressed="false"] { opacity: .45; }
+.admin-trend-toggles i { height: 7px; width: 7px; border-radius: 50%; }
+.admin-trend-scroll { overflow-x: auto; margin: 12px 12px 0 0; }
+.admin-trend-svg { display: block; width: 100%; min-width: 430px; height: auto; }
+.admin-trend-svg text { fill: var(--color-text-secondary); font: 11px var(--font-sans); }
+.admin-trend-svg rect:focus { outline: none; fill: var(--color-border); fill-opacity: .3; stroke: var(--color-accent); }
+.admin-trend-tooltip { display: flex; flex-wrap: wrap; gap: 8px 14px; padding: 8px 16px; background: var(--color-surface-raised); font-size: 11px; }
+.admin-chart-data { padding: 8px 16px 12px; font-size: 11px; color: var(--color-text-secondary); }
+.admin-chart-data summary { cursor: pointer; }
+.admin-chart-data .admin-table-scroll { max-height: 240px; margin-top: 10px; }
+.admin-analytics .manager-dashboard-status-chart { border-top: 1px solid var(--color-border); }
+.admin-analytics .manager-order-donut { display: grid; place-items: center; border-radius: 50%; }
+.admin-analytics .manager-order-legend { display: grid; }
+.admin-analytics .status-dot { height: 7px; width: 7px; border-radius: 50%; }
+.admin-analytics-note { margin: 0; padding: 0 16px 16px; font-size: 11px; color: var(--color-text-secondary); line-height: 1.7; }
+.admin-payment-channels { padding: 8px 16px 0; }
+.admin-payment-channels > div { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--color-border); font-size: 12px; }
+.admin-payment-channels small { display: block; font-size: 10px; color: var(--color-text-muted); margin-top: 4px; }
+.admin-payment-channels strong { font-size: 14px; white-space: nowrap; }
+.admin-wallet-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding: 16px; }
+.admin-wallet-grid > div { border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface-raised); padding: 12px; display: grid; gap: 7px; font-size: 12px; min-width: 0; }
+.admin-wallet-grid strong { font-size: 21px; overflow-wrap: anywhere; }
+.admin-wallet-grid small { font-size: 10px; color: var(--color-text-secondary); line-height: 1.5; }
+.admin-restaurant-controls { padding: 16px; }
+.admin-restaurant-controls label:first-child { flex: 1; min-width: 150px; }
+.admin-table-scroll { width: 100%; overflow-x: auto; }
+.admin-analytics table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; }
+.admin-analytics caption { text-align: left; padding: 0 16px 10px; color: var(--color-text-muted); font-size: 10px; }
+.admin-analytics :is(th, td) { padding: 12px 14px; border-bottom: 1px solid var(--color-border); line-height: 1.5; }
+.admin-analytics thead { background: var(--color-surface-raised); color: var(--color-text-secondary); }
+.admin-analytics tbody th { min-width: 150px; }
+.admin-analytics td { white-space: nowrap; }
+.admin-restaurant-status { padding: 4px 7px; background: var(--color-surface-raised); border: 1px solid var(--color-border); border-radius: 6px; font-size: 10px; }
+.admin-restaurant-comparison { display: grid; grid-template-columns: 185px minmax(0, 1fr); gap: 20px; align-items: start; margin: 0 16px 16px; padding: 16px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface-raised); }
+.admin-restaurant-bars { display: grid; gap: 11px; }
+.admin-restaurant-bars > div { display: grid; grid-template-columns: minmax(110px, 1fr) 2fr 110px; align-items: center; gap: 12px; font-size: 11px; }
+.admin-restaurant-bars > div > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-restaurant-bars i { height: 6px; background: var(--color-border); border-radius: 4px; }
+.admin-restaurant-bars b { height: 100%; display: block; border-radius: inherit; background: var(--color-primary); }
+.admin-restaurant-bars strong { text-align: right; font-size: 11px; }
+.admin-analytics-pagination { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 16px; font-size: 11px; color: var(--color-text-muted); }
+.admin-analytics-pagination > div { display: flex; gap: 6px; }
+.admin-real-activity { list-style: none; margin: 0; padding: 4px 16px; }
+.admin-real-activity li { display: flex; align-items: start; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--color-border); }
+.admin-event-icon { display: grid; place-items: center; flex-shrink: 0; width: 30px; height: 30px; border-radius: 8px; background: var(--color-surface-raised); color: var(--color-accent); }
+.admin-real-activity li > div { display: grid; gap: 4px; min-width: 0; flex: 1; }
+.admin-real-activity small { font-size: 9px; text-transform: uppercase; letter-spacing: .04em; color: var(--color-text-muted); }
+.admin-real-activity strong { font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.admin-real-activity li > div > span, .admin-real-activity time { color: var(--color-text-secondary); font-size: 11px; line-height: 1.6; }
+.admin-analytics-methodology { border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); padding: 16px; color: var(--color-text-secondary); font-size: 12px; line-height: 1.8; }
+.admin-analytics-methodology summary { cursor: pointer; font-weight: 650; }
+.admin-analytics-methodology ul { padding-left: 18px; margin-bottom: 0; }
+.admin-analytics-methodology li + li { margin-top: 8px; }
+.admin-analytics-empty { padding: 24px 16px; text-align: center; color: var(--color-text-muted); font-size: 12px; line-height: 1.7; margin: 0; }
+.admin-analytics-error, .admin-analytics-caution { border-radius: 10px; padding: 14px 16px; font-size: 12px; line-height: 1.7; }
+.admin-analytics-error { color: var(--db-status-danger-text); background: var(--db-status-danger-bg); }
+.admin-analytics-caution { margin: 0 16px 16px; color: var(--db-status-warning-text); background: var(--db-status-warning-bg); }
+.admin-analytics-loading { padding: 16px; font-size: 12px; color: var(--color-text-muted); }
+.admin-skeleton-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+.admin-skeleton-grid i { display: block; height: 84px; border-radius: 10px; background: var(--color-border); opacity: .55; }
+@container manager-overview (max-width: 1050px) {
+  .admin-account-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .admin-analytics-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@container manager-overview (max-width: 650px) {
+  .admin-account-kpis, .admin-period-kpis, .admin-wallet-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-analytics-heading { align-items: start; flex-direction: column; }
+  .admin-restaurant-comparison { grid-template-columns: minmax(0, 1fr); }
+  .admin-restaurant-bars > div { grid-template-columns: minmax(90px, 1fr) 1fr 90px; gap: 8px; }
+  .admin-real-activity li { flex-wrap: wrap; }
+  .admin-real-activity time { padding-left: 42px; flex-basis: 100%; }
+  .admin-analytics-filters > label { flex: 1; min-width: 125px; }
+  .admin-analytics .admin-analytics-refresh { margin-left: 0; }
+}
+@container manager-overview (max-width: 370px) {
+  .admin-account-kpis, .admin-period-kpis { gap: 8px; }
+  .admin-kpi { padding: 11px; }
+  .admin-kpi > div { gap: 5px; font-size: 11px; }
+  .admin-restaurant-bars > div { grid-template-columns: minmax(0, 1fr) 80px; }
+  .admin-restaurant-bars i { grid-column: 1 / -1; grid-row: 2; }
+}

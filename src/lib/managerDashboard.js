@@ -76,7 +76,7 @@ export function donutGradient(items) {
 }
 
 /** Latest request wins; same-query refreshes coalesce, and errors clear old data. */
-export function createDashboardLoader(request, onState) {
+export function createDashboardLoader(request, onState, endpoint = "/api/manager/dashboard/overview") {
   let sequence = 0;
   let pending = null;
   let lastLoaded = 0;
@@ -95,7 +95,7 @@ export function createDashboardLoader(request, onState) {
       const ticket = sequence;
       const controller = new AbortController();
       onState({ data: null, loading: true, error: "" });
-      const promise = Promise.resolve().then(() => request(`/api/manager/dashboard/overview?${query}`, {
+      const promise = Promise.resolve().then(() => request(`${endpoint}?${query}`, {
         signal: controller.signal, fallbackMessage: "The dashboard could not be loaded. Please try again.",
       })).then((data) => {
         if (ticket !== sequence) return;
