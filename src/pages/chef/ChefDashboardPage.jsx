@@ -11,6 +11,9 @@ import { requestJson } from "../../lib/authApi.js";
 import { confirmAction } from "../../lib/confirmDialog.js";
 import { createKitchenActions, elapsedLabel, kitchenInstant, KITCHEN_ACTION_LABELS, orderReference, preparationLabel } from "../../lib/chefDashboard.js";
 import { STATUS_COLORS, statusLabel } from "../../lib/managerDashboard.js";
+import { formatLocalDate, formatWallTime } from "../../lib/localDate.js";
+import { browserTimezone } from "../../lib/customerSettings.js";
+import { useAccountPreferences } from "../../components/preferences/AccountPreferences.jsx";
 import "../../assets/css/ManagerDashboardPage.css";
 import "../../assets/css/ChefDashboardPage.css";
 
@@ -18,6 +21,7 @@ const volumeSeries = [{ key: "total", name: "Orders received", color: "#7c2d3c" 
 
 export default function ChefDashboardPage() {
   const { chef } = useOutletContext();
+  const preferences = useAccountPreferences();
   const navigate = useNavigate();
   const [period, setPeriod] = useState("today");
   const [status, setStatus] = useState("ACTIVE");
@@ -43,8 +47,8 @@ export default function ChefDashboardPage() {
       <div className="kitchen-welcome">
         <div><h2>Welcome, {chef?.name?.trim().split(/\s+/)[0] || "Chef"}</h2><p>Your kitchen, at a glance.</p></div>
         <div className="kitchen-refresh-info">
-          {data && <><time dateTime={data.today}>{new Intl.DateTimeFormat("en-IN", { timeZone: data.timezone, dateStyle: "full" }).format(new Date(data.as_of))}</time>
-            <span>Updated {kitchenInstant(data.as_of, data.timezone)} · {data.timezone}</span></>}
+          {data && <><time dateTime={data.today}>{formatLocalDate(data.today)}</time>
+            <span>Updated {kitchenInstant(data.as_of, data.timezone)} · {preferences?.active ? preferences.general.timezone || browserTimezone() : data.timezone}</span></>}
           <span className="kitchen-connection"><i className={connection === "connected" ? "connected" : ""} />{connection === "connected" ? "Live updates connected" : "Reconnecting live updates · refreshes every 30 seconds"}</span>
           <div className="kitchen-header-controls"><ThemeToggle /><button type="button" onClick={refresh} disabled={loading}><RefreshCw size={15} />{loading ? "Refreshing…" : "Refresh"}</button></div>
         </div>
@@ -99,7 +103,7 @@ export function KitchenDashboardContent({ data, period = "today", setPeriod, sta
       <KitchenPanel title="Upcoming Reservations" subtitle="Next 8 confirmed arrivals · Kitchen planning">
         {data.upcoming_reservations.length ? <div className="kitchen-reservations">{data.upcoming_reservations.map((visit) => <article key={visit.id}>
           <div className="kitchen-row"><strong>RES-{visit.id.slice(0, 8).toUpperCase()}</strong><StatusBadge status={visit.status} /></div>
-          <p><CalendarDays size={14} /><time dateTime={visit.arrival_at}>{kitchenInstant(visit.arrival_at, timezone, true)}</time> · {visit.number_of_guests} guests</p>
+          <p><CalendarDays size={14} /><time dateTime={visit.arrival_at}>{kitchenInstant(visit.arrival_at, timezone, true, { restaurantLocal: true })}</time> · {visit.number_of_guests} guests</p>
           <p>{tableLabel(visit.tables)}</p>
           {visit.preorder_items.length > 0 && <div className="kitchen-preorder"><strong>Preordered food</strong><ItemList items={visit.preorder_items} /></div>}
         </article>)}</div> : <EmptyState>No upcoming confirmed reservations.</EmptyState>}
@@ -109,7 +113,7 @@ export function KitchenDashboardContent({ data, period = "today", setPeriod, sta
     <div className="kitchen-analytics-heading"><h2>Kitchen analytics</h2><label className="kitchen-filter">Order analytics date range<select value={period} onChange={(event) => setPeriod(event.target.value)}>
       <option value="today">Today</option><option value="last7">Last 7 days</option><option value="last30">Last 30 days</option>
     </select></label></div>
-    <p className="kitchen-note">{data.start_date} – {data.end_date} · {timezone} · Orders grouped by receipt date. Live operations remain current.</p>
+    <p className="kitchen-note">{formatLocalDate(data.start_date)} – {formatLocalDate(data.end_date)} · {timezone} · Orders grouped by receipt date. Live operations remain current.</p>
     <div className="kitchen-analytics-grid">
       <KitchenPanel title="Order Volume" subtitle={data.group_by === "hour" ? "Today · Hourly receipts" : "Selected period · Daily receipts"}>
         {data.group_by === "hour" ? <HourlyVolume points={data.order_volume} /> : <BarChart points={data.order_volume} series={volumeSeries} group="day" label="Orders received over time" />}
@@ -186,7 +190,7 @@ function HourlyVolume({ points }) {
   return <div className="kitchen-chart-scroll" tabIndex={0} role="region" aria-label="Hourly order volume. Scroll to view all hours.">
     <svg viewBox="0 0 760 200" className="kitchen-hourly-chart" role="img" aria-label="Orders received by restaurant-local hour">
       {[0, Math.ceil(max / 2), max].map((tick, index) => <g key={index}><line x1="40" x2="750" y1={158 - tick / max * 140} y2={158 - tick / max * 140} className="manager-chart-gridline" /><text x="32" y={162 - tick / max * 140} textAnchor="end">{tick}</text></g>)}
-      {points.map((point, index) => <g key={point.date}><rect x={46 + index * 29} y={158 - point.total / max * 140} width="17" height={point.total / max * 140} rx="3" fill="#7c2d3c" tabIndex={0} aria-label={`${point.date.slice(11)}: ${point.total} orders`}><title>{`${point.date.slice(11)} · ${point.total} orders`}</title></rect><text x={54 + index * 29} y="183" textAnchor="middle">{point.date.slice(11, 13)}</text></g>)}
+      {points.map((point, index) => <g key={point.date}><rect x={46 + index * 29} y={158 - point.total / max * 140} width="17" height={point.total / max * 140} rx="3" fill="#7c2d3c" tabIndex={0} aria-label={`${formatWallTime(point.date.slice(11))}: ${point.total} orders`}><title>{`${formatWallTime(point.date.slice(11))} · ${point.total} orders`}</title></rect><text x={54 + index * 29} y="183" textAnchor="middle">{point.date.slice(11, 13)}</text></g>)}
     </svg>
   </div>;
 }
@@ -198,8 +202,8 @@ function PreparationChart({ points }) {
     <svg viewBox="0 0 500 200" className="kitchen-prep-chart" role="img" aria-label="Average preparation time in minutes over the last 7 days">
       {[0, max / 2, max].map((tick, index) => <g key={index}><line x1="60" x2="490" y1={158 - tick / max * 140} y2={158 - tick / max * 140} className="manager-chart-gridline" /><text x="50" y={162 - tick / max * 140} textAnchor="end">{Math.round(tick * 10) / 10} min</text></g>)}
       {points.map((point, index) => <g key={point.date}>
-        {point.average_minutes == null ? <text x={90 + index * 60} y="150" textAnchor="middle">N/A<title>{`${point.date} · No measured preparation times`}</title></text> : <g tabIndex={0} aria-label={`${point.date}: ${preparationLabel(point.average_minutes)}, ${point.measured_orders} measured orders`}>
-          <title>{`${point.date} · ${preparationLabel(point.average_minutes)} · ${point.measured_orders} measured orders`}</title>
+        {point.average_minutes == null ? <text x={90 + index * 60} y="150" textAnchor="middle">N/A<title>{`${formatLocalDate(point.date)} · No measured preparation times`}</title></text> : <g tabIndex={0} aria-label={`${formatLocalDate(point.date)}: ${preparationLabel(point.average_minutes)}, ${point.measured_orders} measured orders`}>
+          <title>{`${formatLocalDate(point.date)} · ${preparationLabel(point.average_minutes)} · ${point.measured_orders} measured orders`}</title>
           <rect x={77 + index * 60} y={158 - point.average_minutes / max * 140} width="26" height={point.average_minutes / max * 140} fill="#ef7917" rx="3" />
           {point.average_minutes === 0 && <circle cx={90 + index * 60} cy="158" r="3" fill="#ef7917" />}
         </g>}

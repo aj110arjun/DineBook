@@ -10,6 +10,7 @@ import {
   MapPin,
   Package,
   Plus,
+  RefreshCw,
   Search,
   Users,
 } from "lucide-react";
@@ -22,6 +23,7 @@ import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
 import Pagination from "../../components/Pagination.jsx";
 import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
 import "../../assets/css/ManagerOrdersPage.css";
+import "../../assets/css/ChefOrdersPage.css";
 
 const orderStatuses = [
   "PLACED",
@@ -748,6 +750,7 @@ export default function OrdersPage({ mode = "customer" }) {
           </div>
         ) : (
           <button type="button" onClick={load} disabled={loading}>
+            {mode === "chef" && <RefreshCw size={16} aria-hidden="true" />}
             Refresh
           </button>
         )}

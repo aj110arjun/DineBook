@@ -56,3 +56,81 @@
   .manager-dashboard-filters > label { flex: 1; min-width: 130px; }
   .manager-analytics .manager-list-row { flex-wrap: wrap; }
 }
+
+/* Each dashboard card follows its content instead of stretching to a tall neighbor. */
+.manager-analytics { container: manager-overview / inline-size; }
+.manager-analytics .manager-dashboard-panels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: row dense; gap: 16px; align-items: start; margin-top: 16px; }
+.manager-analytics .manager-dashboard-panels[data-measured="true"] { grid-auto-rows: 1px; row-gap: 0; }
+.manager-analytics .manager-dashboard-panels > :is(.manager-dashboard-grid, .manager-bottom-grid) { display: contents; }
+.manager-analytics .manager-dashboard-panels .manager-panel {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  margin: 0;
+  align-self: start;
+  container: manager-card / inline-size;
+}
+.manager-analytics .manager-summary-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.manager-analytics .manager-summary-card { min-height: 0; padding: 14px 16px; }
+.manager-analytics .manager-summary-top { min-height: 32px; align-items: start; }
+.manager-analytics .manager-summary-top > span { line-height: 1.4; }
+.manager-analytics .manager-summary-icon { flex-shrink: 0; }
+.manager-analytics .manager-summary-value { margin-top: 8px; font-size: clamp(22px, 2vw, 28px); line-height: 1.25; overflow-wrap: anywhere; }
+.manager-analytics .manager-summary-detail { display: grid; gap: 3px; margin-top: 6px; line-height: 1.45; }
+.manager-analytics .manager-panel-header { gap: 10px; padding: 16px 16px 0; }
+.manager-analytics .manager-panel-header > div { min-width: 0; flex: 1 1 140px; }
+.manager-analytics .manager-panel-header h3 { font-size: 14px; line-height: 1.4; }
+.manager-analytics .manager-panel-header > div > span { margin-top: 3px; line-height: 1.5; }
+.manager-analytics .manager-chart-scroll { margin: 12px 12px 0; }
+.manager-analytics .manager-chart-legend { gap: 6px 14px; padding: 8px 16px 12px; }
+.manager-analytics .manager-financial-totals { grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 10px; padding: 12px 16px; }
+.manager-analytics .manager-dashboard-status-chart { gap: 16px; padding: 16px; }
+.manager-analytics .manager-analytics-donut { width: 96px; height: 96px; flex-shrink: 0; }
+.manager-analytics .manager-order-legend { flex: 1; min-width: 0; gap: 8px; }
+.manager-analytics .manager-order-legend div { line-height: 1.45; }
+.manager-analytics .manager-order-legend-detailed > div { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; gap: 4px 7px; align-items: center; }
+.manager-analytics .manager-order-legend-detailed b { font-size: 12px; font-weight: 600; white-space: nowrap; }
+.manager-analytics .manager-legend-label { min-width: 0; }
+.manager-analytics .manager-legend-track { grid-column: 2 / -1; height: 4px; border-radius: 4px; background: var(--color-border); overflow: hidden; }
+.manager-analytics .manager-legend-track i { display: block; height: 100%; border-radius: inherit; }
+.manager-analytics .manager-analytics-empty { min-height: 0; margin: 0; padding: 20px 16px; line-height: 1.6; }
+.manager-analytics .manager-table-grid { grid-template-columns: repeat(var(--table-columns), minmax(0, 1fr)); gap: 8px; padding: 14px 16px; }
+.manager-analytics .manager-popular-list { max-height: 320px; overflow-y: auto; overscroll-behavior: contain; padding: 4px 16px 12px; }
+.manager-analytics .manager-popular-item { min-height: 0; padding: 10px 0; }
+.manager-analytics .manager-popular-track { margin: 8px 0 0; }
+.manager-analytics .manager-review-list { max-height: 240px; overflow-y: auto; overscroll-behavior: contain; padding: 0 16px 12px; }
+.manager-analytics .manager-review-preview { min-height: 0; padding: 12px 0; align-items: start; }
+.manager-analytics .manager-review-preview p { margin: 6px 0 0; line-height: 1.6; }
+.manager-analytics .manager-list:not(.manager-review-list) { padding: 6px 16px 12px; }
+.manager-analytics .manager-panel-note { padding: 0 16px 12px; margin-top: 6px; line-height: 1.6; }
+.manager-analytics .manager-dashboard-methodology { margin-top: 0; }
+.manager-analytics .manager-rating-summary { display: flex; align-items: center; gap: 18px; padding: 16px; }
+.manager-analytics .manager-rating-average { flex: 0 0 auto; display: grid; gap: 5px; }
+.manager-analytics .manager-rating-average > strong { font-size: 25px; line-height: 1.2; white-space: nowrap; }
+.manager-analytics .manager-rating-average > span { font-size: 12px; color: var(--color-text-muted); }
+.manager-analytics .manager-rating-breakdown { flex: 1; min-width: 0; display: grid; gap: 6px; }
+.manager-analytics .manager-rating-row { display: grid; grid-template-columns: 26px minmax(0, 1fr) 18px; align-items: center; gap: 8px; font-size: 12px; line-height: 1.3; }
+.manager-analytics .manager-rating-row b { text-align: right; font-weight: 500; }
+.manager-analytics .manager-rating-track { height: 5px; overflow: hidden; border-radius: 6px; background: var(--color-border); }
+.manager-analytics .manager-rating-track i { display: block; height: 100%; border-radius: inherit; background: var(--color-accent); }
+@container manager-card (max-width: 480px) {
+  .manager-analytics .manager-table-grid { grid-template-columns: repeat(var(--table-columns-small), minmax(0, 1fr)); }
+}
+@container manager-card (min-width: 800px) {
+  .manager-analytics .manager-table-grid { grid-template-columns: repeat(var(--table-columns-wide), minmax(0, 1fr)); }
+}
+@container manager-overview (min-width: 1400px) {
+  .manager-analytics .manager-summary-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+}
+@container manager-overview (max-width: 1320px) {
+  .manager-analytics .manager-dashboard-panels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container manager-overview (max-width: 900px) {
+  .manager-analytics .manager-summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@container manager-overview (max-width: 760px) {
+  .manager-analytics .manager-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container manager-overview (max-width: 760px) {
+  .manager-analytics .manager-dashboard-panels { grid-template-columns: minmax(0, 1fr); }
+}

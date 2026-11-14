@@ -1,3 +1,5 @@
+import { formatLocalDateTime, formatLocalTime, getAccountDateTimePreferences } from "./localDate.js";
+
 export const KITCHEN_ACTION_LABELS = {
   ACCEPTED: "Accept order", PREPARING: "Start preparing", READY: "Mark as ready", SERVED: "Mark as served",
 };
@@ -13,7 +15,12 @@ export function elapsedLabel(seconds) {
   return `${Math.floor(minutes / 60)} hr ${minutes % 60} min`;
 }
 
-export function kitchenInstant(value, timezone, date = false) {
+export function kitchenInstant(value, timezone, date = false, { restaurantLocal = false } = {}) {
+  const preferences = getAccountDateTimePreferences();
+  if (preferences) {
+    const formatting = restaurantLocal ? { ...preferences, timezone } : preferences;
+    return date ? formatLocalDateTime(value, {}, formatting) : formatLocalTime(value, {}, formatting);
+  }
   return new Intl.DateTimeFormat("en-IN", {
     timeZone: timezone, ...(date ? { day: "numeric", month: "short" } : {}), hour: "2-digit", minute: "2-digit",
   }).format(new Date(value));

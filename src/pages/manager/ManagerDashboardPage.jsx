@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { CalendarDays, CircleDollarSign, Plus, RefreshCw, ShoppingBasket, Star, Table2, Tag, Users, Receipt } from "lucide-react";
 import { usePageState } from "../../state/usePageState.js";
@@ -89,6 +89,21 @@ export function DashboardFeedback({ error, loading, validation, refresh }) {
 export function DashboardContent({ data, sort, setSort, navigate }) {
   const { overview, operations, period, live, revenue, reviews, customers } = data;
   const count = (statuses, status) => statuses.find((item) => item.status === status)?.count || 0;
+  const panelsRef = useRef(null);
+  // Pack natural card heights into one-pixel rows, leaving 16px between cards.
+  useEffect(() => {
+    const container = panelsRef.current;
+    const panels = [...container.querySelectorAll(".manager-panel")];
+    const sizeCard = (panel) => {
+      const span = `span ${Math.ceil(panel.getBoundingClientRect().height) + 16}`;
+      if (panel.style.gridRowEnd !== span) panel.style.gridRowEnd = span;
+    };
+    const observer = new ResizeObserver((entries) => entries.forEach(({ target }) => sizeCard(target)));
+    panels.forEach((panel) => { sizeCard(panel); observer.observe(panel); });
+    container.dataset.measured = "true";
+    return () => observer.disconnect();
+  }, []);
+  const tableColumns = (limit) => live.table_preview.length ? Math.ceil(live.table_preview.length / Math.ceil(live.table_preview.length / limit)) : 1;
   return <>
     <p className="manager-dashboard-period">{formatDate(period.start_date)} – {formatDate(period.end_date)} · {period.timezone}<br />
       Compared with {formatDate(period.previous_start_date)} – {formatDate(period.previous_end_date)}. Charts grouped {statusLabel(period.group_by)}.</p>
@@ -102,6 +117,7 @@ export function DashboardContent({ data, sort, setSort, navigate }) {
       <SummaryCard title="Average Rating" metric={reviews.total ? overview.rating : undefined} value={reviews.total ? `${formatNumber(reviews.average)} ★` : "—"} detail={`${reviews.total} published reviews in period`} icon={Star} />
     </div>
 
+    <div className="manager-dashboard-panels" ref={panelsRef}>
     <div className="manager-dashboard-grid">
       <Panel title="Revenue Overview" subtitle="INR · Collection and reversal dates">
         <BarChart points={data.revenue_chart} series={revenueSeries} group={period.group_by} currency label="Revenue over time in INR" />
@@ -109,18 +125,18 @@ export function DashboardContent({ data, sort, setSort, navigate }) {
           {[["Gross collected", revenue.gross], ["Refunds", revenue.refunds], ["Commission, after reversals", revenue.commissions], ["Net after commission", revenue.net]].map(([name, value]) => <div key={name}><span>{name}</span><strong>{formatCurrency(value)}</strong></div>)}
         </div>
       </Panel>
-      <Panel title="Order Statuses" subtitle="Selected period · Order creation date"><DonutChart items={distribution(operations.order_status)} label="Orders" /></Panel>
+      <Panel title="Order Statuses" subtitle="Selected period · Order creation date"><DonutChart items={distribution(operations.order_status)} label="Orders" detailed /></Panel>
     </div>
 
     <div className="manager-dashboard-grid manager-middle-grid">
       <Panel title="Live Floor Status Summary" subtitle={`Current · Updated ${formatInstant(live.as_of)}`} action={<button type="button" onClick={() => navigate("/manager/tables")}>View all tables</button>}>
-        {live.table_preview.length ? <div className="manager-table-grid">{live.table_preview.map((table) => <div className={`manager-table-card ${table.status}`} key={table.id}>
+        {live.table_preview.length ? <div className="manager-table-grid" style={{ "--table-columns": tableColumns(5), "--table-columns-small": tableColumns(2), "--table-columns-wide": tableColumns(8) }}>{live.table_preview.map((table) => <div className={`manager-table-card ${table.status}`} key={table.id}>
           <strong>Table {table.name}</strong><span>{table.floor} · {table.seats} seats</span><small>{statusLabel(table.status)}</small>
         </div>)}</div> : <EmptyState>No active tables. Set up floors and tables to view seating.</EmptyState>}
         <p className="manager-panel-note">{live.tables.total} active tables · {live.tables.reserved} reserved · {live.tables.maintenance} in maintenance. Showing up to 20 tables.</p>
       </Panel>
       <Panel title="Popular Items" subtitle="Paid orders · Sales after discounts, before tax" action={<label className="manager-dashboard-sort">Rank by<select aria-label="Rank popular items by" value={sort} onChange={(event) => setSort(event.target.value)}><option value="quantity">Most sold</option><option value="revenue">Highest revenue</option></select></label>}>
-        {data.popular_items.length ? <div className="manager-popular-list">{data.popular_items.map((item, index) => <div key={item.key} className="manager-popular-item manager-popular-chart-item">
+        {data.popular_items.length ? <div className="manager-popular-list" tabIndex={0} role="region" aria-label="Popular menu items">{data.popular_items.map((item, index) => <div key={item.key} className="manager-popular-item manager-popular-chart-item">
           <div><strong title={item.name}>{index + 1}. {item.name}</strong><span>{formatNumber(item.quantity)} sold · {formatCurrency(item.revenue)}</span>
             <div className="manager-popular-track" title={`${item.name}: ${item.quantity} sold, ${formatCurrency(item.revenue)}`}><i style={{ width: `${Number(sort === "revenue" ? item.revenue : item.quantity) / Math.max(1, ...data.popular_items.map((row) => Number(sort === "revenue" ? row.revenue : row.quantity))) * 100}%` }} /></div>
           </div>
@@ -137,13 +153,20 @@ export function DashboardContent({ data, sort, setSort, navigate }) {
         <BarChart points={customers.trend} series={customerSeries} group={period.group_by} label="Unique restaurant customers over time" />
         <p className="manager-panel-note">New customers are identified from their full restaurant history. A customer can appear in more than one chart interval.</p>
       </Panel>
-      <Panel title="Reservation Statuses" subtitle={`${operations.expected_guests} expected guests · Average party ${formatNumber(operations.average_party_size)}`}><DonutChart items={distribution(operations.reservation_status)} label="Reservations" /></Panel>
+      <Panel title="Reservation Statuses" subtitle={`${operations.expected_guests} expected guests · Average party ${formatNumber(operations.average_party_size)}`}><DonutChart items={distribution(operations.reservation_status)} label="Reservations" detailed /></Panel>
     </div>
     <div className="manager-bottom-grid">
-      <Panel title="Payment Methods" subtitle="Captured volume · Before refunds"><DonutChart items={data.payment_methods.map((item) => ({ label: `${statusLabel(item.method)} · ${item.count} payments`, value: item.amount }))} label="Collected payments" currency /></Panel>
+      <Panel title="Payment Methods" subtitle="Captured volume · Before refunds"><DonutChart items={data.payment_methods.map((item) => ({ label: `${statusLabel(item.method)} · ${item.count} payments`, value: item.amount }))} label="Collected payments" currency detailed /></Panel>
       <Panel title="Reviews and Ratings" subtitle="Published reviews in selected period" action={<button type="button" onClick={() => navigate("/manager/reviews")}>View reviews</button>}>
-        <DonutChart items={reviews.distribution.map((item) => ({ label: `${item.status} stars`, value: item.count }))} label="Published reviews" />
-        {!!reviews.recent.length && <div className="manager-list">{reviews.recent.map((review) => <div key={review.id} className="manager-list-row manager-review-preview"><div><strong>{review.rating} ★ · {formatInstant(review.created_at)}</strong><p>{review.content}</p></div></div>)}</div>}
+        {reviews.total ? <div className="manager-rating-summary">
+          <div className="manager-rating-average"><strong>{formatNumber(reviews.average)} <span aria-hidden="true">★</span></strong><span>{reviews.total} {reviews.total === 1 ? "review" : "reviews"}</span></div>
+          <div className="manager-rating-breakdown" role="group" aria-label="Published rating distribution">
+            {[...reviews.distribution].reverse().map((item) => <div className="manager-rating-row" key={item.status} role="img" aria-label={`${item.status} stars: ${item.count} ${item.count === 1 ? "review" : "reviews"}`}>
+              <span aria-hidden="true">{item.status} ★</span><span className="manager-rating-track" aria-hidden="true"><i style={{ width: `${item.count / reviews.total * 100}%` }} /></span><b aria-hidden="true">{item.count}</b>
+            </div>)}
+          </div>
+        </div> : <EmptyState>No published reviews in this period.</EmptyState>}
+        {!!reviews.recent.length && <div className="manager-list manager-review-list" tabIndex={0} role="region" aria-label="Recent published reviews">{reviews.recent.map((review) => <div key={review.id} className="manager-list-row manager-review-preview"><div><strong>{review.rating} ★ · {formatInstant(review.created_at)}</strong><p>{review.content}</p></div></div>)}</div>}
       </Panel>
     </div>
 
@@ -159,6 +182,7 @@ export function DashboardContent({ data, sort, setSort, navigate }) {
           <div className="manager-order-row-right"><b>{formatCurrency(order.amount)}</b><span className={`manager-order-pill ${order.status.toLowerCase()}`}>{statusLabel(order.status)}</span></div>
         </div>)}</div> : <EmptyState>No active orders.</EmptyState>}
       </Panel>
+    </div>
     </div>
     <details className="manager-dashboard-methodology"><summary>How these numbers are calculated</summary><ul>{data.notes.map((note) => <li key={note}>{note}</li>)}</ul></details>
   </>;

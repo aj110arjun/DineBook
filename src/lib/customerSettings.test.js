@@ -151,3 +151,33 @@ test("manager responses cannot change a customer or a later manager's store", as
   assert.equal(customer.getSnapshot().settings.general.theme, "system");
   assert.equal(newManager.getSnapshot().settings.general.theme, "system");
 });
+
+test("chef settings persist through the chef API and isolate late responses from other accounts", async () => {
+  const calls = [];
+  let saved = defaults();
+  const request = async (path, options) => {
+    calls.push(path);
+    if (options) saved = { ...saved, [path.endsWith("/general") ? "general" : "notifications"]: {
+      ...saved[path.endsWith("/general") ? "general" : "notifications"], ...options.body,
+    } };
+    return structuredClone(saved);
+  };
+  const chef = createCustomerSettingsStore(request, "/api/chef/settings");
+  await chef.load();
+  await chef.save("general", "theme", "dark");
+  await chef.save("notifications", "in_app_enabled", false);
+  assert.deepEqual(calls, ["/api/chef/settings", "/api/chef/settings/general", "/api/chef/settings/notifications"]);
+  const refreshed = createCustomerSettingsStore(request, "/api/chef/settings");
+  await refreshed.load();
+  assert.equal(refreshed.getSnapshot().settings.general.theme, "dark");
+  assert.equal(refreshed.getSnapshot().settings.notifications.in_app_enabled, false);
+
+  const pending = deferred();
+  const previous = createCustomerSettingsStore(() => pending.promise, "/api/chef/settings");
+  const loading = previous.load();
+  const accounts = ["chef", "manager", "customer"].map((role) => createCustomerSettingsStore(async () => defaults(), `/api/${role}/settings`));
+  await Promise.all(accounts.map((store) => store.load()));
+  pending.resolve({ ...defaults(), general: { ...DEFAULT_GENERAL, theme: "dark" } });
+  await loading;
+  for (const store of accounts) assert.equal(store.getSnapshot().settings.general.theme, "system");
+});

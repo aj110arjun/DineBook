@@ -1,0 +1,217 @@
+/* Keep kitchen orders independent of shared customer and manager page defaults. */
+.chef-dashboard-main .orders-page-chef {
+  width: 100%;
+  max-width: var(--content-width);
+  margin-inline: auto;
+  padding: 0;
+  color: var(--color-text-primary);
+  overflow-wrap: break-word;
+}
+.chef-dashboard-main .orders-page-chef .orders-page-heading {
+  gap: 20px;
+  padding: 24px;
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+.orders-page-chef .orders-page-heading > div { min-width: 0; }
+.orders-page-chef .orders-page-heading > div > span:first-child {
+  color: var(--color-primary);
+  letter-spacing: .1em;
+}
+.orders-page-chef .orders-page-heading > div > .realtime-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: normal;
+}
+.orders-page-chef .realtime-status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: var(--color-warning);
+}
+.orders-page-chef .realtime-connected::before { background: var(--color-success); }
+.chef-dashboard-main .orders-page-chef :is(.orders-page-heading > button, .food-order-actions button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: var(--color-primary);
+  color: var(--color-background);
+  white-space: nowrap;
+}
+.chef-dashboard-main .orders-page-chef :is(.orders-page-heading > button, .food-order-actions button):hover:not(:disabled) {
+  background: var(--color-primary-strong);
+}
+.orders-page-chef button:disabled { cursor: not-allowed; }
+.orders-page-chef .orders-page-heading > button:disabled { opacity: .65; }
+.chef-dashboard-main .orders-page-chef .manager-orders-calendar-layout {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  gap: 22px;
+}
+.chef-dashboard-main .orders-page-chef :is(.chef-orders-calendar, .chef-orders-day) {
+  min-height: 0;
+  max-height: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+.chef-dashboard-main .orders-page-chef .chef-orders-calendar { padding: 22px; }
+.orders-page-chef .manager-orders-calendar-legend { gap: 8px 14px; }
+.orders-page-chef .manager-orders-calendar-header {
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 22px 0 16px;
+}
+.orders-page-chef .manager-orders-calendar-header h2 {
+  font-size: clamp(20px, 2vw, 26px);
+}
+.orders-page-chef .manager-orders-calendar-header > div { flex-shrink: 0; }
+.chef-dashboard-main .orders-page-chef .manager-orders-calendar-header button {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-raised);
+  color: var(--color-text-primary);
+}
+.chef-dashboard-main .orders-page-chef .manager-orders-calendar-header .chef-orders-today {
+  width: auto;
+  min-width: 72px;
+  padding-inline: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+.chef-dashboard-main .orders-page-chef .manager-orders-calendar-header button:hover {
+  border-color: var(--color-primary);
+  background: var(--color-surface-raised);
+}
+.chef-dashboard-main .orders-page-chef .manager-orders-calendar-day {
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+.chef-dashboard-main .orders-page-chef .manager-orders-calendar-day .day-count {
+  background: var(--color-surface-raised);
+}
+.chef-dashboard-main .orders-page-chef .manager-orders-calendar-day.today {
+  border-color: var(--color-info);
+  background: var(--db-status-info-bg);
+}
+.chef-dashboard-main .orders-page-chef .chef-orders-calendar .manager-orders-calendar-day.selected {
+  border: 2px solid var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
+  color: var(--color-text-primary);
+}
+.chef-dashboard-main .orders-page-chef .chef-orders-calendar .manager-orders-calendar-day.selected .day-count {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+.chef-dashboard-main .orders-page-chef .chef-orders-day > header {
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px;
+  border-color: var(--color-border);
+}
+.orders-page-chef .chef-orders-day > header h2 { font-size: 16px; line-height: 1.5; }
+.chef-dashboard-main .orders-page-chef .chef-orders-day > header > div strong {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 4px 10px;
+  background: var(--db-status-info-bg);
+  color: var(--db-status-info-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+.chef-dashboard-main .orders-page-chef .chef-orders-day > header > div strong + strong {
+  background: var(--db-status-success-bg);
+  color: var(--db-status-success-text);
+}
+.chef-dashboard-main .orders-page-chef .orders-search {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  align-items: end;
+  gap: 12px;
+  padding: 20px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+.orders-page-chef .orders-search label:first-child { grid-column: 1 / -1; }
+.chef-dashboard-main .orders-page-chef .orders-search :is(input, select, button) {
+  min-width: 0;
+  min-height: 42px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-raised);
+  color: var(--color-text-primary);
+  font-size: 13px;
+}
+.orders-page-chef .orders-search :is(input, select) { padding: 10px 12px; }
+.orders-page-chef .orders-search input::placeholder { color: var(--color-text-muted); }
+.chef-dashboard-main .orders-page-chef .orders-search button {
+  padding: 10px 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.orders-page-chef .orders-search button:hover { border-color: var(--color-primary); }
+.chef-dashboard-main .orders-page-chef .manager-orders-empty {
+  flex: 1;
+  min-height: 240px;
+  margin: 20px;
+  padding: 32px 20px;
+  border-color: var(--color-border);
+  background: var(--color-surface-raised);
+}
+.chef-dashboard-main .orders-page-chef .food-order-card {
+  border-color: var(--color-border);
+  background: var(--color-surface-raised);
+  box-shadow: none;
+}
+.orders-page-chef .food-order-top > div { min-width: 0; }
+.chef-dashboard-main .orders-page-chef .chef-order-context { background: var(--color-surface); }
+.orders-page-chef .food-order-actions .orders-empty {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  text-align: left;
+}
+@container chef-orders (min-width: 1000px) {
+  .chef-dashboard-main .orders-page-chef .manager-orders-calendar-layout {
+    grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+  }
+  .chef-dashboard-main .orders-page-chef .chef-orders-calendar .manager-orders-calendar-day {
+    height: clamp(64px, 7.4vh, 80px);
+  }
+  .chef-dashboard-main .orders-page-chef .chef-orders-day {
+    max-height: max(680px, calc(100vh - 330px));
+  }
+}
+@media (max-width: 680px) {
+  .chef-dashboard-main .orders-page-chef { padding-inline: 14px; }
+  .chef-dashboard-main .orders-page-chef .orders-page-heading { padding: 18px; }
+  .orders-page-chef .orders-page-heading h1 { font-size: 28px; }
+  .chef-dashboard-main .orders-page-chef .chef-orders-calendar { padding: 16px; }
+  .chef-dashboard-main .orders-page-chef .chef-orders-day > header { padding: 16px; }
+  .chef-dashboard-main .orders-page-chef .orders-search {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 16px;
+  }
+  .orders-page-chef .orders-search button { grid-column: 1 / -1; }
+  .orders-page-chef .food-order-top { flex-wrap: wrap; gap: 10px; }
+  .chef-dashboard-main .orders-page-chef .manager-orders-empty { margin: 16px; }
+}
