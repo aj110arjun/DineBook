@@ -95,12 +95,12 @@ export default function CustomerRecoveryPage({ role = "customer" }) {
       return;
     }
     if (
-      newPassword.length < 10 ||
+      newPassword.length < 8 ||
       !/[A-Za-z]/.test(newPassword) ||
       !/[\d\W]/.test(newPassword)
     ) {
       setError(
-        "Choose a password with at least 10 characters, including a letter and a number or symbol.",
+        "Choose a password with at least 8 characters, including a letter and a number or symbol.",
       );
       return;
     }

@@ -1,5 +1,6 @@
 import { Bell, CalendarDays, CreditCard, ShieldCheck, Star, Store, Users, UtensilsCrossed } from "lucide-react";
 import Notice from "../../components/auth/Notice.jsx";
+import ChangePasswordSection from "../../components/preferences/ChangePasswordSection.jsx";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
 import { useAccountPreferences } from "../../components/preferences/AccountPreferences.jsx";
@@ -44,6 +45,7 @@ export function ManagerSettingsContent({ preferences }) {
       <h2>Settings</h2>
       <p>Manage your notification preferences and Manager Portal appearance.</p>
     </header>
+    <ChangePasswordSection key={preferences.accountId} role="manager" />
     <Notice message={success} type="success" />
     {error && <div><Notice message={error.message || "Unable to load or save settings."} />
       {!settings && <button className="db-portal-button db-portal-control" type="button" disabled={loading} onClick={load}>Try again</button>}
@@ -64,7 +66,7 @@ export function ManagerSettingsContent({ preferences }) {
       </section>
       <GeneralSettingsSection preferences={preferences} portal="Manager Portal" />
     </>}
-    <p className="customer-settings-save-state" role="status">{pending ? "Saving your preference…" : settings ? "Changes are saved automatically to your account." : ""}</p>
+    <p className="customer-settings-save-state" role="status">{pending ? "Saving your preference…" : settings ? "Appearance and notification preferences are saved automatically to your account." : ""}</p>
   </>;
 }
 

@@ -152,6 +152,13 @@ function connect() {
   };
 }
 
+// Password changes renew the cookie while existing streams still carry the old
+// session. Reconnect subscribers immediately with the renewed credentials.
+export function refreshRealtimeSession() {
+  stopConnection();
+  connect();
+}
+
 export function useRealtimeEvents({
   enabled = true,
   onEvent,

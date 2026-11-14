@@ -55,6 +55,18 @@ test("blur validation catches name symbols and password complexity", () => {
   assert.match(errors.password, /number or symbol/);
 });
 
+test("registration accepts eight-character passwords and rejects shorter passwords", () => {
+  const data = validRegistration();
+  for (const password of ["Fresh8!x", "Fresh8!xy", "a1".repeat(64)]) {
+    data.credentials = { password, confirmPassword: password };
+    assert.deepEqual(getManagerRegistrationStepErrors(1, data), {});
+  }
+  for (const password of ["Valid7!", "a1".repeat(65)]) {
+    data.credentials = { password, confirmPassword: password };
+    assert.match(getManagerRegistrationStepErrors(1, data).password, /8–128 characters/);
+  }
+});
+
 test("restaurant details report required and format errors in one pass", () => {
   const data = validRegistration();
   for (const field of Object.keys(data.application)) data.application[field] = " ";
