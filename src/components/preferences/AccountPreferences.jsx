@@ -21,11 +21,13 @@ export default function AccountPreferencesProvider({ children }) {
   const customerId = useSelector((state) => state.customerSession.user?.id);
   const [managerId, setManagerId] = useState(null);
   const [chefId, setChefId] = useState(null);
+  const [adminId, setAdminId] = useState(null);
   const customerRoute = pathname.startsWith("/customer") && !/^\/customer\/(login|register|recovery|verify-email)(\/|$)/.test(pathname);
   const managerRoute = pathname.startsWith("/manager/") && !/^\/manager\/(login|register|pending)(\/|$)/.test(pathname);
   const chefRoute = pathname.startsWith("/chef/") && !/^\/chef\/(login|change-password)(\/|$)/.test(pathname);
-  const role = chefRoute ? "chef" : managerRoute ? "manager" : "customer";
-  const accountId = chefRoute ? chefId : managerRoute ? managerId : customerRoute ? customerId : null;
+  const adminRoute = pathname.startsWith("/admin/") && !/^\/admin\/(login|recovery)(\/|$)/.test(pathname);
+  const role = adminRoute ? "admin" : chefRoute ? "chef" : managerRoute ? "manager" : "customer";
+  const accountId = adminRoute ? adminId : chefRoute ? chefId : managerRoute ? managerId : customerRoute ? customerId : null;
   const scope = accountId ? `${role}:${accountId}` : null;
   const store = useMemo(() => createAccountSettingsStore(requestJson, `/api/${role}/settings`), [scope, role]);
   const state = useSyncExternalStore(store.subscribe, store.getSnapshot);
@@ -35,6 +37,7 @@ export default function AccountPreferencesProvider({ children }) {
 
   useEffect(() => { if (!managerRoute) setManagerId(null); }, [managerRoute]);
   useEffect(() => { if (!chefRoute) setChefId(null); }, [chefRoute]);
+  useEffect(() => { if (!adminRoute) setAdminId(null); }, [adminRoute]);
   useLayoutEffect(() => {
     setAccountDateTimePreferences(effectiveFormatting);
     setFormatting(effectiveFormatting);
@@ -42,7 +45,8 @@ export default function AccountPreferencesProvider({ children }) {
   useEffect(() => { if (scope) store.load(); }, [store, scope]);
   useEffect(() => {
     if (state.error?.status === 401 || state.error?.status === 403) {
-      if (role === "chef") setChefId(null);
+      if (role === "admin") setAdminId(null);
+      else if (role === "chef") setChefId(null);
       else if (role === "manager") setManagerId(null);
       else dispatch(clearCustomerSession());
       navigate(`/${role}/login`, { replace: true });
@@ -55,7 +59,7 @@ export default function AccountPreferencesProvider({ children }) {
   }, [scope, general.theme]);
 
   return <AccountPreferences.Provider value={{ ...state, general, formatting, active: Boolean(scope), role, accountId,
-    setManagerId, setChefId, load: store.load, save: store.save }}>
+    setManagerId, setChefId, setAdminId, load: store.load, save: store.save }}>
     {children}
   </AccountPreferences.Provider>;
 }

@@ -181,3 +181,32 @@ test("chef settings persist through the chef API and isolate late responses from
   await loading;
   for (const store of accounts) assert.equal(store.getSnapshot().settings.general.theme, "system");
 });
+
+test("admin settings use admin endpoints and isolate late responses from other admins and portals", async () => {
+  let saved = defaults();
+  const calls = [];
+  const request = async (path, options) => {
+    calls.push(path);
+    const section = path.endsWith("/general") ? "general" : "notifications";
+    if (options) saved = { ...saved, [section]: { ...saved[section], ...options.body } };
+    return structuredClone(saved);
+  };
+  const admin = createCustomerSettingsStore(request, "/api/admin/settings");
+  await admin.load();
+  await admin.save("general", "theme", "dark");
+  await admin.save("notifications", "approval_updates", false);
+  assert.deepEqual(calls, ["/api/admin/settings", "/api/admin/settings/general", "/api/admin/settings/notifications"]);
+  const refreshed = createCustomerSettingsStore(request, "/api/admin/settings");
+  await refreshed.load();
+  assert.equal(refreshed.getSnapshot().settings.general.theme, "dark");
+  assert.equal(refreshed.getSnapshot().settings.notifications.approval_updates, false);
+
+  const response = deferred();
+  const oldAdmin = createCustomerSettingsStore(() => response.promise, "/api/admin/settings");
+  const loading = oldAdmin.load();
+  const accounts = ["admin", "customer", "manager", "chef"].map((role) => createCustomerSettingsStore(async () => defaults(), `/api/${role}/settings`));
+  await Promise.all(accounts.map((store) => store.load()));
+  response.resolve(saved);
+  await loading;
+  for (const store of accounts) assert.equal(store.getSnapshot().settings.general.theme, "system");
+});

@@ -3,8 +3,10 @@ import { Navigate } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
 import { AdminSessionContext } from "../admin/AdminSessionContext.jsx";
 import NotificationSession from "../notifications/NotificationSession.jsx";
+import { useAccountPreferences } from "../preferences/AccountPreferences.jsx";
 
 export default function AdminProtectedRoute({ children }) {
+  const { setAdminId } = useAccountPreferences();
   // undefined = checking; null = signed out; object = authenticated.
   const [admin, setAdmin] = useState(undefined);
   const [error, setError] = useState("");
@@ -50,6 +52,11 @@ export default function AdminProtectedRoute({ children }) {
   const clearAdmin = useCallback(() => {
     setAdmin(null);
   }, []);
+
+  useEffect(() => {
+    setAdminId(admin?.id ?? null);
+    return () => setAdminId(null);
+  }, [admin?.id, setAdminId]);
 
   if (error) {
     return (
