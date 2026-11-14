@@ -59,11 +59,9 @@ import ChefServiceHoursPage from "./pages/chef/ChefServiceHoursPage.jsx";
 import ManagerPaymentsPage from "./pages/manager/ManagerPaymentsPage.jsx";
 import ManagerReviewsPage from "./pages/manager/ManagerReviewsPage.jsx";
 import AdminReviewModerationPage from "./pages/admin/AdminReviewModerationPage.jsx";
-import {
-  AdminRevenuePage,
-  ChefRevenuePage,
-  ManagerRevenuePage,
-} from "./pages/shared/RevenueWalletPage.jsx";
+import {AdminRevenuePage, ChefRevenuePage, ManagerRevenuePage} from "./pages/shared/RevenueWalletPage.jsx";
+import AdminProfilePage from "./pages/admin/AdminProfilePage.jsx"
+
 
 export default function App() {
   useAccountPreferences();
@@ -295,6 +293,14 @@ export default function App() {
               <AdminManagerRequestDetailsPage />
             </AdminProtectedRoute>
           }
+        />
+        <Route 
+          path="/admin/profile"
+          element={
+            <AdminProtectedRoute>
+              <AdminProfilePage />
+            </AdminProtectedRoute>
+          } 
         />
         <Route path="/manager/register" element={<ManagerRegisterPage />} />
         <Route
