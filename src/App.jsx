@@ -5,6 +5,7 @@ import CustomerLoginPage from "./pages/customer/CustomerLoginPage.jsx";
 import CustomerRecoveryPage from "./pages/customer/CustomerRecoveryPage.jsx";
 import CustomerRegisterPage from "./pages/customer/CustomerRegisterPage.jsx";
 import CustomerLandingPage from "./pages/customer/CustomerLandingPage.jsx";
+import CustomerAiSupport from "./components/customer/CustomerAiSupport.jsx";
 import CustomerEmailVerificationPage from "./pages/customer/CustomerEmailVerificationPage.jsx";
 import CustomerRestaurantDetailsPage from "./pages/customer/CustomerRestaurantDetailsPage.jsx";
 import CustomerReservationPage from "./pages/customer/CustomerReservationPage.jsx";
@@ -399,6 +400,7 @@ export default function App() {
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+      <CustomerAiSupport />
     </>
   );
 }
