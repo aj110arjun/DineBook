@@ -10,7 +10,7 @@ import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { demoCustomer } from "../data/demoCustomer.js";
 
-let temporary, Panel, SignInPanel, Header, Support, store;
+let temporary, Panel, SignInPanel, Header, Support, store, observeInputWidth;
 before(async () => {
   const output = await build({ logLevel: "silent", plugins: [{
     name: "isolate-notification-portals",
@@ -18,7 +18,7 @@ before(async () => {
     resolveId(source) { if (source.endsWith("NotificationSession.jsx")) return "\0notification-session-fixture"; },
     load(id) { if (id === "\0notification-session-fixture") return "export default function Session({children}) { return children; } export function useNotificationScope() { return null; }"; },
   }], build: { ssr: true, write: false,
-    rollupOptions: { input: ["src/components/customer/CustomerAiWidget.jsx", "src/components/customer/CustomerAiSupport.jsx", "src/components/landing/CustomerHeader.jsx", "src/state/store.js"] },
+    rollupOptions: { input: ["src/components/customer/CustomerAiWidget.jsx", "src/components/customer/CustomerAiSupport.jsx", "src/components/customer/ai-support/AIChatInput.jsx", "src/components/landing/CustomerHeader.jsx", "src/state/store.js"] },
   } });
   temporary = await mkdtemp(join(process.cwd(), "node_modules/.customer-ai-render-"));
   for (const chunk of output.output) if (chunk.type === "chunk") {
@@ -29,15 +29,56 @@ before(async () => {
   ({ default: Support } = await import(pathToFileURL(join(temporary, "CustomerAiSupport.js"))));
   ({ default: Header } = await import(pathToFileURL(join(temporary, "CustomerHeader.js"))));
   ({ store } = await import(pathToFileURL(join(temporary, "store.js"))));
+  ({ observeInputWidth } = await import(pathToFileURL(join(temporary, "AIChatInput.js"))));
 });
 after(async () => { if (temporary) await rm(temporary, { recursive: true, force: true }); });
 const chat = (extra = {}) => ({ active: null, conversations: [], messages: [], language: "auto", status: { ready: true, support_url: "" },
   busy: false, loading: false, expired: false, error: "", send() {}, select() {}, newConversation() {}, setLanguage() {}, remove() {}, ...extra });
 const render = (value) => renderToStaticMarkup(createElement(StaticRouter, {}, createElement(Panel, { chat: value, id: "support", close() {} })));
 
+test("textarea resizing defers DOM writes, ignores scrollbar changes and cancels work on unmount", () => {
+  const originalWindow = globalThis.window, originalObserver = globalThis.ResizeObserver;
+  let callback, borderWidth = 320, writes = 0, disconnected = false, nextId = 0;
+  const frames = new Map();
+  globalThis.window = { requestAnimationFrame: (fn) => { frames.set(++nextId, fn); return nextId; }, cancelAnimationFrame: (id) => frames.delete(id) };
+  globalThis.ResizeObserver = class { constructor(fn) { callback = fn; } observe() {} disconnect() { disconnected = true; } };
+  try {
+    const input = { clientWidth: 300, getBoundingClientRect: () => ({ width: borderWidth }) };
+    const cleanup = observeInputWidth(input, () => { writes++; });
+    callback(); assert.equal(frames.size, 0);
+    input.clientWidth = 284; callback(); assert.equal(frames.size, 0);
+    borderWidth = 280; callback(); assert.equal(writes, 0); assert.equal(frames.size, 1);
+    const frame = [...frames.values()][0]; frames.clear(); frame(); assert.equal(writes, 1);
+    borderWidth = 260; callback(); cleanup();
+    assert.equal(frames.size, 0); assert.equal(disconnected, true);
+  } finally {
+    if (originalWindow === undefined) delete globalThis.window; else globalThis.window = originalWindow;
+    if (originalObserver === undefined) delete globalThis.ResizeObserver; else globalThis.ResizeObserver = originalObserver;
+  }
+});
+
 test("the customer panel includes history, language, quick actions and accessible composer", () => {
   const html = render(chat());
-  for (const value of ["My reservations", "Wallet balance", "Human support", "മലയാളം", "हिन्दी", "Conversations", 'role="dialog"', 'role="log"', 'maxLength="1000"']) assert.ok(html.includes(value), value);
+  for (const value of ["DineBook Assistant", "Your dining companion", "Welcome to DineBook AI!", "Find Restaurants", "My Reservations", "Track My Order", "Payment Help", "Offers &amp; Discounts", "Contact Support", "Wallet Balance", "Refund Status", "മലയാളം", "हिन्दी", "Conversations", 'role="dialog"', 'role="log"', 'aria-live="polite"', 'maxLength="1000"']) assert.ok(html.includes(value), value);
+});
+
+test("availability is verified and offline inference keeps read-only quick actions usable", () => {
+  assert.match(render(chat({ status: null })), /Service unavailable/);
+  assert.match(render(chat({ status: { ready: true, model_available: true } })), /AI available/);
+  const offline = render(chat({ status: { ready: true, model_available: false } }));
+  assert.match(offline, /Limited mode/);
+  assert.match(offline, /Account lookups and help still work/);
+  assert.doesNotMatch(offline, /Online|AI available/);
+  assert.doesNotMatch(offline.match(/class="customer-ai-actions".*?<\/div>/s)[0], /disabled=""/);
+});
+
+test("assistant messages expose copy controls, timestamps and safe numbered Markdown lists", () => {
+  const html = render(chat({ active: "saved-conversation", messages: [{ id: "answer", sender: "assistant", created_at: "2026-11-15T12:00:00Z", content: "1. **Find** a restaurant\n2. Pick a time\n\n[Unsafe](javascript:alert(1))" }] }));
+  assert.match(html, /aria-label="Copy message"/);
+  assert.match(html, /<time dateTime="2026-11-15T12:00:00Z"/);
+  assert.match(html, /<ol><li><strong>Find<\/strong>/);
+  assert.match(html, /aria-label="Clear conversation"/);
+  assert.doesNotMatch(html, /href="javascript:/);
 });
 
 test("account facts render safely with internal links and no active HTML", () => {

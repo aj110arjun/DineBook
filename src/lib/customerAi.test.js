@@ -40,10 +40,41 @@ test("SSE preserves authorization errors and detects disconnected or oversized r
 
 test("support links reject scripts, external images and unconfigured external URLs", () => {
   assert.equal(api.safeSupportHref("/customer/profile/orders"), "/customer/profile/orders");
-  for (const value of ["javascript:alert(1)", "//evil.example", "https://evil.example", "/admin/dashboard", "data:text/html,hi"]) {
+  for (const value of ["javascript:alert(1)", "//evil.example", "https://evil.example", "/admin/dashboard", "data:text/html,hi", "/customer/../admin", "/customer/%2e%2e/admin", "/customer/%2f..%2fadmin", "/customer/%5cadmin", "/customer/%00", "/customer/%zz"]) {
     assert.equal(api.safeSupportHref(value), null);
   }
   assert.equal(api.safeSupportHref("https://help.example.com", "https://help.example.com"), "https://help.example.com");
+});
+
+test("draft validation matches backend limits while preserving multiline messages", () => {
+  assert.match(api.supportDraftError("   \n"), /Write a message/);
+  assert.equal(api.supportDraftError("  Find restaurants\nnear Kochi  "), "");
+  assert.equal(api.supportDraftError("x".repeat(1000)), "");
+  assert.match(api.supportDraftError("x".repeat(1001)), /1,000 characters/);
+  assert.match(api.supportDraftError("x".repeat(101), 100), /100 characters/);
+  assert.match(api.supportDraftError("😀".repeat(800), 2000), /shorten/);
+});
+
+test("friendly failures distinguish auth, access, timeout, network and unavailable service without exposing internals", () => {
+  for (const [reason, expected] of [
+    [{ status: 401 }, /session has expired/], [{ status: 403 }, /customer accounts/],
+    [{ status: 504, message: "internal stack trace" }, /longer than expected/],
+    [{ cause: { code: "ECONNABORTED" } }, /longer than expected/],
+    [new TypeError("Failed to fetch"), /connection and retry/],
+    [{ cause: { code: "ERR_NETWORK" } }, /connection and retry/],
+    [{ status: 500, message: "private database details" }, /temporarily unavailable/],
+    [{ status: 503 }, /temporarily unavailable/],
+    [{ status: 404 }, /new chat/],
+    [{ status: 422, message: "Please send a shorter message." }, /shorter message/],
+  ]) assert.match(api.supportErrorMessage(reason), expected);
+  assert.doesNotMatch(api.supportErrorMessage(new Error("private stack trace")), /stack trace/);
+});
+
+test("a completed SSE answer returns immediately and cannot deliver a duplicate done event", async () => {
+  const events = [];
+  const event = 'event: done\ndata: {"reply":"Ready","cards":[]}\n\n';
+  await api.readSupportEvents(reader(event + event), (name) => events.push(name));
+  assert.deepEqual(events, ["done"]);
 });
 
 test("each message receives a UUID for retry-safe server persistence", () => {

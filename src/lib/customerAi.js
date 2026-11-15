@@ -11,6 +11,9 @@ const CARD_FIELDS = {
   hours: ["Date", "Hours"],
   availability: ["Availability", "Date", "Time", "Guests", "Duration (minutes)"],
   offer: ["Code", "Discount", "Minimum subtotal", "Your usage limit"],
+  manager_summary: ["Orders", "Reservations", "Expected guests", "Recorded revenue", "Active orders shown", "Available tables", "Occupied tables", "Reserved tables", "Maintenance tables"],
+  manager_revenue: ["Gross collections", "Refunds", "Commission", "Revenue after refunds", "Net revenue"],
+  manager_tables: ["Total", "Available", "Occupied", "Reserved", "Maintenance", "Occupancy percent"],
 };
 const FIELD_LABELS = {
   "Start time": "Time", "Fee payment": "Booking payment", "Reservation fee": "Booking fee",
@@ -33,7 +36,8 @@ export function supportFieldLabel(key, fields) {
 }
 
 export function supportFieldValue(key, value) {
-  if (key === "Date" && /^\d{4}-\d{2}-\d{2}$/.test(value)) return formatLocalDate(value);
+  if (["Date", "From", "Through"].includes(key) && /^\d{4}-\d{2}-\d{2}$/.test(value)) return formatLocalDate(value);
+  if (key === "Occupancy percent" && /^\d+(?:\.\d+)?$/.test(value)) return `${value}%`;
   if (["Start time", "Time"].includes(key)) return formatWallTime(value);
   if (["Created", "Placed", "Recorded", "Preparation started", "Ready"].includes(key) && /^\d{4}-\d{2}-\d{2}T/.test(value)) {
     return formatLocalDateTime(value);
@@ -50,6 +54,28 @@ export function supportFieldValue(key, value) {
 }
 
 export const customerAiPath = "/api/customer/ai";
+export const SUPPORT_MAX_MESSAGE_LENGTH = 1000;
+export const SUPPORT_MAX_MESSAGE_BYTES = 3000;
+export const SUPPORT_REPLY_TIMEOUT_MS = 125000;
+
+export function supportDraftError(text, maxLength = SUPPORT_MAX_MESSAGE_LENGTH) {
+  if (!text.trim()) return "Write a message to get started.";
+  if (text.length > maxLength) return `Keep your message under ${maxLength.toLocaleString()} characters.`;
+  if (new TextEncoder().encode(text.trim()).length > SUPPORT_MAX_MESSAGE_BYTES) return "This message is too long. Please shorten it and try again.";
+  return "";
+}
+
+export function supportErrorMessage(reason) {
+  if (reason.status === 401) return "Your session has expired. Please sign in again.";
+  if (reason.status === 403) return "AI support is available only to customer accounts. Sign in with a customer account.";
+  if (reason.status === 504 || reason.code === "ECONNABORTED" || ["ECONNABORTED", "ETIMEDOUT"].includes(reason.cause?.code)) return "This is taking longer than expected. Please try again.";
+  if (reason.status >= 500) return "The AI assistant is temporarily unavailable. Please try again.";
+  if (reason.status === 404) return "This conversation is no longer available. Start a new chat.";
+  if ([409, 422, 429].includes(reason.status)) return reason.message || "Please wait a moment and try again.";
+  if (reason instanceof TypeError || reason.cause?.code === "ERR_NETWORK") return "We couldn't connect to the server. Check your connection and retry.";
+  return "We couldn't finish this reply. Please try again.";
+}
+
 export const supportJson = (path, options = {}) => requestJson(`${customerAiPath}${path}`, {
   timeout: 10000, fallbackMessage: "Customer support is unavailable. Please try again.", ...options,
 });
@@ -65,7 +91,12 @@ export function supportMessageId() {
 
 export function safeSupportHref(value, supportUrl = "") {
   if (typeof value !== "string") return null;
-  if (/^\/customer(?:\/[a-zA-Z0-9/?#=&%._~-]*)?$/.test(value)) return value;
+  if (/^\/customer(?:\/[a-zA-Z0-9/?#=&%._~-]*)?$/.test(value)) {
+    try {
+      const pathname = decodeURIComponent(value.split(/[?#]/)[0]);
+      if (!pathname.split("/").some((part) => [".", ".."].includes(part)) && !/[\\\x00-\x1f]/.test(pathname)) return value;
+    } catch { return null; }
+  }
   if (value === supportUrl && value.startsWith("https://")) return value;
   return null;
 }
@@ -99,6 +130,7 @@ export async function readSupportEvents(reader, onEvent) {
           complete = true;
         }
         onEvent(name, parsed);
+        if (complete) return;
       }
       if (done) break;
     }
