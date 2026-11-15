@@ -3,11 +3,13 @@ import { useEffect, useRef, useState } from "react";
 import { requestJson } from "../../lib/authApi.js";
 import NotificationSession from "../notifications/NotificationSession.jsx";
 import { useAccountPreferences } from "../preferences/AccountPreferences.jsx";
+import ManagerAiWidget from "../manager/ManagerAiWidget.jsx";
 
 export default function ManagerProtectedRoute() {
   const preferences = useAccountPreferences();
   const [checking, setChecking] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
+  const [managerId, setManagerId] = useState(null);
   const [suspended, setSuspended] = useState(false);
   const hadSession = useRef(false);
 
@@ -23,6 +25,7 @@ export default function ManagerProtectedRoute() {
 
         if (active) {
           preferences?.setManagerId(manager.id);
+          setManagerId(manager.id);
           setAuthenticated(true);
           hadSession.current = true;
           if (initial) setChecking(false);
@@ -75,6 +78,7 @@ export default function ManagerProtectedRoute() {
   return (
     <NotificationSession>
       <Outlet />
+      <ManagerAiWidget key={managerId} userId={managerId} />
     </NotificationSession>
   );
 }
