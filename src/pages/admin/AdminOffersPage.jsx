@@ -1,3 +1,5 @@
+import useLoadingPhase from "../../hooks/useLoadingPhase.js";
+import LoadingState, { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
 import { useEffect } from "react";
@@ -30,6 +32,8 @@ export default function AdminOffersPage() {
     validFrom: "",
     validTo: "",
   }));
+  const { initialLoading, refreshing } = useLoadingPhase(loading, rows.length, error);
+
   useEffect(() => {
     let active = true;
     setLoading(true);
@@ -177,8 +181,9 @@ export default function AdminOffersPage() {
           )}
         </div>
         {error && <p role="alert">{error}</p>}
-        {loading ? (
-          <p>Loading records…</p>
+        {refreshing && <RefreshIndicator active />}
+        {initialLoading ? (
+          <LoadingState variant="table" columns={14} label="Loading records…" />
         ) : (
           <div className="admin-offers-table-wrap">
             <table>

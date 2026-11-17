@@ -12,6 +12,7 @@ import "./assets/css/styles.css";
 import "./assets/css/design-system.css";
 import "./assets/css/layout-refresh.css";
 import "./assets/css/ux-improvements.css";
+import "./assets/css/ui-experience.css";
 
 try {
   document.documentElement.dataset.theme = window.localStorage.getItem("dinebook-theme") === "dark" ? "dark" : "light";
@@ -22,7 +23,7 @@ try {
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <Provider store={store}>
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AppExperience />
         <AppErrorBoundary>
           <AccountPreferencesProvider><App /></AccountPreferencesProvider>

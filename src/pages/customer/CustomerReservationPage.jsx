@@ -1,3 +1,5 @@
+import LoadingState from "../../components/ui/LoadingState.jsx";
+import PageTransition from "../../components/ui/PageTransition.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatCalendarDate, formatWallTime, formatLocalDate, shiftLocalMonth } from "../../lib/localDate.js";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -1174,26 +1176,16 @@ export default function CustomerReservationPage() {
 
   return (
     <div className="customer-home">
-      <CustomerHeader user={user} onLogout={() => setUser(null)} />
-      <main className="customer-reservation-page">
-        <nav className="restaurant-breadcrumbs" aria-label="Breadcrumb">
-          <Link to="/customer">Home</Link>
-          <span>/</span>
-          <Link to="/customer/restaurants">Restaurants</Link>
-          <span>/</span>
-          <Link to={`/customer/restaurants/${restaurantId}`}>
-            {restaurant?.name || "Restaurant"}
-          </Link>
-          <span>/</span>
-          <strong>Booking</strong>
-        </nav>
+      <CustomerHeader breadcrumbLabel={restaurant?.name ? `Book at ${restaurant.name}` : undefined} user={user} onLogout={() => setUser(null)} />
+      <PageTransition as="main" className="customer-reservation-page">
+
         {error && step === 1 && (
           <p className="reservation-page-error" role="alert">
             {error}
           </p>
         )}
         {!restaurant ? (
-          <p className="customer-reservation-loading">Loading restaurant…</p>
+          <LoadingState variant="detail" label="Loading restaurant…" error={error} />
         ) : (
           <>
             <section className="booking-restaurant-summary">
@@ -1622,7 +1614,7 @@ export default function CustomerReservationPage() {
                           ? ""
                           : `${menuTotal} menu ${menuTotal === 1 ? "item" : "items"} found`}
                     </div>
-                    {menuLoading ? null : menuError ? (
+                    {menuLoading ? <LoadingState variant="menu" count={3} label="Loading preorder menu…" /> : menuError ? (
                       <div role="alert">
                         <p className="reservation-page-error">{menuError}</p>
                         <button
@@ -2700,7 +2692,7 @@ export default function CustomerReservationPage() {
             </div>
           </>
         )}
-      </main>
+      </PageTransition>
       <LandingFooter />
     </div>
   );

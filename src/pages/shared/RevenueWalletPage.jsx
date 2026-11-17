@@ -1,3 +1,4 @@
+import LoadingState from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDateTime } from "../../lib/localDate.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
@@ -747,9 +748,7 @@ function RevenueContent({ data, error, title, description }) {
         </p>
       )}
       {!data && !error && (
-        <p className="revenue-loading" role="status">
-          Loading revenue…
-        </p>
+        <LoadingState variant="dashboard" label="Loading revenue…" />
       )}
       {data && (
         <div className="revenue-stat-grid">

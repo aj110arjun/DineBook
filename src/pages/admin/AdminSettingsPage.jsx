@@ -1,3 +1,4 @@
+import LoadingState from "../../components/ui/LoadingState.jsx";
 import { Bell, ShieldCheck } from "lucide-react";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
 import Notice from "../../components/auth/Notice.jsx";
@@ -46,14 +47,7 @@ export function AdminSettingsContent({ preferences }) {
       )}
 
       {!settings ? (
-        <div
-          className="profile-card customer-settings-loading"
-          role="status"
-          aria-busy={loading || !error}
-        >
-          <span className="loading-mark">D</span>
-          <p>{loading || !error ? "Loading your settings…" : "Your settings are unavailable."}</p>
-        </div>
+        <LoadingState variant="form" label="Loading your settings…" error={error} />
       ) : (
         <>
           <GeneralSettingsSection preferences={preferences} portal="Admin Portal" />

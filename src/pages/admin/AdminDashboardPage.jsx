@@ -1,12 +1,14 @@
+import LoadingState, { ErrorState, RefreshIndicator } from "../../components/ui/LoadingState.jsx";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Activity, CalendarDays, CheckCheck, CircleDollarSign, Clock3, CreditCard, RefreshCw, ShoppingBasket, Store, Users, Wallet } from "lucide-react";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
+import AdminLedgerDownloads from "../../components/admin/AdminLedgerDownloads.jsx";
 import AdminTrendChart from "../../components/admin/AdminTrendChart.jsx";
 import { BarChart, DonutChart } from "../../components/manager/DashboardCharts.jsx";
 import useAdminDashboard from "../../hooks/useAdminDashboard.js";
 import { usePageState } from "../../state/usePageState.js";
-import { formatCurrency as money, formatNumber as number, formatDate, formatInstant, PERIOD_PRESETS, presetPeriod, STATUS_COLORS, statusLabel, validatePeriod } from "../../lib/managerDashboard.js";
+import { formatCurrency as money, formatNumber as number, formatDate, formatInstant, ADMIN_PERIOD_PRESETS, presetPeriod, STATUS_COLORS, statusLabel, validatePeriod } from "../../lib/managerDashboard.js";
 import "../../assets/css/ManagerDashboardPage.css";
 import "../../assets/css/AdminDashboardPage.css";
 
@@ -18,12 +20,13 @@ const distribution = (items) => items.map(({ status, count }) => ({ label: statu
 export default function AdminDashboardPage() {
   const [filters, set] = usePageState("AdminDashboardFilters", () => {
     const period = presetPeriod("last30");
-    return { preset: "last30", period, draft: period, group: "auto", pollMs: 60000, error: "" };
+    return { preset: "last30", period, draft: period, group: "auto", error: "" };
   });
   const [refreshTick, setRefreshTick] = useState(0);
   const params = { ...filters.period, group_by: filters.group };
   const validation = validatePeriod(params.start_date, params.end_date, params.group_by);
-  const overview = useAdminDashboard("overview", params, !validation, filters.pollMs);
+  const overview = useAdminDashboard("overview", params, !validation);
+  const unappliedDates = filters.preset === "custom" && (filters.draft.start_date !== filters.period.start_date || filters.draft.end_date !== filters.period.end_date);
   function selectPreset(value) {
     set.preset(value);
     set.error("");
@@ -43,10 +46,12 @@ export default function AdminDashboardPage() {
     <div className="admin-analytics-heading"><div><span className="admin-eyebrow">PLATFORM OVERVIEW</span><h2>Across DineBook</h2><p>Restaurant activity, customer growth and platform earnings.</p></div>
       <div className="admin-analytics-updated"><span className="admin-live-dot" />{overview.data ? `Updated ${formatInstant(overview.data.as_of)}` : "Database analytics"}</div></div>
     <div className="admin-analytics-filters">
-      <label>Period<select value={filters.preset} onChange={(e) => selectPreset(e.target.value)}>{PERIOD_PRESETS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
+      <label>Period<select value={filters.preset} onChange={(e) => selectPreset(e.target.value)}>{ADMIN_PERIOD_PRESETS.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
       <label>Chart interval<select value={filters.group} onChange={(e) => set.group(e.target.value)}>{[["auto", "Automatic"], ["day", "Daily"], ["week", "Weekly"], ["month", "Monthly"], ["year", "Yearly"]].map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
-      <label>Auto refresh<select value={filters.pollMs} onChange={(e) => set.pollMs(Number(e.target.value))}><option value={60000}>Every minute</option><option value={120000}>Every 2 minutes</option><option value={0}>Off</option></select></label>
-      <button className="admin-analytics-refresh" type="button" disabled={overview.loading || !!validation} onClick={() => { overview.refresh(); setRefreshTick((v) => v + 1); }}><RefreshCw size={15} />Refresh</button>
+      <div className="admin-analytics-actions">
+        <AdminLedgerDownloads key={`${filters.period.start_date}:${filters.period.end_date}`} period={filters.period} disabled={Boolean(validation) || unappliedDates} />
+        <button className="admin-analytics-refresh" type="button" disabled={overview.loading || !!validation} onClick={() => { overview.refresh(); setRefreshTick((v) => v + 1); }}><RefreshCw size={15} />Refresh</button>
+      </div>
       {filters.preset === "custom" && <form className="admin-analytics-custom" onSubmit={applyRange}>
         <label>Start date<input type="date" required min="2000-01-01" max="2099-12-31" value={filters.draft.start_date} onChange={(e) => set.draft((d) => ({ ...d, start_date: e.target.value }))} /></label>
         <label>End date<input type="date" required min="2000-01-01" max="2099-12-31" value={filters.draft.end_date} onChange={(e) => set.draft((d) => ({ ...d, end_date: e.target.value }))} /></label><button type="submit">Apply range</button>
@@ -57,18 +62,18 @@ export default function AdminDashboardPage() {
     {!validation && <>
       <AdminDashboardFeedback {...overview} />
       {overview.data && <AdminDashboardContent data={overview.data} slot="top" />}
-      <RestaurantSection key={`restaurants:${params.start_date}:${params.end_date}`} params={params} pollMs={filters.pollMs} refreshTick={refreshTick} />
+      <RestaurantSection key={`restaurants:${params.start_date}:${params.end_date}`} params={params} refreshTick={refreshTick} />
       {overview.data && <AdminDashboardContent data={overview.data} slot="bottom" />}
-      <ActivitySection key={`activity:${params.start_date}:${params.end_date}`} params={params} pollMs={filters.pollMs} refreshTick={refreshTick} />
+      <ActivitySection key={`activity:${params.start_date}:${params.end_date}`} params={params} refreshTick={refreshTick} />
       {overview.data && <details className="admin-analytics-methodology"><summary>How these numbers are calculated</summary><ul>{overview.data.notes.map((note) => <li key={note}>{note}</li>)}</ul></details>}
     </>}
   </div></AdminLayout>;
 }
 
-export function AdminDashboardFeedback({ loading, error, refresh }) {
-  if (error) return <div role="alert" className="admin-analytics-error"><p>{error}</p><button type="button" onClick={refresh}>Try again</button></div>;
+export function AdminDashboardFeedback({ loading, error, data, refresh }) {
+  if (error) return <ErrorState message={error} onRetry={refresh} />;
   if (!loading) return null;
-  return <div className="admin-analytics-loading" role="status" aria-live="polite"><span>Loading platform analytics…</span><div className="admin-skeleton-grid" aria-hidden="true">{Array.from({ length: 6 }, (_, i) => <i key={i} />)}</div></div>;
+  return data ? <RefreshIndicator active /> : <LoadingState variant="dashboard" label="Loading platform analytics…" />;
 }
 
 function Metric({ title, value, icon: Icon, currency = false, detail }) {
@@ -150,14 +155,14 @@ export function AdminDashboardContent({ data, slot = "all" }) {
   </>;
 }
 
-function RestaurantSection({ params, pollMs, refreshTick }) {
+function RestaurantSection({ params, refreshTick }) {
   const [search, setSearch] = useState("");
   const [q, setQ] = useState("");
   const [sort, setSort] = useState("gross");
   const [direction, setDirection] = useState("desc");
   const [page, setPage] = useState(1);
   const [chartBy, setChartBy] = useState("gross");
-  const resource = useAdminDashboard("restaurants", { ...params, q, sort, direction, page, page_size: 10 }, true, pollMs);
+  const resource = useAdminDashboard("restaurants", { ...params, q, sort, direction, page, page_size: 10 });
   useEffect(() => { if (refreshTick) resource.refresh(); }, [refreshTick]);
   return <Panel title="Restaurant performance" note="Orders by creation · reservations by visit date · outstanding includes earlier dues">
     <form className="admin-restaurant-controls" onSubmit={(e) => { e.preventDefault(); setQ(search.trim()); setPage(1); }}>
@@ -183,9 +188,9 @@ export function RestaurantContent({ data, pageChange = () => {}, chartBy = "gros
   </>;
 }
 
-function ActivitySection({ params, pollMs, refreshTick }) {
+function ActivitySection({ params, refreshTick }) {
   const [page, setPage] = useState(1);
-  const resource = useAdminDashboard("activity", { ...params, page, page_size: 8 }, true, pollMs);
+  const resource = useAdminDashboard("activity", { ...params, page, page_size: 8 });
   useEffect(() => { if (refreshTick) resource.refresh(); }, [refreshTick]);
   return <Panel title="Recent platform activity" note="Recorded events in the selected period · newest first"><AdminDashboardFeedback {...resource} />{resource.data && <ActivityContent data={resource.data} pageChange={setPage} />}</Panel>;
 }

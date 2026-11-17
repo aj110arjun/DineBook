@@ -1,3 +1,6 @@
+import useLoadingPhase from "../../hooks/useLoadingPhase.js";
+import LoadingState, { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
+import PageTransition from "../../components/ui/PageTransition.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatWallTime, formatLocalDate } from "../../lib/localDate.js";
 import { useEffect, useRef, useState } from "react";
@@ -84,14 +87,8 @@ export function ProfileFrame({
       className={`customer-home profile-page db-portal-shell ${variant}`.trim()}
     >
       <CustomerHeader user={user} />
-      <main className="profile-shell">
-        <nav className="profile-crumb" aria-label="Breadcrumb">
-          <Link to="/customer">Home</Link>
-          <span>/</span>
-          <Link to="/customer/profile#personal">Account</Link>
-          <span>/</span>
-          <strong>{selected}</strong>
-        </nav>
+      <PageTransition as="main" className="profile-shell">
+
         <div className="profile-layout">
           <aside className="profile-sidebar db-portal-surface">
             <div className="profile-identity">
@@ -121,7 +118,7 @@ export function ProfileFrame({
           </aside>
           <div className="profile-content">{children}</div>
         </div>
-      </main>
+      </PageTransition>
       <LandingFooter />
     </div>
   );
@@ -175,6 +172,8 @@ export default function CustomerReservationsPage() {
   ] = usePageState("CustomerReservationsPage", () => ({
     realtimeReloadKey: 0,
   }));
+
+  const { initialLoading, refreshing } = useLoadingPhase(busy, items.length, error);
 
   useEffect(() => {
     return () => {
@@ -352,8 +351,9 @@ export default function CustomerReservationsPage() {
                 ? "Live reservation updates disconnected · Refresh to sync"
                 : "Connecting to live updates…"}
         </p>
-        {busy ? (
-          <p className="profile-empty">Loading reservations…</p>
+        {refreshing && <RefreshIndicator active />}
+        {initialLoading ? (
+          <LoadingState variant="list" label="Loading reservations…" />
         ) : error ? (
           <p className="profile-empty">{error}</p>
         ) : !items.length ? (

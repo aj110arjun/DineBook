@@ -5,6 +5,12 @@ export const PERIOD_PRESETS = [
   ["today", "Today"], ["last7", "Last 7 Days"], ["last30", "Last 30 Days"],
   ["month", "This Month"], ["year", "This Year"], ["custom", "Custom Range"],
 ];
+export const MANAGER_PERIOD_PRESETS = [["last30", "30 days"], ["last90", "90 days"], ["last6months", "6 months"], ["lastyear", "1 year"], ["custom", "Custom"]];
+export const ADMIN_PERIOD_PRESETS = [
+  ["today", "Today"], ["last7", "Last 7 Days"], ["last30", "Last 30 Days"],
+  ["last90", "90 days"], ["last6months", "6 months"], ["lastyear", "1 year"],
+  ["month", "This Month"], ["year", "This Year"], ["custom", "Custom Range"],
+];
 
 export function businessDate(now = new Date()) {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -17,7 +23,14 @@ export function businessDate(now = new Date()) {
 export function presetPeriod(preset, now = new Date()) {
   const end = businessDate(now);
   const day = new Date(`${end}T00:00:00Z`);
-  if (preset === "last7" || preset === "last30") day.setUTCDate(day.getUTCDate() - (preset === "last7" ? 6 : 29));
+  if (["last7", "last30", "last90"].includes(preset)) day.setUTCDate(day.getUTCDate() - ({ last7: 6, last30: 29, last90: 89 }[preset]));
+  if (["last6months", "lastyear"].includes(preset)) {
+    const date = day.getUTCDate();
+    day.setUTCDate(1);
+    day.setUTCMonth(day.getUTCMonth() - (preset === "last6months" ? 6 : 12));
+    const last = new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth() + 1, 0)).getUTCDate();
+    day.setUTCDate(Math.min(date, last) + 1);
+  }
   if (preset === "month") day.setUTCDate(1);
   if (preset === "year") day.setUTCMonth(0, 1);
   return { start_date: day.toISOString().slice(0, 10), end_date: end };
@@ -80,6 +93,8 @@ export function createDashboardLoader(request, onState, endpoint = "/api/manager
   let sequence = 0;
   let pending = null;
   let lastLoaded = 0;
+  let lastData = null;
+  let lastQuery = null;
   const cancel = () => {
     sequence += 1;
     pending?.controller.abort();
@@ -94,16 +109,19 @@ export function createDashboardLoader(request, onState, endpoint = "/api/manager
       cancel();
       const ticket = sequence;
       const controller = new AbortController();
-      onState({ data: null, loading: true, error: "" });
+      const retained = query === lastQuery ? lastData : null;
+      onState({ data: retained, loading: true, error: "" });
       const promise = Promise.resolve().then(() => request(`${endpoint}?${query}`, {
         signal: controller.signal, fallbackMessage: "The dashboard could not be loaded. Please try again.",
       })).then((data) => {
         if (ticket !== sequence) return;
         lastLoaded = Date.now();
+        lastData = data;
+        lastQuery = query;
         onState({ data, loading: false, error: "" });
       }).catch((error) => {
         if (ticket !== sequence) return;
-        onState({ data: null, loading: false, error: error.message || "The dashboard could not be loaded." });
+        onState({ data: retained, loading: false, error: error.message || "The dashboard could not be loaded." });
       }).finally(() => {
         if (ticket === sequence) pending = null;
       });

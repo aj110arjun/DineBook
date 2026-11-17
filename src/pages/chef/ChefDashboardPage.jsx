@@ -1,9 +1,9 @@
+import LoadingState, { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CalendarDays, CheckCheck, Clock3, Package, RefreshCw, ShoppingBag, Soup, Timer } from "lucide-react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import ChefLayout from "../../components/chef/ChefLayout.jsx";
 import Pagination from "../../components/Pagination.jsx";
-import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
 import ThemeToggle from "../../components/ThemeToggle.jsx";
 import { BarChart, DonutChart, EmptyState } from "../../components/manager/DashboardCharts.jsx";
 import useChefDashboard from "../../hooks/useChefDashboard.js";
@@ -43,7 +43,7 @@ export default function ChefDashboardPage() {
 
   return <ChefLayout title="Kitchen Dashboard">
     <div className="chef-live-dashboard">
-      <PortalBreadcrumb home={{ label: "Home", to: "/chef/dashboard" }} items={[{ label: "Kitchen Dashboard" }]} />
+
       <div className="kitchen-welcome">
         <div><h2>Welcome, {chef?.name?.trim().split(/\s+/)[0] || "Chef"}</h2><p>Your kitchen, at a glance.</p></div>
         <div className="kitchen-refresh-info">
@@ -63,8 +63,8 @@ export default function ChefDashboardPage() {
 
 export function KitchenFeedback({ loading, error, hasData, refresh }) {
   if (error) return <div className="kitchen-feedback error" role="alert"><p>{error}{hasData && " Showing the last successful update; order actions are paused until refresh succeeds."}</p><button type="button" onClick={refresh}>Try again</button></div>;
-  if (loading && !hasData) return <div role="status" aria-live="polite" className="kitchen-loading"><span>Loading kitchen operations…</span><div className="kitchen-kpis">{Array.from({ length: 6 }, (_, index) => <div className="kitchen-skeleton" key={index} aria-hidden="true" />)}</div></div>;
-  return null;
+  if (loading && !hasData) return <LoadingState variant="dashboard" label="Loading kitchen operations…" />;
+  return <RefreshIndicator active={loading && hasData} />;
 }
 
 export function KitchenDashboardContent({ data, period = "today", setPeriod, status = "ACTIVE", setStatus, setPage, busy = new Set(), updateOrder, loading = false, navigate, actionsDisabled = false }) {

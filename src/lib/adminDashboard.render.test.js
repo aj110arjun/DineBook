@@ -37,7 +37,7 @@ test("empty database shows useful payment and chart empty states", () => {
 test("loading skeleton and errors have accessible feedback and retry", () => {
   const loading = render("AdminDashboardFeedback", { loading: true });
   assert.match(loading, /role="status"/);
-  assert.match(loading, /admin-skeleton-grid/);
+  assert.match(loading, /db-skeleton-stats/);
   const error = render("AdminDashboardFeedback", { error: "Service unavailable", refresh: () => {} });
   assert.match(error, /role="alert"/);
   assert.match(error, /Try again/);

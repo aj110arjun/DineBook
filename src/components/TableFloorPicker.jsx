@@ -16,6 +16,7 @@ export default function TableFloorPicker({
   guests,
 }) {
   const [activeFloor, setActiveFloor] = useState(null);
+  const [activeZone, setActiveZone] = useState("all");
   const [notice, setNotice] = useState("");
 
   const floors = Array.from(
@@ -27,8 +28,11 @@ export default function TableFloorPicker({
     : floors[0]?.[0];
 
   const floorTables = tables.filter((table) => table.floor_id === floorId);
+  const zones = Array.from(new Map(floorTables.map((table) => [table.zone_id || "general", table.zone_name || "General seating"])));
+  const zoneId = activeZone === "all" || zones.some(([id]) => id === activeZone) ? activeZone : "all";
+  const zoneTables = floorTables.filter((table) => zoneId === "all" || (table.zone_id || "general") === zoneId);
 
-  const displayTables = displayTableLayout(floorTables);
+  const displayTables = displayTableLayout(zoneTables);
   const hasAutomaticLayout = floorTables.some((table) => table.layout_source === "automatic");
   const hasUnpositionedTables = floorTables.some((table) => !hasTablePosition(table));
 
@@ -103,6 +107,7 @@ export default function TableFloorPicker({
             aria-pressed={floorId === id}
             onClick={() => {
               setActiveFloor(id);
+              setActiveZone("all");
               setNotice("");
             }}
           >
@@ -110,6 +115,11 @@ export default function TableFloorPicker({
           </button>
         ))}
       </div>
+
+      {floorTables.some((table) => table.zone_id) && <div className="floor-picker__floors" role="group" aria-label="Floor zones">
+        <button type="button" aria-pressed={zoneId === "all"} onClick={() => setActiveZone("all")}>All zones</button>
+        {zones.map(([id, name]) => <button type="button" key={id} aria-pressed={zoneId === id} onClick={() => { setActiveZone(id); setNotice(""); }}>{name}</button>)}
+      </div>}
 
       <div className="floor-picker__viewport">
         <div
@@ -128,7 +138,8 @@ export default function TableFloorPicker({
                 type="button"
                 disabled={unavailable}
                 aria-pressed={isSelected}
-                aria-label={`Table ${table.table_number}, ${table.capacity} seats, ${money(
+                title={table.zone_name || "General seating"}
+                aria-label={`Table ${table.table_number}${table.zone_name ? `, ${table.zone_name}` : ""}, ${table.capacity} seats, ${money(
                   tableBookingFee(table),
                 )}, ${unavailable ? "unavailable" : "available"}`}
                 className={[

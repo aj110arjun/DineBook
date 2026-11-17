@@ -1,9 +1,12 @@
+import useLoadingPhase from "../../hooks/useLoadingPhase.js";
+import LoadingState, {
+  RefreshIndicator,
+} from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useEffect } from "react";
 import { ChefHat, Plus } from "lucide-react";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
-import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
 import { FormField } from "../../components/auth/FormField.jsx";
 import Notice from "../../components/auth/Notice.jsx";
 import { requestJson } from "../../lib/authApi.js";
@@ -12,14 +15,27 @@ import ManagerChefWalletTransfers from "./ManagerChefWalletTransfers.jsx";
 export default function ManagerStaffPage() {
   const [
     {
-      saving, error, success, walletRefreshKey, chefs, chefsLoading, chefsError,
-      resendingId, inviteError, InviteSuccess,
+      saving,
+      error,
+      success,
+      walletRefreshKey,
+      chefs,
+      chefsLoading,
+      chefsError,
+      resendingId,
+      inviteError,
+      InviteSuccess,
     },
     {
-      saving: setSaving, error: setError, success: setSuccess,
-      walletRefreshKey: setWalletRefreshKey, chefs: setChefs,
-      chefsLoading: setChefsLoading, chefsError: setChefsError,
-      resendingId: setResendingId, inviteError: setInviteError,
+      saving: setSaving,
+      error: setError,
+      success: setSuccess,
+      walletRefreshKey: setWalletRefreshKey,
+      chefs: setChefs,
+      chefsLoading: setChefsLoading,
+      chefsError: setChefsError,
+      resendingId: setResendingId,
+      inviteError: setInviteError,
       InviteSuccess: setInviteSuccess,
     },
   ] = usePageState("ManagerStaffPage", () => ({
@@ -34,6 +50,12 @@ export default function ManagerStaffPage() {
     inviteError: "",
     InviteSuccess: "",
   }));
+
+  const { initialLoading, refreshing } = useLoadingPhase(
+    chefsLoading,
+    chefs.length,
+    chefsError,
+  );
 
   useEffect(() => {
     let active = true;
@@ -125,12 +147,6 @@ export default function ManagerStaffPage() {
   return (
     <ManagerLayout title="Chef Management">
       <div className="manager-dashboard-content">
-        <PortalBreadcrumb
-          home={{ label: "Home", to: "/manager/dashboard" }}
-          items={[{ label: "Chef Management" }]}
-          className="manager-breadcrumb"
-        />
-
         <div className="manager-heading">
           <div>
             <h2>Chef Management</h2>
@@ -207,12 +223,13 @@ export default function ManagerStaffPage() {
               </button>
             </header>
 
+            {refreshing && <RefreshIndicator active />}
             {chefsError ? (
               <p role="alert" className="manager-chef-details-error">
                 {chefsError}
               </p>
-            ) : chefsLoading ? (
-              <p role="status">Loading chef details…</p>
+            ) : initialLoading ? (
+              <LoadingState variant="list" label="Loading chef details…" />
             ) : chefs.length === 0 ? (
               <p>No chefs have been added yet.</p>
             ) : (
@@ -220,7 +237,11 @@ export default function ManagerStaffPage() {
                 {chefs.map((chef) => (
                   <article className="manager-chef-item" key={chef.id}>
                     <div className="manager-chef-avatar" aria-hidden="true">
-                      <ChefHat size={22} />
+                      {chef.avatar_url ? (
+                        <img src={chef.avatar_url} alt="" loading="lazy" />
+                      ) : (
+                        <ChefHat size={22} />
+                      )}
                     </div>
 
                     <div className="manager-chef-info">

@@ -10,7 +10,7 @@
 }
 /* Both controls remain available without competing for the same corner. */
 body:has(.customer-ai-widget) .theme-toggle { right: auto; left: 18px; }
-body:has(.restaurant-booking-dock) .customer-ai-widget { bottom: calc(122px + env(safe-area-inset-bottom, 0px)); }
+body:has(.restaurant-booking-dock) .customer-ai-widget { bottom: calc(var(--restaurant-booking-dock-height, 88px) + 36px + env(safe-area-inset-bottom, 0px)); }
 :root[data-theme="dark"] .customer-ai-widget { --ai-ink: #843c4d; }
 .customer-ai-widget button { cursor: pointer; }
 .customer-ai-launcher {
@@ -56,7 +56,7 @@ body:has(.restaurant-booking-dock) .customer-ai-widget { bottom: calc(122px + en
   box-shadow: var(--shadow-popover);
   text-align: left;
 }
-body:has(.restaurant-booking-dock) .customer-ai-panel { height: min(720px, calc(100dvh - 218px)); }
+body:has(.restaurant-booking-dock) .customer-ai-panel { height: min(720px, calc(100dvh - var(--restaurant-booking-dock-height, 88px) - 132px - env(safe-area-inset-bottom, 0px))); }
 .customer-ai-header {
   display: flex;
   flex: none;

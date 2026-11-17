@@ -32,8 +32,8 @@ const render = (state = {}) => renderToStaticMarkup(createElement(content, { pre
 test("admin settings expose general controls and the supported notification categories", () => {
   const html = render();
   assert.equal((html.match(/role="switch"/g) || []).length, 5);
-  assert.equal((html.match(/<select/g) || []).length, 5);
-  for (const label of ["General Settings", "Notification Settings", "Admin Portal", "Restaurant requests", "Reviews and reports", "Wallet activity", "Optional system updates", "Theme", "Language", "Date format", "Time format", "Timezone"]) assert.ok(html.includes(label), label);
+  assert.equal((html.match(/<select/g) || []).length, 4);
+  for (const label of ["General Settings", "Notification Settings", "Admin Portal", "Restaurant requests", "Reviews and reports", "Wallet activity", "Optional system updates", "Theme", "Date format", "Time format", "Timezone"]) assert.ok(html.includes(label), label);
   assert.match(html, /saved automatically/);
   assert.match(html, /system incidents remain active/);
   assert.match(html, /Existing notifications stay/);
@@ -46,7 +46,7 @@ test("confirmed values render and a pending save disables every preference", () 
   const html = render({ settings: value, pending: "theme" });
   assert.match(html, /aria-checked="false"/);
   assert.match(html, /value="dark" selected/);
-  assert.equal((html.match(/ disabled=""/g) || []).length, 10);
+  assert.equal((html.match(/ disabled=""/g) || []).length, 9);
   assert.match(html, /Saving your preference/);
 });
 

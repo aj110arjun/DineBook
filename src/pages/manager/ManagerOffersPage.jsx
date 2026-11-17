@@ -1,3 +1,5 @@
+import useLoadingPhase from "../../hooks/useLoadingPhase.js";
+import LoadingState, { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDateTime } from "../../lib/localDate.js";
 import { confirmAction } from "../../lib/confirmDialog.js";
@@ -121,6 +123,8 @@ export default function ManagerOffersPage() {
   }));
   const actionMenuRef = useRef(null);
   const formErrorRef = useRef(null);
+
+  const { initialLoading, refreshing } = useLoadingPhase(loading, offers.length, error);
 
   useEffect(() => {
     if (form && formError) {
@@ -441,8 +445,9 @@ export default function ManagerOffersPage() {
             <RefreshCw size={16} />
           </button>
         </div>
-        {loading ? (
-          <p>Loading offers…</p>
+        {refreshing && <RefreshIndicator active />}
+        {initialLoading ? (
+          <LoadingState variant="list" label="Loading offers…" />
         ) : filtered.length === 0 ? (
           <div className="offers-empty">
             <Tag />

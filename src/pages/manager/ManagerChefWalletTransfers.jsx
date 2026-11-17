@@ -1,3 +1,4 @@
+import LoadingState from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useCallback, useEffect } from "react";
@@ -172,9 +173,7 @@ export default function ManagerChefWalletTransfers() {
       ) : data ? (
         <p className="revenue-empty">Add a chef above to send wallet funds.</p>
       ) : (
-        <p className="revenue-loading" role="status">
-          Loading chef wallet details…
-        </p>
+        <LoadingState variant="detail" label="Loading chef wallet details…" />
       )}
     </section>
   );

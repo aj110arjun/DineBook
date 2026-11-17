@@ -1,8 +1,9 @@
 import { memo, useEffect, useRef, useState } from "react";
+import { EmptyState as ContentEmptyState } from "../ui/LoadingState.jsx";
 import { donutGradient, formatBucket, formatCurrency, formatNumber, SERIES_COLORS } from "../../lib/managerDashboard.js";
 
 export function EmptyState({ children = "No activity in this period." }) {
-  return <p className="manager-analytics-empty">{children}</p>;
+  return <ContentEmptyState title="">{children}</ContentEmptyState>;
 }
 
 export const BarChart = memo(function BarChart({ points, series, group, currency = false, label }) {

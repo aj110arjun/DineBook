@@ -1,10 +1,11 @@
+import useLoadingPhase from "../../hooks/useLoadingPhase.js";
+import LoadingState, { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
 import { useEffect } from "react";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { MapPin, Store } from "lucide-react";
 import ChefLayout from "../../components/chef/ChefLayout.jsx";
 import AccountInformation from "../../components/profile/AccountInformation.jsx";
 import { Detail } from "../../components/manager/profile/ProfileParts.jsx";
-import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
 import Notice from "../../components/auth/Notice.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import { profileStatus } from "../../lib/managerProfile.js";
@@ -46,6 +47,8 @@ export default function ChefProfilePage() {
     return true;
   }
 
+  const { initialLoading, refreshing } = useLoadingPhase(loading, Boolean(data), error);
+
   useEffect(() => {
     const controller = new AbortController();
     set.loading(true); set.error("");
@@ -64,10 +67,11 @@ export default function ChefProfilePage() {
 
   return <ChefLayout title="Chef Profile">
     <div className="chef-profile-page">
-      <PortalBreadcrumb home={{ label: "Home", to: "/chef/dashboard" }} items={[{ label: "Profile" }]} />
+
       <header className="manager-profile-heading"><h2>Chef Profile</h2><p>Manage your personal information and view your kitchen assignment.</p></header>
       <Notice message={error} />
-      {loading ? <div className="manager-profile-card manager-profile-loading" role="status" aria-live="polite">Loading your chef profile…</div>
+      {refreshing && <RefreshIndicator active />}
+        {initialLoading ? <LoadingState variant="form" label="Loading your chef profile…" />
         : data ? <ChefProfileContent data={data} onPersist={persist} onAuthError={authError} />
           : <div className="manager-profile-card"><p>Your profile is unavailable right now.</p><button type="button" className="manager-profile-button" onClick={() => set.refresh((value) => value + 1)}>Try again</button></div>}
     </div>

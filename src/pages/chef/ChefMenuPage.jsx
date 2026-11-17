@@ -1,3 +1,5 @@
+import useLoadingPhase from "../../hooks/useLoadingPhase.js";
+import LoadingState, { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { useEffect, useMemo } from "react";
 import { ArrowLeft, Search, Utensils } from "lucide-react";
@@ -21,6 +23,8 @@ export default function ChefMenuPage() {
     loading: true,
     error: "",
   }));
+
+  const { initialLoading, refreshing } = useLoadingPhase(loading, categories.length, error);
 
   useEffect(() => {
     let active = true;
@@ -72,7 +76,7 @@ export default function ChefMenuPage() {
   }, [categories, query, categoryFilter]);
 
   return (
-    <ChefLayout title={foodId ? selectedFood?.name || "Menu item" : "Menu"}>
+    <ChefLayout breadcrumbLabel={selectedFood?.name} title={foodId ? selectedFood?.name || "Menu item" : "Menu"}>
       <main className="chef-menu-page">
         <header className="chef-menu-page-heading">
           <div>
@@ -100,10 +104,9 @@ export default function ChefMenuPage() {
             </button>
           </div>
         )}
-        {loading ? (
-          <p className="chef-menu-page-message" role="status">
-            Loading menu…
-          </p>
+        {refreshing && <RefreshIndicator active />}
+        {initialLoading ? (
+          <LoadingState variant="menu" label="Loading menu…" />
         ) : foodId ? (
           !selectedFood ? (
             <div className="chef-menu-page-message">

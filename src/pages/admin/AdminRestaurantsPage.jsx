@@ -1,3 +1,6 @@
+import useLoadingPhase from "../../hooks/useLoadingPhase.js";
+import { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
+import { SkeletonRows } from "../../components/ui/Skeleton.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate } from "../../lib/localDate.js";
 import { useEffect } from "react";
@@ -37,6 +40,8 @@ export default function AdminRestaurantsPage() {
     error: "",
     refresh: 0,
   }));
+
+  const { initialLoading, refreshing } = useLoadingPhase(loading, restaurants.length, error);
 
   useEffect(() => {
     let mounted = true;
@@ -174,8 +179,9 @@ export default function AdminRestaurantsPage() {
             {error}
           </div>
         )}
+        <RefreshIndicator active={refreshing} />
         <div className="admin-table-card">
-          <table className="admin-table">
+          <table className="admin-table" aria-busy={loading}>
             <thead>
               <tr>
                 <th>Restaurant</th>
@@ -187,12 +193,8 @@ export default function AdminRestaurantsPage() {
               </tr>
             </thead>
             <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan="6" className="admin-table-empty">
-                    Loading restaurants…
-                  </td>
-                </tr>
+              {initialLoading ? (
+                <SkeletonRows columns={6} />
               ) : visibleRestaurants.length ? (
                 visibleRestaurants.map((restaurant) => (
                   <tr

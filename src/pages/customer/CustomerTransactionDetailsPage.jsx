@@ -1,3 +1,4 @@
+import LoadingState from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDateTime } from "../../lib/localDate.js";
 import { useEffect } from "react";
@@ -133,9 +134,7 @@ export default function CustomerTransactionDetailsPage() {
           All payment transactions
         </Link>
         {busy ? (
-          <p className="profile-empty" role="status">
-            Loading transaction details…
-          </p>
+          <LoadingState variant="detail" label="Loading transaction details…" />
         ) : error ? (
           <p className="profile-empty" role="alert">
             {error}

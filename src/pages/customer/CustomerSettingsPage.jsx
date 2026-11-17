@@ -1,3 +1,4 @@
+import LoadingState from "../../components/ui/LoadingState.jsx";
 import { useSelector } from "react-redux";
 import { Bell, CalendarDays, CreditCard, ShieldCheck, Star, Tag, UtensilsCrossed } from "lucide-react";
 import { useCustomerPreferences } from "../../components/customer/CustomerPreferences.jsx";
@@ -46,7 +47,7 @@ export function CustomerSettingsContent({ preferences, user }) {
     <Notice message={success} type="success" />
     {error && <div><Notice message={error.message || "Unable to load or save settings."} />
       {!settings && <button className="db-portal-button db-portal-control" type="button" disabled={loading} onClick={load}>Try again</button>}</div>}
-    {!settings ? <div className="customer-settings-loading profile-card" role="status" aria-busy={loading || !error}><span className="loading-mark">D</span><p>{loading || !error ? "Loading your settings…" : "Your settings are unavailable."}</p></div> : <>
+    {!settings ? <LoadingState variant="form" label="Loading your settings…" error={error} /> : <>
       <section className="profile-card customer-settings-card" aria-labelledby="notification-settings-title" aria-busy={Boolean(pending)}>
         <header><span className="customer-settings-icon"><Bell size={22} aria-hidden="true" /></span><div><h2 id="notification-settings-title">Notification Settings</h2><p>Choose how you hear from DineBook.</p></div></header>
         <p className="customer-settings-security"><ShieldCheck size={19} aria-hidden="true" />Security, account protection, and legally required messages remain active.</p>

@@ -1,3 +1,5 @@
+import useLoadingPhase from "../../hooks/useLoadingPhase.js";
+import LoadingState, { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDateTime } from "../../lib/localDate.js";
 import { useEffect } from "react";
@@ -47,6 +49,8 @@ export default function CustomerTransactionsPage() {
     busy: true,
     error: "",
   }));
+
+  const { initialLoading, refreshing } = useLoadingPhase(busy, transactions.length, error);
 
   useEffect(() => {
     let alive = true;
@@ -191,8 +195,9 @@ export default function CustomerTransactionsPage() {
             Clear filters
           </button>
         </div>
-        {busy ? (
-          <p className="profile-empty">Loading transactions…</p>
+        {refreshing && <RefreshIndicator active />}
+        {initialLoading ? (
+          <LoadingState variant="table" label="Loading transactions…" />
         ) : error ? (
           <p className="profile-empty" role="alert">
             {error}

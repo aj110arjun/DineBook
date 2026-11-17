@@ -1,3 +1,4 @@
+import LoadingState from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatWallTime, formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
 import { confirmAction } from "../../lib/confirmDialog.js";
@@ -655,7 +656,7 @@ export default function CustomerReservationDetailsPage() {
           className="profile-card reservation-detail-card"
           aria-live="polite"
         >
-          <p className="profile-empty">Loading reservation…</p>
+          <LoadingState variant="detail" label="Loading reservation…" />
         </section>
       ) : (
         <>

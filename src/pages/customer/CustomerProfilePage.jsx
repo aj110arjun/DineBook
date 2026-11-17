@@ -1,3 +1,5 @@
+import LoadingState from "../../components/ui/LoadingState.jsx";
+import PageTransition from "../../components/ui/PageTransition.jsx";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -480,23 +482,16 @@ export default function CustomerProfilePage() {
 
   if (!user)
     return (
-      <main className="landing-loading" role="status">
-        <span className="loading-mark">D</span>
-        <p>Loading your profile…</p>
-      </main>
+      <PageTransition as="main" className="landing-loading" role="status">
+        <LoadingState variant="form" label="Loading your profile…" />
+      </PageTransition>
     );
 
   return (
     <div className="customer-home profile-page customer-profile-module">
       <CustomerHeader user={user} onLogout={sessionExpired} />
-      <main className="profile-shell">
-        <nav className="profile-crumb" aria-label="Breadcrumb">
-          <Link to="/customer">Home</Link>
-          <span>/</span>
-          <span>Account</span>
-          <span>/</span>
-          <strong>{section}</strong>
-        </nav>
+      <PageTransition as="main" className="profile-shell">
+
         <div className="profile-layout">
           <aside className="profile-sidebar">
             <div className="profile-identity">
@@ -618,7 +613,7 @@ export default function CustomerProfilePage() {
 
           </div>
         </div>
-      </main>
+      </PageTransition>
       <LandingFooter />
     </div>
   );

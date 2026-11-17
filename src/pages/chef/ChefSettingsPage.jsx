@@ -1,8 +1,8 @@
+import LoadingState from "../../components/ui/LoadingState.jsx";
 import { Bell, CreditCard, ShieldCheck, UtensilsCrossed } from "lucide-react";
 import Notice from "../../components/auth/Notice.jsx";
 import ChangePasswordSection from "../../components/preferences/ChangePasswordSection.jsx";
 import ChefLayout from "../../components/chef/ChefLayout.jsx";
-import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
 import { useAccountPreferences } from "../../components/preferences/AccountPreferences.jsx";
 import { GeneralSettingsSection, ToggleSetting } from "../../components/preferences/SettingsControls.jsx";
 import "../../assets/css/ChefSettingsPage.css";
@@ -36,10 +36,7 @@ export function ChefSettingsContent({ preferences }) {
     {error && <div><Notice message={error.message || "Unable to load or save settings."} />
       {!settings && <button className="db-portal-button db-portal-control" type="button" disabled={loading} onClick={load}>Try again</button>}
     </div>}
-    {!settings ? <div className="customer-settings-loading profile-card" role="status" aria-busy={loading || !error}>
-      <span className="loading-mark">D</span>
-      <p>{loading || !error ? "Loading your settings…" : "Your settings are unavailable."}</p>
-    </div> : <>
+    {!settings ? <LoadingState variant="form" label="Loading your settings…" error={error} /> : <>
       <section className="profile-card customer-settings-card" aria-labelledby="notification-settings-title" aria-busy={Boolean(pending)}>
         <header><span className="customer-settings-icon"><Bell size={22} aria-hidden="true" /></span><div><h2 id="notification-settings-title">Notification Settings</h2><p>Choose how you hear from DineBook.</p></div></header>
         <p className="customer-settings-security"><ShieldCheck size={19} aria-hidden="true" />Security, account protection, failed payments, and restaurant suspension notices remain active.</p>
@@ -60,7 +57,7 @@ export default function ChefSettingsPage() {
   const preferences = useAccountPreferences();
   return <ChefLayout title="Settings">
     <div className="customer-settings-page chef-settings-page">
-      <PortalBreadcrumb home={{ label: "Home", to: "/chef/dashboard" }} items={[{ label: "Settings" }]} />
+
       <ChefSettingsContent preferences={preferences} />
     </div>
   </ChefLayout>;

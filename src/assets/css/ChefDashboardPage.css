@@ -88,7 +88,6 @@
 .kitchen-feedback { background: var(--db-status-success-bg); color: var(--db-status-success-text); padding: 14px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-size: 13px; }
 .kitchen-feedback.error { background: var(--db-status-danger-bg); color: var(--db-status-danger-text); }
 .kitchen-loading > span { display: block; margin-bottom: 16px; color: var(--color-text-secondary); }
-.kitchen-skeleton { height: 138px; border-radius: 16px; background: var(--color-border); }
 @media (min-width: 1600px) { .kitchen-kpis { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 @media (max-width: 1100px) { .kitchen-operations-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 760px) {

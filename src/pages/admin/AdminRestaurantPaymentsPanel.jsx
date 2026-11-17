@@ -1,3 +1,5 @@
+import useLoadingPhase from "../../hooks/useLoadingPhase.js";
+import LoadingState, { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDateTime } from "../../lib/localDate.js";
 import { useEffect } from "react";
@@ -63,6 +65,8 @@ export default function AdminRestaurantPaymentsPanel({ restaurantId }) {
   }));
   const global = !restaurantId;
   const PAGE_SIZE_DEFAULT = 10;
+
+  const { initialLoading, refreshing } = useLoadingPhase(loading, transactions.length, error);
 
   useEffect(() => {
     if (!global) return;
@@ -310,12 +314,9 @@ export default function AdminRestaurantPaymentsPanel({ restaurantId }) {
         </label>
       </div>
       {error && <p role="alert">{error}</p>}
-      {loading ? (
-        <div className="transactions-empty" role="status">
-          <ReceiptText size={28} />
-          <h3>Loading transactions…</h3>
-          <p>Fetching the latest payment records.</p>
-        </div>
+      {refreshing && <RefreshIndicator active />}
+        {initialLoading ? (
+        <LoadingState variant="table" columns={6} label="Loading transactions…" />
       ) : error ? null : transactions.length ? (
         <div className="admin-table-card transactions-table">
           <table className="admin-table">

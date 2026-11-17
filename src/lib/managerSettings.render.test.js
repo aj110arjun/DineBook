@@ -23,8 +23,8 @@ const render = (state = {}) => renderToStaticMarkup(createElement(content, { pre
 test("manager settings render operational notification switches and shared general controls", () => {
   const html = render();
   assert.equal((html.match(/role="switch"/g) || []).length, 13);
-  assert.equal((html.match(/<select/g) || []).length, 5);
-  for (const label of ["Notification Settings", "General Settings", "Manager Portal", "Theme", "Date format", "Time format", "Timezone", "Language", "Kitchen team updates"]) assert.ok(html.includes(label));
+  assert.equal((html.match(/<select/g) || []).length, 4);
+  for (const label of ["Notification Settings", "General Settings", "Manager Portal", "Theme", "Date format", "Time format", "Timezone", "Kitchen team updates"]) assert.ok(html.includes(label));
   assert.match(html, /saved automatically/);
   assert.match(html, /essential account messages/);
 });
@@ -41,7 +41,7 @@ test("saved switch states and preferences are displayed without sample values", 
 test("pending changes disable controls and report save progress", () => {
   const html = render({ pending: "theme" });
   assert.match(html, /Saving your preference/);
-  assert.equal((html.match(/ disabled=""/g) || []).length, 18);
+  assert.equal((html.match(/ disabled=""/g) || []).length, 17);
 });
 
 test("load errors offer retry and loading never shows invented preference values", () => {

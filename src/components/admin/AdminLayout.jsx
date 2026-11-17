@@ -1,3 +1,5 @@
+import PageTransition from "../ui/PageTransition.jsx";
+import { PortalPage, usePortalShell } from "../ui/PortalShell.jsx";
 import useNavigationDisclosure from "../../hooks/useNavigationDisclosure.js";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -9,7 +11,7 @@ import NotificationBell from "../notifications/NotificationBell.jsx";
 import { useAdminSession } from "./AdminSessionContext.jsx";
 
 
-export default function AdminLayout({ children, title = "Dashboard" }) {
+export function AdminFrame({ children, title = "Dashboard" }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -89,7 +91,7 @@ export default function AdminLayout({ children, title = "Dashboard" }) {
           <span>Admin</span>
         </div>
       </div>
-      
+
       </aside>
 
       <section className="admin-dashboard-main db-portal-main">
@@ -111,22 +113,6 @@ export default function AdminLayout({ children, title = "Dashboard" }) {
           </div>
         </header>
 
-        <PortalBreadcrumb
-          home={{ label: "Admin", to: "/admin/dashboard" }}
-          items={
-            pathname.startsWith("/admin/transactions/")
-              ? [{ label: "Transactions", to: "/admin/transactions" }, { label: title }]
-              : pathname.startsWith("/admin/requests/")
-              ? [{ label: "Requests", to: "/admin/requests" }, { label: title }]
-              : pathname.startsWith("/admin/restaurants/")
-                ? [
-                    { label: "Restaurants", to: "/admin/restaurants" },
-                    { label: title },
-                  ]
-                : [{ label: title }]
-          }
-          className="admin-breadcrumb"
-        />
         {children}
       </section>
     </main>
@@ -141,4 +127,10 @@ function UtensilsIcon() {
       <span />
     </span>
   );
+}
+
+export default function AdminLayout(props) {
+  const shell = usePortalShell();
+  if (shell) return <PortalPage {...props} />;
+  return <AdminFrame title={props.title}><PageTransition><PortalBreadcrumb entityLabel={props.breadcrumbLabel} />{props.children}</PageTransition></AdminFrame>;
 }

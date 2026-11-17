@@ -1,3 +1,5 @@
+import useLoadingPhase from "../../hooks/useLoadingPhase.js";
+import LoadingState, { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate } from "../../lib/localDate.js";
 import { confirmAction } from "../../lib/confirmDialog.js";
@@ -72,6 +74,8 @@ export default function ManagerOperatingHoursPage() {
       setLoading(false);
     }
   }
+  const { initialLoading, refreshing } = useLoadingPhase(loading, Boolean(schedule), error);
+
   useEffect(() => {
     load();
   }, []);
@@ -266,8 +270,9 @@ export default function ManagerOperatingHoursPage() {
               {notice}
             </p>
           )}
-          {loading ? (
-            <p>Loading schedule…</p>
+          {refreshing && <RefreshIndicator active />}
+        {initialLoading ? (
+            <LoadingState variant="form" label="Loading schedule…" />
           ) : (
             <>
               <p role="status">

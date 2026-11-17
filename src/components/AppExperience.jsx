@@ -1,5 +1,5 @@
-import { Component, useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Component, useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigationType } from "react-router-dom";
 
 export class AppErrorBoundary extends Component {
   state = { failed: false };
@@ -20,7 +20,10 @@ export class AppErrorBoundary extends Component {
 }
 
 export default function AppExperience() {
-  const { pathname, hash } = useLocation();
+  const { pathname, hash, key } = useLocation();
+  const navigationType = useNavigationType();
+  const positions = useRef(new Map());
+  const previousPath = useRef(null);
   const [offline, setOffline] = useState(!navigator.onLine);
   useEffect(() => {
     const update = () => setOffline(!navigator.onLine);
@@ -33,24 +36,37 @@ export default function AppExperience() {
   }, []);
 
   useEffect(() => {
+    const changedPage = previousPath.current !== pathname;
+    const saved = positions.current.get(key);
+    const remember = () => {
+      positions.current.set(key, { top: window.scrollY, left: window.scrollX });
+      if (positions.current.size > 100) positions.current.delete(positions.current.keys().next().value);
+    };
     // Wait for the new route to render without moving focus on background refreshes.
     const frame = window.requestAnimationFrame(() => {
+      previousPath.current = pathname;
       if (hash) {
         let id = hash.slice(1);
         try { id = decodeURIComponent(id); } catch { /* Preserve malformed hashes as literal IDs. */ }
         const target = document.getElementById(id);
         target?.scrollIntoView({ behavior: "instant", block: "start" });
+        remember();
         return;
       }
-      window.scrollTo({ top: 0, behavior: "instant" });
+      if (navigationType === "POP" && saved) window.scrollTo({ ...saved, behavior: "instant" });
+      else if (changedPage) window.scrollTo({ top: 0, behavior: "instant" });
+      remember();
+      // Search/filter changes must not steal focus from an active input.
+      if (!changedPage) return;
       const heading = document.querySelector(".db-portal-main h1, main h1, .hero-banner h1, h1");
       if (heading) {
         heading.setAttribute("tabindex", "-1");
         heading.focus({ preventScroll: true });
       }
     });
-    return () => window.cancelAnimationFrame(frame);
-  }, [pathname, hash]);
+    window.addEventListener("scroll", remember, { passive: true });
+    return () => { window.cancelAnimationFrame(frame); window.removeEventListener("scroll", remember); };
+  }, [pathname, hash, key, navigationType]);
 
   function skip(event) {
     const target = document.querySelector(".db-portal-main, main, #discover");

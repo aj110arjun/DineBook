@@ -1,3 +1,5 @@
+import useLoadingPhase from "../../hooks/useLoadingPhase.js";
+import LoadingState, { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { useEffect, useMemo } from "react";
 import { Heart, Search } from "lucide-react";
@@ -35,6 +37,8 @@ export default function CustomerSavedRestaurantsPage() {
     error: "",
     reloadKey: 0,
   }));
+
+  const { initialLoading, refreshing } = useLoadingPhase(loading, restaurants.length, error);
 
   useEffect(
     () =>
@@ -166,10 +170,9 @@ export default function CustomerSavedRestaurantsPage() {
             </select>
           </div>
         )}
-        {loading ? (
-          <div className="saved-restaurants-message" role="status">
-            Loading your saved restaurants…
-          </div>
+        {refreshing && <RefreshIndicator active />}
+        {initialLoading ? (
+          <LoadingState variant="cards" label="Loading your saved restaurants…" />
         ) : error ? (
           <div className="saved-restaurants-message error" role="alert">
             <p>{error}</p>

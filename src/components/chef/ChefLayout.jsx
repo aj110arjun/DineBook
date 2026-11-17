@@ -1,5 +1,8 @@
+import PageTransition from "../ui/PageTransition.jsx";
+import { PortalPage, usePortalShell } from "../ui/PortalShell.jsx";
+import PortalBreadcrumb from "../PortalBreadcrumb.jsx";
 import useNavigationDisclosure from "../../hooks/useNavigationDisclosure.js";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Bell,
   Check,
@@ -27,7 +30,7 @@ const navigation = [
   { label: "Settings", icon: Settings, to: "/chef/settings" },
 ];
 
-export default function ChefLayout({ title, children }) {
+export function ChefFrame({ title, children }) {
   const navigate = useNavigate();
   const { hash, pathname } = useLocation();
   const { chef } = useOutletContext();
@@ -43,15 +46,7 @@ export default function ChefLayout({ title, children }) {
       .join("")
       .toUpperCase() || "CA";
 
-  useEffect(() => {
-    if (!hash) return;
-    const sectionId = hash.slice(1);
-    window.requestAnimationFrame(() => {
-      document
-        .getElementById(sectionId)
-        ?.scrollIntoView({ behavior: "smooth" });
-    });
-  }, [hash]);
+
 
   async function logout() {
     try {
@@ -154,4 +149,10 @@ export default function ChefLayout({ title, children }) {
       </section>
     </main>
   );
+}
+
+export default function ChefLayout(props) {
+  const shell = usePortalShell();
+  if (shell) return <PortalPage {...props} />;
+  return <ChefFrame title={props.title}><PageTransition><PortalBreadcrumb entityLabel={props.breadcrumbLabel} />{props.children}</PageTransition></ChefFrame>;
 }
