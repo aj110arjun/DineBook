@@ -1,3 +1,5 @@
+import useLoadingPhase from "../../hooks/useLoadingPhase.js";
+import LoadingState, { RefreshIndicator } from "../ui/LoadingState.jsx";
 import { ArrowRight } from "lucide-react";
 import SectionHeading from "./SectionHeading.jsx";
 import RestaurantCard from "./RestaurantCard.jsx";
@@ -15,6 +17,7 @@ export default function RestaurantSection({
   actionLabel = "View All Featured",
   actionHref = "#featured",
 }) {
+  const { initialLoading, refreshing } = useLoadingPhase(loading, restaurants.length, error);
   return (
     <section className="content-section restaurant-section" id={id}>
       <SectionHeading
@@ -27,10 +30,9 @@ export default function RestaurantSection({
           </a>
         }
       />
-      {loading ? (
-        <p className="empty-state" role="status">
-          Loading restaurants…
-        </p>
+      {refreshing && <RefreshIndicator active />}
+      {initialLoading ? (
+        <LoadingState variant="cards" label="Loading restaurants…" />
       ) : error ? (
         <div className="empty-state" role="alert">
           <p>{error}</p>

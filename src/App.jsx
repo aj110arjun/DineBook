@@ -1,3 +1,8 @@
+import CustomerShell from "./components/ui/CustomerShell.jsx";
+import PortalShell from "./components/ui/PortalShell.jsx";
+import { ManagerFrame } from "./components/manager/ManagerLayout.jsx";
+import { ChefFrame } from "./components/chef/ChefLayout.jsx";
+import { AdminFrame } from "./components/admin/AdminLayout.jsx";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { NotFoundPage } from "./components/AppExperience.jsx";
 import CustomerChangePasswordPage from "./pages/customer/CustomerChangePasswordPage.jsx";
@@ -71,6 +76,7 @@ export default function App() {
     <>
       <Routes>
         <Route path="/" element={<Navigate to="/customer" replace />} />
+        <Route element={<CustomerShell />}>
         <Route path="/customer" element={<CustomerLandingPage />} />
         <Route path="/customer/settings" element={<ProtectedRoute><CustomerSettingsPage /></ProtectedRoute>} />
         <Route
@@ -161,6 +167,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        </Route>
         <Route
           path="/customer/login"
           element={
@@ -216,98 +223,80 @@ export default function App() {
           path="/admin"
           element={<Navigate to="/admin/dashboard" replace />}
         />
+        <Route element={<AdminProtectedRoute />}><Route element={<PortalShell Frame={AdminFrame} />}>
         <Route
           path="/admin/dashboard"
           element={
-            <AdminProtectedRoute>
-              <AdminDashboardPage />
-            </AdminProtectedRoute>
+            <AdminDashboardPage />
           }
         />
         <Route
           path="/admin/restaurants"
           element={
-            <AdminProtectedRoute>
-              <AdminRestaurantsPage />
-            </AdminProtectedRoute>
+            <AdminRestaurantsPage />
           }
         />
         <Route
           path="/admin/restaurants/:restaurantId"
           element={
-            <AdminProtectedRoute>
-              <AdminRestaurantDetailsPage />
-            </AdminProtectedRoute>
+            <AdminRestaurantDetailsPage />
           }
         />
         <Route
           path="/admin/orders"
           element={
-            <AdminProtectedRoute>
-              <Navigate to="/admin/dashboard" replace />
-            </AdminProtectedRoute>
+            <Navigate to="/admin/dashboard" replace />
           }
         />
         <Route
           path="/admin/offers"
           element={
-            <AdminProtectedRoute>
-              <AdminOffersPage />
-            </AdminProtectedRoute>
+            <AdminOffersPage />
           }
         />
         <Route
           path="/admin/transactions/:restaurantId/:transactionId"
-          element={<AdminProtectedRoute><AdminTransactionDetailsPage /></AdminProtectedRoute>}
+          element={<AdminTransactionDetailsPage />}
         />
         <Route
           path="/admin/transactions"
-          element={<AdminProtectedRoute><AdminTransactionsPage /></AdminProtectedRoute>}
+          element={<AdminTransactionsPage />}
         />
         <Route
           path="/admin/revenue"
           element={
-            <AdminProtectedRoute>
-              <AdminRevenuePage />
-            </AdminProtectedRoute>
+            <AdminRevenuePage />
           }
         />
         <Route
           path="/admin/reviews"
           element={
-            <AdminProtectedRoute>
-              <AdminReviewModerationPage />
-            </AdminProtectedRoute>
+            <AdminReviewModerationPage />
           }
         />
         <Route
           path="/admin/requests"
           element={
-            <AdminProtectedRoute>
-              <AdminRequestsPage />
-            </AdminProtectedRoute>
+            <AdminRequestsPage />
           }
         />
         <Route
           path="/admin/requests/:requestId"
           element={
-            <AdminProtectedRoute>
-              <AdminManagerRequestDetailsPage />
-            </AdminProtectedRoute>
+            <AdminManagerRequestDetailsPage />
           }
         />
-        <Route 
+        <Route
           path="/admin/profile"
           element={
-            <AdminProtectedRoute>
-              <AdminProfilePage />
-            </AdminProtectedRoute>
-          } 
+            <AdminProfilePage />
+          }
         />
         <Route
           path="/admin/settings"
-          element={<AdminProtectedRoute><AdminSettingsPage /></AdminProtectedRoute>}
+          element={<AdminSettingsPage />}
         />
+        </Route></Route>
         <Route path="/manager/register" element={<ManagerRegisterPage />} />
         <Route
           path="/manager/login"
@@ -326,7 +315,7 @@ export default function App() {
           element={<Navigate to="/manager/dashboard" replace />}
         />
         <Route path="/manager/pending" element={<ManagerPendingPage />} />
-        <Route element={<ManagerProtectedRoute />}>
+        <Route element={<ManagerProtectedRoute />}><Route element={<PortalShell Frame={ManagerFrame} />}>
           <Route path="/manager/dashboard" element={<ManagerDashboardPage />} />
           <Route path="/manager/settings" element={<ManagerSettingsPage />} />
           <Route path="/manager/profile" element={<ManagerProfilePage />} />
@@ -364,6 +353,7 @@ export default function App() {
             element={<ManagerOrderDetailsPage />}
           />
         </Route>
+        </Route>
         <Route
           path="/manager/floors"
           element={<Navigate to="/manager/tables" replace />}
@@ -384,7 +374,7 @@ export default function App() {
             </PortalGuestOnlyRoute>
           }
         />
-        <Route element={<ChefProtectedRoute />}>
+        <Route element={<ChefProtectedRoute />}><Route element={<PortalShell Frame={ChefFrame} />}>
           <Route path="/chef/dashboard" element={<ChefDashboardPage />} />
           <Route path="/chef/settings" element={<ChefSettingsPage />} />
           <Route path="/chef/profile" element={<ChefProfilePage />} />
@@ -393,6 +383,7 @@ export default function App() {
           <Route path="/chef/menu/:foodId" element={<ChefMenuPage />} />
           <Route path="/chef/revenue" element={<ChefRevenuePage />} />
           <Route path="/chef/service-hours" element={<ChefServiceHoursPage />} />
+          </Route>
           <Route
             path="/chef/change-password"
             element={<ChefChangePasswordPage />}

@@ -1,0 +1,38 @@
+.manager-ledger-downloads {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  max-width: 100%;
+  margin-inline-start: auto;
+}
+.manager-ledger-downloads-label { font-size: 12px; color: var(--color-text-secondary); }
+.manager-ledger-downloads-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+:is(.manager-dashboard-filters, .admin-analytics-filters) .manager-ledger-downloads button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 12px;
+  background: var(--color-surface-raised);
+  color: var(--color-text-primary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+:is(.manager-dashboard-filters, .admin-analytics-filters) .manager-ledger-downloads button:hover:enabled {
+  border-color: var(--color-primary);
+  color: var(--color-link);
+}
+.manager-ledger-downloads-error {
+  max-width: 400px;
+  margin: 3px 0 0;
+  color: var(--color-danger);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 650px) {
+  .manager-ledger-downloads { flex-basis: 100%; margin-inline-start: 0; }
+  .manager-ledger-downloads-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  :is(.manager-dashboard-filters, .admin-analytics-filters) .manager-ledger-downloads button { padding-inline: 8px; }
+}

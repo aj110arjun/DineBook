@@ -1,3 +1,6 @@
+import PageTransition from "../../components/ui/PageTransition.jsx";
+import useLoadingPhase from "../../hooks/useLoadingPhase.js";
+import LoadingState, { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatCalendarDate, formatLocalDate, formatLocalDateTime, formatLocalTime, shiftLocalMonth } from "../../lib/localDate.js";
 import { useEffect, useMemo, useRef } from "react";
@@ -129,6 +132,8 @@ export default function OrdersPage({ mode = "customer" }) {
   }[mode];
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   const visibleOrders = orders;
+  const { initialLoading, refreshing } = useLoadingPhase(loading, orders.length, error);
+
   useEffect(() => {
     if (previousPageFilterKey.current !== pageFilterKey) {
       previousPageFilterKey.current = pageFilterKey;
@@ -398,8 +403,9 @@ export default function OrdersPage({ mode = "customer" }) {
           </button>
         </div>
       )}
-      {loading ? (
-        <p className="orders-empty">Loading orders…</p>
+      {refreshing && <RefreshIndicator active />}
+        {initialLoading ? (
+        <LoadingState variant="list" label="Loading orders…" />
       ) : error ? (
         <p className="orders-error" role="alert">
           {error}
@@ -925,13 +931,13 @@ export default function OrdersPage({ mode = "customer" }) {
   if (mode === "chef")
     return <ChefLayout title="Kitchen Orders">{content}</ChefLayout>;
   return (
-    <main className="customer-orders-shell">
+    <PageTransition as="main" className="customer-orders-shell">
       <CustomerHeader user={headerUser} />
       {content}
       <Link className="orders-back-link" to="/customer/profile">
         Back to profile
       </Link>
-    </main>
+    </PageTransition>
   );
 }
 

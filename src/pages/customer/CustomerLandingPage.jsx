@@ -1,3 +1,5 @@
+import LoadingState from "../../components/ui/LoadingState.jsx";
+import PageTransition from "../../components/ui/PageTransition.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { useEffect, useMemo } from "react";
 import { useDispatch } from "react-redux";
@@ -130,10 +132,9 @@ export default function CustomerLandingPage() {
 
   if (loading)
     return (
-      <main className="landing-loading">
-        <span className="loading-mark">D</span>
-        <p>Setting your table…</p>
-      </main>
+      <PageTransition as="main" className="landing-loading">
+        <LoadingState variant="cards" count={4} label="Setting your table…" />
+      </PageTransition>
     );
 
   return (
@@ -141,7 +142,7 @@ export default function CustomerLandingPage() {
       <CustomerHeader user={user} onLogout={() => setUser(null)} />
       <HeroBanner />
       <CustomerOrderTracker enabled={Boolean(user) && !isDemoSession} />
-      <main>
+      <PageTransition as="main">
         <CuisineGrid selected={selectedCuisine} onSelect={setSelectedCuisine} />
         <RestaurantSection
           id="restaurants-near-you"
@@ -160,7 +161,7 @@ export default function CustomerLandingPage() {
           actionHref="/customer/restaurants"
         />
         <HowItWorks />
-      </main>
+      </PageTransition>
       <LandingFooter />
     </div>
   );

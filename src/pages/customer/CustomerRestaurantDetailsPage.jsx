@@ -1,3 +1,5 @@
+import LoadingState from "../../components/ui/LoadingState.jsx";
+import PageTransition from "../../components/ui/PageTransition.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate, formatLocalTime, formatWallTime } from "../../lib/localDate.js";
 import { confirmAction } from "../../lib/confirmDialog.js";
@@ -481,26 +483,12 @@ export default function CustomerRestaurantDetailsPage() {
 
   return (
     <div className="customer-home restaurant-details-home">
-      <CustomerHeader user={user} onLogout={() => setUser(null)} />
-      <main className="restaurant-details-page">
-        <nav className="restaurant-breadcrumbs" aria-label="Breadcrumb">
-          <Link to="/customer">Home</Link>
-          <span>/</span>
-          <Link to="/customer#restaurants-near-you">Restaurants</Link>
-          <span>/</span>
-          {restaurant ? (
-            <>
-              <strong>{restaurant.name}</strong>
-            </>
-          ) : (
-            <span>Restaurant details</span>
-          )}
-        </nav>
+      <CustomerHeader breadcrumbLabel={restaurant?.name} user={user} onLogout={() => setUser(null)} />
+      <PageTransition as="main" className="restaurant-details-page">
+
 
         {loading ? (
-          <p className="restaurant-detail-message" role="status">
-            Loading restaurant details…
-          </p>
+          <LoadingState variant="detail" label="Loading restaurant details…" />
         ) : error ? (
           <div className="restaurant-detail-message" role="alert">
             <p>{error}</p>
@@ -772,9 +760,7 @@ export default function CustomerRestaurantDetailsPage() {
                     </div>
 
                     {menuLoading ? (
-                      <p className="customer-menu-message" role="status">
-                        Loading menu…
-                      </p>
+                      <LoadingState variant="menu" label="Loading menu…" />
                     ) : menuError ? (
                       <p className="customer-menu-message" role="alert">
                         {menuError}
@@ -1077,7 +1063,7 @@ export default function CustomerRestaurantDetailsPage() {
                     ) : null}
                     <div className="customer-review-list">
                       {reviewLoading ? (
-                        <p role="status">Loading reviews…</p>
+                        <LoadingState variant="list" label="Loading reviews…" />
                       ) : restaurantReviews.filter(
                           (review) =>
                             !review.status || review.status === "PUBLISHED",
@@ -1239,7 +1225,7 @@ export default function CustomerRestaurantDetailsPage() {
         >
           <ArrowLeft size={15} /> Back to restaurants
         </Link>
-      </main>
+      </PageTransition>
       <LandingFooter />
       {!loading && !error && restaurant && (
         <RestaurantBookingDock

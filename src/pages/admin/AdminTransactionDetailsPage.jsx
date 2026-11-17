@@ -1,3 +1,4 @@
+import LoadingState from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
 import { useEffect } from "react";
@@ -104,9 +105,7 @@ export default function AdminTransactionDetailsPage() {
           <ArrowLeft size={16} /> Back to transactions
         </Link>
         {loading ? (
-          <div className="transactions-empty" role="status">
-            Loading transaction details…
-          </div>
+          <LoadingState variant="detail" label="Loading transaction details…" />
         ) : error ? (
           <div className="transactions-empty">
             <p role="alert">{error}</p>

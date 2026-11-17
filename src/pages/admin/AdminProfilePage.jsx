@@ -1,3 +1,5 @@
+import useLoadingPhase from "../../hooks/useLoadingPhase.js";
+import LoadingState, { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
 import { useCallback, useEffect } from "react";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
 import { useAdminSession } from "../../components/admin/AdminSessionContext.jsx";
@@ -29,6 +31,8 @@ export default function AdminProfilePage() {
     },
     [clearAdmin],
   );
+
+  const { initialLoading, refreshing } = useLoadingPhase(loading, Boolean(data), error);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -94,14 +98,9 @@ export default function AdminProfilePage() {
 
         <Notice message={error} />
 
-        {loading ? (
-          <div
-            className="manager-profile-card manager-profile-loading"
-            role="status"
-            aria-live="polite"
-          >
-            Loading your admin profile…
-          </div>
+        {refreshing && <RefreshIndicator active />}
+        {initialLoading ? (
+          <LoadingState variant="form" label="Loading your admin profile…" />
         ) : data ? (
           <AccountInformation
             key={data.admin.id}

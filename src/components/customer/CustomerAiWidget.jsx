@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { ArrowDown, ArrowUpRight, Bot, CalendarDays, CircleHelp, CreditCard, Headphones, LoaderCircle, MessageCircle, Minus, Plus, RotateCcw, Search, Sparkles, Tag, Trash2, Utensils, Wallet, X } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Bot, CalendarDays, CircleHelp, CreditCard, Headphones, MessageCircle, Minus, Plus, RotateCcw, Search, Sparkles, Tag, Trash2, Utensils, Wallet, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import useCustomerAi from "../../hooks/useCustomerAi.js";
 import { demoCustomer } from "../../data/demoCustomer.js";
@@ -7,6 +7,7 @@ import AIChatInput from "./ai-support/AIChatInput.jsx";
 import AIMessageBubble from "./ai-support/AIMessageBubble.jsx";
 import { AI_LABELS, customerAiLabels } from "./ai-support/customerAiCopy.js";
 import "../../assets/css/CustomerAi.css";
+import LoadingState, { RefreshIndicator } from "../ui/LoadingState.jsx";
 
 export { SupportText } from "./ai-support/AIMessageBubble.jsx";
 const ACTIONS = [
@@ -91,7 +92,9 @@ export function CustomerAiPanel({ chat, close, closeRef, id, open = true, presen
               <Icon size={17} aria-hidden="true" /><span>{labels.actions[index]}</span><ArrowUpRight size={13} aria-hidden="true" />
             </button>)}</div>
           </div>}
-          {chat.loading && <div className="customer-ai-history-loading" role="status"><LoaderCircle size={20} className="customer-ai-spin" /><p>{presentation?.loadingMessage || "Loading conversations…"}</p></div>}
+          {chat.loading && <div className="customer-ai-history-loading">{chat.messages.length
+            ? <RefreshIndicator active label="Updating conversation…" />
+            : <LoadingState variant="chat" label={presentation?.loadingMessage || "Loading conversations…"} />}</div>}
           {chat.messages.map((message) => <AIMessageBubble key={message.id} message={message} language={language} labels={labels} chat={chat} disabled={disabled} safeHref={presentation?.safeHref} summarize={presentation?.summarize} />)}
           {chat.busy && <div className="customer-ai-thinking" role="status"><span className="customer-ai-message-avatar" aria-hidden="true"><Bot size={16} /></span>
             <span className="customer-ai-thinking-dots" aria-hidden="true"><i /><i /><i /></span><span>{labels.loading}</span>

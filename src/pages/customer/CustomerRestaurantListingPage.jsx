@@ -1,3 +1,6 @@
+import useLoadingPhase from "../../hooks/useLoadingPhase.js";
+import LoadingState, { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
+import PageTransition from "../../components/ui/PageTransition.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
@@ -61,6 +64,8 @@ export default function CustomerRestaurantListingPage() {
     filtersOpen: false,
     refreshKey: 0,
   }));
+
+  const { initialLoading, refreshing } = useLoadingPhase(loading, restaurants.length, error);
 
   useEffect(() => {
     const value = searchParams.get("search") || "";
@@ -266,12 +271,8 @@ export default function CustomerRestaurantListingPage() {
         </div>
       </section>
 
-      <main className="restaurant-listing-page">
-        <nav className="restaurant-listing-breadcrumb" aria-label="Breadcrumb">
-          <Link to="/customer">Home</Link>
-          <span aria-hidden="true">/</span>
-          <strong aria-current="page">Restaurants</strong>
-        </nav>
+      <PageTransition as="main" className="restaurant-listing-page">
+
         <div className="restaurant-listing-layout">
           <aside className="restaurant-filter-panel">
             <div className="restaurant-filter-title">
@@ -369,6 +370,7 @@ export default function CustomerRestaurantListingPage() {
                 {locations.map((value) => <button type="button" key={`l-${value}`} onClick={() => toggleFilter(value, setLocations)} aria-label={`Remove location filter ${value}`}>{value} ×</button>)}
               </div>
             )}
+            {refreshing && <RefreshIndicator active />}
             {error ? (
               <div className="empty-state" role="alert">
                 <p>{error}</p>
@@ -379,10 +381,8 @@ export default function CustomerRestaurantListingPage() {
                   Try again
                 </button>
               </div>
-            ) : loading ? (
-              <div className="restaurant-grid ux-restaurant-skeletons" aria-label="Loading restaurants">
-                {Array.from({ length: PAGE_SIZE }, (_, index) => <div className="ux-skeleton-card" key={index} aria-hidden="true"><div /><span /><span /></div>)}
-              </div>
+            ) : initialLoading ? (
+              <LoadingState variant="cards" count={6} label="Loading restaurants…" />
             ) : visibleRestaurants.length ? (
               <div className="restaurant-grid">
                 {visibleRestaurants.map((restaurant) => (
@@ -419,7 +419,7 @@ export default function CustomerRestaurantListingPage() {
             )}
           </section>
         </div>
-      </main>
+      </PageTransition>
       <LandingFooter />
     </div>
   );

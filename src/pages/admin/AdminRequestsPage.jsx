@@ -1,3 +1,5 @@
+import useLoadingPhase from "../../hooks/useLoadingPhase.js";
+import LoadingState, { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDateTime } from "../../lib/localDate.js";
 import { useEffect, useRef } from "react";
@@ -71,6 +73,8 @@ export default function AdminRequestsPage() {
       if (sequence === requestSequence.current) setLoading(false);
     }
   }
+
+  const { initialLoading, refreshing } = useLoadingPhase(loading, managerRequests.length, error);
 
   useEffect(() => {
     loadManagerRequests();
@@ -201,8 +205,9 @@ export default function AdminRequestsPage() {
 
         {error && <div className="admin-request-error">{error}</div>}
 
-        {loading ? (
-          <div className="admin-request-empty">Loading manager requests...</div>
+        {refreshing && <RefreshIndicator active />}
+        {initialLoading ? (
+          <LoadingState variant="table" label="Loading manager requests..." />
         ) : visibleRequests.length === 0 ? (
           <div className="admin-request-empty">
             <UserCheck size={28} />

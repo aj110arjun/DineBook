@@ -1,3 +1,4 @@
+import LoadingState from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
 import { useEffect } from "react";
@@ -104,29 +105,7 @@ export default function AdminManagerRequestDetailsPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <AdminLayout title="Request Details" activePath="/admin/requests">
-        <div className="admin-dashboard-content admin-request-detail-content">
-          <div className="flex min-h-[420px] items-center justify-center">
-            <div className="text-center">
-              <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[#0fa99d]/10 text-[#0fa99d]">
-                <Clock3 size={22} />
-              </div>
-
-              <h2 className="text-base font-bold text-[#172335]">
-                Loading manager request
-              </h2>
-
-              <p className="mt-1 text-sm text-gray-500">
-                Please wait while the application details are loaded.
-              </p>
-            </div>
-          </div>
-        </div>
-      </AdminLayout>
-    );
-  }
+  if (loading && !request) return <AdminLayout title="Request details"><div className="admin-dashboard-content"><LoadingState variant="detail" label="Loading manager request…" /></div></AdminLayout>;
 
   if (error && !request) {
     return (

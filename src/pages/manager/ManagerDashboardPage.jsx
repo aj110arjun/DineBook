@@ -1,13 +1,14 @@
+import LoadingState, { ErrorState, RefreshIndicator } from "../../components/ui/LoadingState.jsx";
 import { useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { CalendarDays, CircleDollarSign, Plus, RefreshCw, ShoppingBasket, Star, Table2, Tag, Users, Receipt } from "lucide-react";
 import { usePageState } from "../../state/usePageState.js";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
-import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
+import ManagerLedgerDownloads from "../../components/manager/ManagerLedgerDownloads.jsx";
 import { BarChart, DonutChart, EmptyState } from "../../components/manager/DashboardCharts.jsx";
 import useManagerDashboard from "../../hooks/useManagerDashboard.js";
 import { formatWallTime } from "../../lib/localDate.js";
-import { comparison, formatCurrency, formatDate, formatInstant, formatNumber, PERIOD_PRESETS, presetPeriod, STATUS_COLORS, statusLabel, validatePeriod } from "../../lib/managerDashboard.js";
+import { comparison, formatCurrency, formatDate, formatInstant, formatNumber, MANAGER_PERIOD_PRESETS, presetPeriod, STATUS_COLORS, statusLabel, validatePeriod } from "../../lib/managerDashboard.js";
 import "../../assets/css/ManagerDashboardPage.css";
 
 const revenueSeries = [{ key: "revenue", name: "Collected less refunds", color: "#7c2d3c" }, { key: "net", name: "After commission", color: "#2675c9" }];
@@ -25,6 +26,7 @@ export default function ManagerDashboardPage() {
   const params = useMemo(() => ({ ...filters.period, group_by: filters.group, popular_sort: filters.sort }), [filters.period, filters.group, filters.sort]);
   const validation = validatePeriod(params.start_date, params.end_date, params.group_by);
   const { data, loading, error, refresh } = useManagerDashboard(params, !validation);
+  const unappliedDates = filters.preset === "custom" && (filters.draft.start_date !== filters.period.start_date || filters.draft.end_date !== filters.period.end_date);
 
   function selectPreset(value) {
     set.preset(value);
@@ -44,7 +46,7 @@ export default function ManagerDashboardPage() {
 
   return <ManagerLayout title="Dashboard">
     <div className="manager-dashboard-content manager-analytics">
-      <PortalBreadcrumb home={{ label: "Home", to: "/manager/dashboard" }} items={[{ label: "Dashboard" }]} className="manager-breadcrumb" />
+
       <div className="manager-heading">
         <div><h2>Welcome{data?.manager_name ? `, ${data.manager_name}` : ""}</h2>
           <p>{data?.restaurant_name || "Your restaurant"} · Operations and performance</p></div>
@@ -61,11 +63,12 @@ export default function ManagerDashboardPage() {
       </div>
 
       <div className="manager-dashboard-filters">
-        <label>Period<select value={filters.preset} onChange={(event) => selectPreset(event.target.value)}>{PERIOD_PRESETS.map(([value, name]) => <option key={value} value={value}>{name}</option>)}</select></label>
+        <label>Period<select value={filters.preset} onChange={(event) => selectPreset(event.target.value)}>{MANAGER_PERIOD_PRESETS.map(([value, name]) => <option key={value} value={value}>{name}</option>)}</select></label>
         <label>Chart interval<select value={filters.group} onChange={(event) => set.group(event.target.value)}>
           {[["auto", "Automatic"], ["day", "Daily"], ["week", "Weekly"], ["month", "Monthly"], ["year", "Yearly"]].map(([value, name]) => <option key={value} value={value}>{name}</option>)}
         </select></label>
         <button type="button" className="manager-dashboard-refresh" onClick={refresh} disabled={loading || !!validation}><RefreshCw size={16} className={loading ? "manager-refresh-spinning" : ""} />{loading ? "Loading…" : "Refresh"}</button>
+        <ManagerLedgerDownloads key={`${filters.period.start_date}:${filters.period.end_date}`} period={filters.period} disabled={Boolean(validation) || unappliedDates} />
         {filters.preset === "custom" && <form onSubmit={applyCustom} className="manager-dashboard-date-range">
           <label>Start date<input type="date" min="2000-01-01" max="2099-12-31" required value={filters.draft.start_date} onChange={(event) => set.draft((current) => ({ ...current, start_date: event.target.value }))} /></label>
           <label>End date<input type="date" min="2000-01-01" max="2099-12-31" required value={filters.draft.end_date} onChange={(event) => set.draft((current) => ({ ...current, end_date: event.target.value }))} /></label>
@@ -73,17 +76,17 @@ export default function ManagerDashboardPage() {
         </form>}
       </div>
       {(validation || filters.filterError) && <p role="alert" className="manager-dashboard-error">{validation || filters.filterError}</p>}
-      <DashboardFeedback error={error} loading={loading} validation={validation} refresh={refresh} />
-      {data && !loading && !validation && <DashboardContent data={data} sort={filters.sort} setSort={set.sort} navigate={navigate} />}
+      <DashboardFeedback error={error} loading={loading} hasData={Boolean(data)} validation={validation} refresh={refresh} />
+      {data && !validation && <DashboardContent data={data} sort={filters.sort} setSort={set.sort} navigate={navigate} />}
     </div>
   </ManagerLayout>;
 }
 
-export function DashboardFeedback({ error, loading, validation, refresh }) {
+export function DashboardFeedback({ error, loading, hasData, validation, refresh }) {
   if (validation) return null;
-  if (error) return <div role="alert" className="manager-dashboard-error"><p>{error}</p><button type="button" onClick={refresh}>Try again</button></div>;
-  if (loading) return <div role="status" aria-live="polite" className="manager-dashboard-loading">Loading restaurant performance…</div>;
-  return null;
+  if (error) return <ErrorState message={error} onRetry={refresh} />;
+  if (loading && !hasData) return <LoadingState variant="dashboard" label="Loading restaurant performance…" />;
+  return <RefreshIndicator active={loading && hasData} />;
 }
 
 export function DashboardContent({ data, sort, setSort, navigate }) {

@@ -1,3 +1,4 @@
+import { CustomerHeaderRegistration, useCustomerShell } from "../ui/CustomerShell.jsx";
 import useNavigationDisclosure from "../../hooks/useNavigationDisclosure.js";
 import { useState, useEffect } from "react";
 import { MapPin, Menu, Settings, Utensils, X } from "lucide-react";
@@ -7,7 +8,7 @@ import NotificationSession from "../notifications/NotificationSession.jsx";
 import NotificationBell from "../notifications/NotificationBell.jsx";
 import { useSelector } from "react-redux";
 
-export default function CustomerHeader({ user }) {
+export function CustomerHeaderFrame({ user }) {
   const sharedUser = useSelector((state) => state.customerSession.user);
   if (user && sharedUser?.id === user.id) user = sharedUser;
   const [menuOpen, setMenuOpen] = useState(false);
@@ -201,4 +202,9 @@ export default function CustomerHeader({ user }) {
   ) : (
     header
   );
+}
+
+export default function CustomerHeader(props) {
+  const shell = useCustomerShell();
+  return shell ? <CustomerHeaderRegistration {...props} /> : <CustomerHeaderFrame {...props} />;
 }

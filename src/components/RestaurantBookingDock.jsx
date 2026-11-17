@@ -20,9 +20,29 @@ function today() {
 export default function RestaurantBookingDock({ restaurant, open, onOpenChange }) {
   const navigate = useNavigate();
   const dialogRef = useRef(null);
+  const dockRef = useRef(null);
   const [date, setDate] = useState(today);
   const [guests, setGuests] = useState("2");
   const [time, setTime] = useState("20:00");
+
+  useEffect(() => {
+    const dock = dockRef.current;
+    const root = document.documentElement;
+    const property = "--restaurant-booking-dock-height";
+    const previous = root.style.getPropertyValue(property);
+    const measure = () => {
+      const height = `${Math.ceil(dock.getBoundingClientRect().height)}px`;
+      if (root.style.getPropertyValue(property) !== height) root.style.setProperty(property, height);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(dock);
+    return () => {
+      observer.disconnect();
+      if (previous) root.style.setProperty(property, previous);
+      else root.style.removeProperty(property);
+    };
+  }, []);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -44,7 +64,7 @@ export default function RestaurantBookingDock({ restaurant, open, onOpenChange }
 
   return (
     <>
-      <aside className="restaurant-booking-dock" aria-label="Table reservation">
+      <aside ref={dockRef} className="restaurant-booking-dock" aria-label="Table reservation">
         <span className="restaurant-booking-dock-icon" aria-hidden="true">
           <CalendarDays size={22} />
         </span>

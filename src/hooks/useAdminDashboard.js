@@ -4,7 +4,7 @@ import { createDashboardLoader } from "../lib/managerDashboard.js";
 
 // Reuse request cancellation/coalescing from the manager portal. Each resource
 // has independent feedback so a failed activity list cannot hide the KPIs.
-export default function useAdminDashboard(resource, params, valid = true, pollMs = 60000) {
+export default function useAdminDashboard(resource, params, valid = true) {
   const [state, setState] = useState({ data: null, loading: true, error: "" });
   const loader = useMemo(() => createDashboardLoader(requestJson, setState, `/api/admin/dashboard/${resource}`), [resource]);
   const query = new URLSearchParams(params).toString();
@@ -13,16 +13,5 @@ export default function useAdminDashboard(resource, params, valid = true, pollMs
     refresh();
     return () => loader.cancel();
   }, [loader, refresh]);
-  useEffect(() => {
-    const onVisible = () => {
-      if (pollMs > 0 && document.visibilityState === "visible" && Date.now() - loader.lastLoaded >= pollMs) refresh();
-    };
-    const timer = pollMs > 0 ? window.setInterval(onVisible, pollMs) : null;
-    document.addEventListener("visibilitychange", onVisible);
-    return () => {
-      if (timer) window.clearInterval(timer);
-      document.removeEventListener("visibilitychange", onVisible);
-    };
-  }, [loader, refresh, pollMs]);
   return { ...state, refresh };
 }

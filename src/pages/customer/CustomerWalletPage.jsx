@@ -1,3 +1,4 @@
+import LoadingState from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDateTime } from "../../lib/localDate.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
@@ -588,17 +589,13 @@ export default function CustomerWalletPage() {
             {error}
           </p>
         ) : !wallet ? (
-          <p className="wallet-empty" role="status">
-            Loading wallet…
-          </p>
+          <LoadingState variant="wallet" label="Loading wallet…" />
         ) : activityError ? (
           <p className="wallet-empty" role="alert">
             {activityError}
           </p>
         ) : activityLoading && activityTotal === 0 ? (
-          <p className="wallet-empty" role="status">
-            Loading wallet activity…
-          </p>
+          <LoadingState variant="table" columns={5} label="Loading wallet activity…" />
         ) : activityTotal === 0 &&
           wallet.transactions.length === 0 &&
           !activityQuery.trim() &&

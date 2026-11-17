@@ -1,3 +1,4 @@
+import LoadingState from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
 import { useCallback, useEffect, useMemo } from "react";
@@ -155,16 +156,7 @@ export default function ManagerOrderDetailsPage() {
   return (
     <ManagerLayout title="Order Details">
       <main className="manager-dashboard-content manager-order-details-page">
-        <nav
-          className="manager-order-details-breadcrumb"
-          aria-label="Breadcrumb"
-        >
-          <Link to="/manager/dashboard">Manager</Link>
-          <span>/</span>
-          <Link to={backToOrders}>Orders</Link>
-          <span>/</span>
-          <strong>Order Details</strong>
-        </nav>
+
         <header className="manager-order-details-heading">
           <div>
             <span className="manager-orders-breadcrumb">ORDER MANAGEMENT</span>
@@ -183,8 +175,7 @@ export default function ManagerOrderDetailsPage() {
         )}
         {loading ? (
           <section className="manager-order-details-state" aria-live="polite">
-            <span className="manager-order-details-spinner" />
-            <p>Loading order details…</p>
+            <LoadingState variant="detail" label="Loading order details…" />
           </section>
         ) : error && !order ? (
           <section className="manager-order-details-state" role="alert">

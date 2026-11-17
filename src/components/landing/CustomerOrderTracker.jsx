@@ -1,3 +1,4 @@
+import LoadingState from "../ui/LoadingState.jsx";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Check, Clock3, CookingPot, PackageCheck, Search, Utensils,
@@ -143,9 +144,7 @@ export default function CustomerOrderTracker({ enabled }) {
         />
       </label>
       {loading && activeOrders.length === 0 ? (
-        <p className="customer-order-tracker-message">
-          Checking for active orders…
-        </p>
+        <LoadingState variant="list" count={1} label="Checking for active orders…" />
       ) : error ? (
         <p className="customer-order-tracker-message is-error" role="alert">
           {error}

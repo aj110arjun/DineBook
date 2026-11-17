@@ -1,3 +1,4 @@
+import LoadingState from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
@@ -219,7 +220,7 @@ export default function AdminRestaurantDetailsPage() {
   }
 
   return (
-    <AdminLayout title="Restaurant Details" activePath="/admin/restaurants">
+    <AdminLayout breadcrumbLabel={restaurant?.name} title="Restaurant Details" activePath="/admin/restaurants">
       <div
         className={`admin-dashboard-content ${restaurant && !loading && !error ? "admin-restaurant-detail-layout" : ""}`}
       >
@@ -227,7 +228,7 @@ export default function AdminRestaurantDetailsPage() {
           <ArrowLeft size={16} /> Back to restaurants
         </Link>
         {loading ? (
-          <div className="admin-request-empty">Loading restaurant details…</div>
+          <LoadingState variant="detail" label="Loading restaurant details…" />
         ) : error ? (
           <div className="admin-request-error" role="alert">
             {error}
@@ -617,7 +618,7 @@ export default function AdminRestaurantDetailsPage() {
                 <Store size={17} /> Menu inspection
               </h3>
               {menuError && <p role="alert">{menuError}</p>}
-              {menuLoading && <p role="status">Loading menu…</p>}
+              {menuLoading && <LoadingState variant="menu" label="Loading menu…" />}
               {menuCategories.length ? (
                 <>
                   <div className="admin-page-actions">

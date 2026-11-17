@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import useAnimatedDismiss from "../hooks/useAnimatedDismiss.js";
 import {
   AlertTriangle,
   Ban,
@@ -102,13 +103,14 @@ export default function ConfirmActionDialog({
   const Icon = config.icon;
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const { closing, dismiss } = useAnimatedDismiss(onCancel);
   const dialogRef = useRef(null);
   const cancelRef = useRef(null);
   const busyRef = useRef(false);
   const previousFocus = useRef(null);
-  const onCancelRef = useRef(onCancel);
-  onCancelRef.current = onCancel;
-  const isBusy = busy || submitting;
+  const onCancelRef = useRef(dismiss);
+  onCancelRef.current = dismiss;
+  const isBusy = busy || submitting || closing;
   busyRef.current = isBusy;
 
   useEffect(() => {
@@ -153,10 +155,10 @@ export default function ConfirmActionDialog({
 
   return (
     <div
-      className="action-confirm-backdrop"
+      className={`action-confirm-backdrop${closing ? " is-closing" : ""}`}
       role="presentation"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget && !isBusy) onCancel?.();
+        if (event.target === event.currentTarget && !isBusy) dismiss();
       }}
     >
       <section
@@ -208,7 +210,7 @@ export default function ConfirmActionDialog({
             type="button"
             ref={cancelRef}
             className="action-confirm-cancel"
-            onClick={onCancel}
+            onClick={dismiss}
             disabled={isBusy}
           >
             {cancelLabel}

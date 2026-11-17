@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
 import { AdminSessionContext } from "../admin/AdminSessionContext.jsx";
 import NotificationSession from "../notifications/NotificationSession.jsx";
 import { useAccountPreferences } from "../preferences/AccountPreferences.jsx";
 
 export default function AdminProtectedRoute({ children }) {
+  const { pathname } = useLocation();
   const { setAdminId } = useAccountPreferences();
   // undefined = checking; null = signed out; object = authenticated.
   const [admin, setAdmin] = useState(undefined);
@@ -15,7 +16,8 @@ export default function AdminProtectedRoute({ children }) {
   useEffect(() => {
     const controller = new AbortController();
 
-    setAdmin(undefined);
+    // Keep the verified shell while repeating the existing check on navigation.
+    setAdmin((current) => current || undefined);
     setError("");
 
     requestJson("/api/auth/admin/me", {
@@ -39,7 +41,7 @@ export default function AdminProtectedRoute({ children }) {
       });
 
     return () => controller.abort();
-  }, [attempt]);
+  }, [attempt, pathname]);
 
   const updateAdminProfile = useCallback((profile) => {
     setAdmin((current) =>
@@ -90,7 +92,7 @@ export default function AdminProtectedRoute({ children }) {
       value={{ admin, updateAdminProfile, clearAdmin }}
     >
       <NotificationSession key={admin.id}>
-        {children}
+        {children || <Outlet />}
       </NotificationSession>
     </AdminSessionContext.Provider>
   );

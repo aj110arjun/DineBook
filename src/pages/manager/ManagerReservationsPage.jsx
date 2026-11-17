@@ -1,3 +1,4 @@
+import LoadingState from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate, formatWallTime, shiftLocalMonth } from "../../lib/localDate.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
@@ -662,9 +663,7 @@ export default function ManagerReservationsPage() {
       <main className="manager-dashboard-content reservation-page">
         <div className="reservation-page-heading">
           <div>
-            <div className="reservation-breadcrumb">
-              Home <span>/</span> <strong>Reservations &amp; Orders</strong>
-            </div>
+
             <h2>Reservations &amp; Orders</h2>
             <p>
               View reservations, preorders, and kitchen orders together by date
@@ -882,10 +881,7 @@ export default function ManagerReservationsPage() {
               {calendarLoading &&
               selectedItems.length === 0 &&
               selectedStandaloneOrders.length === 0 ? (
-                <div className="reservation-empty">
-                  <CalendarDays size={28} />
-                  <strong>Loading this date…</strong>
-                </div>
+                <LoadingState variant="list" label="Loading this date…" />
               ) : selectedItems.length === 0 &&
                 selectedStandaloneOrders.length === 0 ? (
                 <div className="reservation-empty">
@@ -1702,7 +1698,7 @@ export default function ManagerReservationsPage() {
               total will appear in reservation details.
             </p>
             {menuBusy ? (
-              <p>Loading menu…</p>
+              <LoadingState variant="menu" label="Loading menu…" />
             ) : availableVariants.length === 0 ? (
               <p>No available menu items right now.</p>
             ) : (
@@ -1800,7 +1796,7 @@ export default function ManagerReservationsPage() {
               {deskOrderReservation.customer_name}.
             </p>
             {menuBusy ? (
-              <p>Loading menu…</p>
+              <LoadingState variant="menu" label="Loading menu…" />
             ) : availableVariants.length === 0 ? (
               <p>No available menu items right now.</p>
             ) : (

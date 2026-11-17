@@ -1,3 +1,5 @@
+import useLoadingPhase from "../../hooks/useLoadingPhase.js";
+import LoadingState, { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate } from "../../lib/localDate.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
@@ -43,6 +45,8 @@ export default function ManagerReviewsPage() {
     flagErrors: {},
     flagForms: {},
   }));
+
+  const { initialLoading, refreshing } = useLoadingPhase(loading, data.items.length, error);
 
   useEffect(() => {
     let active = true;
@@ -204,8 +208,9 @@ export default function ManagerReviewsPage() {
             {error}
           </p>
         )}
-        {loading && <p role="status">Loading reviews…</p>}
-        {!loading && !error && data.items.map((item) => (
+        {refreshing && <RefreshIndicator active />}
+        {initialLoading && <LoadingState variant="list" label="Loading reviews…" />}
+        {!initialLoading && !error && data.items.map((item) => (
           <article className="reviews-card" key={item.id}>
             <div className="reviews-row">
               <div>
@@ -388,7 +393,7 @@ export default function ManagerReviewsPage() {
             )}
           </article>
         ))}
-        {!loading && !error && !data.items.length && (
+        {!initialLoading && !error && !data.items.length && (
           <p>No restaurant reviews match these filters.</p>
         )}
         <div className="reviews-pager">

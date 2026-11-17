@@ -1,3 +1,4 @@
+import LoadingState from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDateTime } from "../../lib/localDate.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
@@ -207,7 +208,7 @@ export default function ManagerSpotOrderPage() {
           </p>
         )}
         {loading ? (
-          <p>Loading tables and menu…</p>
+          <LoadingState variant="menu" label="Loading tables and menu…" />
         ) : order ? (
           <section
             className="spot-order-receipt"

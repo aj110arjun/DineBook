@@ -1,6 +1,7 @@
+import LoadingState, { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   PlusCircle,
   ChevronDown,
@@ -13,6 +14,8 @@ import {
 import { requestJson } from "../../lib/authApi.js";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
+import ManagerFloorZones from "../../components/manager/ManagerFloorZones.jsx";
+import "../../assets/css/ManagerFloorZones.css";
 
 const statusLabels = {
   available: "Available",
@@ -23,12 +26,14 @@ const statusLabels = {
 };
 
 export default function ManagerFloorsPage() {
+  const [loading, setLoading] = useState(true);
   const [
     {
       floors, floorFilter, statusFilter, tableQuery, capacityFilter, typeFilter,
       tableSort, form, name, floorNumber, description, floorId, number, seats,
       reservationFee, extraHourFee, gridRow, gridCol, shape, tableStatus,
       editingTable, editingFloor, error, notice, saving, pendingConfirmation,
+      zoneFilter, zoneId, zoneName, zoneFloorId, editingZone, floorZoneNames,
     },
     {
       floors: setFloors, floorFilter: setFloorFilter,
@@ -42,6 +47,8 @@ export default function ManagerFloorsPage() {
       tableStatus: setTableStatus, editingTable: setEditingTable,
       editingFloor: setEditingFloor, error: setError, notice: setNotice,
       saving: setSaving, pendingConfirmation: setPendingConfirmation,
+      zoneFilter: setZoneFilter, zoneId: setZoneId, zoneName: setZoneName,
+      zoneFloorId: setZoneFloorId, editingZone: setEditingZone, floorZoneNames: setFloorZoneNames,
     },
   ] = usePageState("ManagerFloorsPage", () => ({
     floors: [],
@@ -70,15 +77,20 @@ export default function ManagerFloorsPage() {
     notice: "",
     saving: false,
     pendingConfirmation: null,
+    zoneFilter: "all", zoneId: "", zoneName: "", zoneFloorId: "", editingZone: null, floorZoneNames: "",
   }));
   const load = useCallback(
-    () =>
-      requestJson("/api/manager/floors")
+    () => {
+      setLoading(true);
+      setError("");
+      return requestJson("/api/manager/floors")
         .then((data) => {
           setFloors(data);
           setFloorId((current) => current || data[0]?.id || "");
         })
-        .catch((e) => setError(e.message)),
+        .catch((e) => setError(e.message))
+        .finally(() => setLoading(false));
+    },
     [],
   );
   useEffect(() => {
@@ -96,19 +108,23 @@ export default function ManagerFloorsPage() {
     [floors],
   );
   const scopedTables = allTables.filter(
-    (table) => floorFilter === "all" || table.floorId === floorFilter,
+    (table) => (floorFilter === "all" || table.floorId === floorFilter) &&
+      (zoneFilter === "all" || (zoneFilter === "general" ? !table.zone_id : table.zone_id === zoneFilter)),
   );
   const counts = scopedTables.reduce((result, table) => {
     result[table.status] = (result[table.status] || 0) + 1;
     return result;
   }, {});
-  const shownFloors = floors.filter(
+  const scopedFloors = floors.filter(
     (floor) => floorFilter === "all" || floor.id === floorFilter,
   );
+  const shownFloors = scopedFloors.filter((floor) => zoneFilter === "all" || zoneFilter === "general" ||
+    (floor.zones || []).some((zone) => zone.id === zoneFilter));
   const visibleTables = (floor) =>
     floor.tables
       .filter(
         (table) =>
+          (zoneFilter === "all" || (zoneFilter === "general" ? !table.zone_id : table.zone_id === zoneFilter)) &&
           (statusFilter === "all" || table.status === statusFilter) &&
           (capacityFilter === "all" ||
             (capacityFilter === "8+"
@@ -117,7 +133,7 @@ export default function ManagerFloorsPage() {
                 Number(capacityFilter))) &&
           (typeFilter === "all" || table.table_type === typeFilter) &&
           (!tableQuery.trim() ||
-            `${table.table_number} ${table.id} ${floor.floor_name || floor.name} ${table.table_type || ""}`
+            `${table.table_number} ${table.id} ${floor.floor_name || floor.name} ${table.zone_name || ""} ${table.table_type || ""}`
               .toLowerCase()
               .includes(tableQuery.trim().toLowerCase())),
       )
@@ -139,7 +155,7 @@ export default function ManagerFloorsPage() {
     setError("");
     const cleanName = name.trim().replace(/\s+/g, " ");
     if (!cleanName) {
-      setError("Enter a floor or zone name.");
+      setError("Enter a floor name.");
       return;
     }
     setSaving(true);
@@ -148,6 +164,7 @@ export default function ManagerFloorsPage() {
         floor_number: Number(floorNumber),
         floor_name: cleanName,
         description: description.trim() || null,
+        ...(!editingFloor && { zones: floorZoneNames.split("\n").map((value) => value.trim()).filter(Boolean) }),
       };
       const created = editingFloor
         ? await requestJson(`/api/manager/floors/${editingFloor.id}`, {
@@ -174,6 +191,7 @@ export default function ManagerFloorsPage() {
       setEditingFloor(null);
       setForm("");
       setFloorFilter(created.id);
+      setZoneFilter("all");
       setFloorId(created.id);
       setNotice(
         editingFloor ? "Floor updated." : "Floor created successfully.",
@@ -193,6 +211,7 @@ export default function ManagerFloorsPage() {
     try {
       const payload = {
         floor_id: floorId,
+        zone_id: zoneId || null,
         table_number: number.trim(),
         capacity: Number(seats),
         reservation_fee: Number(reservationFee),
@@ -222,7 +241,10 @@ export default function ManagerFloorsPage() {
     }
   }
   function openAddTable() {
-    setFloorId(floorFilter !== "all" ? floorFilter : floors[0]?.id || "");
+    const selectedZoneFloor = floors.find((floor) => (floor.zones || []).some((zone) => zone.id === zoneFilter));
+    const targetFloor = selectedZoneFloor?.id || (floorFilter !== "all" ? floorFilter : floors[0]?.id || "");
+    setFloorId(targetFloor);
+    setZoneId((floors.find((floor) => floor.id === targetFloor)?.zones || []).some((zone) => zone.id === zoneFilter) ? zoneFilter : "");
     setNumber("");
     setSeats("4");
     setReservationFee("250");
@@ -237,6 +259,7 @@ export default function ManagerFloorsPage() {
   }
   function openAddFloor() {
     setName("");
+    setFloorZoneNames("");
     setDescription("");
     setFloorNumber(
       String(
@@ -259,6 +282,7 @@ export default function ManagerFloorsPage() {
   function openEditTable(table, floor) {
     setEditingTable({ ...table, floorId: floor.id });
     setFloorId(floor.id);
+    setZoneId(table.zone_id || "");
     setNumber(table.table_number);
     setSeats(String(table.capacity ?? table.seats));
     setReservationFee(String(table.reservation_fee ?? 0));
@@ -269,6 +293,43 @@ export default function ManagerFloorsPage() {
     setTableStatus(table.status);
     setError("");
     setForm("table");
+  }
+  function selectFloor(id) {
+    setFloorFilter(id);
+    setZoneFilter("all");
+  }
+  function openZone(floor, zone = null) {
+    setZoneFloorId(floor.id);
+    setZoneName(zone?.name || "");
+    setEditingZone(zone);
+    setError("");
+    setForm("zone");
+  }
+  async function saveZone(event) {
+    event.preventDefault();
+    setSaving(true);
+    setError("");
+    try {
+      await requestJson(`/api/manager/floors/${zoneFloorId}/zones${editingZone ? `/${editingZone.id}` : ""}`, {
+        method: editingZone ? "PATCH" : "POST", body: JSON.stringify({ name: zoneName.trim() }),
+      });
+      setForm("");
+      setNotice(editingZone ? "Zone updated." : "Zone added. Assign tables to it when adding or editing a table.");
+      await load();
+    } catch (reason) { setError(reason.message); }
+    finally { setSaving(false); }
+  }
+  async function removeZone(zone) {
+    setSaving(true);
+    setError("");
+    try {
+      await requestJson(`/api/manager/floors/${zone.floor_id}/zones/${zone.id}`, { method: "DELETE" });
+      if (zoneFilter === zone.id) setZoneFilter("all");
+      setPendingConfirmation(null);
+      await load();
+      return true;
+    } catch (reason) { setError(reason.message); return false; }
+    finally { setSaving(false); }
   }
   async function removeTable() {
     if (!editingTable) return false;
@@ -300,7 +361,8 @@ export default function ManagerFloorsPage() {
       await requestJson(`/api/manager/floors/${floor.id}`, {
         method: "DELETE",
       });
-      if (floorFilter === floor.id) setFloorFilter("all");
+      if (floorFilter === floor.id) selectFloor("all");
+      else if ((floor.zones || []).some((zone) => zone.id === zoneFilter)) setZoneFilter("all");
       await load();
       setPendingConfirmation(null);
       return true;
@@ -310,16 +372,12 @@ export default function ManagerFloorsPage() {
     }
   }
 
+  if (loading && !floors.length && !error) return <ManagerLayout title="Tables & floors"><div className="manager-dashboard-content"><LoadingState variant="calendar" label="Loading floors and tables…" /></div></ManagerLayout>;
+
   return (
     <ManagerLayout title="Table Layout & Live Seating">
       <div className="manager-dashboard-content table-layout-page">
-        <div className="manager-breadcrumb">
-          <span>Home</span>
-          <span>/</span>
-          <span>Tables</span>
-          <span>/</span>
-          <strong>Layout & Live Seating</strong>
-        </div>
+
         {notice && (
           <div className="table-layout-notice" role="status">
             {notice}
@@ -330,6 +388,7 @@ export default function ManagerFloorsPage() {
             {error}
           </div>
         )}
+        <RefreshIndicator active={loading && Boolean(floors.length)} />
         <section
           className="table-stat-grid"
           aria-label="Table availability summary"
@@ -360,7 +419,7 @@ export default function ManagerFloorsPage() {
               type="search"
               value={tableQuery}
               onChange={(event) => setTableQuery(event.target.value)}
-              placeholder="Search table or floor"
+              placeholder="Search table, floor or zone"
               aria-label="Search tables"
             />
           </label>
@@ -432,7 +491,7 @@ export default function ManagerFloorsPage() {
             <span className="sr-only">Choose floor</span>
             <select
               value={floorFilter}
-              onChange={(e) => setFloorFilter(e.target.value)}
+              onChange={(e) => selectFloor(e.target.value)}
             >
               <option value="all">All Floors</option>
               {floors.map((floor) => (
@@ -443,13 +502,23 @@ export default function ManagerFloorsPage() {
             </select>
             <ChevronDown size={15} />
           </label>
+          <label className="table-layout-select">
+            <span className="sr-only">Choose zone</span>
+            <select value={zoneFilter} onChange={(event) => setZoneFilter(event.target.value)}>
+              <option value="all">All Zones</option>
+              <option value="general">General seating</option>
+              {scopedFloors.flatMap((floor) => (floor.zones || []).map((zone) =>
+                <option key={zone.id} value={zone.id}>{floorFilter === "all" ? `${floor.floor_name || floor.name} · ` : ""}{zone.name}</option>))}
+            </select>
+            <ChevronDown size={15} />
+          </label>
           <button
             type="button"
             className="table-layout-primary"
             onClick={openAddTable}
             disabled={!floors.length}
           >
-            <PlusCircle size={17} /> Add Floor Table
+            <PlusCircle size={17} /> Add Table
           </button>
         </div>
 
@@ -476,7 +545,7 @@ export default function ManagerFloorsPage() {
               <h2 id="add-floor-title">
                 {editingFloor ? "Edit Floor" : "Add Floor"}
               </h2>
-              <p>Set up a numbered floor or dining zone for your tables.</p>
+              <p>Set up a floor, then divide its seating into optional zones.</p>
               <label>
                 Floor Number <b>*</b>
                 <input
@@ -490,7 +559,7 @@ export default function ManagerFloorsPage() {
                 />
               </label>
               <label>
-                Floor / Zone Name <b>*</b>
+                Floor Name <b>*</b>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -508,6 +577,12 @@ export default function ManagerFloorsPage() {
                   maxLength={1000}
                 />
               </label>
+              {!editingFloor && <label>
+                Zones (optional)
+                <textarea rows={3} value={floorZoneNames} onChange={(event) => setFloorZoneNames(event.target.value)}
+                  placeholder={"Main Dining\nWindow Seats\nTerrace"} maxLength={5000} />
+                <small>Enter one zone per line. You can add more zones later.</small>
+              </label>}
               {error && (
                 <div className="table-layout-error" role="alert">
                   {error}
@@ -537,6 +612,20 @@ export default function ManagerFloorsPage() {
             </CustomForm>
           </div>
         )}
+
+        {form === "zone" && <div className="table-modal-backdrop" onMouseDown={(event) => {
+          if (event.target === event.currentTarget && !saving) setForm("");
+        }}>
+          <CustomForm className="table-entry-modal floor-zone-modal" role="dialog" aria-modal="true" aria-labelledby="zone-title" onSubmit={saveZone}>
+            <button className="table-modal-close" type="button" aria-label="Close" disabled={saving} onClick={() => setForm("")}><X size={20} /></button>
+            <h2 id="zone-title">{editingZone ? "Edit Zone" : "Add Zone"}</h2>
+            <p>{floors.find((floor) => floor.id === zoneFloorId)?.floor_name || "Selected floor"} · Keep tables organised by seating area.</p>
+            <label>Zone Name <b>*</b><input autoFocus required maxLength={100} value={zoneName} onChange={(event) => setZoneName(event.target.value)} placeholder="e.g. Window Seats" /></label>
+            {error && <p role="alert" className="table-layout-error">{error}</p>}
+            <footer><button className="table-modal-secondary" type="button" disabled={saving} onClick={() => setForm("")}>Cancel</button>
+              <button className="table-layout-primary" type="submit" disabled={saving}>{saving ? "Saving…" : editingZone ? "Save Changes" : "Add Zone"}</button></footer>
+          </CustomForm>
+        </div>}
 
         {form === "table" && (
           <div
@@ -634,10 +723,10 @@ export default function ManagerFloorsPage() {
                       value={gridCol} onChange={(event) => setGridCol(event.target.value)} />
                   </label>
                   <label>
-                    Floor / Zone <b>*</b>
+                    Floor <b>*</b>
                     <select
                       value={floorId}
-                      onChange={(e) => setFloorId(e.target.value)}
+                      onChange={(e) => { setFloorId(e.target.value); setZoneId(""); }}
                       required
                     >
                       {floors.map((floor) => (
@@ -646,6 +735,14 @@ export default function ManagerFloorsPage() {
                         </option>
                       ))}
                     </select>
+                  </label>
+                  <label>
+                    Zone (optional)
+                    <select value={zoneId} onChange={(event) => setZoneId(event.target.value)}>
+                      <option value="">General seating</option>
+                      {(floors.find((floor) => floor.id === floorId)?.zones || []).map((zone) => <option key={zone.id} value={zone.id}>{zone.name}</option>)}
+                    </select>
+                    <small>Zones belong to the selected floor.</small>
                   </label>
                   <label>
                     Table Status <b>*</b>
@@ -761,37 +858,8 @@ export default function ManagerFloorsPage() {
                 const tables = visibleTables(floor);
                 return (
                   <div className="live-floor" key={floor.id}>
-                    <h3>{floor.floor_name || floor.name}</h3>
-                    {tables.length ? (
-                      <div className="live-floor-map">
-                        {tables.map((table, index) => (
-                          <button
-                            type="button"
-                            title="Edit table"
-                            onClick={() => openEditTable(table, floor)}
-                            className={`live-table ${table.status} ${table.table_type || (index % 4 === 0 ? "round" : index % 4 === 1 ? "square" : "rectangle")}`}
-                            key={table.id}
-                          >
-                            <strong>
-                              {table.table_number.toUpperCase().startsWith("T-")
-                                ? table.table_number
-                                : `T-${table.table_number}`}
-                            </strong>
-                            <span>
-                              {table.capacity ?? table.seats}{" "}
-                              {(table.capacity ?? table.seats) === 1
-                                ? "Seat"
-                                : "Seats"}
-                            </span>
-                            <small>{statusLabels[table.status]}</small>
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="table-layout-empty">
-                        No tables match this view.
-                      </p>
-                    )}
+                    <ManagerFloorZones floor={floor} tables={tables} zoneFilter={zoneFilter} onAddZone={openZone}
+                      onEditZone={openZone} onDeleteZone={(zone) => setPendingConfirmation({ type: "zone", item: zone })} onEditTable={openEditTable} />
                   </div>
                 );
               })}
@@ -799,7 +867,7 @@ export default function ManagerFloorsPage() {
             {floors.length === 0 && (
               <div className="table-layout-empty">
                 <p>No floors yet. Add a floor to start mapping tables.</p>
-                <button type="button" onClick={() => setForm("floor")}>
+                <button type="button" onClick={openAddFloor}>
                   Add your first floor
                 </button>
               </div>
@@ -836,7 +904,7 @@ export default function ManagerFloorsPage() {
                   <button
                     type="button"
                     className="floor-selection-main"
-                    onClick={() => setFloorFilter(floor.id)}
+                    onClick={() => selectFloor(floor.id)}
                   >
                     <strong>
                       {floor.floor_number}. {floor.floor_name || floor.name}
@@ -844,7 +912,7 @@ export default function ManagerFloorsPage() {
                     <span className={free ? "available" : "maintenance"}>
                       {free ? `${free} Available` : "No Availability"}
                     </span>
-                    <small>{floor.tables.length} tables</small>
+                    <small>{floor.tables.length} tables · {floor.zones?.length || 0} zones</small>
                   </button>
                   <div className="floor-row-actions">
                     <button
@@ -879,9 +947,9 @@ export default function ManagerFloorsPage() {
       </div>
       {pendingConfirmation && (
         <ConfirmActionDialog
-          action="deactivate"
+          action={pendingConfirmation.type === "zone" ? "delete" : "deactivate"}
           resourceType={
-            pendingConfirmation.type === "table" ? "dining table" : "floor"
+            pendingConfirmation.type === "table" ? "dining table" : pendingConfirmation.type === "zone" ? "zone" : "floor"
           }
           resourceName={
             pendingConfirmation.type === "table"
@@ -892,12 +960,12 @@ export default function ManagerFloorsPage() {
           title={
             pendingConfirmation.type === "table"
               ? "Deactivate this table?"
-              : "Deactivate this floor?"
+              : pendingConfirmation.type === "zone" ? "Delete this zone?" : "Deactivate this floor?"
           }
           description={
             pendingConfirmation.type === "table"
               ? "This table will be removed from new reservations. Existing reservations and table history will be preserved. You can reactivate it by editing its status."
-              : "This floor will be hidden from active floor lists. Floor records and reservation history will be preserved."
+              : pendingConfirmation.type === "zone" ? "Only empty zones can be deleted. Move assigned tables to another zone or general seating first." : "This floor will be hidden from active floor lists. Floor records and reservation history will be preserved."
           }
           busy={saving}
           onCancel={() => {
@@ -906,7 +974,7 @@ export default function ManagerFloorsPage() {
           onConfirm={() =>
             pendingConfirmation.type === "table"
               ? removeTable()
-              : deactivateFloor(pendingConfirmation.item)
+              : pendingConfirmation.type === "zone" ? removeZone(pendingConfirmation.item) : deactivateFloor(pendingConfirmation.item)
           }
         />
       )}

@@ -19,7 +19,9 @@
     "test:admin-settings": "node --test src/lib/customerSettings.test.js src/lib/adminSettings.render.test.js src/lib/adminDashboard.test.js src/lib/localDate.test.js",
     "test:password-change": "node --test src/lib/passwordChange.test.js src/lib/passwordChange.render.test.js src/lib/passwordChange.realtime.test.js",
     "test:customer-ai": "node --test src/lib/customerAi.test.js src/lib/customerAi.render.test.js src/lib/customerAi.lifecycle.test.js",
-    "test:manager-ai": "node --test src/lib/managerAi.render.test.js src/lib/managerAi.lifecycle.test.js"
+    "test:manager-ai": "node --test src/lib/managerAi.render.test.js src/lib/managerAi.lifecycle.test.js",
+    "test:ui": "node --test src/lib/uiExperience.test.js",
+    "test:ledger": "node --test src/lib/managerLedger.test.js src/lib/managerDashboard.test.js"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.14.0",

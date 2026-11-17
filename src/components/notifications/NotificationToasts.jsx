@@ -7,22 +7,24 @@ import { createNotificationDelivery } from "../../lib/notificationDelivery.js";
 import { notificationTags, notificationsApi } from "../../state/notificationsApi.js";
 import { clearToasts, dismissToast, enqueueToast } from "../../state/notificationToasts.js";
 import "../../assets/css/notifications.css";
+import useAnimatedDismiss from "../../hooks/useAnimatedDismiss.js";
 
 const TOAST_DURATION = 7000;
 
 function NotificationToast({ item, onDismiss }) {
+  const { closing, dismiss } = useAnimatedDismiss(() => onDismiss(item.id));
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
 
   useEffect(() => {
     if (hovered || focused) return;
-    const timer = window.setTimeout(() => onDismiss(item.id), TOAST_DURATION);
+    const timer = window.setTimeout(dismiss, TOAST_DURATION);
     return () => window.clearTimeout(timer);
   }, [focused, hovered, item.id, onDismiss]);
 
   return (
     <div
-      className="db-notification-toast"
+      className={`db-notification-toast${closing ? " is-closing" : ""}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -38,7 +40,7 @@ function NotificationToast({ item, onDismiss }) {
         aria-label="Dismiss notification toast"
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        onClick={() => onDismiss(item.id)}
+        onClick={dismiss}
       >
         <X size={18} aria-hidden="true" />
       </button>

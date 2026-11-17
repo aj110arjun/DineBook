@@ -1,3 +1,6 @@
+import PageTransition from "../ui/PageTransition.jsx";
+import { PortalPage, usePortalShell } from "../ui/PortalShell.jsx";
+import PortalBreadcrumb from "../PortalBreadcrumb.jsx";
 import useNavigationDisclosure from "../../hooks/useNavigationDisclosure.js";
 import {
   CalendarDays,
@@ -64,7 +67,7 @@ const navigationGroups = [
   },
 ];
 
-export default function ManagerLayout({ children, title = "Dashboard" }) {
+export function ManagerFrame({ children, title = "Dashboard" }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -191,4 +194,10 @@ export default function ManagerLayout({ children, title = "Dashboard" }) {
       </section>
     </main>
   );
+}
+
+export default function ManagerLayout(props) {
+  const shell = usePortalShell();
+  if (shell) return <PortalPage {...props} />;
+  return <ManagerFrame title={props.title}><PageTransition><PortalBreadcrumb entityLabel={props.breadcrumbLabel} />{props.children}</PageTransition></ManagerFrame>;
 }

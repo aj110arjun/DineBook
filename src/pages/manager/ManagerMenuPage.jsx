@@ -1,3 +1,5 @@
+import useLoadingPhase from "../../hooks/useLoadingPhase.js";
+import LoadingState, { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -15,7 +17,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import ImageUploadField from "../../components/manager/ImageUploadField.jsx";
 import ImageCropDialog from "../../components/manager/ImageCropDialog.jsx";
-import PortalBreadcrumb from "../../components/PortalBreadcrumb.jsx";
 import Notice from "../../components/auth/Notice.jsx";
 import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
 import { requestJson } from "../../lib/authApi.js";
@@ -597,6 +598,8 @@ export default function ManagerMenuPage() {
       setLoading(false);
     }
   }, []);
+  const { initialLoading, refreshing } = useLoadingPhase(loading, categories.length, error);
+
   useEffect(() => {
     loadMenu();
   }, [loadMenu]);
@@ -721,20 +724,9 @@ export default function ManagerMenuPage() {
   }
 
   return (
-    <ManagerLayout title="Menu Management">
+    <ManagerLayout breadcrumbLabel={selectedFood?.name} title="Menu Management">
       <div className="manager-dashboard-content">
-        <PortalBreadcrumb
-          home={{ label: "Home", to: "/manager/dashboard" }}
-          items={
-            foodId
-              ? [
-                  { label: "Menu", to: "/manager/menu" },
-                  { label: selectedFood?.name || "Food item" },
-                ]
-              : [{ label: "Menu" }]
-          }
-          className="manager-breadcrumb"
-        />
+
         <div className="manager-heading flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2>
@@ -777,10 +769,9 @@ export default function ManagerMenuPage() {
         {foodId ? (
           <>
             <Notice message={error} />
-            {loading ? (
-              <p className="py-12 text-center text-sm text-stone-500">
-                Loading dish…
-              </p>
+            {refreshing && <RefreshIndicator active />}
+        {initialLoading ? (
+              <LoadingState variant="detail" label="Loading dish…" />
             ) : !selectedFood ? (
               <section className="manager-menu-item-detail">
                 <p>This menu item could not be found.</p>
@@ -941,10 +932,9 @@ export default function ManagerMenuPage() {
             </header>
             <div className="p-4 sm:p-6">
               <Notice message={error} />
-              {loading ? (
-                <p className="py-12 text-center text-sm text-stone-500">
-                  Loading menu…
-                </p>
+              {refreshing && <RefreshIndicator active />}
+        {initialLoading ? (
+                <LoadingState variant="menu" label="Loading menu…" />
               ) : categories.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-stone-200 px-5 py-14 text-center">
                   <Utensils className="mx-auto text-stone-300" size={26} />

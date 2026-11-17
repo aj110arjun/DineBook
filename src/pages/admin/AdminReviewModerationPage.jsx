@@ -1,3 +1,5 @@
+import useLoadingPhase from "../../hooks/useLoadingPhase.js";
+import LoadingState, { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDateTime } from "../../lib/localDate.js";
 import { confirmAction } from "../../lib/confirmDialog.js";
@@ -53,6 +55,8 @@ export default function AdminReviewModerationPage() {
     refresh: 0,
     reasons: {},
   }));
+
+  const { initialLoading, refreshing } = useLoadingPhase(loading, data.items.length, error);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -214,7 +218,9 @@ export default function AdminReviewModerationPage() {
             {error || actionError}
           </p>
         )}
-        {!loading && !error && data.items.map((row) => {
+        {initialLoading && <LoadingState variant="list" label="Loading flagged reviews…" />}
+        {refreshing && <RefreshIndicator active />}
+        {!initialLoading && !error && data.items.map((row) => {
           const { review } = row;
           const contentParts = splitReviewAtReportedQuotes(
             review.content,
@@ -307,7 +313,7 @@ export default function AdminReviewModerationPage() {
             </article>
           );
         })}
-        {!loading && !error && (
+        {!initialLoading && !error && (
           data.total > 0 ? (
             <Pagination
               page={query.page}

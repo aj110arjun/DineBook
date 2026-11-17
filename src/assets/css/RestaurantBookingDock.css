@@ -1,5 +1,5 @@
 .restaurant-details-home {
-  padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(var(--restaurant-booking-dock-height, 88px) + 40px + env(safe-area-inset-bottom, 0px));
 }
 
 body:has(.restaurant-booking-dock) .theme-toggle {

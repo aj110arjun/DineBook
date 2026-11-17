@@ -8,6 +8,7 @@ import CustomerAiWidget from "../src/components/customer/CustomerAiWidget.jsx";
 import "../src/assets/css/index.css";
 import "../src/assets/css/styles.css";
 import "../src/assets/css/design-system.css";
+import "../src/assets/css/ui-experience.css";
 import "../src/assets/css/layout-refresh.css";
 import "../src/assets/css/ux-improvements.css";
 

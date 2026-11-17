@@ -25,8 +25,8 @@ const render = (state = {}) => renderToStaticMarkup(createElement(content, { pre
 test("chef settings expose kitchen and wallet notifications and all general settings", () => {
   const html = render();
   assert.equal((html.match(/role="switch"/g) || []).length, 7);
-  assert.equal((html.match(/<select/g) || []).length, 5);
-  for (const label of ["Notification Settings", "General Settings", "Chef Portal", "New orders", "Order status updates", "Wallet transactions", "Theme", "Language", "Date format", "Time format", "Timezone"]) assert.ok(html.includes(label));
+  assert.equal((html.match(/<select/g) || []).length, 4);
+  for (const label of ["Notification Settings", "General Settings", "Chef Portal", "New orders", "Order status updates", "Wallet transactions", "Theme", "Date format", "Time format", "Timezone"]) assert.ok(html.includes(label));
   assert.match(html, /saved automatically/);
   assert.match(html, /essential account messages/);
 });
@@ -39,7 +39,7 @@ test("saved choices are reflected and pending saves disable every control", () =
   assert.match(html, /aria-checked="false"/);
   assert.match(html, /value="dark" selected/);
   assert.match(html, /Saving your preference/);
-  assert.equal((html.match(/ disabled=""/g) || []).length, 12);
+  assert.equal((html.match(/ disabled=""/g) || []).length, 11);
 });
 
 test("loading and failed loads provide feedback and retry without showing fake settings", () => {

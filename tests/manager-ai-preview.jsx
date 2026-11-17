@@ -7,6 +7,7 @@ import ManagerAiWidget from "../src/components/manager/ManagerAiWidget.jsx";
 import "../src/assets/css/index.css";
 import "../src/assets/css/styles.css";
 import "../src/assets/css/design-system.css";
+import "../src/assets/css/ui-experience.css";
 import "../src/assets/css/layout-refresh.css";
 
 let mode = "ready";

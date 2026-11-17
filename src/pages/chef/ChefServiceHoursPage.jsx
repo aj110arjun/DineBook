@@ -1,3 +1,5 @@
+import useLoadingPhase from "../../hooks/useLoadingPhase.js";
+import LoadingState, { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate, formatWallTime } from "../../lib/localDate.js";
 import { useEffect } from "react";
@@ -16,6 +18,8 @@ export default function ChefServiceHoursPage() {
     loading: true,
     error: "",
   }));
+  const { initialLoading, refreshing } = useLoadingPhase(loading, Boolean(data), error);
+
   useEffect(() => {
     let active = true;
     const load = () =>
@@ -39,8 +43,9 @@ export default function ChefServiceHoursPage() {
     <ChefLayout title="Service Hours">
       <section className="chef-service-hours">
         {error && <p role="alert">{error}</p>}
-        {loading ? (
-          <p role="status">Loading service schedule…</p>
+        {refreshing && <RefreshIndicator active />}
+        {initialLoading ? (
+          <LoadingState variant="form" label="Loading service schedule…" />
         ) : (
           data && (
             <>

@@ -1,3 +1,5 @@
+import useLoadingPhase from "../../hooks/useLoadingPhase.js";
+import LoadingState, { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDateTime } from "../../lib/localDate.js";
 import { useEffect } from "react";
@@ -69,6 +71,8 @@ export default function ManagerPaymentsPage() {
   }));
   const pageSize = 10;
 
+  const { initialLoading, refreshing } = useLoadingPhase(loading, Boolean(transactionId ? transaction : transactions.length), error);
+
   useEffect(() => {
     let active = true;
     setLoading(true);
@@ -131,10 +135,9 @@ export default function ManagerPaymentsPage() {
           <Link className="manager-payments-back" to="/manager/payments">
             <ArrowLeft size={16} /> Payments & transactions
           </Link>
-          {loading ? (
-            <div className="manager-payment-state" role="status">
-              Loading transaction details…
-            </div>
+          {refreshing && !transactionId && <RefreshIndicator active />}
+        {(transactionId ? loading : initialLoading) ? (
+            <LoadingState variant="detail" label="Loading transaction details…" />
           ) : error ? (
             <div className="manager-payment-state is-error" role="alert">
               {error}
@@ -429,10 +432,9 @@ export default function ManagerPaymentsPage() {
             {error}
           </div>
         )}
-        {loading ? (
-          <div className="manager-payment-state" role="status">
-            Loading transactions…
-          </div>
+        {refreshing && !transactionId && <RefreshIndicator active />}
+        {initialLoading ? (
+          <LoadingState variant="table" columns={9} label="Loading transactions…" />
         ) : transactions.length ? (
           <div className="manager-payments-table-wrap">
             <table className="manager-payments-table">
