@@ -1,4 +1,5 @@
 .chef-live-dashboard { display: grid; gap: 22px; color: var(--color-text-primary); min-width: 0; }
+.kitchen-dashboard-skeleton { display: grid; gap: 22px; min-width: 0; }
 .chef-live-dashboard h2, .chef-live-dashboard h3, .chef-live-dashboard p { margin: 0; }
 .kitchen-welcome, .kitchen-row, .kitchen-analytics-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .kitchen-welcome h2 { font-size: clamp(22px, 3vw, 30px); }

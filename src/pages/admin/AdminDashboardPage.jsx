@@ -1,4 +1,6 @@
 import LoadingState, { ErrorState, RefreshIndicator } from "../../components/ui/LoadingState.jsx";
+import { Skeleton, SkeletonRows } from "../../components/ui/Skeleton.jsx";
+import { SkeletonBars, SkeletonCopy, SkeletonDonut, SkeletonPairs } from "../../components/ui/DashboardSkeleton.jsx";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Activity, CalendarDays, CheckCheck, CircleDollarSign, Clock3, CreditCard, RefreshCw, ShoppingBasket, Store, Users, Wallet } from "lucide-react";
@@ -64,26 +66,83 @@ export default function AdminDashboardPage() {
       {overview.data && <AdminDashboardContent data={overview.data} slot="top" />}
       <RestaurantSection key={`restaurants:${params.start_date}:${params.end_date}`} params={params} refreshTick={refreshTick} />
       {overview.data && <AdminDashboardContent data={overview.data} slot="bottom" />}
+      {overview.loading && !overview.data && !overview.error && <div aria-hidden="true"><AdminDashboardSkeleton slot="bottom" /></div>}
       <ActivitySection key={`activity:${params.start_date}:${params.end_date}`} params={params} refreshTick={refreshTick} />
       {overview.data && <details className="admin-analytics-methodology"><summary>How these numbers are calculated</summary><ul>{overview.data.notes.map((note) => <li key={note}>{note}</li>)}</ul></details>}
     </>}
   </div></AdminLayout>;
 }
 
-export function AdminDashboardFeedback({ loading, error, data, refresh }) {
+export function AdminDashboardFeedback({ loading, error, data, refresh, section = "overview" }) {
   if (error) return <ErrorState message={error} onRetry={refresh} />;
   if (!loading) return null;
-  return data ? <RefreshIndicator active /> : <LoadingState variant="dashboard" label="Loading platform analytics…" />;
+  if (data) return <RefreshIndicator active />;
+  const labels = { overview: "Loading platform analytics…", restaurants: "Loading restaurant performance…", activity: "Loading platform activity…" };
+  return <LoadingState label={labels[section]}>{section === "overview" ? <AdminDashboardSkeleton slot="top" /> : section === "restaurants" ? <RestaurantSkeleton /> : <ActivitySkeleton />}</LoadingState>;
 }
 
-function Metric({ title, value, icon: Icon, currency = false, detail }) {
-  return <article className="admin-kpi"><div><span>{title}</span><Icon size={17} aria-hidden="true" /></div><strong>{currency ? money(value) : number(value)}</strong><small>{detail}</small></article>;
+function Metric({ title, value, icon: Icon, currency = false, detail, loading = false }) {
+  return <article className="admin-kpi"><div><span>{loading ? <SkeletonCopy>{title}</SkeletonCopy> : title}</span>{loading ? <Skeleton width={17} height={17} /> : <Icon size={17} aria-hidden="true" />}</div><strong>{loading ? <Skeleton width="60%" height="1.25em" /> : currency ? money(value) : number(value)}</strong><small>{loading ? <SkeletonCopy>{detail}</SkeletonCopy> : detail}</small></article>;
 }
 function Panel({ title, note, children, action, className = "" }) {
   return <section className={`admin-analytics-panel ${className}`}><header><div><h3>{title}</h3>{note && <p>{note}</p>}</div>{action}</header>{children}</section>;
 }
 function Totals({ items }) {
   return <dl className="admin-inline-totals">{items.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>;
+}
+
+function TrendSkeleton({ series = 2 }) {
+  return <div className="admin-trend">
+    <div className="admin-trend-toggles">{Array.from({ length: series }, (_, index) => <Skeleton key={index} width={110} height={30} />)}</div>
+    <div className="admin-trend-scroll"><svg viewBox="0 0 750 216" className="admin-trend-svg" aria-hidden="true">
+      {[20, 100, 180].map((y) => <line key={y} x1="80" x2="720" y1={y} y2={y} className="manager-chart-gridline" />)}
+      <polyline points="80,150 170,125 260,140 350,75 440,95 530,50 620,70 720,25" fill="none" stroke="var(--color-border)" strokeWidth="8" strokeLinejoin="round" />
+    </svg></div><div className="admin-chart-data"><SkeletonCopy>View chart data</SkeletonCopy></div>
+  </div>;
+}
+
+export function AdminDashboardSkeleton({ slot = "all" }) {
+  const panel = (title, note, children) => <Panel title={<SkeletonCopy>{title}</SkeletonCopy>} note={<SkeletonCopy>{note}</SkeletonCopy>}>{children}</Panel>;
+  const totals = (count) => <div className="admin-inline-totals"><SkeletonPairs count={count} /></div>;
+  return <div className="admin-dashboard-skeleton">
+    {slot !== "bottom" && <>
+      <div className="admin-section-heading"><h3><SkeletonCopy>Platform accounts</SkeletonCopy></h3><SkeletonCopy>Current · all time</SkeletonCopy></div>
+      <div className="admin-kpi-grid admin-account-kpis">{[
+        ["Registered restaurants", "All restaurant records"], ["Active restaurants", "Approved for the platform"], ["Pending approvals", "Restaurants awaiting review"], ["Registered customers", "Customer accounts"], ["Restaurant managers", "Manager accounts"],
+      ].map(([title, detail]) => <Metric key={title} title={title} detail={detail} loading />)}</div>
+      <div className="admin-section-heading"><h3><SkeletonCopy>Performance in this period</SkeletonCopy></h3><SkeletonCopy>Selected date range</SkeletonCopy></div>
+      <div className="admin-kpi-grid admin-period-kpis">{[
+        ["Reservations", "Scheduled visit dates"], ["Total orders", "Created in this period"], ["Completed orders", "Current completed status"], ["Gross transaction value", "Recorded customer purchases"], ["Commission earned", "Generated less reversals"], ["Outstanding commission", "Balance at period end · includes earlier dues"],
+      ].map(([title, detail]) => <Metric key={title} title={title} detail={detail} loading />)}</div>
+      <div className="admin-analytics-grid">
+        {panel("Transactions & refunds", "Confirmed payment events · includes direct restaurant collections", <><TrendSkeleton />{totals(3)}</>)}
+        {panel("Platform commission", "Earned and collected separately · internal wallet settlements", <><TrendSkeleton series={3} />{totals(6)}</>)}
+        {panel("Orders", "Creation-date cohort · current fulfillment status", <>{totals(6)}<SkeletonBars series={3} /><SkeletonDonut detailed /></>)}
+        {panel("Reservations", "Scheduled-date cohort · current reservation status", <>{totals(5)}<SkeletonBars series={3} /><SkeletonDonut detailed /></>)}
+      </div>
+    </>}
+    {slot !== "top" && <>
+      <div className="admin-analytics-grid">
+        {panel("Customer growth", "Registered customers · registration dates in the selected period", <>{totals(4)}<TrendSkeleton series={1} /><p className="admin-analytics-note"><SkeletonCopy>Customer activity in the selected period</SkeletonCopy></p></>)}
+        {panel("Payments overview", "Confirmed captures by event date · pending / failed by source creation date", <><div className="admin-payment-channels">{Array.from({ length: 3 }, (_, index) => <div key={index}><span><SkeletonCopy>Confirmed payment channel</SkeletonCopy><small><SkeletonCopy>Recorded payments</SkeletonCopy></small></span><Skeleton width={65} height={18} /></div>)}</div>{totals(4)}<p className="admin-analytics-note"><SkeletonCopy>Direct collections stay with restaurants.</SkeletonCopy></p></>)}
+      </div>
+      {panel("Wallet balances & settlement", "Current ledger balances · all time · separate from sales and bank receipts", <><div className="admin-wallet-grid">{Array.from({ length: 4 }, (_, index) => <div key={index}><SkeletonCopy>Account wallets</SkeletonCopy><Skeleton height={26} width="70%" /><small><SkeletonCopy>Accounts · net balance</SkeletonCopy></small><small><SkeletonCopy>Positive balances</SkeletonCopy></small></div>)}</div>{totals(4)}<p className="admin-analytics-note"><SkeletonCopy>Wallet balance and settlement information</SkeletonCopy></p></>)}
+    </>}
+  </div>;
+}
+
+function SkeletonPagination() {
+  return <div className="admin-analytics-pagination"><Skeleton width={125} height={14} /><div><Skeleton width={75} height={38} /><Skeleton width={60} height={38} /></div></div>;
+}
+function RestaurantSkeleton() {
+  return <>
+    <div className="admin-restaurant-comparison"><div><SkeletonCopy>Compare this ranking by</SkeletonCopy><Skeleton height={38} /></div><div className="admin-restaurant-bars">{Array.from({ length: 4 }, (_, index) => <div key={index}><Skeleton height={12} /><Skeleton height={6} /><Skeleton height={12} /></div>)}</div></div>
+    <div className="admin-table-scroll"><table><caption><SkeletonCopy>Restaurant performance in the selected period</SkeletonCopy></caption><thead><SkeletonRows rows={1} columns={9} /></thead><tbody><SkeletonRows rows={5} columns={9} /></tbody></table></div>
+    <SkeletonPagination />
+  </>;
+}
+function ActivitySkeleton() {
+  return <><ol className="admin-real-activity">{Array.from({ length: 4 }, (_, index) => <li key={index}><Skeleton className="admin-event-icon" /><div><small><SkeletonCopy>Activity type</SkeletonCopy></small><strong><SkeletonCopy>Recorded platform event</SkeletonCopy></strong><span><SkeletonCopy>Related account or restaurant</SkeletonCopy></span></div><Skeleton width={105} height={14} /></li>)}</ol><SkeletonPagination /></>;
 }
 
 export function AdminDashboardContent({ data, slot = "all" }) {
@@ -170,7 +229,7 @@ function RestaurantSection({ params, refreshTick }) {
       <label>Sort by<select value={sort} onChange={(e) => { setSort(e.target.value); setPage(1); }}>{[["gross", "Transaction value"], ["orders", "Orders"], ["completed", "Completed orders"], ["reservations", "Reservations"], ["commission", "Commission"], ["outstanding", "Outstanding"], ["name", "Name"]].map(([key, value]) => <option key={key} value={key}>{value}</option>)}</select></label>
       <label>Direction<select value={direction} onChange={(e) => { setDirection(e.target.value); setPage(1); }}><option value="desc">Descending</option><option value="asc">Ascending</option></select></label>
     </form>
-    <AdminDashboardFeedback {...resource} />
+    <AdminDashboardFeedback {...resource} section="restaurants" />
     {resource.data && <RestaurantContent data={resource.data} pageChange={setPage} chartBy={chartBy} setChartBy={setChartBy} />}
   </Panel>;
 }
@@ -192,7 +251,7 @@ function ActivitySection({ params, refreshTick }) {
   const [page, setPage] = useState(1);
   const resource = useAdminDashboard("activity", { ...params, page, page_size: 8 });
   useEffect(() => { if (refreshTick) resource.refresh(); }, [refreshTick]);
-  return <Panel title="Recent platform activity" note="Recorded events in the selected period · newest first"><AdminDashboardFeedback {...resource} />{resource.data && <ActivityContent data={resource.data} pageChange={setPage} />}</Panel>;
+  return <Panel title="Recent platform activity" note="Recorded events in the selected period · newest first"><AdminDashboardFeedback {...resource} section="activity" />{resource.data && <ActivityContent data={resource.data} pageChange={setPage} />}</Panel>;
 }
 export function ActivityContent({ data, pageChange = () => {} }) {
   return <>{data.items.length ? <ol className="admin-real-activity">{data.items.map((item) => <li key={item.id}><span className="admin-event-icon"><Activity size={16} aria-hidden="true" /></span><div><small>{statusLabel(item.event_type)}</small><strong>{item.title}</strong>{item.subject && <span>{item.subject}</span>}</div><time dateTime={item.occurred_at}>{formatInstant(item.occurred_at)}</time></li>)}</ol> : <p className="admin-analytics-empty">No recorded platform events in this period.</p>}<Pagination {...data} onPage={pageChange} /></>;

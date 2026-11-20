@@ -1,21 +1,26 @@
 import LoadingState from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
-import { formatLocalDate, formatWallTime, shiftLocalMonth } from "../../lib/localDate.js";
+import { formatWallTime, shiftLocalMonth } from "../../lib/localDate.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   AlertTriangle,
   CalendarDays,
-  ChevronLeft,
   ChevronRight,
   Clock3,
+  CreditCard,
+  Mail,
+  MapPin,
+  Table2,
+  Utensils,
   QrCode,
   Upload,
   Search,
   Users,
   X,
 } from "lucide-react";
+import ReservationDateStrip from "../../components/manager/ReservationDateStrip.jsx";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
 import { requestJson } from "../../lib/authApi.js";
@@ -50,7 +55,6 @@ const activityStatusLabels = {
   READY: "Ready to serve",
   SERVED: "Served",
 };
-const weekDays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 const dayKey = (date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 const orderTone = (status) =>
@@ -76,6 +80,7 @@ const orderStatusLabel = (status) =>
     REJECTED: "Declined by kitchen",
   })[status] || "Order update pending";
 const shortTime = formatWallTime;
+const isActiveReservation = (item) => ["CONFIRMED", "PENDING_PAYMENT", "SEATED"].includes(item.status);
 const consolidateDeskOrderLines = (lines) => {
   const quantities = new Map();
   lines.forEach(({ variant_id, quantity }) => {
@@ -220,7 +225,7 @@ export default function ManagerReservationsPage() {
     return () => window.clearTimeout(timer);
   }, [query]);
 
-  const loadCalendarSummary = useCallback(async () => {
+  const loadCalendarSummary = useCallback(async (signal) => {
     const startDate = dayKey(
       new Date(month.getFullYear(), month.getMonth(), 1),
     );
@@ -230,11 +235,12 @@ export default function ManagerReservationsPage() {
     try {
       const result = await requestJson(
         `/api/manager/calendar/summary?${new URLSearchParams({ start_date: startDate, end_date: endDate })}`,
+        { signal },
       );
       setCalendarDays(result.days || {});
       setTables(result.tables || []);
     } catch (e) {
-      setError(e.message);
+      if (!signal?.aborted) setError(e.message);
     }
   }, [month]);
 
@@ -269,7 +275,14 @@ export default function ManagerReservationsPage() {
         }
         setError("");
       } catch (e) {
-        if (!signal?.aborted) setError(e.message);
+        if (!signal?.aborted) {
+          setItems([]);
+          setOrders([]);
+          setReservationTotal(0);
+          setReservationGuestCount(0);
+          setOrdersTotal(0);
+          setError(e.message);
+        }
       } finally {
         if (!signal?.aborted) setCalendarLoading(false);
       }
@@ -307,7 +320,9 @@ export default function ManagerReservationsPage() {
     },
   });
   useEffect(() => {
-    loadCalendarSummary();
+    const controller = new AbortController();
+    loadCalendarSummary(controller.signal);
+    return () => controller.abort();
   }, [loadCalendarSummary]);
   const calendarFilterKey = JSON.stringify([
     selectedDate,
@@ -361,26 +376,13 @@ export default function ManagerReservationsPage() {
   const selectedItems = items;
   const selectedStandaloneOrders = orders;
   const selectedDateOrderCount = calendarDays[selectedDate]?.orders_count || 0;
-  const visibleSelectedItems = selectedItems;
+  const visibleSelectedItems = [
+    ...selectedItems.filter(isActiveReservation),
+    ...selectedItems.filter((item) => !isActiveReservation(item)),
+  ];
   const dayGuestCount = reservationGuestCount;
 
-  const monthCells = useMemo(() => {
-    const first = new Date(month.getFullYear(), month.getMonth(), 1);
-    const start = new Date(
-      first.getFullYear(),
-      first.getMonth(),
-      1 - first.getDay(),
-    );
-    return Array.from(
-      { length: 42 },
-      (_, index) =>
-        new Date(
-          start.getFullYear(),
-          start.getMonth(),
-          start.getDate() + index,
-        ),
-    );
-  }, [month]);
+  const selectedReservation = items.find((item) => item.id === expandedId) || visibleSelectedItems[0] || null;
 
   async function update(item, action, reason = "") {
     setBusyId(item.id);
@@ -507,7 +509,7 @@ export default function ManagerReservationsPage() {
     }
   }
 
-  async function loadReservationOrders(reservationId) {
+  const loadReservationOrders = useCallback(async (reservationId) => {
     setOrdersLoadingId(reservationId);
     try {
       const data = await requestJson(
@@ -520,9 +522,9 @@ export default function ManagerReservationsPage() {
     } catch (e) {
       setError(e.message);
     } finally {
-      setOrdersLoadingId("");
+      setOrdersLoadingId((current) => current === reservationId ? "" : current);
     }
-  }
+  }, []);
 
   async function removeManagerAddedOrder() {
     if (!pendingOrderRemoval) return;
@@ -648,22 +650,349 @@ export default function ManagerReservationsPage() {
         ),
     );
 
-  function moveMonth(direction) {
-    setMonthTime((current) => shiftLocalMonth(current, direction));
+  useEffect(() => {
+    if (selectedReservation?.id && !calendarLoading) loadReservationOrders(selectedReservation.id);
+  }, [selectedReservation?.id, calendarLoading, loadReservationOrders]);
+
+  function selectDate(value) {
+    setSelectedDate(value);
+    setExpandedId("");
+    if (isReservationIdLookup) setQuery("");
   }
 
-  const monthTitle = new Intl.DateTimeFormat("en", {
-    month: "long",
-    year: "numeric",
-  }).format(month);
-  const selectedLabel = formatLocalDate(selectedDate);
+  function selectReservation(id) {
+    setExpandedId(id);
+    if (window.matchMedia("(max-width: 760px)").matches) {
+      document.getElementById("reservation-detail-panel")?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+        block: "start",
+      });
+    }
+  }
+
+  function moveMonth(direction) {
+    const nextMonth = shiftLocalMonth(monthTime, direction);
+    setMonthTime(nextMonth);
+    const today = new Date();
+    selectDate(dayKey(shiftLocalMonth(today) === nextMonth ? today : new Date(nextMonth)));
+  }
+
+  function goToToday() {
+    setMonthTime(shiftLocalMonth(Date.now()));
+    selectDate(dayKey(new Date()));
+  }
+
+  const selectedLabel = new Date(`${selectedDate}T12:00:00`).toLocaleDateString("en", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+  const initials = (name) => name?.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "G";
+
+  function renderReservationDetails(item) {
+    return <>
+      <header className="reservation-detail-heading">
+        <span className="reservation-eyebrow">RESERVATION DETAILS</span>
+        <span>#{item.id.slice(0, 8).toUpperCase()}</span>
+      </header>
+      <div className="reservation-detail-hero">
+        <div className="reservation-detail-tags">
+          <span className={`reservation-status ${statusClass[item.status] || "pending"}`}>{statusLabel[item.status] || item.status}</span>
+          <span>{item.fulfillment_type === "PREORDER" ? "Table + preorder" : "Table reservation"}</span>
+        </div>
+        <div className="reservation-detail-guest">
+          <div className="reservation-avatar">{initials(item.customer_name)}</div>
+          <div><h3>{item.customer_name}</h3><p><Mail size={14} />{item.customer_email || "Restaurant guest"}</p></div>
+        </div>
+        <div className="reservation-detail-hero-footer"><CalendarDays size={15} /><span>{selectedLabel}</span><span className="reservation-detail-duration">{shortTime(item.start_time)} – {shortTime(item.end_time)}</span></div>
+      </div>
+      <section className="reservation-information">
+        <h3>Visit information</h3>
+        <div className="reservation-information-grid">
+          <div><CalendarDays size={20} /><span><small>Reservation date</small><strong>{selectedLabel}</strong></span></div>
+          <div><Clock3 size={20} /><span><small>Arrival & departure</small><strong>{shortTime(item.start_time)} – {shortTime(item.end_time)}</strong></span></div>
+          <div><Users size={20} /><span><small>Party size</small><strong>{item.number_of_guests} {item.number_of_guests === 1 ? "guest" : "guests"}</strong></span></div>
+          <div><Table2 size={20} /><span><small>Reserved tables</small><strong>{item.tables.map((table) => `Table ${table.table_number}`).join(", ") || "Not assigned"}</strong></span></div>
+          <div><MapPin size={20} /><span><small>Floor / zone</small><strong>{[...new Set(item.tables.map((table) => table.floor_name).filter(Boolean))].join(", ") || "Not specified"}</strong></span></div>
+          <div><Utensils size={20} /><span><small>Booking type</small><strong>{item.fulfillment_type === "PREORDER" ? "Preorder included" : "Table only"}</strong></span></div>
+        </div>
+      </section>
+      <section className="reservation-information reservation-payment-information">
+        <h3>Payment information</h3>
+        <div className="reservation-information-grid">
+          <div><CreditCard size={20} /><span><small>Reservation fee · {item.payment_status?.replaceAll("_", " ").toLowerCase()}</small><strong>₹{Number(item.fee_amount || 0).toFixed(2)}</strong></span></div>
+          {item.fulfillment_type === "PREORDER" && <div><Utensils size={20} /><span><small>Preorder · {item.preorder_payment_status === "PAID" ? "paid" : "due at desk"}</small><strong>₹{Number(item.preorder_total || 0).toFixed(2)}</strong></span></div>}
+          {Number(item.preorder_due_at_desk || 0) > 0 && <div><CreditCard size={20} /><span><small>Food due at desk</small><strong>₹{Number(item.preorder_due_at_desk).toFixed(2)}</strong></span></div>}
+        </div>
+        {Number(item.extra_fee_amount) > 0 && <p className="reservation-extra-fee">Includes ₹{Number(item.extra_fee_amount).toFixed(2)} for {item.extra_hours} extra hour{item.extra_hours === 1 ? "" : "s"}.</p>}
+      </section>
+      <div className="reservation-expanded-details">
+        {item.preorder_items?.length > 0 && <section className="reservation-preorder-summary"><h3>Preordered items</h3><ul>{item.preorder_items.map((food) => <li key={food.variant_id}><span>{food.quantity} × {food.food_name} · {food.variant_name}</span><strong>₹{Number(food.line_total).toFixed(2)}</strong></li>)}</ul></section>}
+        <div className="reservation-linked-orders">
+          <strong>Food orders for this visit</strong>
+          {ordersLoadingId === item.id ? (
+            <span>Loading orders…</span>
+          ) : (reservationOrders[item.id] || []).length ===
+            0 ? (
+            <span>
+              No food orders have been sent to the kitchen
+              yet.
+            </span>
+          ) : (
+            (reservationOrders[item.id] || []).map(
+              (order) => {
+                const managerAdded =
+                  order.customer_note ===
+                  "Manager desk order";
+                const canRemove =
+                  managerAdded &&
+                  [
+                    "PLACED",
+                    "ACCEPTED",
+                    "PREPARING",
+                  ].includes(order.status);
+                return (
+                  <article
+                    className="reservation-linked-order"
+                    key={order.id}
+                  >
+                    <div className="reservation-linked-order-content">
+                      <div className="reservation-linked-order-heading">
+                        <strong>
+                          {managerAdded
+                            ? "Added by manager"
+                            : order.is_preorder
+                              ? "Customer preorder"
+                              : "Reservation order"}
+                        </strong>
+                        <span
+                          className={`reservation-order-progress ${orderTone(order.status)}`}
+                        >
+                          {orderStatusLabel(order.status)}
+                        </span>
+                      </div>
+                      <ul>
+                        {(order.items || []).map(
+                          (food, index) => (
+                            <li
+                              key={`${food.variant_id || food.food_name}-${index}`}
+                            >
+                              <span>
+                                {food.quantity} ×{" "}
+                                {food.food_name}
+                                {food.variant_name
+                                  ? ` · ${food.variant_name}`
+                                  : ""}
+                              </span>
+                              <strong>
+                                ₹
+                                {Number(
+                                  food.line_total,
+                                ).toFixed(2)}
+                              </strong>
+                            </li>
+                          ),
+                        )}
+                      </ul>
+                      <div className="reservation-linked-order-footer">
+                        <strong>
+                          Order total · ₹
+                          {Number(order.total).toFixed(2)}
+                        </strong>
+                        <span>
+                          {order.payment_status === "PAID"
+                            ? "Paid"
+                            : "Payment due at desk"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="reservation-linked-order-actions">
+                      <Link
+                        to={`/manager/orders/${order.id}`}
+                      >
+                        View details
+                      </Link>
+                      {canRemove && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setPendingOrderRemoval({
+                              order,
+                              reservationId: item.id,
+                            })
+                          }
+                        >
+                          Remove order
+                        </button>
+                      )}
+                    </div>
+                  </article>
+                );
+              },
+            )
+          )}
+          {item.status === "SEATED" &&
+            ordersLoadingId !== item.id &&
+            reservationOrders[item.id] &&
+            (reservationOrders[item.id].some(
+              (order) => order.status === "PLACED",
+            ) ||
+              (item.fulfillment_type === "PREORDER" &&
+                item.preorder_items?.length > 0 &&
+                !["REFUNDED", "CANCELLED"].includes(
+                  item.preorder_payment_status,
+                ) &&
+                !reservationOrders[item.id].some(
+                  (order) => order.is_preorder,
+                ))) && (
+              <button
+                type="button"
+                disabled={busyId === item.id}
+                onClick={() =>
+                  updateReservationStatus(item, "SEATED")
+                }
+              >
+                {busyId === item.id
+                  ? "Sending…"
+                  : "Send waiting orders to kitchen"}
+              </button>
+            )}
+          {item.status === "SEATED" &&
+            !(
+              item.fulfillment_type === "PREORDER" &&
+              item.preorder_items?.length > 0
+            ) && (
+              <button
+                type="button"
+                onClick={() => openDeskOrder(item)}
+              >
+                Order at desk
+              </button>
+            )}
+        </div>
+
+        <div className="reservation-special-request">
+          {item.special_request && (
+            <p>{item.special_request}</p>
+          )}
+
+        </div>
+        {["PENDING_PAYMENT", "CONFIRMED", "SEATED"].includes(item.status) && <section className="reservation-visit-actions"><h3>Manage reservation</h3><div>
+          {["CONFIRMED", "SEATED"].includes(item.status) &&
+            item.preorder_payment_method === "PAY_AT_DESK" &&
+            item.preorder_payment_status === "PENDING" && (
+              <button
+                type="button"
+                disabled={busyId === item.id}
+                onClick={() => confirmPreorderPayment(item)}
+              >
+                {busyId === item.id
+                  ? "Recording…"
+                  : "Record preorder payment received"}
+              </button>
+            )}
+          {item.status === "PENDING_PAYMENT" && (
+            <div>
+              {item.fulfillment_type !== "PREORDER" && (
+                <button
+                  type="button"
+                  disabled={busyId === item.id}
+                  onClick={() => openFoodEditor(item)}
+                >
+                  Add food before confirming
+                </button>
+              )}
+              <button
+                type="button"
+                disabled={busyId === item.id}
+                onClick={() =>
+                  setPendingAction({
+                    item,
+                    action: "confirm-payment",
+                  })
+                }
+              >
+                Record payment & confirm
+              </button>
+              <button
+                type="button"
+                disabled={busyId === item.id}
+                onClick={() => {
+                  setActionReason("");
+                  setPendingAction({ item, action: "cancel" });
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+          {item.status === "PENDING_PAYMENT" && (
+            <button
+              type="button"
+              disabled={busyId === item.id}
+              onClick={() => {
+                setActionReason("");
+                setPendingAction({ item, action: "reject" });
+              }}
+            >
+              Reject reservation
+            </button>
+          )}
+          {item.status === "CONFIRMED" && (
+            <>
+              <button
+                type="button"
+                disabled={busyId === item.id}
+                onClick={() =>
+                  updateReservationStatus(item, "SEATED")
+                }
+              >
+                {busyId === item.id
+                  ? "Updating…"
+                  : "Mark guest seated"}
+              </button>
+              <button
+                type="button"
+                disabled={busyId === item.id}
+                onClick={() => {
+                  setActionReason("");
+                  setPendingAction({ item, action: "no-show" });
+                }}
+              >
+                Mark no-show
+              </button>
+              <button
+                type="button"
+                disabled={busyId === item.id}
+                onClick={() => {
+                  setActionReason("");
+                  setPendingAction({ item, action: "cancel" });
+                }}
+              >
+                Cancel reservation
+              </button>
+            </>
+          )}
+          {item.status === "SEATED" && (
+            <button
+              type="button"
+              disabled={busyId === item.id}
+              onClick={() =>
+                updateReservationStatus(item, "COMPLETED")
+              }
+            >
+              {busyId === item.id
+                ? "Updating…"
+                : "Complete dining session"}
+            </button>
+          )}
+        </div></section>}
+      </div>
+    </>;
+  }
 
   return (
     <ManagerLayout title="Reservation Management">
       <main className="manager-dashboard-content reservation-page">
         <div className="reservation-page-heading">
           <div>
-
+            <span className="reservation-eyebrow">YOUR RESTAURANT, IN SYNC</span>
             <h2>Reservations &amp; Orders</h2>
             <p>
               View reservations, preorders, and kitchen orders together by date
@@ -677,70 +1006,72 @@ export default function ManagerReservationsPage() {
                     : "Connecting to live updates…"}
             </p>
           </div>
-          <div className="reservation-toolbar">
-            <button
-              type="button"
-              className="reservation-scan-trigger"
-              onClick={() => {
-                setScannerOpen(true);
-                setScanError("");
-              }}
-            >
-              <QrCode size={16} /> Scan pass
-            </button>
-            <select
-              aria-label="Filter by table"
-              value={tableFilter}
-              onChange={(event) => setTableFilter(event.target.value)}
-            >
-              <option value="all">Filter by Table: All</option>
-              {tables.map((table) => (
-                <option key={table.id} value={table.id}>
-                  Table {table.table_number}
-                </option>
-              ))}
-            </select>
-            <select
-              aria-label="Filter by reservation or order status"
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value)}
-            >
-              <option value="all">All statuses</option>
-              {Object.entries(activityStatusLabels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-            <select
-              aria-label="Filter by party size"
-              value={guestFilter}
-              onChange={(event) => setGuestFilter(event.target.value)}
-            >
-              <option value="all">All party sizes</option>
-              {[1, 2, 3, 4, 5].map((count) => (
-                <option key={count} value={String(count)}>
-                  {count} guests
-                </option>
-              ))}
-              <option value="6+">6+ guests</option>
-            </select>
-            <select
-              aria-label="Sort reservations"
-              value={reservationSort}
-              onChange={(event) => setReservationSort(event.target.value)}
-            >
-              <option value="time">Time: earliest first</option>
-              <option value="guests">Party size: smallest first</option>
-            </select>
-            <div className="reservation-search">
-              <Search size={16} />
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search reservations, orders, guests, items…"
-              />
-            </div>
+        </div>
+
+        <div className="reservation-toolbar">
+          <button
+            type="button"
+            className="reservation-scan-trigger"
+            onClick={() => {
+              setScannerOpen(true);
+              setScanError("");
+            }}
+          >
+            <QrCode size={16} /> Scan pass
+          </button>
+          <select
+            aria-label="Filter by table"
+            value={tableFilter}
+            onChange={(event) => setTableFilter(event.target.value)}
+          >
+            <option value="all">Filter by Table: All</option>
+            {tables.map((table) => (
+              <option key={table.id} value={table.id}>
+                Table {table.table_number}
+              </option>
+            ))}
+          </select>
+          <select
+            aria-label="Filter by reservation or order status"
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+          >
+            <option value="all">All statuses</option>
+            {Object.entries(activityStatusLabels).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+          <select
+            aria-label="Filter by party size"
+            value={guestFilter}
+            onChange={(event) => setGuestFilter(event.target.value)}
+          >
+            <option value="all">All party sizes</option>
+            {[1, 2, 3, 4, 5].map((count) => (
+              <option key={count} value={String(count)}>
+                {count} guests
+              </option>
+            ))}
+            <option value="6+">6+ guests</option>
+          </select>
+          <select
+            aria-label="Sort reservations"
+            value={reservationSort}
+            onChange={(event) => setReservationSort(event.target.value)}
+          >
+            <option value="time">Time: earliest first</option>
+            <option value="guests">Party size: smallest first</option>
+          </select>
+          <div className="reservation-search">
+            <Search size={16} />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              aria-label="Search reservations, orders, guests, or items"
+              placeholder="Search guests, reservations, orders…"
+            />
           </div>
         </div>
 
@@ -754,133 +1085,27 @@ export default function ManagerReservationsPage() {
             {cancellationNotice}
           </p>
         )}
+        <ReservationDateStrip
+          month={month}
+          selectedDate={selectedDate}
+          calendarDays={calendarDays}
+          workingDays={workingDays}
+          onSelect={selectDate}
+          onMonthChange={moveMonth}
+          onToday={goToToday}
+        />
         <div className="reservation-workspace">
-          <div className="reservation-primary-column">
-            <section className="reservation-calendar-card">
-              <div className="reservation-legend">
-                <span>
-                  <i className="confirmed" />
-                  Confirmed
-                </span>
-                <span>
-                  <i className="pending" />
-                  Payment due
-                </span>
-                <span>
-                  <i className="cancelled" />
-                  Cancelled
-                </span>
-                <span>
-                  <i className="completed" />
-                  Completed
-                </span>
-              </div>
-              <div className="reservation-calendar-header">
-                <h3>{monthTitle}</h3>
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => moveMonth(-1)}
-                    aria-label="Previous month"
-                  >
-                    <ChevronLeft />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => moveMonth(1)}
-                    aria-label="Next month"
-                  >
-                    <ChevronRight />
-                  </button>
-                </div>
-              </div>
-              <div className="reservation-calendar-grid">
-                {weekDays.map((day) => (
-                  <div className="reservation-weekday" key={day}>
-                    {day}
-                  </div>
-                ))}
-                {monthCells.map((day) => {
-                  const key = dayKey(day);
-                  const daySummary = calendarDays[key] || {};
-                  const reservationCount = daySummary.reservations_count || 0;
-                  const orderCount = daySummary.orders_count || 0;
-                  const currentMonth = day.getMonth() === month.getMonth();
-                  const schedule = workingDays?.find(
-                    (entry) =>
-                      String(entry.day_of_week).toLowerCase() ===
-                      day
-                        .toLocaleDateString("en", { weekday: "long" })
-                        .toLowerCase(),
-                  );
-                  const workingDay =
-                    workingDays === null
-                      ? false
-                      : workingDays.length === 0 ||
-                        Boolean(
-                          schedule?.enabled &&
-                          schedule.open_time &&
-                          schedule.close_time,
-                        );
-                  const disabled =
-                    !currentMonth ||
-                    (!workingDay && reservationCount === 0 && orderCount === 0);
-                  const selected = key === selectedDate;
-                  return (
-                    <button
-                      type="button"
-                      key={key}
-                      onClick={() => setSelectedDate(key)}
-                      disabled={disabled}
-                      aria-label={`${formatLocalDate(day)}${workingDay ? "" : ", closed"}`}
-                      title={
-                        disabled
-                          ? currentMonth
-                            ? "Restaurant is closed"
-                            : "Outside the displayed month"
-                          : undefined
-                      }
-                      className={`reservation-calendar-day${currentMonth ? "" : " outside"}${disabled ? " disabled-date" : ""}${selected ? " selected" : ""}${key === dayKey(new Date()) ? " today" : ""}`}
-                    >
-                      <span className="reservation-day-number">
-                        {day.getDate()}
-                      </span>
-                      {reservationCount + orderCount > 0 && (
-                        <span className="reservation-day-count">
-                          {reservationCount + orderCount}
-                        </span>
-                      )}
-                      <span className="reservation-day-dots">
-                        {(daySummary.tones || []).map((tone) => (
-                          <i className={tone} key={tone} />
-                        ))}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-          </div>
-
           <aside className="reservation-list-column">
             <header className="reservation-list-summary">
-              <h3>
-                {isReservationIdLookup
-                  ? "Reservation ID lookup"
-                  : `Reservations & Orders – ${selectedLabel}`}
-              </h3>
-              <span className="booking-count">
-                {reservationTotal} {reservationTotal === 1 ? "Reservation" : "Reservations"}
-              </span>
-              <span className="booking-count">
-                {selectedDateOrderCount} {selectedDateOrderCount === 1 ? "Order" : "Orders"}
-              </span>
-              <span className="guest-count">{dayGuestCount} {dayGuestCount === 1 ? "Guest" : "Guests"}</span>
+              <div>
+                <span className="reservation-eyebrow">DAILY OVERVIEW</span>
+                <h3>{isReservationIdLookup ? "Reservation lookup" : "Reservations & orders"}</h3>
+                <p>{selectedLabel} · {dayGuestCount} {dayGuestCount === 1 ? "guest" : "guests"}</p>
+              </div>
+              <span className="reservation-activity-total" aria-label={`${reservationTotal} reservations and ${selectedDateOrderCount} orders`}>{reservationTotal + selectedDateOrderCount}</span>
             </header>
             <div className="reservation-list-scroll">
-              {calendarLoading &&
-              selectedItems.length === 0 &&
-              selectedStandaloneOrders.length === 0 ? (
+              {calendarLoading ? (
                 <LoadingState variant="list" label="Loading this date…" />
               ) : selectedItems.length === 0 &&
                 selectedStandaloneOrders.length === 0 ? (
@@ -893,362 +1118,54 @@ export default function ManagerReservationsPage() {
                 </div>
               ) : (
                 <>
-                  {visibleSelectedItems.map((item) => (
-                    <article
-                      className={`reservation-guest-card${expandedId === item.id ? " expanded" : ""}`}
-                      key={item.id}
-                    >
-                      <div className="reservation-guest-top">
-                        <div className="reservation-avatar">
-                          {item.customer_name
-                            ?.split(/\s+/)
-                            .slice(0, 2)
-                            .map((part) => part[0])
-                            .join("")
-                            .toUpperCase()}
-                        </div>
-                        <div className="reservation-guest-name">
-                          <strong>{item.customer_name}</strong>
-                          <span>{item.customer_email || "Customer"}</span>
-                        </div>
-                        <button
-                          className="reservation-expand"
-                          type="button"
-                          aria-label="Show reservation details"
-                          onClick={() =>
-                            expandedId === item.id
-                              ? setExpandedId("")
-                              : (setExpandedId(item.id),
-                                loadReservationOrders(item.id))
-                          }
-                        >
-                          <ChevronRight size={17} />
-                        </button>
-                      </div>
-                      <div className="reservation-guest-meta">
-                        <span>
-                          <Clock3 size={14} />
-                          {shortTime(item.start_time)} –{" "}
-                          {shortTime(item.end_time)}
-                        </span>
-                        <span>
-                          <Users size={14} />
-                          {item.number_of_guests} Guests
-                        </span>
-                        <span>
-                          <CalendarDays size={14} />
-                          {item.tables
-                            .map((table) => `Table ${table.table_number}`)
-                            .join(", ")}
-                        </span>
-                        <span
-                          className={`reservation-status ${statusClass[item.status] || "pending"}`}
-                        >
-                          {statusLabel[item.status] || item.status}
-                        </span>
-                      </div>
-                      {expandedId === item.id && (
-                        <div className="reservation-expanded-details">
-                          <strong>
-                            Reservation ID · {item.id.slice(0, 8).toUpperCase()}
-                          </strong>
-                          <span>
-                            {item.tables
-                              .map(
-                                (table) =>
-                                  `${table.floor_name} · Table ${table.table_number}`,
-                              )
-                              .join(", ")}
-                          </span>
-                          <strong>
-                            Reservation fee ₹
-                            {Number(item.fee_amount).toFixed(2)} ·{" "}
-                            {item.payment_status}
-                          </strong>
-                          {Number(item.extra_fee_amount) > 0 && (
-                            <span>
-                              Includes ₹{Number(item.extra_fee_amount).toFixed(2)} for {item.extra_hours} extra hour{item.extra_hours === 1 ? "" : "s"}
-                            </span>
-                          )}
-                          <strong>
-                            {item.fulfillment_type === "PREORDER"
-                              ? `Preorder · ₹${Number(item.preorder_total || 0).toFixed(2)} · ${item.preorder_payment_status === "PAID" ? "Paid" : "Due at desk"}`
-                              : "Table reservation only"}
-                          </strong>
-                          {Number(item.preorder_due_at_desk || 0) > 0 && (
-                            <strong>
-                              Food due at desk · ₹
-                              {Number(item.preorder_due_at_desk).toFixed(2)}
-                            </strong>
-                          )}
-                          {item.preorder_items?.length > 0 && (
-                            <ul>
-                              {item.preorder_items.map((food) => (
-                                <li key={food.variant_id}>
-                                  {food.quantity} × {food.food_name} ·{" "}
-                                  {food.variant_name} — ₹
-                                  {Number(food.line_total).toFixed(2)}
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                          <div className="reservation-linked-orders">
-                            <strong>Food orders for this visit</strong>
-                            {ordersLoadingId === item.id ? (
-                              <span>Loading orders…</span>
-                            ) : (reservationOrders[item.id] || []).length ===
-                              0 ? (
-                              <span>
-                                No food orders have been sent to the kitchen
-                                yet.
-                              </span>
-                            ) : (
-                              (reservationOrders[item.id] || []).map(
-                                (order) => {
-                                  const managerAdded =
-                                    order.customer_note ===
-                                    "Manager desk order";
-                                  const canRemove =
-                                    managerAdded &&
-                                    [
-                                      "PLACED",
-                                      "ACCEPTED",
-                                      "PREPARING",
-                                    ].includes(order.status);
-                                  return (
-                                    <article
-                                      className="reservation-linked-order"
-                                      key={order.id}
-                                    >
-                                      <div className="reservation-linked-order-content">
-                                        <div className="reservation-linked-order-heading">
-                                          <strong>
-                                            {managerAdded
-                                              ? "Added by manager"
-                                              : order.is_preorder
-                                                ? "Customer preorder"
-                                                : "Reservation order"}
-                                          </strong>
-                                          <span
-                                            className={`reservation-order-progress ${orderTone(order.status)}`}
-                                          >
-                                            {orderStatusLabel(order.status)}
-                                          </span>
-                                        </div>
-                                        <ul>
-                                          {(order.items || []).map(
-                                            (food, index) => (
-                                              <li
-                                                key={`${food.variant_id || food.food_name}-${index}`}
-                                              >
-                                                <span>
-                                                  {food.quantity} ×{" "}
-                                                  {food.food_name}
-                                                  {food.variant_name
-                                                    ? ` · ${food.variant_name}`
-                                                    : ""}
-                                                </span>
-                                                <strong>
-                                                  ₹
-                                                  {Number(
-                                                    food.line_total,
-                                                  ).toFixed(2)}
-                                                </strong>
-                                              </li>
-                                            ),
-                                          )}
-                                        </ul>
-                                        <div className="reservation-linked-order-footer">
-                                          <strong>
-                                            Order total · ₹
-                                            {Number(order.total).toFixed(2)}
-                                          </strong>
-                                          <span>
-                                            {order.payment_status === "PAID"
-                                              ? "Paid"
-                                              : "Payment due at desk"}
-                                          </span>
-                                        </div>
-                                      </div>
-                                      <div className="reservation-linked-order-actions">
-                                        <Link
-                                          to={`/manager/orders/${order.id}`}
-                                        >
-                                          View details
-                                        </Link>
-                                        {canRemove && (
-                                          <button
-                                            type="button"
-                                            onClick={() =>
-                                              setPendingOrderRemoval({
-                                                order,
-                                                reservationId: item.id,
-                                              })
-                                            }
-                                          >
-                                            Remove order
-                                          </button>
-                                        )}
-                                      </div>
-                                    </article>
-                                  );
-                                },
-                              )
-                            )}
-                            {item.status === "SEATED" &&
-                              ordersLoadingId !== item.id &&
-                              reservationOrders[item.id] &&
-                              (reservationOrders[item.id].some(
-                                (order) => order.status === "PLACED",
-                              ) ||
-                                (item.fulfillment_type === "PREORDER" &&
-                                  item.preorder_items?.length > 0 &&
-                                  !["REFUNDED", "CANCELLED"].includes(
-                                    item.preorder_payment_status,
-                                  ) &&
-                                  !reservationOrders[item.id].some(
-                                    (order) => order.is_preorder,
-                                  ))) && (
-                                <button
-                                  type="button"
-                                  disabled={busyId === item.id}
-                                  onClick={() =>
-                                    updateReservationStatus(item, "SEATED")
-                                  }
-                                >
-                                  {busyId === item.id
-                                    ? "Sending…"
-                                    : "Send waiting orders to kitchen"}
-                                </button>
-                              )}
-                            {item.status === "SEATED" &&
-                              !(
-                                item.fulfillment_type === "PREORDER" &&
-                                item.preorder_items?.length > 0
-                              ) && (
-                                <button
-                                  type="button"
-                                  onClick={() => openDeskOrder(item)}
-                                >
-                                  Order at desk
-                                </button>
-                              )}
-                          </div>
-                          {item.special_request && (
-                            <p>{item.special_request}</p>
-                          )}
-                          {["CONFIRMED", "SEATED"].includes(item.status) &&
-                            item.preorder_payment_method === "PAY_AT_DESK" &&
-                            item.preorder_payment_status === "PENDING" && (
-                              <button
-                                type="button"
-                                disabled={busyId === item.id}
-                                onClick={() => confirmPreorderPayment(item)}
-                              >
-                                {busyId === item.id
-                                  ? "Recording…"
-                                  : "Record preorder payment received"}
-                              </button>
-                            )}
-                          {item.status === "PENDING_PAYMENT" && (
-                            <div>
-                              {item.fulfillment_type !== "PREORDER" && (
-                                <button
-                                  type="button"
-                                  disabled={busyId === item.id}
-                                  onClick={() => openFoodEditor(item)}
-                                >
-                                  Add food before confirming
-                                </button>
-                              )}
-                              <button
-                                type="button"
-                                disabled={busyId === item.id}
-                                onClick={() =>
-                                  setPendingAction({
-                                    item,
-                                    action: "confirm-payment",
-                                  })
-                                }
-                              >
-                                Record payment & confirm
-                              </button>
-                              <button
-                                type="button"
-                                disabled={busyId === item.id}
-                                onClick={() => {
-                                  setActionReason("");
-                                  setPendingAction({ item, action: "cancel" });
-                                }}
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          )}
-                          {item.status === "PENDING_PAYMENT" && (
-                            <button
-                              type="button"
-                              disabled={busyId === item.id}
-                              onClick={() => {
-                                setActionReason("");
-                                setPendingAction({ item, action: "reject" });
-                              }}
-                            >
-                              Reject reservation
-                            </button>
-                          )}
-                          {item.status === "CONFIRMED" && (
-                            <>
-                              <button
-                                type="button"
-                                disabled={busyId === item.id}
-                                onClick={() =>
-                                  updateReservationStatus(item, "SEATED")
-                                }
-                              >
-                                {busyId === item.id
-                                  ? "Updating…"
-                                  : "Mark guest seated"}
-                              </button>
-                              <button
-                                type="button"
-                                disabled={busyId === item.id}
-                                onClick={() => {
-                                  setActionReason("");
-                                  setPendingAction({ item, action: "no-show" });
-                                }}
-                              >
-                                Mark no-show
-                              </button>
-                              <button
-                                type="button"
-                                disabled={busyId === item.id}
-                                onClick={() => {
-                                  setActionReason("");
-                                  setPendingAction({ item, action: "cancel" });
-                                }}
-                              >
-                                Cancel reservation
-                              </button>
-                            </>
-                          )}
-                          {item.status === "SEATED" && (
-                            <button
-                              type="button"
-                              disabled={busyId === item.id}
-                              onClick={() =>
-                                updateReservationStatus(item, "COMPLETED")
-                              }
-                            >
-                              {busyId === item.id
-                                ? "Updating…"
-                                : "Complete dining session"}
-                            </button>
-                          )}
-                        </div>
+                  {visibleSelectedItems.map((item, index) => (
+                    <Fragment key={item.id}>
+                      {(index === 0 || isActiveReservation(item) !== isActiveReservation(visibleSelectedItems[index - 1])) && (
+                        <h4 className="reservation-list-group-title">
+                          <CalendarDays size={15} />
+                          {isActiveReservation(item) ? "Upcoming & active" : "Completed & cancelled"}
+                        </h4>
                       )}
-                    </article>
+                      <article
+                        className={`reservation-guest-card${selectedReservation?.id === item.id ? " expanded" : ""}`}
+                      >
+                        <button
+                          type="button"
+                          className="reservation-card-select"
+                          aria-label={`View reservation for ${item.customer_name}`}
+                          aria-pressed={selectedReservation?.id === item.id}
+                          aria-controls="reservation-detail-panel"
+                          onClick={() => selectReservation(item.id)}
+                        >
+                          <div className="reservation-card-tags">
+                            <span>#{item.id.slice(0, 8).toUpperCase()}</span>
+                            <span>{item.fulfillment_type === "PREORDER" ? "Preorder" : "Table booking"}</span>
+                          </div>
+                          <div className="reservation-guest-top">
+                            <span className="reservation-avatar">{initials(item.customer_name)}</span>
+                            <span className="reservation-guest-name">
+                              <strong>{item.customer_name}</strong>
+                              <span>{item.customer_email || "Restaurant guest"}</span>
+                            </span>
+                            <ChevronRight size={17} className="reservation-card-chevron" />
+                          </div>
+                          <div className="reservation-guest-meta">
+                            <span><Clock3 size={14} />{shortTime(item.start_time)}</span>
+                            <span><Users size={14} />{item.number_of_guests} {item.number_of_guests === 1 ? "guest" : "guests"}</span>
+                            <span><Table2 size={14} />{item.tables.map((table) => `Table ${table.table_number}`).join(", ")}</span>
+                          </div>
+                          <div className={`reservation-card-status ${statusClass[item.status] || "pending"}`}>
+                            <span>{statusLabel[item.status] || item.status}</span>
+                            <small>{selectedReservation?.id === item.id ? "Viewing details" : "View reservation"}</small>
+                          </div>
+                        </button>
+
+                      </article>
+                    </Fragment>
                   ))}
+                  {reservationTotal > 0 && (
+                    <Pagination page={listPage} pageSize={listPageSize} total={reservationTotal} onPageChange={setListPage} label="reservations" />
+                  )}
                   {selectedStandaloneOrders.length > 0 && (
                     <section className="reservation-standalone-orders">
                       <h4>Walk-in &amp; spot orders</h4>
@@ -1306,6 +1223,15 @@ export default function ManagerReservationsPage() {
               )}
             </div>
           </aside>
+          <section id="reservation-detail-panel" className="reservation-detail-panel" aria-label="Reservation details" aria-busy={calendarLoading}>
+            {calendarLoading ? <LoadingState variant="cards" label="Loading reservation details…" /> : selectedReservation ? renderReservationDetails(selectedReservation) : (
+              <div className="reservation-detail-empty">
+                <span><Utensils size={30} /></span>
+                <h3>Your service, at a glance</h3>
+                <p>{selectedStandaloneOrders.length ? "Open a walk-in or spot order to view its details, or choose another date for reservations." : "Choose a date with reservations to view guest information, payments, and food orders here."}</p>
+              </div>
+            )}
+          </section>
         </div>
       </main>
       {pendingAction &&

@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { requestJson } from "../../lib/authApi.js";
 import NotificationSession from "../notifications/NotificationSession.jsx";
 import { useAccountPreferences } from "../preferences/AccountPreferences.jsx";
-import ManagerAiWidget from "../manager/ManagerAiWidget.jsx";
 
 export default function ManagerProtectedRoute() {
   const preferences = useAccountPreferences();
@@ -77,8 +76,7 @@ export default function ManagerProtectedRoute() {
 
   return (
     <NotificationSession>
-      <Outlet />
-      <ManagerAiWidget key={managerId} userId={managerId} />
+      <Outlet context={{ managerId }} />
     </NotificationSession>
   );
 }

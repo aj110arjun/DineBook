@@ -4,7 +4,9 @@ import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import axios from "axios";
-import CustomerAiWidget from "../src/components/customer/CustomerAiWidget.jsx";
+import { Provider } from "react-redux";
+import { store } from "../src/state/store.js";
+import { CustomerHeaderFrame } from "../src/components/landing/CustomerHeader.jsx";
 import "../src/assets/css/index.css";
 import "../src/assets/css/styles.css";
 import "../src/assets/css/design-system.css";
@@ -17,6 +19,7 @@ const conversations = new Map(), answers = new Map();
 const now = () => new Date().toISOString();
 const notify = () => window.dispatchEvent(new Event("fixture-update"));
 axios.defaults.adapter = async (config) => {
+  if (config.url.includes("/notifications")) return { data: config.url.includes("count") ? { count: 0 } : { items: [], total: 0 }, status: 200, headers: {}, config };
   const path = config.url.split("/api/customer/ai")[1];
   let data;
   if (path === "/status") data = { ready: true, model_available: mode !== "offline", reply_timeout_seconds: mode === "timeout" ? 1 : 125, max_message_length: 1000, support_url: "" };
@@ -27,6 +30,7 @@ axios.defaults.adapter = async (config) => {
   else data = { conversation: conversations.get(path.split("/").at(-1)), messages: [] };
   return { data, status: 200, statusText: "OK", headers: {}, config };
 };
+window.EventSource = class { addEventListener() {} close() {} };
 window.fetch = async (url, options) => {
   if (!String(url).includes("/api/customer/ai/")) throw new Error("Fixture disallows external requests");
   requests++; notify();
@@ -52,10 +56,12 @@ function Preview() {
   const [customer, setCustomer] = useState(1);
   const [, update] = useState(0);
   React.useEffect(() => { const listener = () => update((value) => value + 1); window.addEventListener("fixture-update", listener); return () => window.removeEventListener("fixture-update", listener); }, []);
-  return <MemoryRouter><main style={{ padding: "28px", maxWidth: 760 }}>
+  const user = customer ? { id: `fixture-${customer}`, name: "Preview Customer", role: "CUSTOMER" } : null;
+  React.useLayoutEffect(() => { store.dispatch({ type: "customerSession/setCustomerSession", payload: user }); }, [customer]);
+  return <Provider store={store}><MemoryRouter initialEntries={["/customer"]}><div className="customer-home"><CustomerHeaderFrame user={user} /><main style={{ padding: "28px", maxWidth: 760 }}>
     <p style={{ color: "var(--color-primary)", fontSize: 12, letterSpacing: ".12em" }}>DINEBOOK · INTERACTION PREVIEW</p>
     <h1 style={{ fontFamily: "var(--font-display)", fontSize: 38, margin: "14px 0" }}>A little help for your next table.</h1>
-    <p style={{ marginBottom: 24, lineHeight: 1.8 }}>Isolated UI test with synthetic account data. Open the assistant in the bottom-right corner.</p>
+    <p style={{ marginBottom: 24, lineHeight: 1.8 }}>Isolated UI test with synthetic account data. Open Ask DineBook AI in the header.</p>
     <label>Service scenario <select aria-label="Service scenario" defaultValue="ready" onChange={(event) => { mode = event.target.value; update((value) => value + 1); }}>
       {["ready", "offline", "server", "network", "expired", "forbidden", "slow", "timeout"].map((value) => <option key={value}>{value}</option>)}
     </select></label>
@@ -63,6 +69,6 @@ function Preview() {
     <div style={{ margin: "20px 0", display: "flex", gap: 10 }}><button onClick={() => { conversations.clear(); answers.clear(); setCustomer((value) => value + 1); }}>New customer session</button><button onClick={() => setCustomer(0)}>Sign out preview</button></div>
     <p role="status">Reply requests: {requests} · Deleted chats: {deleted}</p>
     <p style={{ marginTop: 16 }}>Use the “malicious” message to check safe rendering. Use “slow” to check minimizing, drafts and Stop.</p>
-  </main><CustomerAiWidget key={customer} user={customer ? { id: `fixture-${customer}`, role: "CUSTOMER" } : null} /></MemoryRouter>;
+  </main></div></MemoryRouter></Provider>;
 }
 createRoot(document.getElementById("root")).render(<Preview />);

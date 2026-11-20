@@ -4,37 +4,17 @@
   position: fixed;
   right: 24px;
   bottom: calc(22px + env(safe-area-inset-bottom, 0px));
-  z-index: 130;
+  z-index: 2100;
   font-family: var(--font-sans);
   color: var(--color-text-primary);
 }
-/* Both controls remain available without competing for the same corner. */
-body:has(.customer-ai-widget) .theme-toggle { right: auto; left: 18px; }
 body:has(.restaurant-booking-dock) .customer-ai-widget { bottom: calc(var(--restaurant-booking-dock-height, 88px) + 36px + env(safe-area-inset-bottom, 0px)); }
 :root[data-theme="dark"] .customer-ai-widget { --ai-ink: #843c4d; }
 .customer-ai-widget button { cursor: pointer; }
-.customer-ai-launcher {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-  min-height: 52px;
-  padding: 0 20px;
-  border: 1px solid #ffffff24;
-  border-radius: 999px;
-  background: var(--ai-ink);
-  color: var(--ai-on-ink);
-  box-shadow: var(--shadow-popover);
-  font-size: 13px;
-  font-weight: 700;
-  transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
-}
-.customer-ai-launcher:hover { transform: translateY(-3px); background: #7b293d; box-shadow: 0 10px 30px #47111e35; }
-.customer-ai-launcher:active { transform: translateY(0) scale(.97); }
 .customer-ai-panel-slot {
   position: absolute;
   right: 0;
-  bottom: 68px;
+  bottom: 0;
   width: min(440px, calc(100vw - 48px));
   visibility: hidden;
   opacity: 0;
@@ -172,8 +152,6 @@ body:has(.restaurant-booking-dock) .customer-ai-panel { height: min(720px, calc(
 @keyframes customer-ai-message-in { from { transform: translateY(5px); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (max-width: 520px) {
   .customer-ai-widget { right: 12px; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
-  .customer-ai-launcher { min-height: 48px; padding: 0 16px; font-size: 12px; }
-  .customer-ai-widget[data-open="true"] .customer-ai-launcher { visibility: hidden; }
   .customer-ai-panel-slot { position: fixed; inset: calc(var(--customer-ai-viewport-top, 0px) + 8px) 8px auto; width: auto; height: calc(var(--customer-ai-viewport-height, 100dvh) - 16px); transform: translateY(12px); }
   .customer-ai-panel, body:has(.restaurant-booking-dock) .customer-ai-panel { width: 100%; height: 100%; border-radius: 18px; }
   .customer-ai-header { padding: 18px 14px; }
@@ -190,4 +168,53 @@ body:has(.restaurant-booking-dock) .customer-ai-panel { height: min(720px, calc(
 }
 @media (prefers-reduced-motion: reduce) {
   .customer-ai-widget *, .customer-ai-widget *::before, .customer-ai-widget *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* Launchers live in the navigation; panels are portalled outside its stacking contexts. */
+.customer-ai-header-entry { flex: 0 0 auto; }
+.customer-ai-header-launcher {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 13px;
+  border: 1px solid #ffffff45;
+  border-radius: 10px;
+  background: #ffffff12;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.customer-ai-header-launcher svg { color: #edd4a0; flex-shrink: 0; }
+.customer-ai-header-launcher:hover,
+.customer-ai-header-launcher[aria-expanded="true"] { background: #ffffff24; }
+.customer-ai-header-launcher:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+.customer-home .header-inner:has(.customer-ai-header-entry) { column-gap: clamp(12px, 2vw, 28px); }
+.manager-ai-sidebar-entry { margin-bottom: 6px; }
+.manager-sidebar .manager-ai-sidebar-launcher {
+  min-height: 44px;
+  border: 1px solid #ffffff30;
+  background: #ffffff0d;
+  color: #fff;
+  font-family: inherit;
+  cursor: pointer;
+}
+.manager-ai-sidebar-launcher > svg { color: #edd4a0; flex-shrink: 0; }
+.manager-sidebar .manager-ai-sidebar-launcher:hover,
+.manager-sidebar .manager-ai-sidebar-launcher[aria-expanded="true"] { background: #ffffff20; }
+@media (min-width: 521px) {
+  .customer-ai-widget--header { top: 90px; bottom: auto; }
+  .customer-ai-widget--header .customer-ai-panel-slot { top: 0; bottom: auto; transform-origin: top right; }
+}
+@media (max-width: 1280px) {
+  .customer-home .customer-ai-header-entry { margin-left: auto; }
+  .customer-home .mobile-menu-toggle { order: 1; }
+}
+@media (max-width: 480px) {
+  .customer-ai-header-launcher { width: 44px; padding: 0; }
+  .customer-ai-header-launcher > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
 }

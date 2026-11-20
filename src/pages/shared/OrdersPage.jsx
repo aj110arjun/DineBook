@@ -20,6 +20,7 @@ import {
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import ChefLayout from "../../components/chef/ChefLayout.jsx";
+import ChefOrdersWorkspace, { CHEF_ORDER_ACTIONS } from "../../components/chef/ChefOrdersWorkspace.jsx";
 import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
@@ -46,7 +47,7 @@ const transitions = {
     READY: ["COMPLETED"],
     SERVED: ["COMPLETED"],
   },
-  chef: { ACCEPTED: ["PREPARING"], PREPARING: ["READY"], READY: ["SERVED"] },
+  chef: CHEF_ORDER_ACTIONS,
 };
 const statusLabel = (status) =>
   status
@@ -124,6 +125,7 @@ export default function OrdersPage({ mode = "customer" }) {
   ]);
   const previousPageFilterKey = useRef(pageFilterKey);
   const loadSequence = useRef(0);
+  const currentChefLoad = useRef(null);
   const endpoint = {
     customer: "/api/customer/orders",
     manager: "/api/manager/orders",
@@ -214,6 +216,9 @@ export default function OrdersPage({ mode = "customer" }) {
       if (sequence === loadSequence.current) setLoading(false);
     }
   }
+  useEffect(() => {
+    currentChefLoad.current = load;
+  });
   const realtimeStatus = useRealtimeEvents({
     enabled: mode !== "admin",
     onEvent: load,
@@ -242,7 +247,8 @@ export default function OrdersPage({ mode = "customer" }) {
           desk_refund_confirmed: deskRefundConfirmed,
         }),
       });
-      await load();
+      // The chef can move to another date while the update is in flight.
+      await (mode === "chef" ? currentChefLoad.current() : load());
       if (status === "SERVED") setNotice("Order marked as served.");
       return true;
     } catch (reason) {
@@ -316,6 +322,52 @@ export default function OrdersPage({ mode = "customer" }) {
     } finally {
       setBusy("");
     }
+  }
+
+  if (mode === "chef") {
+    function selectDate(date) {
+      if (date === selectedOrderDate) return;
+      setOrders([]);
+      setTotal(0);
+      setTotalGuests(0);
+      setLoading(true);
+      setSelectedOrderDate(date);
+    }
+    function moveMonth(direction) {
+      const next = shiftLocalMonth(orderMonthTime, direction);
+      setOrderMonthTime(next);
+      selectDate(dateKey(next === shiftLocalMonth(Date.now()) ? new Date() : new Date(next)));
+    }
+    return <ChefLayout title="Kitchen Orders">
+      <ChefOrdersWorkspace
+        orders={orders}
+        total={total}
+        calendarOrderCounts={calendarOrderCounts}
+        month={orderMonth}
+        selectedDate={selectedOrderDate}
+        loading={loading}
+        initialLoading={initialLoading}
+        refreshing={refreshing}
+        error={error}
+        notice={notice}
+        busy={busy}
+        realtimeStatus={realtimeStatus}
+        filters={{ search, status: statusFilter, sort }}
+        pagination={{ page, pageSize, onPageChange: setPage }}
+        onSearch={setSearch}
+        onStatus={setStatusFilter}
+        onSort={setSort}
+        onResetFilters={() => { setSearch(""); setStatusFilter("ACTIVE"); setSort("oldest"); }}
+        onSelectDate={selectDate}
+        onMonthChange={moveMonth}
+        onToday={() => { setOrderMonthTime(shiftLocalMonth(Date.now())); selectDate(dateKey(new Date())); }}
+        onRefresh={load}
+        onUpdate={(orderId, status) => {
+          const order = orders.find((item) => item.id === orderId);
+          if (order && CHEF_ORDER_ACTIONS[order.status]?.includes(status)) updateOrder(orderId, status);
+        }}
+      />
+    </ChefLayout>;
   }
 
   const ordersContent = (
@@ -928,8 +980,6 @@ export default function OrdersPage({ mode = "customer" }) {
         {content}
       </AdminLayout>
     );
-  if (mode === "chef")
-    return <ChefLayout title="Kitchen Orders">{content}</ChefLayout>;
   return (
     <PageTransition as="main" className="customer-orders-shell">
       <CustomerHeader user={headerUser} />

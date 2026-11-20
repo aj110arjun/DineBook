@@ -21,10 +21,11 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useRef, useState } from "react";
+import { Link, useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
 import NotificationBell from "../notifications/NotificationBell.jsx";
+import ManagerAiWidget from "./ManagerAiWidget.jsx";
 
 const navigationGroups = [
   {
@@ -67,9 +68,12 @@ const navigationGroups = [
   },
 ];
 
-export function ManagerFrame({ children, title = "Dashboard" }) {
+export function ManagerFrame({ children, title = "Dashboard", managerId: providedManagerId }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const outlet = useOutletContext();
+  const managerId = providedManagerId || outlet?.managerId;
+  const menuButton = useRef(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   useNavigationDisclosure(
     sidebarOpen,
@@ -143,6 +147,12 @@ export function ManagerFrame({ children, title = "Dashboard" }) {
           ))}
         </nav>
         <div className="manager-sidebar-bottom">
+          {managerId && <ManagerAiWidget
+            key={managerId}
+            userId={managerId}
+            onOpen={() => setSidebarOpen(false)}
+            returnFocusRef={menuButton}
+          />}
           <Link
             to="/manager/profile"
             className={`manager-nav-item ${pathname === "/manager/profile" ? "active" : ""}`}
@@ -176,6 +186,7 @@ export function ManagerFrame({ children, title = "Dashboard" }) {
         <header className="manager-topbar db-portal-topbar">
           <div className="manager-topbar-left">
             <button
+              ref={menuButton}
               className="manager-menu-button"
               onClick={() => setSidebarOpen(true)}
               aria-label="Open menu"
@@ -199,5 +210,12 @@ export function ManagerFrame({ children, title = "Dashboard" }) {
 export default function ManagerLayout(props) {
   const shell = usePortalShell();
   if (shell) return <PortalPage {...props} />;
-  return <ManagerFrame title={props.title}><PageTransition><PortalBreadcrumb entityLabel={props.breadcrumbLabel} />{props.children}</PageTransition></ManagerFrame>;
+  return (
+    <ManagerFrame title={props.title}>
+      <PageTransition>
+        <PortalBreadcrumb entityLabel={props.breadcrumbLabel} />
+        {props.children}
+      </PageTransition>
+    </ManagerFrame>
+  );
 }

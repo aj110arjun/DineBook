@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ArrowDown, ArrowUpRight, Bot, CalendarDays, CircleHelp, CreditCard, Headphones, MessageCircle, Minus, Plus, RotateCcw, Search, Sparkles, Tag, Trash2, Utensils, Wallet, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import useCustomerAi from "../../hooks/useCustomerAi.js";
@@ -122,7 +123,7 @@ export function CustomerAiSignInPanel({ id, close, closeRef, preview = false }) 
   </section>;
 }
 
-export default function CustomerAiWidget({ user }) {
+export default function CustomerAiWidget({ user, onOpen }) {
   const [open, setOpen] = useState(false);
   const [opened, setOpened] = useState(false);
   const launcher = useRef(null);
@@ -153,14 +154,16 @@ export default function CustomerAiWidget({ user }) {
   }, [open]);
   // Account changes and sign-out remount this widget at the portal boundary.
   // Minimizing only hides the panel: drafts, scroll position and replies survive.
-  return <div ref={widget} className="customer-ai-widget" data-open={open}>
-    {opened && <div className="customer-ai-panel-slot" inert={open ? undefined : ""} aria-hidden={!open}>
+  return <div className="customer-ai-header-entry">
+    {opened && createPortal(<div ref={widget} className="customer-ai-widget customer-ai-widget--docked customer-ai-widget--header" data-open={open}>
+      <div className="customer-ai-panel-slot" inert={open ? undefined : ""} aria-hidden={!open}>
       {authenticated ? <CustomerAiPanel key={user.id} chat={chat} close={close} closeRef={closeButton} id={id} open={open} /> :
         <CustomerAiSignInPanel id={id} close={close} closeRef={closeButton} preview={user?.id === demoCustomer.id} />}
-    </div>}
-    <button ref={launcher} className="customer-ai-launcher" type="button" aria-label={open ? "Close customer support" : "Open customer support"}
+      </div>
+    </div>, document.body)}
+    <button ref={launcher} className="customer-ai-header-launcher" type="button" aria-label={open ? "Close customer support" : "Open customer support"}
       title="Ask DineBook AI" aria-haspopup="dialog" aria-expanded={open} aria-controls={opened ? id : undefined}
-      onClick={() => { if (open) close(); else { setOpened(true); setOpen(true); } }}>
+      onClick={() => { if (open) close(); else { onOpen?.(); setOpened(true); setOpen(true); } }}>
       {open ? <X size={21} aria-hidden="true" /> : <Sparkles size={21} aria-hidden="true" />}<span>{open ? "Close" : "Ask DineBook AI"}</span>
     </button>
   </div>;

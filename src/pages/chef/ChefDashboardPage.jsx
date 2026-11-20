@@ -1,4 +1,6 @@
 import LoadingState, { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
+import { Skeleton } from "../../components/ui/Skeleton.jsx";
+import { SkeletonBars, SkeletonCopy, SkeletonDonut } from "../../components/ui/DashboardSkeleton.jsx";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CalendarDays, CheckCheck, Clock3, Package, RefreshCw, ShoppingBag, Soup, Timer } from "lucide-react";
 import { useNavigate, useOutletContext } from "react-router-dom";
@@ -47,8 +49,8 @@ export default function ChefDashboardPage() {
       <div className="kitchen-welcome">
         <div><h2>Welcome, {chef?.name?.trim().split(/\s+/)[0] || "Chef"}</h2><p>Your kitchen, at a glance.</p></div>
         <div className="kitchen-refresh-info">
-          {data && <><time dateTime={data.today}>{formatLocalDate(data.today)}</time>
-            <span>Updated {kitchenInstant(data.as_of, data.timezone)} · {preferences?.active ? preferences.general.timezone || browserTimezone() : data.timezone}</span></>}
+          {data ? <><time dateTime={data.today}>{formatLocalDate(data.today)}</time>
+            <span>Updated {kitchenInstant(data.as_of, data.timezone)} · {preferences?.active ? preferences.general.timezone || browserTimezone() : data.timezone}</span></> : loading && <><SkeletonCopy>Current date</SkeletonCopy><SkeletonCopy>Updated just now · Asia/Kolkata</SkeletonCopy></>}
           <span className="kitchen-connection"><i className={connection === "connected" ? "connected" : ""} />{connection === "connected" ? "Live updates connected" : "Reconnecting live updates · refreshes every 30 seconds"}</span>
           <div className="kitchen-header-controls"><ThemeToggle /><button type="button" onClick={refresh} disabled={loading}><RefreshCw size={15} />{loading ? "Refreshing…" : "Refresh"}</button></div>
         </div>
@@ -63,8 +65,46 @@ export default function ChefDashboardPage() {
 
 export function KitchenFeedback({ loading, error, hasData, refresh }) {
   if (error) return <div className="kitchen-feedback error" role="alert"><p>{error}{hasData && " Showing the last successful update; order actions are paused until refresh succeeds."}</p><button type="button" onClick={refresh}>Try again</button></div>;
-  if (loading && !hasData) return <LoadingState variant="dashboard" label="Loading kitchen operations…" />;
+  if (loading && !hasData) return <LoadingState label="Loading kitchen operations…"><KitchenDashboardSkeleton /></LoadingState>;
   return <RefreshIndicator active={loading && hasData} />;
+}
+
+export function KitchenDashboardSkeleton() {
+  const panel = (title, subtitle, children, action) => <KitchenPanel title={<SkeletonCopy>{title}</SkeletonCopy>} subtitle={<SkeletonCopy>{subtitle}</SkeletonCopy>}
+    action={action && <div className="kitchen-filter"><SkeletonCopy>Order status</SkeletonCopy><Skeleton width={135} height={42} /></div>}>{children}</KitchenPanel>;
+  return <div className="kitchen-dashboard-skeleton">
+    <section className="kitchen-kpis">{[
+      ["Today's Orders", "Yesterday · Change in orders"], ["Pending Orders", "Live · Placed and accepted"], ["Preparing Orders", "Live · In preparation"],
+      ["Ready Orders", "Live · Ready for serving"], ["Completed Orders", "Completed today"], ["Average Preparation Time", "Measured orders ready today"],
+    ].map(([title, detail]) => <Kpi key={title} title={title} detail={detail} loading />)}</section>
+    <div className="kitchen-operations-grid">
+      {panel("Active Kitchen Orders", "Matching orders · Oldest first · All receipt dates", <>
+        <div className="kitchen-queue">{Array.from({ length: 2 }, (_, index) => <article className="kitchen-order-card" key={index}>
+          <div className="kitchen-row"><strong><SkeletonCopy>Order reference</SkeletonCopy></strong><Skeleton width={80} height={26} radius={20} /></div>
+          <p className="kitchen-table-label"><SkeletonCopy>Table · Restaurant floor</SkeletonCopy></p>
+          <div className="kitchen-row kitchen-order-time"><Skeleton width="54%" height={13} /><Skeleton width="30%" height={13} /></div>
+          <p className="kitchen-item-count"><SkeletonCopy>Order items</SkeletonCopy></p><ul className="kitchen-items"><li><SkeletonCopy>Quantity × Menu item</SkeletonCopy></li><li><SkeletonCopy>Quantity × Menu item</SkeletonCopy></li></ul>
+          <div className="kitchen-order-details"><SkeletonCopy>View order details</SkeletonCopy></div><div className="kitchen-order-actions"><Skeleton width={140} height={42} /></div>
+        </article>)}</div><Skeleton className="kitchen-all-orders" height={42} />
+      </>, true)}
+      {panel("Upcoming Reservations", "Next 8 confirmed arrivals · Kitchen planning", <div className="kitchen-reservations">{Array.from({ length: 3 }, (_, index) => <article key={index}>
+        <div className="kitchen-row"><strong><SkeletonCopy>Reservation reference</SkeletonCopy></strong><Skeleton width={80} height={26} radius={20} /></div>
+        <p><SkeletonCopy>Arrival date and time · Guests</SkeletonCopy></p><p><SkeletonCopy>Table · Restaurant floor</SkeletonCopy></p>
+      </article>)}</div>)}
+    </div>
+    <div className="kitchen-analytics-heading"><h2><SkeletonCopy>Kitchen analytics</SkeletonCopy></h2><div className="kitchen-filter"><SkeletonCopy>Order analytics date range</SkeletonCopy><Skeleton height={42} /></div></div>
+    <p className="kitchen-note"><SkeletonCopy>Selected date range · Orders grouped by receipt date. Live operations remain current.</SkeletonCopy></p>
+    <div className="kitchen-analytics-grid">
+      {panel("Order Volume", "Today · Hourly receipts", <SkeletonBars series={0} height={215} />)}
+      {panel("Order Status Distribution", "Current status of orders received in selected period", <SkeletonDonut />)}
+      {panel("Preparation Performance", "Last 7 days · Actual start to ready time", <><SkeletonBars series={0} height={220} /><p className="kitchen-note"><SkeletonCopy>Days use the order’s ready timestamp.</SkeletonCopy></p></>)}
+    </div>
+    <div className="kitchen-operations-grid">
+      {panel("Kitchen Performance Overview", "Today and the current queue", <><dl className="kitchen-performance">{["Orders prepared today", "Average preparation time", "Longest active order age", "Delayed orders"].map((title) => <div key={title}><dt><SkeletonCopy>{title}</SkeletonCopy></dt><dd><Skeleton width={55} height={18} /></dd></div>)}</dl><p className="kitchen-note"><SkeletonCopy>Preparation timestamps and kitchen delay threshold</SkeletonCopy></p></>)}
+      {panel("Recent Kitchen Activity", "Persisted order events · Latest recorded changes", <ol className="kitchen-activity">{Array.from({ length: 3 }, (_, index) => <li key={index}><Skeleton shape="circle" width={30} height={30} /><div><strong><SkeletonCopy>Latest kitchen event</SkeletonCopy></strong><span><SkeletonCopy>Order reference</SkeletonCopy></span><span><SkeletonCopy>Event date and time</SkeletonCopy></span></div></li>)}</ol>)}
+    </div>
+    <div className="kitchen-methodology"><SkeletonCopy>How kitchen metrics are calculated</SkeletonCopy></div>
+  </div>;
 }
 
 export function KitchenDashboardContent({ data, period = "today", setPeriod, status = "ACTIVE", setStatus, setPage, busy = new Set(), updateOrder, loading = false, navigate, actionsDisabled = false }) {
@@ -171,8 +211,8 @@ export function KitchenOrderCard({ order, timezone, age, busy, updateOrder, disa
 function KitchenPanel({ title, subtitle, action, children }) {
   return <section className="kitchen-panel"><div className="kitchen-panel-heading"><div><h3>{title}</h3>{subtitle && <p>{subtitle}</p>}</div>{action}</div>{children}</section>;
 }
-function Kpi({ title, value, detail, icon: Icon }) {
-  return <article className="kitchen-kpi"><div><h3>{title}</h3><Icon size={18} /></div><strong>{value}</strong><p>{detail}</p></article>;
+function Kpi({ title, value, detail, icon: Icon, loading = false }) {
+  return <article className="kitchen-kpi"><div><h3>{loading ? <SkeletonCopy>{title}</SkeletonCopy> : title}</h3>{loading ? <Skeleton width={18} height={18} /> : <Icon size={18} />}</div><strong>{loading ? <Skeleton width="40%" height="1lh" /> : value}</strong><p>{loading ? <SkeletonCopy>{detail}</SkeletonCopy> : detail}</p></article>;
 }
 function StatusBadge({ status }) {
   return <span className={`kitchen-status ${status.toLowerCase()}`}><i style={{ background: STATUS_COLORS[status] }} />{statusLabel(status)}</span>;
