@@ -1,0 +1,231 @@
+/* Shared horizontal date calendar for reservation and kitchen order workspaces. */
+.reservation-eyebrow {
+  color: var(--color-primary);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+.reservation-date-strip {
+  max-width: 1600px;
+  min-width: 0;
+  margin: 0 auto 24px;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+.reservation-date-navigation,
+.reservation-month-navigation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.reservation-month-navigation {
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+}
+.reservation-month-navigation span {
+  padding-inline: 7px;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+}
+.reservation-date-strip button {
+  font-family: inherit;
+  cursor: pointer;
+}
+.reservation-month-navigation button,
+.reservation-today-button,
+.reservation-date-scroll {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+.reservation-date-strip .reservation-today-button {
+  width: auto;
+  height: 40px;
+  padding-inline: 14px;
+  border: 1px solid var(--color-border);
+  color: var(--color-primary);
+  font-size: 0.8125rem;
+  font-weight: 650;
+}
+.reservation-month-navigation button:hover,
+.reservation-date-scroll:hover:not(:disabled),
+.reservation-today-button:hover {
+  background: var(--reservation-tint);
+  color: var(--color-primary);
+}
+.reservation-month-tile {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  flex: 0 0 108px;
+  gap: 3px;
+  min-height: 112px;
+  border-radius: 12px;
+  background: #641b2b;
+  color: #fff;
+}
+.reservation-month-tile > span {
+  color: #edd4ae;
+  font-size: 1.625rem;
+  font-weight: 650;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+.reservation-month-tile strong {
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+.reservation-month-tile small {
+  margin-top: 5px;
+  color: #e4c9ce;
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+}
+.reservation-date-track {
+  position: relative;
+  display: flex;
+  flex: 1;
+  gap: 9px;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+  padding: 3px 2px 9px;
+}
+.reservation-date-tile {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  flex: 0 0 82px;
+  min-height: 108px;
+  gap: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: 11px;
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
+  scroll-snap-align: center;
+  transition: background 150ms, border-color 150ms;
+}
+.reservation-date-tile > span {
+  font-size: 0.8125rem;
+}
+.reservation-date-tile strong {
+  color: var(--color-text-primary);
+  font-size: 1.625rem;
+  line-height: 1.3;
+  font-weight: 600;
+}
+.reservation-date-tile small {
+  min-height: 16px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+.reservation-date-tile[aria-current="date"]:not(.selected) {
+  border-color: var(--color-accent);
+}
+.reservation-date-tile:hover {
+  border-color: var(--color-primary);
+  background: var(--reservation-tint);
+}
+.reservation-date-tile.selected {
+  border-color: #641b2b;
+  background: #641b2b;
+  color: #f0dce0;
+  box-shadow: 0 4px 10px rgb(100 27 43 / 16%);
+}
+.reservation-date-tile.selected strong {
+  color: #fff;
+}
+.reservation-date-tile.selected small {
+  color: #edd4ae;
+}
+.reservation-date-tile.closed:not(.selected) {
+  background: transparent;
+  border-style: dashed;
+}
+.reservation-date-scroll:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+@media (max-width: 760px) {
+  .reservation-date-strip {
+    padding: 15px 10px;
+  }
+}
+@media (max-width: 480px) {
+  .reservation-month-tile {
+    flex-basis: 65px;
+    min-height: 106px;
+  }
+  .reservation-month-tile > span {
+    font-size: 1.125rem;
+  }
+  .reservation-month-tile small {
+    display: none;
+  }
+  .reservation-date-scroll {
+    width: 23px;
+  }
+  .reservation-date-tile {
+    flex-basis: 70px;
+    min-height: 100px;
+  }
+  .reservation-month-navigation span {
+    display: none;
+  }
+}
+
+.reservation-date-strip-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.reservation-date-strip-heading h3 {
+  margin: 4px 0 0;
+  color: var(--color-text-primary);
+  font-size: 1.125rem;
+  font-weight: 650;
+}
+.reservation-date-strip-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+@media (max-width: 480px) {
+  .reservation-date-strip-heading {
+    gap: 10px;
+    padding-inline: 4px;
+  }
+  .reservation-date-strip-heading h3 {
+    font-size: 1rem;
+  }
+  .reservation-date-strip-body {
+    gap: 3px;
+  }
+}
+.reservation-date-strip {
+  --reservation-tint: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
+}
+.reservation-date-strip button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+

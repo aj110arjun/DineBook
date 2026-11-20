@@ -37,7 +37,18 @@ test("empty database shows useful payment and chart empty states", () => {
 test("loading skeleton and errors have accessible feedback and retry", () => {
   const loading = render("AdminDashboardFeedback", { loading: true });
   assert.match(loading, /role="status"/);
-  assert.match(loading, /db-skeleton-stats/);
+  const loaded = render("AdminDashboardContent", { data: fixture.data, slot: "top" });
+  for (const className of ["admin-kpi", "admin-analytics-panel "]) {
+    assert.equal(loading.split(`class="${className}"`).length, loaded.split(`class="${className}"`).length);
+  }
+  assert.doesNotMatch(loading, /db-skeleton-stats|<button|<input|<a /);
+  const restaurants = render("AdminDashboardFeedback", { loading: true, section: "restaurants" });
+  assert.match(restaurants, /admin-table-scroll/);
+  assert.doesNotMatch(restaurants, /admin-kpi|admin-analytics-grid/);
+  const activity = render("AdminDashboardFeedback", { loading: true, section: "activity" });
+  assert.match(activity, /admin-real-activity/);
+  assert.doesNotMatch(activity, /admin-kpi|<table/);
+  assert.doesNotMatch(render("AdminDashboardFeedback", { loading: true, data: fixture.data }), /db-skeleton/);
   const error = render("AdminDashboardFeedback", { error: "Service unavailable", refresh: () => {} });
   assert.match(error, /role="alert"/);
   assert.match(error, /Try again/);

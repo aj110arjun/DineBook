@@ -151,9 +151,18 @@ test("the guest support panel explains sign-in and has no account chat composer"
   assert.doesNotMatch(panel(false), /<textarea|<form/);
 });
 
-test("individual customer headers do not mount duplicate Help buttons", () => {
-  const header = (user) => renderToStaticMarkup(createElement(Provider, { store }, createElement(StaticRouter, {}, createElement(Header, { user }))));
-  for (const user of [null, demoCustomer, { id: "customer", role: "CUSTOMER" }, { id: "admin", role: "ADMIN" }, { id: "manager", role: "MANAGER" }, { id: "chef", role: "CHEF" }]) {
-    assert.doesNotMatch(header(user), /Open customer support/);
+test("customer headers contain one AI launcher and exclude other account roles", () => {
+  const header = (user) => {
+    store.dispatch({ type: "customerSession/setCustomerSession", payload: user });
+    return renderToStaticMarkup(createElement(Provider, { store }, createElement(StaticRouter, { location: "/customer" }, createElement(Header, { user }))));
+  };
+  for (const user of [null, demoCustomer, { id: "customer", role: "CUSTOMER" }]) {
+    const html = header(user);
+    assert.equal(html.match(/Open customer support/g)?.length, 1);
+    assert.match(html, /<header[^>]*>[\s\S]*customer-ai-header-entry[\s\S]*<\/header>/);
+    assert.doesNotMatch(html, /class="customer-ai-launcher"/);
+  }
+  for (const role of ["ADMIN", "MANAGER", "CHEF"]) {
+    assert.doesNotMatch(header({ id: role, role }), /Open customer support/);
   }
 });

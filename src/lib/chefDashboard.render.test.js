@@ -61,7 +61,13 @@ test("valid actions come from backend permissions and are disabled while submitt
 test("loading, error, retry, and stale-data notices are accessible", () => {
   const renderFeedback = (props) => renderToStaticMarkup(createElement(page.KitchenFeedback, props));
   assert.match(renderFeedback({ loading: true }), /role="status"/);
-  assert.match(renderFeedback({ loading: true }), /db-skeleton-stats/);
+  const loading = renderFeedback({ loading: true });
+  const loaded = render();
+  for (const className of ["kitchen-kpi", "kitchen-panel"]) {
+    assert.equal(loading.split(`class="${className}"`).length, loaded.split(`class="${className}"`).length);
+  }
+  assert.doesNotMatch(loading, /db-skeleton-stats|db-skeleton-table|<button|<input|<a /);
+  assert.doesNotMatch(renderFeedback({ loading: true, hasData: true }), /db-skeleton/);
   assert.match(renderFeedback({ error: "Connection lost", hasData: true, refresh() {} }), /role="alert"/);
   assert.match(renderFeedback({ error: "Connection lost", hasData: true, refresh() {} }), /last successful update/);
   assert.match(renderFeedback({ error: "Connection lost", refresh() {} }), /Try again/);

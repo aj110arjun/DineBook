@@ -3,7 +3,9 @@ import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import axios from "axios";
-import ManagerAiWidget from "../src/components/manager/ManagerAiWidget.jsx";
+import { Provider } from "react-redux";
+import { store } from "../src/state/store.js";
+import { ManagerFrame } from "../src/components/manager/ManagerLayout.jsx";
 import "../src/assets/css/index.css";
 import "../src/assets/css/styles.css";
 import "../src/assets/css/design-system.css";
@@ -33,7 +35,7 @@ axios.defaults.adapter = async (config) => {
 
 function Preview() {
   const [session, setSession] = useState(1);
-  return <MemoryRouter><main style={{ padding: 28, maxWidth: 800 }}>
+  return <Provider store={store}><MemoryRouter><ManagerFrame key={session} managerId={`preview-manager-${session}`} title="Manager Assistant"><main style={{ padding: 28, maxWidth: 800 }}>
     <p style={{ color: "var(--color-primary)", fontSize: 12, letterSpacing: ".12em" }}>DINEBOOK · MANAGER PORTAL PREVIEW</p>
     <h1 style={{ fontFamily: "var(--font-display)", fontSize: 40, margin: "18px 0" }}>Your restaurant, at a glance.</h1>
     <p style={{ marginBottom: 20 }}>Isolated interface test. All restaurant information and requests are synthetic.</p>
@@ -41,7 +43,7 @@ function Preview() {
       {["ready", "offline", "slow", "error", "expired"].map((value) => <option key={value}>{value}</option>)}
     </select></label>
     <button style={{ marginLeft: 16 }} onClick={() => setSession((value) => value + 1)}>New manager session</button>
-    <p style={{ marginTop: 20 }}>Use the assistant in the bottom right to check quick actions, follow-up questions, drafts, Stop and Retry.</p>
-  </main><ManagerAiWidget key={session} userId={`preview-manager-${session}`} /></MemoryRouter>;
+    <p style={{ marginTop: 20 }}>Use Ask DineBook AI in the sidebar to check quick actions, follow-up questions, drafts, Stop and Retry.</p>
+  </main></ManagerFrame></MemoryRouter></Provider>;
 }
 createRoot(document.getElementById("root")).render(<Preview />);

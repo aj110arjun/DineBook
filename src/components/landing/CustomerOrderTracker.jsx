@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { requestJson } from "../../lib/authApi.js";
 import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
+import OrderProgressAnimation from "./OrderProgressAnimation.jsx";
 import "../../assets/css/CustomerOrderTracker.css";
 
 const steps = [
@@ -156,68 +157,44 @@ export default function CustomerOrderTracker({ enabled }) {
             : "You have no active food orders right now."}
         </p>
       ) : (
-        visibleOrders.map((order) => {
-          const currentIndex =
-            order.status === "COMPLETED"
-              ? steps.length - 1
-              : steps.findIndex(({ status }) => status === order.status);
-          const isActive = activeStatuses.has(order.status);
-          const terminalLabel = order.status
-            .replaceAll("_", " ")
-            .toLowerCase()
-            .replace(/\b\w/g, (letter) => letter.toUpperCase());
-          const currentLabel = isActive ? steps[currentIndex].label : terminalLabel;
-          return (
-            <article className="customer-order-progress-card" key={order.id}>
-              <header>
-                <div>
-                  <span>ORDER #{order.id.slice(0, 8).toUpperCase()}</span>
-                  <h3>{order.restaurant_name || "Restaurant order"}</h3>
-                </div>
-                <strong
-                  className={`customer-order-current-status status-${order.status.toLowerCase()}`}
-                >
-                  {currentLabel}
-                </strong>
-              </header>
-              <p className="customer-order-items-summary">
-                {(order.items || [])
-                  .map((item) => `${item.quantity} × ${item.food_name}`)
-                  .join(" · ")}
-              </p>
-              {isActive || order.status === "COMPLETED" ? (
-                <ol
-                  className="customer-order-status-steps"
-                  aria-label={`Order status: ${currentLabel}`}
-                >
-                  {steps.map((step, index) => {
-                    const Icon = step.icon;
-                    const completed =
-                      index < currentIndex || order.status === "COMPLETED";
-                    const current = index === currentIndex && isActive;
-                    return (
-                      <li
-                        key={step.status}
-                        className={`${completed ? "is-complete" : ""}${current ? " is-current" : ""}`}
-                        aria-current={current ? "step" : undefined}
-                      >
-                        <span className="customer-order-step-marker">
-                          {completed ? <Check size={15} /> : <Icon size={15} />}
-                        </span>
-                        <span>{step.label}</span>
-                      </li>
-                    );
-                  })}
-                </ol>
-              ) : (
-                <p className="customer-order-terminal-note">
-                  This order is {terminalLabel.toLowerCase()}.
-                </p>
-              )}
-            </article>
-          );
-        })
+        visibleOrders.map((order) => <CustomerOrderProgressCard order={order} key={order.id} />)
       )}
     </section>
   );
+}
+
+export function CustomerOrderProgressCard({ order }) {
+  const currentIndex = order.status === "COMPLETED"
+    ? steps.length - 1
+    : steps.findIndex(({ status }) => status === order.status);
+  const isActive = activeStatuses.has(order.status);
+  const finished = order.status === "SERVED" || order.status === "COMPLETED";
+  const terminalLabel = order.status.replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
+  const currentLabel = isActive ? steps[currentIndex].label : terminalLabel;
+  return <article className="customer-order-progress-card" data-order-state={order.status.toLowerCase()}>
+    <header>
+      <div><span>ORDER #{order.id.slice(0, 8).toUpperCase()}</span><h3>{order.restaurant_name || "Restaurant order"}</h3></div>
+      <strong className={`customer-order-current-status status-${order.status.toLowerCase()}`}>{currentLabel}</strong>
+    </header>
+    <p className="customer-order-items-summary">{(order.items || []).map((item) => `${item.quantity} × ${item.food_name}`).join(" · ")}</p>
+    <OrderProgressAnimation status={order.status} />
+    {isActive || order.status === "COMPLETED" ? <ol
+      className="customer-order-status-steps"
+      aria-label={`Order status: ${currentLabel}`}
+      style={{ "--order-progress": currentIndex / (steps.length - 1) }}
+    >
+      {steps.map((step, index) => {
+        const Icon = step.icon;
+        const completed = index < currentIndex || finished;
+        const current = index === currentIndex && isActive;
+        return <li key={step.status}
+          className={`${completed ? "is-complete" : ""}${current ? " is-current" : ""}${current && !finished ? " is-live" : ""}`}
+          aria-current={current ? "step" : undefined}>
+          <span className="customer-order-step-marker" key={current ? "current" : completed ? "done" : "upcoming"}>
+            {completed ? <Check size={15} aria-hidden="true" className="customer-order-step-check" /> : <Icon size={15} aria-hidden="true" />}
+          </span><span>{step.label}</span>
+        </li>;
+      })}
+    </ol> : <p className="customer-order-terminal-note">This order is {terminalLabel.toLowerCase()}.</p>}
+  </article>;
 }

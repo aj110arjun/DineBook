@@ -57,6 +57,13 @@ test("empty charts and live lists show useful empty states", () => {
 test("loading and API errors have accessible states and a retry action", () => {
   const loading = renderToStaticMarkup(createElement(page.DashboardFeedback, { loading: true }));
   assert.match(loading, /role="status"/);
+  const loaded = render(fixture);
+  for (const className of ["manager-summary-card", "manager-panel"]) {
+    assert.equal(loading.split(`class="${className}"`).length, loaded.split(`class="${className}"`).length);
+  }
+  assert.doesNotMatch(loading, /db-skeleton-stats|db-skeleton-table|<button|<input|<a /);
+  const refreshing = renderToStaticMarkup(createElement(page.DashboardFeedback, { loading: true, hasData: true }));
+  assert.doesNotMatch(refreshing, /db-skeleton/);
   const error = renderToStaticMarkup(createElement(page.DashboardFeedback, { error: "Service unavailable", refresh: () => {} }));
   assert.match(error, /role="alert"/);
   assert.match(error, /Service unavailable/);

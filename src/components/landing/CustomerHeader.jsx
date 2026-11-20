@@ -7,6 +7,7 @@ import { demoCustomer } from "../../data/demoCustomer.js";
 import NotificationSession from "../notifications/NotificationSession.jsx";
 import NotificationBell from "../notifications/NotificationBell.jsx";
 import { useSelector } from "react-redux";
+import CustomerAiSupport from "../customer/CustomerAiSupport.jsx";
 
 export function CustomerHeaderFrame({ user }) {
   const sharedUser = useSelector((state) => state.customerSession.user);
@@ -193,6 +194,7 @@ export function CustomerHeaderFrame({ user }) {
             )}
           </div>
         </nav>
+        {(!user?.role || user.role === "CUSTOMER") && <CustomerAiSupport onOpen={closeMenu} />}
       </div>
     </header>
   );
