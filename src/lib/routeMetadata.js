@@ -1,12 +1,26 @@
 import { matchPath } from "react-router-dom";
 
-const item = (label, to) => ({ label, ...(to ? { to } : {}) });
+const item = (label, to, key) => ({
+  label,
+  ...(to ? { to } : {}),
+  ...(key ? { key } : {}),
+});
 const customerAccount = item("My account", "/customer/profile");
 const restaurants = item("Restaurants", "/customer/restaurants");
 // Only actual application routes belong here. Dynamic identifiers never become labels.
 export const routeMetadata = [
-  ["/customer/restaurants/:restaurantId/booking", [restaurants, item("Restaurant details", "/customer/restaurants/:restaurantId"), item("Book a table")]],
-  ["/customer/restaurants/:restaurantId/:section?", [restaurants, item("Restaurant details")]],
+  [
+    "/customer/restaurants/:restaurantId/booking",
+    [
+      restaurants,
+      item("Restaurant details", "/customer/restaurants/:restaurantId", "restaurant"),
+      item("Book a table"),
+    ],
+  ],
+  [
+    "/customer/restaurants/:restaurantId/:section?",
+    [restaurants, item("Restaurant details", undefined, "restaurant")],
+  ],
   ["/customer/restaurants", [restaurants]],
   ["/customer/profile/reservations/:reservationId", [item("My reservations", "/customer/profile/reservations"), item("Reservation details")]],
   ["/customer/profile/reservations", [item("My reservations")]],
@@ -32,13 +46,21 @@ export const routeMetadata = [
   ...Object.entries({ restaurants: "Restaurants", requests: "Requests", offers: "Offers", transactions: "Transactions", revenue: "Revenue & commission", reviews: "Review moderation", profile: "Admin profile", settings: "Settings" }).map(([path, label]) => [`/admin/${path}`, [item(label)]]),
 ];
 
-export function breadcrumbsFor(pathname, entityLabel) {
+export function breadcrumbsFor(pathname, entityLabel, entityLabels = {}) {
   const route = routeMetadata.find(([path]) => matchPath({ path, end: true }, pathname));
   if (!route) return [];
   const portal = pathname.split("/")[1];
   const match = matchPath({ path: route[0], end: true }, pathname);
   const home = item(portal === "customer" ? "Home" : "Dashboard", portal === "customer" ? "/customer" : `/${portal}/dashboard`);
-  const crumbs = [home, ...route[1].map((entry) => ({ ...entry, to: entry.to?.replace(/:([a-zA-Z]+)/g, (_, key) => encodeURIComponent(match.params[key])) }))];
-  if (entityLabel?.trim() && route[0].includes(":")) crumbs[crumbs.length - 1].label = entityLabel.trim();
+  const crumbs = [home, ...route[1].map((entry) => ({
+    ...entry,
+    label: entry.key && typeof entityLabels?.[entry.key] === "string" && entityLabels[entry.key].trim()
+      ? entityLabels[entry.key].trim()
+      : entry.label,
+    to: entry.to?.replace(/:([a-zA-Z]+)/g, (_, key) => encodeURIComponent(match.params[key])),
+  }))];
+  if (typeof entityLabel === "string" && entityLabel.trim() && route[0].includes(":")) {
+    crumbs[crumbs.length - 1].label = entityLabel.trim();
+  }
   return crumbs.map((entry, index) => index === crumbs.length - 1 ? { label: entry.label } : entry);
 }

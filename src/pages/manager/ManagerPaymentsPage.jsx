@@ -2,14 +2,15 @@ import useLoadingPhase from "../../hooks/useLoadingPhase.js";
 import LoadingState, { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDateTime } from "../../lib/localDate.js";
-import { useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useRef } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
-  CalendarDays,
+  CircleCheckBig,
   CreditCard,
-  FileText,
+  ReceiptText,
   Search,
+  X,
 } from "lucide-react";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import Pagination from "../../components/Pagination.jsx";
@@ -17,7 +18,13 @@ import TransactionInvoiceButton from "../../components/TransactionInvoice.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import "../../assets/css/ManagerPaymentsPage.css";
 
-const money = (value) => `₹${Number(value || 0).toFixed(2)}`;
+const rupeeFormatter = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+const money = (value) => rupeeFormatter.format(Number(value || 0));
 const humanize = (value) =>
   String(value || "—")
     .toLowerCase()
@@ -39,19 +46,163 @@ function StatusBadge({ status }) {
   );
 }
 
+function PaymentDetailsModal({ transaction, loading, error, onClose, dialogRef }) {
+  const relatedId = transaction?.order_id || transaction?.reservation_id;
+  const relatedLabel =
+    transaction?.type === "ORDER_PAYMENT" ? "Order ID" : "Reservation ID";
+
+  return (
+    <div
+      className="manager-payment-modal-backdrop"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <section
+        ref={dialogRef}
+        className="manager-payment-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Payment details"
+        tabIndex={-1}
+      >
+        <button
+          className="manager-payment-modal-close"
+          type="button"
+          onClick={onClose}
+          aria-label="Close payment details"
+        >
+          <X size={20} aria-hidden="true" />
+        </button>
+        {loading ? (
+          <LoadingState variant="detail" label="Loading transaction details…" />
+        ) : error ? (
+          <div className="manager-payment-state is-error" role="alert">
+            {error}
+          </div>
+        ) : transaction ? (
+          <>
+            <div className="manager-payment-modal-mark" aria-hidden="true">
+              <CircleCheckBig size={34} />
+            </div>
+            <header className="manager-payment-modal-heading">
+              <span className="manager-payment-eyebrow">PAYMENT RECORD</span>
+              <h2 id="manager-payment-modal-title">Payment details</h2>
+              <p title={transaction.transaction_id}>
+                {readableId(
+                  transaction.transaction_id,
+                  transaction.type === "ORDER_PAYMENT" ? "TXN-ORD" : "TXN-RES",
+                )}
+              </p>
+            </header>
+            <section className="manager-payment-modal-amount" aria-label="Payment amount">
+              <span>Amount paid</span>
+              <strong>{money(transaction.amount)}</strong>
+              <StatusBadge status={transaction.status} />
+            </section>
+            <section className="manager-payment-modal-card">
+              <h3>
+                <ReceiptText size={18} aria-hidden="true" /> Payment information
+              </h3>
+              <dl>
+                <dt>{relatedLabel}</dt>
+                <dd title={relatedId || undefined}>
+                  {readableId(
+                    relatedId,
+                    transaction.type === "ORDER_PAYMENT" ? "ORD" : "RES",
+                  )}
+                </dd>
+                <dt>Payment type</dt>
+                <dd>{humanize(transaction.type)}</dd>
+                <dt>Payment method</dt>
+                <dd>{humanize(transaction.payment_method)}</dd>
+                <dt>Refund status</dt>
+                <dd>{humanize(transaction.refund_status)}</dd>
+                <dt>Paid on</dt>
+                <dd>{dateTime(transaction.created_at)}</dd>
+              </dl>
+            </section>
+            <section className="manager-payment-modal-card manager-payment-modal-reference-card">
+              <h3>
+                <CreditCard size={18} aria-hidden="true" /> Reference details
+              </h3>
+              <dl>
+                <dt>Payment reference</dt>
+                <dd>{transaction.razorpay_payment_id || "—"}</dd>
+                <dt>Order reference</dt>
+                <dd>{transaction.razorpay_order_id || "—"}</dd>
+              </dl>
+            </section>
+            <footer className="manager-payment-modal-actions">
+              <button type="button" className="manager-payment-modal-back" onClick={onClose}>
+                <ArrowLeft size={16} aria-hidden="true" /> Back to transactions
+              </button>
+              <TransactionInvoiceButton
+                className="manager-payment-modal-receipt"
+                label="Download receipt"
+                invoice={{
+                  transactionId: transaction.transaction_id,
+                  relatedId,
+                  relatedLabel,
+                  relatedPrefix: transaction.type === "ORDER_PAYMENT" ? "ORD" : "RES",
+                  typeLabel: humanize(transaction.type),
+                  description: transaction.description,
+                  lineItems: transaction.items?.map((item) => ({
+                    description: item.food_name,
+                    variant_name: item.variant_name,
+                    quantity: item.quantity,
+                    unit_price: item.unit_price,
+                    line_total: item.line_total,
+                  })),
+                  subtotal: transaction.subtotal,
+                  discountAmount: transaction.discount_amount,
+                  amount: transaction.amount,
+                  currency: "INR",
+                  status: humanize(transaction.status),
+                  paymentMethod: humanize(transaction.payment_method),
+                  provider: transaction.payment_method === "RAZORPAY" ? "Razorpay" : undefined,
+                  refundStatus: humanize(transaction.refund_status),
+                  providerReference: transaction.razorpay_payment_id,
+                  providerOrderReference: transaction.razorpay_order_id,
+                  createdAt: transaction.created_at,
+                  merchantName: transaction.restaurant_name,
+                  merchantLocation: transaction.restaurant_location,
+                  merchantAddress: transaction.restaurant_address,
+                  merchantEmail: transaction.restaurant_email,
+                  merchantPhone: transaction.restaurant_phone,
+                  customerName: transaction.customer_name,
+                  customerEmail: transaction.customer_email,
+                }}
+              />
+            </footer>
+          </>
+        ) : (
+          <div className="manager-payment-state is-error" role="alert">
+            This transaction is no longer available.
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
 export default function ManagerPaymentsPage() {
   const { transactionId } = useParams();
+  const navigate = useNavigate();
+  const dialogRef = useRef(null);
   const [
     {
       transactions, transaction, total, page, query, status, transactionType,
-      paymentMethod, refundStatus, dateFrom, dateTo, sort, loading, error,
+      paymentMethod, refundStatus, dateFrom, dateTo, sort, listLoading,
+      detailLoading, listError, detailError,
     },
     {
       transactions: setTransactions, transaction: setTransaction, total: setTotal,
       page: setPage, query: setQuery, status: setStatus,
       transactionType: setTransactionType, paymentMethod: setPaymentMethod,
       refundStatus: setRefundStatus, dateFrom: setDateFrom, dateTo: setDateTo,
-      sort: setSort, loading: setLoading, error: setError,
+      sort: setSort, listLoading: setListLoading, detailLoading: setDetailLoading,
+      listError: setListError, detailError: setDetailError,
     },
   ] = usePageState("ManagerPaymentsPage", () => ({
     transactions: [],
@@ -66,27 +217,23 @@ export default function ManagerPaymentsPage() {
     dateFrom: "",
     dateTo: "",
     sort: "newest",
-    loading: true,
-    error: "",
+    listLoading: true,
+    detailLoading: false,
+    listError: "",
+    detailError: "",
   }));
   const pageSize = 10;
 
-  const { initialLoading, refreshing } = useLoadingPhase(loading, Boolean(transactionId ? transaction : transactions.length), error);
+  const { initialLoading, refreshing } = useLoadingPhase(
+    listLoading,
+    Boolean(transactions.length),
+    listError,
+  );
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    setError("");
-    if (transactionId) {
-      setTransaction(null);
-      requestJson(`/api/manager/payments/${transactionId}`)
-        .then((data) => active && setTransaction(data))
-        .catch((reason) => active && setError(reason.message))
-        .finally(() => active && setLoading(false));
-      return () => {
-        active = false;
-      };
-    }
+    setListLoading(true);
+    setListError("");
     const params = new URLSearchParams({
       page: String(page),
       page_size: String(pageSize),
@@ -107,13 +254,12 @@ export default function ManagerPaymentsPage() {
           setTotal(data.total || 0);
         }
       })
-      .catch((reason) => active && setError(reason.message))
-      .finally(() => active && setLoading(false));
+      .catch((reason) => active && setListError(reason.message))
+      .finally(() => active && setListLoading(false));
     return () => {
       active = false;
     };
   }, [
-    transactionId,
     page,
     query,
     status,
@@ -125,207 +271,76 @@ export default function ManagerPaymentsPage() {
     sort,
   ]);
 
-  if (transactionId) {
-    const relatedId = transaction?.order_id || transaction?.reservation_id;
-    const relatedLabel =
-      transaction?.type === "ORDER_PAYMENT" ? "Order ID" : "Reservation ID";
-    return (
-      <ManagerLayout title="Transaction details">
-        <div className="manager-dashboard-content manager-payments-page">
-          <Link className="manager-payments-back" to="/manager/payments">
-            <ArrowLeft size={16} /> Payments & transactions
-          </Link>
-          {refreshing && !transactionId && <RefreshIndicator active />}
-        {(transactionId ? loading : initialLoading) ? (
-            <LoadingState variant="detail" label="Loading transaction details…" />
-          ) : error ? (
-            <div className="manager-payment-state is-error" role="alert">
-              {error}
-            </div>
-          ) : (
-            transaction && (
-              <>
-                <header className="manager-payment-detail-heading">
-                  <div>
-                    <span className="manager-payment-eyebrow">
-                      TRANSACTION RECORD
-                    </span>
-                    <h2>
-                      {transaction.type === "ORDER_PAYMENT"
-                        ? "Order payment"
-                        : "Reservation fee"}
-                    </h2>
-                    <p>
-                      Transaction ID{" "}
-                      <span title={transaction.transaction_id}>
-                        {readableId(
-                          transaction.transaction_id,
-                          transaction.type === "ORDER_PAYMENT"
-                            ? "TXN-ORD"
-                            : "TXN-RES",
-                        )}
-                      </span>
-                    </p>
-                  </div>
-                  <div className="manager-payment-detail-actions">
-                    <StatusBadge status={transaction.status} />
-                    <TransactionInvoiceButton
-                      invoice={{
-                        transactionId: transaction.transaction_id,
-                        relatedId,
-                        relatedLabel,
-                        relatedPrefix:
-                          transaction.type === "ORDER_PAYMENT" ? "ORD" : "RES",
-                        typeLabel: humanize(transaction.type),
-                        description: transaction.description,
-                        lineItems: transaction.items?.map((item) => ({
-                          description: item.food_name,
-                          variant_name: item.variant_name,
-                          quantity: item.quantity,
-                          unit_price: item.unit_price,
-                          line_total: item.line_total,
-                        })),
-                        subtotal: transaction.subtotal,
-                        discountAmount: transaction.discount_amount,
-                        amount: transaction.amount,
-                        currency: transaction.currency,
-                        status: humanize(transaction.status),
-                        paymentMethod: humanize(transaction.payment_method),
-                        provider:
-                          transaction.payment_method === "RAZORPAY"
-                            ? "Razorpay"
-                            : undefined,
-                        refundStatus: humanize(transaction.refund_status),
-                        providerReference: transaction.razorpay_payment_id,
-                        providerOrderReference: transaction.razorpay_order_id,
-                        createdAt: transaction.created_at,
-                        merchantName: transaction.restaurant_name,
-                        merchantLocation: transaction.restaurant_location,
-                        merchantAddress: transaction.restaurant_address,
-                        merchantEmail: transaction.restaurant_email,
-                        merchantPhone: transaction.restaurant_phone,
-                        customerName: transaction.customer_name,
-                        customerEmail: transaction.customer_email,
-                      }}
-                    />
-                  </div>
-                </header>
-                <section
-                  className="manager-payment-amount-card"
-                  aria-label="Payment amount"
-                >
-                  <span>Amount</span>
-                  <strong>
-                    {money(transaction.amount)}{" "}
-                    <small>{transaction.currency || "INR"}</small>
-                  </strong>
-                  <span className="manager-payment-amount-type">
-                    {humanize(transaction.type)}
-                  </span>
-                </section>
-                <div className="manager-payment-detail-grid">
-                  <section className="manager-payment-detail-card">
-                    <h3>
-                      <FileText size={17} /> Transaction information
-                    </h3>
-                    <dl>
-                      <dt>Transaction ID</dt>
-                      <dd title={transaction.transaction_id}>
-                        {readableId(
-                          transaction.transaction_id,
-                          transaction.type === "ORDER_PAYMENT"
-                            ? "TXN-ORD"
-                            : "TXN-RES",
-                        )}
-                      </dd>
-                      <dt>{relatedLabel}</dt>
-                      <dd title={relatedId || undefined}>
-                        {readableId(
-                          relatedId,
-                          transaction.type === "ORDER_PAYMENT" ? "ORD" : "RES",
-                        )}
-                      </dd>
-                      <dt>Payment type</dt>
-                      <dd>{humanize(transaction.type)}</dd>
-                      <dt>Payment method</dt>
-                      <dd>{humanize(transaction.payment_method)}</dd>
-                      <dt>Payment status</dt>
-                      <dd>
-                        <StatusBadge status={transaction.status} />
-                      </dd>
-                      <dt>Refund status</dt>
-                      <dd>{humanize(transaction.refund_status)}</dd>
-                    </dl>
-                  </section>
-                  <section className="manager-payment-detail-card">
-                    <h3>
-                      <CreditCard size={17} /> Provider references
-                    </h3>
-                    <dl>
-                      <dt>Razorpay order ID</dt>
-                      <dd>{transaction.razorpay_order_id || "—"}</dd>
-                      <dt>Razorpay payment ID</dt>
-                      <dd>{transaction.razorpay_payment_id || "—"}</dd>
-                      <dt>Currency</dt>
-                      <dd>{transaction.currency || "INR"}</dd>
-                    </dl>
-                  </section>
-                  <section className="manager-payment-detail-card manager-payment-timestamps">
-                    <h3>
-                      <CalendarDays size={17} /> Record timestamps
-                    </h3>
-                    <dl>
-                      <dt>Created</dt>
-                      <dd>{dateTime(transaction.created_at)}</dd>
-                      <dt>Last updated</dt>
-                      <dd>{dateTime(transaction.updated_at)}</dd>
-                    </dl>
-                  </section>
-                </div>
-              </>
-            )
-          )}
-        </div>
-      </ManagerLayout>
-    );
-  }
+  useEffect(() => {
+    let active = true;
+    if (!transactionId) {
+      setTransaction(null);
+      setDetailError("");
+      setDetailLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+    setTransaction(null);
+    setDetailLoading(true);
+    setDetailError("");
+    requestJson(`/api/manager/payments/${transactionId}`)
+      .then((data) => active && setTransaction(data))
+      .catch((reason) => active && setDetailError(reason.message))
+      .finally(() => active && setDetailLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [transactionId]);
+
+  useEffect(() => {
+    if (!transactionId) return undefined;
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") navigate("/manager/payments");
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    dialogRef.current?.focus();
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [navigate, transactionId]);
 
   return (
-    <ManagerLayout title="Payments & Transactions">
-      <div className="manager-dashboard-content manager-payments-page">
-        <header className="manager-payments-heading">
-          <div>
-            <span className="manager-payment-eyebrow">FINANCE</span>
-            <h2>Payments & Transactions</h2>
-            <p>Review reservation and order payments for your restaurant.</p>
-          </div>
+    <ManagerLayout
+      title="Payments & Transactions"
+      hideHeader
+      hideBreadcrumb
+    >
+      <div
+        className="manager-dashboard-content manager-payments-page"
+        aria-hidden={Boolean(transactionId)}
+      >
+        <div className="manager-payments-toolbar">
+          <nav
+            className="manager-payments-tabs"
+            aria-label="Transaction category"
+          >
+            {[
+              { value: "ALL", label: "All transactions" },
+              { value: "RESERVATION_FEE", label: "Reservations" },
+              { value: "ORDER_PAYMENT", label: "Orders" },
+            ].map((tab) => (
+              <button
+                key={tab.value}
+                type="button"
+                className={transactionType === tab.value ? "is-active" : ""}
+                aria-pressed={transactionType === tab.value}
+                onClick={() => {
+                  setPage(1);
+                  setTransactionType(tab.value);
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
           <span className="manager-payments-total">
             {total.toLocaleString()} transactions
           </span>
-        </header>
-        <nav
-          className="manager-payments-tabs"
-          aria-label="Transaction category"
-        >
-          {[
-            { value: "ALL", label: "All transactions" },
-            { value: "RESERVATION_FEE", label: "Reservations" },
-            { value: "ORDER_PAYMENT", label: "Orders" },
-          ].map((tab) => (
-            <button
-              key={tab.value}
-              type="button"
-              className={transactionType === tab.value ? "is-active" : ""}
-              aria-pressed={transactionType === tab.value}
-              onClick={() => {
-                setPage(1);
-                setTransactionType(tab.value);
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
+        </div>
         <section
           className="manager-payments-filters"
           aria-label="Filter transactions"
@@ -427,9 +442,9 @@ export default function ManagerPaymentsPage() {
             </div>
           </details>
         </section>
-        {error && (
+        {listError && (
           <div className="manager-payment-state is-error" role="alert">
-            {error}
+            {listError}
           </div>
         )}
         {refreshing && !transactionId && <RefreshIndicator active />}
@@ -517,7 +532,7 @@ export default function ManagerPaymentsPage() {
             <span>Try adjusting your search or filters.</span>
           </div>
         )}
-        {!loading && total > 0 && (
+        {!listLoading && total > 0 && (
           <Pagination
             page={page}
             pageSize={pageSize}
@@ -527,6 +542,15 @@ export default function ManagerPaymentsPage() {
           />
         )}
       </div>
+      {transactionId && (
+        <PaymentDetailsModal
+          transaction={transaction}
+          loading={detailLoading}
+          error={detailError}
+          dialogRef={dialogRef}
+          onClose={() => navigate("/manager/payments")}
+        />
+      )}
     </ManagerLayout>
   );
 }

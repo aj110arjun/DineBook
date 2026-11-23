@@ -30,7 +30,6 @@ import { countryCallingCodes } from "../../lib/countryCallingCodes.js";
 
 import {
   getManagerRegistrationStepErrors,
-  isManagerEmailVerified,
   getRestaurantContactErrors,
   formatRestaurantPhoneNumber,
 } from "../../lib/managerRegistrationValidation.js";
@@ -251,12 +250,12 @@ function ReviewDocument({ label, file, required = false }) {
 }
 
 export default function ManagerRegisterPage() {
-  const [
-    { step },
-    { step: setStep },
-  ] = usePageState("ManagerRegisterPage", () => ({
-    step: 1,
-  }));
+  const [{ step }, { step: setStep }] = usePageState(
+    "ManagerRegisterPage",
+    () => ({
+      step: 1,
+    }),
+  );
   const navigate = useNavigate();
   const [
     { error, fieldErrors, submitting },
@@ -266,53 +265,41 @@ export default function ManagerRegisterPage() {
     fieldErrors: {},
     submitting: false,
   }));
-  const [credentials, setCredentials] = useState({ password: "", confirmPassword: "" });
+  const [credentials, setCredentials] = useState({
+    password: "",
+    confirmPassword: "",
+  });
   const [emailCode, setEmailCode] = useState("");
-  const [emailVerification, setEmailVerification] = useState(null);
-  const emailRequestRef = useRef(null);
   const [
-    { emailCodeSent, emailBusy },
+    { emailCodeSent, emailVerified, emailBusy },
     {
       emailCodeSent: setEmailCodeSent,
+      emailVerified: setEmailVerified,
       emailBusy: setEmailBusy,
     },
   ] = usePageState("ManagerRegisterPage", () => ({
     emailCodeSent: false,
+    emailVerified: false,
     emailBusy: false,
   }));
   const [pendingBanner, setPendingBanner] = useState(null);
 
-  const [
-    { application },
-    { application: setApplication },
-  ] = usePageState("ManagerRegisterPage", () => ({
-    application: initialApplication,
-  }));
+  const [{ application }, { application: setApplication }] = usePageState(
+    "ManagerRegisterPage",
+    () => ({
+      application: initialApplication,
+    }),
+  );
   const managerEmail = application.email.trim().toLowerCase();
-  const emailVerified = isManagerEmailVerified(managerEmail, emailVerification);
-
-  useEffect(() => () => emailRequestRef.current?.abort(), []);
-  useEffect(() => {
-    if (!emailVerification) return;
-    const timeout = window.setTimeout(() => {
-      invalidateEmailVerification("Your email verification has expired. Verify your email again to continue.");
-    }, Math.max(0, Date.parse(emailVerification.expires_at) - Date.now()));
-    return () => window.clearTimeout(timeout);
-  }, [emailVerification]);
-
-  function invalidateEmailVerification(message) {
-    setEmailVerification(null);
-    setEmailCode("");
-    setEmailCodeSent(false);
-    setStep(1);
-    setFieldErrors((current) => ({ ...current, email: message }));
-    setError(message);
-  }
-
   const [
     {
-      addressLookupQuery, addressSuggestions, addressLookupBusy,
-      addressLookupError, pinLookupMessage, pinToLookup, locationBusy,
+      addressLookupQuery,
+      addressSuggestions,
+      addressLookupBusy,
+      addressLookupError,
+      pinLookupMessage,
+      pinToLookup,
+      locationBusy,
       locationMessage,
     },
     {
@@ -320,8 +307,10 @@ export default function ManagerRegisterPage() {
       addressSuggestions: setAddressSuggestions,
       addressLookupBusy: setAddressLookupBusy,
       addressLookupError: setAddressLookupError,
-      pinLookupMessage: setPinLookupMessage, pinToLookup: setPinToLookup,
-      locationBusy: setLocationBusy, locationMessage: setLocationMessage,
+      pinLookupMessage: setPinLookupMessage,
+      pinToLookup: setPinToLookup,
+      locationBusy: setLocationBusy,
+      locationMessage: setLocationMessage,
     },
   ] = usePageState("ManagerRegisterPage", () => ({
     addressLookupQuery: "",
@@ -695,12 +684,12 @@ export default function ManagerRegisterPage() {
     },
   };
 
-  const [
-    { hours },
-    { hours: setHours },
-  ] = usePageState("ManagerRegisterPage", () => ({
-    hours: initialHours,
-  }));
+  const [{ hours }, { hours: setHours }] = usePageState(
+    "ManagerRegisterPage",
+    () => ({
+      hours: initialHours,
+    }),
+  );
   const [interiorMedia, setInteriorMedia] = useState(null);
   function updateField(field, value) {
     if (field === "password" || field === "confirmPassword") {
@@ -719,7 +708,9 @@ export default function ManagerRegisterPage() {
     }
     if (field === "restaurantCountryCode" || field === "restaurantContact") {
       const phoneErrors = getRestaurantContactErrors(
-        field === "restaurantCountryCode" ? value : application.restaurantCountryCode,
+        field === "restaurantCountryCode"
+          ? value
+          : application.restaurantCountryCode,
         field === "restaurantContact" ? value : application.restaurantContact,
       );
       setFieldErrors((current) => ({
@@ -731,12 +722,9 @@ export default function ManagerRegisterPage() {
       setFieldErrors((current) => ({ ...current, [field]: "" }));
     }
     if (field === "email") {
-      emailRequestRef.current?.abort();
-      emailRequestRef.current = null;
-      setEmailBusy(false);
       setEmailCode("");
       setEmailCodeSent(false);
-      setEmailVerification(null);
+      setEmailVerified(false);
       setError("");
     }
     setApplication((current) => ({
@@ -933,7 +921,6 @@ export default function ManagerRegisterPage() {
   }
 
   async function requestEmailCode() {
-    if (emailRequestRef.current) return;
     const email = managerEmail;
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
       setFieldErrors((current) => ({
@@ -942,9 +929,6 @@ export default function ManagerRegisterPage() {
       }));
       return;
     }
-    const controller = new AbortController();
-    emailRequestRef.current = controller;
-    setEmailVerification(null);
     setEmailBusy(true);
     setError("");
     try {
@@ -953,31 +937,22 @@ export default function ManagerRegisterPage() {
         validateStatus: () => true,
         method: "POST",
         withCredentials: true,
-        signal: controller.signal,
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify({ email }),
       });
-      if (controller.signal.aborted) return;
       const data = response.data;
       if (response.status < 200 || response.status >= 300)
         throw new Error(data?.detail || "Unable to send a confirmation code.");
       setEmailCodeSent(true);
-      setEmailCode("");
+      setEmailVerified(false);
     } catch (reason) {
-      if (!controller.signal.aborted) setError(reason.message);
+      setError(reason.message);
     } finally {
-      if (emailRequestRef.current === controller) {
-        emailRequestRef.current = null;
-        setEmailBusy(false);
-      }
+      setEmailBusy(false);
     }
   }
 
   async function verifyEmailCode() {
-    if (emailRequestRef.current) return;
-    const email = managerEmail;
-    const controller = new AbortController();
-    emailRequestRef.current = controller;
     setEmailBusy(true);
     setError("");
     try {
@@ -986,41 +961,32 @@ export default function ManagerRegisterPage() {
         validateStatus: () => true,
         method: "POST",
         withCredentials: true,
-        signal: controller.signal,
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify({
-          email,
+          email: managerEmail,
           code: emailCode,
         }),
       });
-      if (controller.signal.aborted) return;
       const data = response.data;
       if (response.status < 200 || response.status >= 300)
         throw new Error(data?.detail || "Unable to verify this email.");
-      if (!isManagerEmailVerified(email, data)) {
-        throw new Error("Email confirmation could not be completed. Request a new code.");
-      }
-      setEmailVerification({
-        email: data.email,
-        verification_token: data.verification_token,
-        expires_at: data.expires_at,
-      });
-      setEmailCode("");
+      setEmailVerified(true);
       setFieldErrors((current) => ({ ...current, email: "" }));
       setError("");
     } catch (reason) {
-      if (!controller.signal.aborted) setError(reason.message);
+      setError(reason.message);
     } finally {
-      if (emailRequestRef.current === controller) {
-        emailRequestRef.current = null;
-        setEmailBusy(false);
-      }
+      setEmailBusy(false);
     }
   }
 
   function getStepErrors(stepNumber) {
     return getManagerRegistrationStepErrors(stepNumber, {
-      application, credentials, emailVerification, documents, hours,
+      application,
+      credentials,
+      emailVerified,
+      documents,
+      hours,
       interiorMedia,
     });
   }
@@ -1040,23 +1006,22 @@ export default function ManagerRegisterPage() {
   function validateStep(stepNumber, form) {
     const errors = getStepErrors(stepNumber);
 
-    if (stepNumber > 1 && errors.email) {
-      invalidateEmailVerification(errors.email);
-      return false;
-    }
-
     setFieldErrors(errors);
     setError("");
 
     const firstError = Object.keys(errors)[0];
     if (firstError) {
       const field = Array.from(form.elements).find(
-        (element) => (element.dataset.validationField || element.name) === firstError,
+        (element) =>
+          (element.dataset.validationField || element.name) === firstError,
       );
       if (field) field.focus();
-      else requestAnimationFrame(() => {
-        form.querySelector('[role="alert"]')?.scrollIntoView({ block: "center", behavior: "smooth" });
-      });
+      else
+        requestAnimationFrame(() => {
+          form
+            .querySelector('[role="alert"]')
+            ?.scrollIntoView({ block: "center", behavior: "smooth" });
+        });
     }
 
     return !firstError;
@@ -1085,7 +1050,7 @@ export default function ManagerRegisterPage() {
   async function handleFinalSubmit(event) {
     event.preventDefault();
 
-    for (const stepNumber of [1, 2, 3, 4, 5]) {
+    for (const stepNumber of [1, 2, 3, 4]) {
       const errors = getStepErrors(stepNumber);
 
       if (Object.keys(errors).length > 0) {
@@ -1107,7 +1072,6 @@ export default function ManagerRegisterPage() {
       formData.append("name", application.name);
       formData.append("email", managerEmail);
       formData.append("password", credentials.password);
-      formData.append("verification_token", emailVerification.verification_token);
 
       // Restaurant information
       formData.append("restaurant_name", application.restaurantName);
@@ -1116,9 +1080,13 @@ export default function ManagerRegisterPage() {
         application.restaurantDescription,
       );
       formData.append("cuisine_type", application.cuisineType);
-      formData.append("restaurant_contact", formatRestaurantPhoneNumber(
-        application.restaurantCountryCode, application.restaurantContact,
-      ));
+      formData.append(
+        "restaurant_contact",
+        formatRestaurantPhoneNumber(
+          application.restaurantCountryCode,
+          application.restaurantContact,
+        ),
+      );
 
       // Address
       formData.append("address", application.address);
@@ -1175,10 +1143,6 @@ export default function ManagerRegisterPage() {
       const data = response.data;
 
       if (response.status < 200 || response.status >= 300) {
-        if (data?.detail?.code === "email_verification_required") {
-          invalidateEmailVerification(data.detail.message);
-          return;
-        }
         throw new Error(
           data?.detail || "Unable to submit manager registration.",
         );
@@ -1187,7 +1151,6 @@ export default function ManagerRegisterPage() {
       console.log("Manager application submitted:", data);
 
       // Go to waiting for admin approval page
-      setEmailVerification(null);
       navigate("/manager/pending");
     } catch (err) {
       console.error("Manager registration failed:", err);
@@ -1264,13 +1227,6 @@ export default function ManagerRegisterPage() {
           </div>
         </div>
 
-        {step > 1 && emailVerified && (
-          <p className="mb-5 flex items-center gap-2 text-sm font-medium text-emerald-700" role="status">
-            <ShieldCheck size={18} aria-hidden="true" />
-            Email confirmed: {managerEmail}
-          </p>
-        )}
-
         {/* STEP 1 */}
         {step === 1 && (
           <>
@@ -1283,7 +1239,11 @@ export default function ManagerRegisterPage() {
               personal account details.
             </p>
 
-            <form onSubmit={handlePersonalContinue} onBlur={handleFieldBlur} noValidate>
+            <form
+              onSubmit={handlePersonalContinue}
+              onBlur={handleFieldBlur}
+              noValidate
+            >
               <FormField
                 id="name"
                 label="Full Name"
@@ -1373,7 +1333,7 @@ export default function ManagerRegisterPage() {
                 label="Password"
                 placeholder="Create a password"
                 autoComplete="new-password"
-                minLength={8}
+                minLength={10}
                 maxLength={128}
                 required
                 value={credentials.password}
@@ -1388,7 +1348,7 @@ export default function ManagerRegisterPage() {
                 label="Confirm Password"
                 placeholder="Re-enter your password"
                 autoComplete="new-password"
-                minLength={8}
+                minLength={10}
                 maxLength={128}
                 required
                 value={credentials.confirmPassword}
@@ -1432,7 +1392,11 @@ export default function ManagerRegisterPage() {
               Fill out the public-facing details for your establishment.
             </p>
 
-            <form onSubmit={handleRestaurantContinue} onBlur={handleFieldBlur} noValidate>
+            <form
+              onSubmit={handleRestaurantContinue}
+              onBlur={handleFieldBlur}
+              noValidate
+            >
               {/* Restaurant Name */}
               <FormField
                 id="restaurantName"
@@ -1521,7 +1485,10 @@ export default function ManagerRegisterPage() {
 
               <div className="grid grid-cols-[minmax(100px,1fr)_minmax(0,2fr)] gap-3">
                 <div className="mb-4" data-validation-container>
-                  <label htmlFor="restaurantCountryCode" className="mb-2 block text-sm font-medium text-ink">
+                  <label
+                    htmlFor="restaurantCountryCode"
+                    className="mb-2 block text-sm font-medium text-ink"
+                  >
                     Country Code
                   </label>
                   <select
@@ -1531,16 +1498,28 @@ export default function ManagerRegisterPage() {
                     required
                     value={application.restaurantCountryCode}
                     aria-invalid={Boolean(fieldErrors.restaurantCountryCode)}
-                    aria-describedby={fieldErrors.restaurantCountryCode ? "restaurantCountryCode-error" : undefined}
-                    onChange={(event) => updateField("restaurantCountryCode", event.target.value)}
+                    aria-describedby={
+                      fieldErrors.restaurantCountryCode
+                        ? "restaurantCountryCode-error"
+                        : undefined
+                    }
+                    onChange={(event) =>
+                      updateField("restaurantCountryCode", event.target.value)
+                    }
                     className={`h-12 w-full rounded-lg border bg-white px-3 text-sm text-ink outline-none transition focus:border-wine focus:ring-2 focus:ring-wine/10 ${fieldErrors.restaurantCountryCode ? "border-red-400" : "border-stone-200"}`}
                   >
                     {countryCallingCodes.map(({ value, label }) => (
-                      <option key={value} value={value}>{value} {label}</option>
+                      <option key={value} value={value}>
+                        {value} {label}
+                      </option>
                     ))}
                   </select>
                   {fieldErrors.restaurantCountryCode && (
-                    <p id="restaurantCountryCode-error" className="mt-1.5 text-xs font-medium text-red-600" role="alert">
+                    <p
+                      id="restaurantCountryCode-error"
+                      className="mt-1.5 text-xs font-medium text-red-600"
+                      role="alert"
+                    >
                       {fieldErrors.restaurantCountryCode}
                     </p>
                   )}
@@ -1772,7 +1751,11 @@ export default function ManagerRegisterPage() {
               Upload official merchant documents as PDF files only (Max 5MB).
             </p>
 
-            <form onSubmit={handleDocumentsContinue} onBlur={handleFieldBlur} noValidate>
+            <form
+              onSubmit={handleDocumentsContinue}
+              onBlur={handleFieldBlur}
+              noValidate
+            >
               <DocumentCard
                 title="FSSAI License / Food Safety"
                 description="Upload your food safety or FSSAI license as a PDF."
@@ -1872,7 +1855,11 @@ export default function ManagerRegisterPage() {
               Configure your restaurant’s weekly operating hours.
             </p>
 
-            <form onSubmit={handleOperatingHoursContinue} onBlur={handleFieldBlur} noValidate>
+            <form
+              onSubmit={handleOperatingHoursContinue}
+              onBlur={handleFieldBlur}
+              noValidate
+            >
               {/* Weekly Timing Schedule */}
               <div className="mb-7">
                 <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-ink">
@@ -2077,14 +2064,10 @@ export default function ManagerRegisterPage() {
                     />
 
                     <ReviewItem
-                      label="Restaurant Email"
-                      value={managerEmail}
-                    />
-
-                    <ReviewItem
                       label="Restaurant Contact"
                       value={formatRestaurantPhoneNumber(
-                        application.restaurantCountryCode, application.restaurantContact,
+                        application.restaurantCountryCode,
+                        application.restaurantContact,
                       )}
                     />
 

@@ -15,6 +15,7 @@ const blank = {
   title: "",
   description: "",
   code: "",
+  application_mode: "AUTOMATIC",
   discount_type: "PERCENTAGE",
   discount_percent: "",
   minimum_subtotal: "0",
@@ -257,6 +258,7 @@ export default function ManagerOffersPage() {
     try {
       const body = {
         ...form,
+        code: form.code.trim() || null,
         discount_percent: Number(form.discount_percent),
         minimum_subtotal: Number(form.minimum_subtotal),
         max_discount: form.max_discount ? Number(form.max_discount) : null,
@@ -282,7 +284,7 @@ export default function ManagerOffersPage() {
         },
       );
       setForm(null);
-      setNotice(`Offer ${form.id ? "updated" : "created"} successfully.`);
+      setNotice(`${form.application_mode === "COUPON" ? "Coupon" : "Offer"} ${form.id ? "updated" : "created"} successfully.`);
       await load();
     } catch (reason) {
       setFormError(reason?.message || "Failed to save offer.");
@@ -338,14 +340,16 @@ export default function ManagerOffersPage() {
         <div className="offers-heading">
           <div>
             <span>GROW REPEAT VISITS</span>
-            <h2>Offers & discounts</h2>
+            <h2>Offers & coupons</h2>
             <p>
-              Create one-off discounts for your menu. Only one offer can be used
-              per order.
+              Each item receives its best eligible offer automatically. Create coupon codes for promotions. Offers never stack on the same item.
             </p>
           </div>
           <button onClick={() => { setFormError(""); setForm({ ...blank }); }}>
             <Plus size={17} /> Create offer
+          </button>
+          <button onClick={() => { setFormError(""); setForm({ ...blank, application_mode: "COUPON" }); }}>
+            <Tag size={17} /> Create coupon
           </button>
         </div>
         {error && (
@@ -473,7 +477,7 @@ export default function ManagerOffersPage() {
                     <td>
                       <b>{o.title}</b>
                       <small>
-                        {o.code} · {o.description}
+                        {o.application_mode === "COUPON" ? `Coupon · ${o.code}` : "Automatic offer"} · {o.description}
                       </small>
                     </td>
                     <td>
@@ -571,7 +575,7 @@ export default function ManagerOffersPage() {
       {form && (
         <div className="offer-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="offer-form-title">
           <CustomForm className="offer-form" onSubmit={save}>
-            <h2 id="offer-form-title">{form.id ? "Edit offer" : "Create offer"}</h2>
+            <h2 id="offer-form-title">{form.id ? "Edit" : "Create"} {form.application_mode === "COUPON" ? "coupon" : "offer"}</h2>
             <div className="offer-form-grid">
               <label>
                 Title
@@ -583,14 +587,21 @@ export default function ManagerOffersPage() {
                 />
               </label>
               <label>
-                Offer code
+                Apply discount
+                <select value={form.application_mode || "AUTOMATIC"} onChange={(e) => update("application_mode", e.target.value)}>
+                  <option value="AUTOMATIC">Automatically at checkout</option>
+                  <option value="COUPON">With a coupon code</option>
+                </select>
+              </label>
+              {form.application_mode === "COUPON" && <label>
+                Coupon code
                 <input
                   required
                   pattern="[A-Za-z0-9_-]{3,40}"
                   value={form.code}
                   onChange={(e) => update("code", e.target.value.toUpperCase())}
                 />
-              </label>
+              </label>}
               <label>
                 Description
                 <input
@@ -614,8 +625,8 @@ export default function ManagerOffersPage() {
                   : "Discount amount (₹)"}
                 <input
                   type="number"
-                  min={form.discount_type === "PERCENTAGE" ? "10" : "0.01"}
-                  max={form.discount_type === "PERCENTAGE" ? "90" : undefined}
+                  min="0.01"
+                  max={form.discount_type === "PERCENTAGE" ? "100" : undefined}
                   step="0.01"
                   required
                   value={form.discount_percent}
@@ -695,7 +706,7 @@ export default function ManagerOffersPage() {
                 Applicability
                 <select
                   value={form.applicability}
-                  onChange={(e) => update("applicability", e.target.value)}
+                  onChange={(e) => setForm((current) => ({ ...current, applicability: e.target.value, eligible_food_ids: [], eligible_category_ids: [] }))}
                 >
                   <option value="RESTAURANT">Entire restaurant order</option>
                   <option value="ITEMS">Specific items</option>
@@ -731,6 +742,7 @@ export default function ManagerOffersPage() {
             {form.applicability === "CATEGORIES" && (
               <fieldset>
                 <legend>Eligible categories</legend>
+                {form.application_mode !== "COUPON" && <p>Each category can have one automatic offer on a given date. Choose separate date ranges to schedule upcoming offers.</p>}
                 {menu.map((c) => (
                   <label className="offer-check" key={c.id}>
                     <input
@@ -761,7 +773,7 @@ export default function ManagerOffersPage() {
               <button type="button" onClick={() => setForm(null)}>
                 Cancel
               </button>
-              <button disabled={busy}>{busy ? "Saving…" : "Save offer"}</button>
+              <button disabled={busy}>{busy ? "Saving…" : form.application_mode === "COUPON" ? "Save coupon" : "Save offer"}</button>
             </div>
           </CustomForm>
         </div>

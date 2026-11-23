@@ -3,7 +3,10 @@ import PageTransition from "../../components/ui/PageTransition.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { useEffect, useMemo } from "react";
 import { useDispatch } from "react-redux";
-import { setCustomerSession, clearCustomerSession } from "../../state/customerSession.js";
+import {
+  setCustomerSession,
+  clearCustomerSession,
+} from "../../state/customerSession.js";
 import { useNavigate } from "react-router-dom";
 import CustomerHeader from "../../components/landing/CustomerHeader.jsx";
 import CuisineGrid from "../../components/landing/CuisineGrid.jsx";
@@ -31,11 +34,18 @@ export default function CustomerLandingPage() {
   const navigate = useNavigate();
   const [
     {
-      user, loading, restaurants, restaurantsLoading, restaurantsError,
-      restaurantRefresh, selectedCuisine,
+      user,
+      loading,
+      restaurants,
+      restaurantsLoading,
+      restaurantsError,
+      restaurantRefresh,
+      selectedCuisine,
     },
     {
-      user: setUser, loading: setLoading, restaurants: setRestaurants,
+      user: setUser,
+      loading: setLoading,
+      restaurants: setRestaurants,
       restaurantsLoading: setRestaurantsLoading,
       restaurantsError: setRestaurantsError,
       restaurantRefresh: setRestaurantRefresh,
@@ -76,7 +86,8 @@ export default function CustomerLandingPage() {
         // Not logged in is perfectly valid for the landing page.
         if (mounted) {
           setUser(null);
-          if (reason.status === 401 || reason.status === 403) dispatch(clearCustomerSession());
+          if (reason.status === 401 || reason.status === 403)
+            dispatch(clearCustomerSession());
         }
       })
       .finally(() => {

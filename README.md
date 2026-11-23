@@ -55,7 +55,7 @@ Protected routes check the matching portal session before rendering. `/` redirec
 
 The customer discovery page and landing-page sections include curated presentation data in `src/data`. Account actions and restaurant, menu, floor, staff, and administration data come from the API. Menu item images are rendered from the URLs returned by the backend.
 
-For customer Google sign-in, configure `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and the callback URL on the backend. The callback defaults to `http://localhost:8000/api/auth/customer/google/callback`; register the exact callback URL with the Google OAuth client.
+For customer Google sign-in, configure `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` on the backend. Register the frontend-origin callback URL with the Google OAuth client: locally, `http://localhost:5173/api/auth/customer/google/callback`. In production, use the corresponding HTTPS frontend origin. The frontend `/api` proxy serves this callback so the session cookie stays same-origin. Google sign-in requests only basic identity information.
 
 ## Project structure
 

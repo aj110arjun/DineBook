@@ -13,13 +13,25 @@ import PortalBreadcrumb from "../PortalBreadcrumb.jsx";
 const CustomerShellContext = createContext(null);
 export const useCustomerShell = () => useContext(CustomerShellContext);
 
-export function CustomerHeaderRegistration({ user, breadcrumbLabel }) {
+export function CustomerHeaderRegistration({ user, breadcrumbLabel, breadcrumbLabels }) {
   const { setHeader } = useCustomerShell();
   const { pathname } = useLocation();
   useLayoutEffect(() => {
-    setHeader({ pathname, user, breadcrumbLabel });
-  }, [pathname, user, breadcrumbLabel, setHeader]);
+    setHeader({ pathname, user, breadcrumbLabel, breadcrumbLabels });
+  }, [pathname, user, breadcrumbLabel, breadcrumbLabels, setHeader]);
   return null;
+}
+
+// Customer pages share one route-aware breadcrumb. Keeping this adapter here
+// means a page never needs to recreate its own Home / Restaurants trail.
+export function CustomerBreadcrumb({ entityLabel, entityLabels }) {
+  return (
+    <PortalBreadcrumb
+      entityLabel={entityLabel}
+      entityLabels={entityLabels}
+      className="portal-breadcrumb customer-route-breadcrumb"
+    />
+  );
 }
 
 export default function CustomerShell() {
@@ -32,9 +44,9 @@ export default function CustomerShell() {
     <CustomerShellContext.Provider value={value}>
       <div className="customer-home customer-portal-shell">
         <CustomerHeaderFrame user={current?.user || user} />
-        <PortalBreadcrumb
+        <CustomerBreadcrumb
           entityLabel={current?.breadcrumbLabel}
-          className="portal-breadcrumb customer-route-breadcrumb"
+          entityLabels={current?.breadcrumbLabels}
         />
         <Outlet />
       </div>

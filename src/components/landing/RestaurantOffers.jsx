@@ -2,6 +2,7 @@ import { formatLocalDateTime } from "../../lib/localDate.js";
 import { useId, useState } from "react";
 import { Check, ChevronDown, Copy, Search, TicketPercent } from "lucide-react";
 import Pagination from "../Pagination.jsx";
+import { isCoupon } from "../../lib/foodOffers.js";
 import "../../assets/css/RestaurantOffers.css";
 
 const PAGE_SIZE = 4;
@@ -106,14 +107,14 @@ export default function RestaurantOffers({ offers }) {
                 {Number(offer.minimum_subtotal) > 0 ? `On orders from ${currency(offer.minimum_subtotal)}` : "No minimum order"}
                 {offer.max_discount != null && ` · Save up to ${currency(offer.max_discount)}`}
               </p>
-              <div className="restaurant-offer-code-row">
+              {isCoupon(offer) ? <div className="restaurant-offer-code-row">
                 <div><span>USE CODE</span><code>{offer.code}</code></div>
                 <button type="button" onClick={() => copyCode(offer)} aria-label={`Copy offer code ${offer.code}`}>
                   {copyFeedback?.id === offer.id && copyFeedback.success
                     ? <><Check size={15} aria-hidden="true" /> Copied</>
                     : <><Copy size={15} aria-hidden="true" /> Copy</>}
                 </button>
-              </div>
+              </div> : <p className="restaurant-offer-summary">Automatic offer · each dish gets its best eligible discount at checkout.</p>}
               <p className="restaurant-offer-copy-feedback" role="status">
                 {copyFeedback?.id === offer.id
                   ? copyFeedback.success ? "Offer code copied." : "Could not copy. Select the code above to copy it manually."

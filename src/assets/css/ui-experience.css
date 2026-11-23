@@ -68,7 +68,8 @@
   width: 100%;
   box-sizing: border-box;
   max-width: var(--customer-content-width, var(--content-width));
-  margin: var(--space-5) auto var(--space-2);
+  min-height: 30px;
+  margin: var(--space-5) auto var(--space-3);
   padding-inline: var(--customer-content-gutter, var(--space-6));
 }
 .customer-portal-shell .restaurant-details-page {

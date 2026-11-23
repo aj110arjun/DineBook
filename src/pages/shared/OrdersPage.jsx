@@ -96,7 +96,7 @@ export default function OrdersPage({ mode = "customer" }) {
     search: initialParams.get("search") || "",
     headerUser: null,
     managerStatusFilter: initialParams.get("status") || "ALL",
-    statusFilter: mode === "chef" ? "ACTIVE" : "ALL",
+    statusFilter: "ALL",
     dateFrom: "",
     dateTo: "",
     sort: mode === "chef" ? "oldest" : "newest",
@@ -357,7 +357,7 @@ export default function OrdersPage({ mode = "customer" }) {
         onSearch={setSearch}
         onStatus={setStatusFilter}
         onSort={setSort}
-        onResetFilters={() => { setSearch(""); setStatusFilter("ACTIVE"); setSort("oldest"); }}
+        onResetFilters={() => { setSearch(""); setStatusFilter("ALL"); setSort("oldest"); }}
         onSelectDate={selectDate}
         onMonthChange={moveMonth}
         onToday={() => { setOrderMonthTime(shiftLocalMonth(Date.now())); selectDate(dateKey(new Date())); }}
@@ -445,7 +445,7 @@ export default function OrdersPage({ mode = "customer" }) {
             type="button"
             onClick={() => {
               setSearch("");
-              setStatusFilter(mode === "chef" ? "ACTIVE" : "ALL");
+              setStatusFilter("ALL");
               setDateFrom("");
               setDateTo("");
               setSort(mode === "chef" ? "oldest" : "newest");

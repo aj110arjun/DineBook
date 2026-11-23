@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
+import ManagerOrderItems from "../../components/manager/ManagerOrderItems.jsx";
 import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import "../../assets/css/ManagerOrderDetailsPage.css";
@@ -142,9 +143,6 @@ export default function ManagerOrderDetailsPage() {
   }
 
   const reservation = order?.reservation;
-  const itemCount =
-    order?.items?.reduce((sum, item) => sum + Number(item.quantity || 0), 0) ||
-    0;
   const orderType = order?.service_type === "TAKEAWAY"
     ? "Takeaway order"
     : order?.is_preorder
@@ -281,47 +279,7 @@ export default function ManagerOrderDetailsPage() {
 
               <div className="manager-order-details-columns">
                 <section className="manager-order-details-items">
-                  <header>
-                    <div>
-                      <h2>Order items</h2>
-                      <p>
-                        {itemCount} {itemCount === 1 ? "item" : "items"}
-                      </p>
-                    </div>
-                  </header>
-                  {order.items?.length ? (
-                    <div className="manager-order-details-item-list">
-                      {order.items.map((item, index) => (
-                        <article
-                          key={`${item.variant_id || item.food_name}-${index}`}
-                        >
-                          {item.image_url ? (
-                            <img src={item.image_url} alt="" loading="lazy" />
-                          ) : (
-                            <span className="manager-order-details-item-placeholder">
-                              <Package size={18} />
-                            </span>
-                          )}
-                          <div className="manager-order-details-item-name">
-                            <strong>{item.food_name || "Menu item"}</strong>
-                            {item.variant_name && (
-                              <span>{item.variant_name}</span>
-                            )}
-                            <small>
-                              Qty {item.quantity} × {money(item.unit_price)}
-                            </small>
-                          </div>
-                          <strong className="manager-order-details-line-total">
-                            {money(item.line_total)}
-                          </strong>
-                        </article>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="manager-order-details-empty">
-                      No item details are available.
-                    </p>
-                  )}
+                  <ManagerOrderItems items={order.items || []} title="Order items" />
                 </section>
 
                 <aside className="manager-order-details-side">

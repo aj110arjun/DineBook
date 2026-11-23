@@ -1,4 +1,5 @@
 import LoadingState from "../../components/ui/LoadingState.jsx";
+import CustomerMenuCard from "../../components/landing/CustomerMenuCard.jsx";
 import PageTransition from "../../components/ui/PageTransition.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate, formatLocalTime, formatWallTime } from "../../lib/localDate.js";
@@ -754,7 +755,7 @@ export default function CustomerRestaurantDetailsPage() {
                         <h2>Explore the menu</h2>
                         <p>
                           Browse dishes and available options. Place your order
-                          at reception.
+                          at reception. Hover over a dish to see its details.
                         </p>
                       </div>
                     </div>
@@ -805,7 +806,7 @@ export default function CustomerRestaurantDetailsPage() {
                               </option>
                             </select>
                           </label>
-                          <span>{menuTotal} available dishes</span>
+                          <span>{menuTotal} {menuTotal === 1 ? "dish" : "dishes"}</span>
                         </div>
                         <nav
                           className="customer-menu-categories"
@@ -856,41 +857,12 @@ export default function CustomerRestaurantDetailsPage() {
                               ) : (
                                 <div className="customer-menu-grid">
                                   {visibleMenuFoods.map((food) => (
-                                    <article
-                                      className={`customer-menu-card ${food.is_available ? "" : "unavailable"}`}
+                                    <CustomerMenuCard
                                       key={food.id}
-                                      tabIndex={0}
-                                    >
-                                      {food.image_url ? (
-                                        <img
-                                          className="customer-menu-image"
-                                          src={food.image_url}
-                                          alt={food.name}
-                                          loading="lazy"
-                                        />
-                                      ) : (
-                                        <div
-                                          className="customer-menu-image-placeholder"
-                                          aria-label={`${food.name} image unavailable`}
-                                        >
-                                          <Utensils size={26} />
-                                        </div>
-                                      )}
-                                      <div className="customer-menu-hover-details">
-                                        <h4>{food.name}</h4>
-                                        <p>
-                                          {food.description?.trim() ||
-                                            "No description has been added for this dish."}
-                                        </p>
-                                      </div>
-                                      {!(food.variants || []).some(
-                                        (variant) => variant.is_available,
-                                      ) && (
-                                        <p className="customer-menu-description">
-                                          No options are currently available.
-                                        </p>
-                                      )}
-                                    </article>
+                                      food={food}
+                                      offers={restaurantOffers}
+                                      categoryId={category.id}
+                                    />
                                   ))}
                                 </div>
                               )}

@@ -1,7 +1,5 @@
-import LoadingState from "../../components/ui/LoadingState.jsx";
-import PageTransition from "../../components/ui/PageTransition.jsx";
 import { usePageState } from "../../state/usePageState.js";
-import { formatCalendarDate, formatWallTime, formatLocalDate, shiftLocalMonth } from "../../lib/localDate.js";
+import { formatLocalDate, shiftLocalMonth } from "../../lib/localDate.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
@@ -84,7 +82,11 @@ function to24Hour(value) {
   if (period === "AM" && hour === 12) hour = 0;
   return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
-
+function displayTime(value) {
+  if (!value) return "-";
+  const [hour, minute] = value.split(":").map(Number);
+  return `${hour % 12 || 12}:${String(minute).padStart(2, "0")} ${hour >= 12 ? "PM" : "AM"}`;
+}
 function paymentMethodLabel(method) {
   if (method === "WALLET") return "DineBook wallet";
   if (method === "RAZORPAY") return "Razorpay";
@@ -110,6 +112,12 @@ function preorderPaymentLabel(reservation) {
   return reservation.preorder_payment_status === "FAILED"
     ? "Payment failed"
     : "Payment pending";
+}
+function shortTime(value) {
+  if (!value) return "—";
+  const [hour, minute] = value.slice(0, 5).split(":").map(Number);
+  const period = hour >= 12 ? "PM" : "AM";
+  return `${hour % 12 || 12}:${String(minute).padStart(2, "0")} ${period}`;
 }
 const reservationCode = (reservation) =>
   reservation?.reservation_code ||
@@ -178,7 +186,7 @@ function makePassImage(qrData, reservation, restaurant) {
         drawRow("Reservation code", reservationCode(reservation), 558, true);
         drawRow(
           "Date and time",
-          `${formatLocalDate(reservation.reservation_date)} · ${formatWallTime(reservation.start_time)} – ${formatWallTime(reservation.end_time)}`,
+          `${formatLocalDate(reservation.reservation_date)} · ${shortTime(reservation.start_time)} – ${shortTime(reservation.end_time)}`,
           585,
         );
         drawRow("Guests", `${reservation.number_of_guests}`, 612);
@@ -1169,6 +1177,10 @@ export default function CustomerReservationPage() {
   }
 
   const selectedDateLabel = formatLocalDate(date);
+  const bookingBreadcrumbLabels = useMemo(
+    () => ({ restaurant: restaurant?.name }),
+    [restaurant?.name],
+  );
   const restaurantPhoto =
     restaurant?.images?.[0] ||
     restaurant?.image ||
@@ -1176,16 +1188,19 @@ export default function CustomerReservationPage() {
 
   return (
     <div className="customer-home">
-      <CustomerHeader breadcrumbLabel={restaurant?.name ? `Book at ${restaurant.name}` : undefined} user={user} onLogout={() => setUser(null)} />
-      <PageTransition as="main" className="customer-reservation-page">
-
+      <CustomerHeader
+        breadcrumbLabels={bookingBreadcrumbLabels}
+        user={user}
+        onLogout={() => setUser(null)}
+      />
+      <main className="customer-reservation-page">
         {error && step === 1 && (
           <p className="reservation-page-error" role="alert">
             {error}
           </p>
         )}
         {!restaurant ? (
-          <LoadingState variant="detail" label="Loading restaurant…" error={error} />
+          <p className="customer-reservation-loading">Loading restaurant…</p>
         ) : (
           <>
             <section className="booking-restaurant-summary">
@@ -1273,7 +1288,7 @@ export default function CustomerReservationPage() {
                             <button
                               type="button"
                               disabled={outside || past || closed}
-                              aria-label={formatCalendarDate(day)}
+                              aria-label={formatLocalDate(day)}
                               title={
                                 closed ? "Restaurant is closed" : undefined
                               }
@@ -1475,7 +1490,7 @@ export default function CustomerReservationPage() {
                             : selectedDateException.periods
                                 .map(
                                   (period) =>
-                                    `${formatWallTime(period.opens)}–${formatWallTime(period.closes)}`,
+                                    `${period.opens}–${period.closes}`,
                                 )
                                 .join(" · ")}
                           {selectedDateException.reason
@@ -1614,7 +1629,7 @@ export default function CustomerReservationPage() {
                           ? ""
                           : `${menuTotal} menu ${menuTotal === 1 ? "item" : "items"} found`}
                     </div>
-                    {menuLoading ? <LoadingState variant="menu" count={3} label="Loading preorder menu…" /> : menuError ? (
+                    {menuLoading ? null : menuError ? (
                       <div role="alert">
                         <p className="reservation-page-error">{menuError}</p>
                         <button
@@ -1870,7 +1885,7 @@ export default function CustomerReservationPage() {
                       RESERVATION STEP {tableStep} OF {checkoutStep}
                     </span>
                     <p>
-                      {selectedDateLabel} at {formatWallTime(time)} · {guests}{" "}
+                      {selectedDateLabel} at {displayTime(time)} · {guests}{" "}
                       guests
                     </p>
                     <TableFloorPicker
@@ -2132,7 +2147,7 @@ export default function CustomerReservationPage() {
                         <div>
                           <Clock3 />
                           <span>Time</span>
-                          <strong>{formatWallTime(time)}</strong>
+                          <strong>{displayTime(time)}</strong>
                         </div>
                         <div>
                           <Users />
@@ -2317,7 +2332,7 @@ export default function CustomerReservationPage() {
                               />
                               <ReviewLine
                                 label="Date & time"
-                                value={`${formatLocalDate(reservation.reservation_date)} · ${formatWallTime(reservation.start_time)} – ${formatWallTime(reservation.end_time)}`}
+                                value={`${formatLocalDate(reservation.reservation_date)} · ${shortTime(reservation.start_time)} – ${shortTime(reservation.end_time)}`}
                               />
                               <ReviewLine
                                 label="Table"
@@ -2468,8 +2483,8 @@ export default function CustomerReservationPage() {
                       label="Dining period"
                       value={
                         step === resultStep && reservation
-                          ? `${formatWallTime(reservation.start_time)} – ${formatWallTime(reservation.end_time)}`
-                          : `${formatWallTime(time)}${selectedAvailability.end_time ? ` – ${formatWallTime(selectedAvailability.end_time)}` : ""}`
+                          ? `${displayTime(reservation.start_time)} – ${displayTime(reservation.end_time)}`
+                          : `${displayTime(time)}${selectedAvailability.end_time ? ` – ${displayTime(selectedAvailability.end_time)}` : ""}`
                       }
                     />
                     {step >= tableStep && (
@@ -2692,7 +2707,7 @@ export default function CustomerReservationPage() {
             </div>
           </>
         )}
-      </PageTransition>
+      </main>
       <LandingFooter />
     </div>
   );
