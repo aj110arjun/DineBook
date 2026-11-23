@@ -5,6 +5,9 @@ export default function GoogleSignInButton({
   onSuccess,
   onError,
   className = "",
+  endpoint = "/api/auth/customer/google/login",
+  messageType = "dinebook-google-auth",
+  label = "Continue with Google",
 }) {
   const popup = useRef(null);
   const closeTimer = useRef(null);
@@ -16,7 +19,7 @@ export default function GoogleSignInButton({
       if (
         event.origin !== window.location.origin ||
         event.source !== popup.current ||
-        event.data?.type !== "dinebook-google-auth"
+        event.data?.type !== messageType
       )
         return;
       if (closeTimer.current) window.clearInterval(closeTimer.current);
@@ -52,7 +55,7 @@ export default function GoogleSignInButton({
       Math.round(window.screenY + (window.outerHeight - height) / 2),
     );
     const authPopup = window.open(
-      `${API_BASE}/api/auth/customer/google/login`,
+      `${API_BASE}${endpoint}`,
       "dinebook-google-sign-in",
       `popup=yes,width=${width},height=${height},left=${left},top=${top}`,
     );
@@ -89,7 +92,7 @@ export default function GoogleSignInButton({
       <span className="font-bold text-base" aria-hidden="true">
         G
       </span>
-      Continue with Google
+      {label}
     </button>
   );
 }

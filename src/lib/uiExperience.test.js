@@ -47,6 +47,16 @@ test("dynamic entity labels use existing data and retain valid parent links", ()
   const crumbs = breadcrumbsFor("/customer/restaurants/restaurant-ref/booking", "Book at Spice Garden");
   assert.equal(crumbs[2].to, "/customer/restaurants/restaurant-ref");
   assert.equal(crumbs.at(-1).label, "Book at Spice Garden");
+  const bookingCrumbs = breadcrumbsFor(
+    "/customer/restaurants/restaurant-ref/booking",
+    undefined,
+    { restaurant: "Spice Garden" },
+  );
+  assert.deepEqual(
+    bookingCrumbs.map((crumb) => crumb.label),
+    ["Home", "Restaurants", "Spice Garden", "Book a table"],
+  );
+  assert.equal(bookingCrumbs[2].to, "/customer/restaurants/restaurant-ref");
   const html = renderToStaticMarkup(createElement(StaticRouter, { location: "/admin/restaurants/reference" }, createElement(Breadcrumb, { entityLabel: "Spice <Garden>" })));
   assert.match(html, /aria-label="Breadcrumb"/); assert.equal((html.match(/aria-current="page"/g) || []).length, 1);
   assert.match(html, /Spice &lt;Garden&gt;/); assert.doesNotMatch(html, />reference</);

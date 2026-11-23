@@ -33,7 +33,7 @@ const renderDetails = (status, extra = {}) => renderToStaticMarkup(createElement
 const renderWorkspace = (extra = {}) => renderToStaticMarkup(createElement(workspace.default, {
   orders: [order], total: 1, calendarOrderCounts: { "2028-02-29": 2 }, month: new Date(2028, 1, 1), selectedDate: "2028-02-29",
   loading: false, initialLoading: false, refreshing: false, error: "", notice: "", busy: "", realtimeStatus: "connected",
-  filters: { search: "", status: "ACTIVE", sort: "oldest" }, pagination: { page: 1, pageSize: 10, onPageChange() {} },
+  filters: { search: "", status: "ALL", sort: "oldest" }, pagination: { page: 1, pageSize: 10, onPageChange() {} },
   onSearch() {}, onStatus() {}, onSort() {}, onResetFilters() {}, onSelectDate() {}, onMonthChange() {}, onToday() {}, onRefresh() {}, onUpdate() {}, ...extra,
 }));
 
@@ -62,6 +62,7 @@ test("the chef calendar includes leap day and labels counts as orders", () => {
   assert.match(html, /aria-label="Orders calendar"/);
   assert.match(html, /February 29, 2028, 2 orders/);
   assert.match(html, /aria-label="Scroll to later dates"/);
+  assert.match(html, /<option value="ALL" selected="">All statuses<\/option>/);
   assert.doesNotMatch(html, /2 activities|Scan pass|Reservations &amp; Orders/);
 });
 

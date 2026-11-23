@@ -7,18 +7,21 @@ import { Printer, Plus, Trash2 } from "lucide-react";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import "../../assets/css/ManagerSpotOrderPage.css";
+import FoodOfferBadges, { ItemOfferSaving } from "../../components/FoodOfferBadges.jsx";
+import { isCoupon, appliedOfferLabel } from "../../lib/foodOffers.js";
 
 export default function ManagerSpotOrderPage() {
   const [
     {
       floors, menu, guestName, tableId, variantId, quantity, lines, order, offers,
-      offerCode, quote, quoteError, loading, saving, error, serviceType,
+      offerCode, quote, quoteError, quoteVersion, loading, saving, error, serviceType,
     },
     {
       floors: setFloors, menu: setMenu, guestName: setGuestName,
       tableId: setTableId, variantId: setVariantId, quantity: setQuantity,
       lines: setLines, order: setOrder, offers: setOffers,
       offerCode: setOfferCode, quote: setQuote, quoteError: setQuoteError,
+      quoteVersion: setQuoteVersion,
       loading: setLoading, saving: setSaving, error: setError,
       serviceType: setServiceType,
     },
@@ -35,6 +38,7 @@ export default function ManagerSpotOrderPage() {
     offerCode: "",
     quote: null,
     quoteError: "",
+    quoteVersion: 0,
     loading: true,
     saving: false,
     error: "",
@@ -79,7 +83,7 @@ export default function ManagerSpotOrderPage() {
             .flatMap((food) =>
               (food.variants || [])
                 .filter((variant) => variant.is_available)
-                .map((variant) => ({ ...variant, foodName: food.name })),
+                .map((variant) => ({ ...variant, foodName: food.name, food, categoryId: category.id })),
             ),
         ),
     [menu],
@@ -109,7 +113,7 @@ export default function ManagerSpotOrderPage() {
     return () => {
       active = false;
     };
-  }, [checkoutKey, order]);
+  }, [checkoutKey, order, quoteVersion]);
 
   function addLine() {
     if (
@@ -158,6 +162,7 @@ export default function ManagerSpotOrderPage() {
           table_id: tableId,
           guest_name: guestName.trim(),
           offer_code: offerCode || null,
+          expected_total: Number(checkout.total),
           items: lines.map(({ variant_id, quantity: count }) => ({
             variant_id,
             quantity: count,
@@ -175,6 +180,7 @@ export default function ManagerSpotOrderPage() {
       );
     } catch (reason) {
       setError(reason.message);
+      if (reason.status === 409) setQuoteVersion((current) => current + 1);
     } finally {
       setSaving(false);
     }
@@ -348,9 +354,15 @@ export default function ManagerSpotOrderPage() {
                 <ul>
                   {lines.map((line) => (
                     <li key={line.variant_id}>
-                      <span>
-                        {line.quantity} × {line.food_name} · {line.variant_name}
-                      </span>
+                      <div className="spot-order-line-description">
+                        <span>{line.quantity} × {line.food_name} · {line.variant_name}</span>
+                        <ItemOfferSaving discount={checkout?.item_discounts?.[line.variant_id]} />
+                        {variants.find((variant) => variant.id === line.variant_id)?.food && <FoodOfferBadges
+                          offers={offers}
+                          food={variants.find((variant) => variant.id === line.variant_id).food}
+                          categoryId={variants.find((variant) => variant.id === line.variant_id).categoryId}
+                        />}
+                      </div>
                       <strong>
                         ₹{(line.unit_price * line.quantity).toFixed(2)}
                       </strong>
@@ -372,13 +384,13 @@ export default function ManagerSpotOrderPage() {
                 </ul>
               )}
               <label className="spot-order-offer">
-                Offer
+                Coupon
                 <select
                   value={offerCode}
                   onChange={(event) => setOfferCode(event.target.value)}
                 >
-                  <option value="">No offer</option>
-                  {offers.map((offer) => (
+                  <option value="">Best automatic offer</option>
+                  {offers.filter(isCoupon).map((offer) => (
                     <option
                       key={offer.id}
                       value={offer.code}
@@ -392,6 +404,8 @@ export default function ManagerSpotOrderPage() {
                   ))}
                 </select>
               </label>
+              {selectedVariant && <FoodOfferBadges offers={offers} food={selectedVariant.food} categoryId={selectedVariant.categoryId} />}
+              <small>Each item gets its best eligible offer. A coupon replaces automatic offers.</small>
               {quoteError && (
                 <p className="spot-order-error" role="alert">
                   {quoteError}
@@ -408,7 +422,7 @@ export default function ManagerSpotOrderPage() {
                   </div>
                   {checkout.offer_code && (
                     <div>
-                      <span>Offer · {checkout.offer_code}</span>
+                      <span>{appliedOfferLabel(checkout)}</span>
                       <strong>
                         −₹{Number(checkout.discount_amount).toFixed(2)}
                       </strong>

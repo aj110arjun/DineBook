@@ -68,7 +68,12 @@ const navigationGroups = [
   },
 ];
 
-export function ManagerFrame({ children, title = "Dashboard", managerId: providedManagerId }) {
+export function ManagerFrame({
+  children,
+  title = "Dashboard",
+  managerId: providedManagerId,
+  hideHeader = false,
+}) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const outlet = useOutletContext();
@@ -183,24 +188,26 @@ export function ManagerFrame({ children, title = "Dashboard", managerId: provide
       </aside>
 
       <section className="manager-dashboard-main db-portal-main">
-        <header className="manager-topbar db-portal-topbar">
-          <div className="manager-topbar-left">
-            <button
-              ref={menuButton}
-              className="manager-menu-button"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Open menu"
-              aria-expanded={sidebarOpen}
-              aria-controls="manager-primary-nav"
-            >
-              <Menu size={21} />
-            </button>
-            <h1>{title}</h1>
-          </div>
-          <div className="manager-topbar-right">
-            <NotificationBell role="manager" />
-          </div>
-        </header>
+        {!hideHeader && (
+          <header className="manager-topbar db-portal-topbar">
+            <div className="manager-topbar-left">
+              <button
+                ref={menuButton}
+                className="manager-menu-button"
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Open menu"
+                aria-expanded={sidebarOpen}
+                aria-controls="manager-primary-nav"
+              >
+                <Menu size={21} />
+              </button>
+              <h1>{title}</h1>
+            </div>
+            <div className="manager-topbar-right">
+              <NotificationBell role="manager" />
+            </div>
+          </header>
+        )}
         {children}
       </section>
     </main>
@@ -211,9 +218,11 @@ export default function ManagerLayout(props) {
   const shell = usePortalShell();
   if (shell) return <PortalPage {...props} />;
   return (
-    <ManagerFrame title={props.title}>
+    <ManagerFrame title={props.title} hideHeader={props.hideHeader}>
       <PageTransition>
-        <PortalBreadcrumb entityLabel={props.breadcrumbLabel} />
+        {!props.hideBreadcrumb && (
+          <PortalBreadcrumb entityLabel={props.breadcrumbLabel} />
+        )}
         {props.children}
       </PageTransition>
     </ManagerFrame>

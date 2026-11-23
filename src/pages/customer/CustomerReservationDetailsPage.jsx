@@ -1,3 +1,6 @@
+import FoodOfferBadges, { ItemOfferSaving } from "../../components/FoodOfferBadges.jsx";
+import useCartOffer from "../../lib/useCartOffer.js";
+import { isCoupon, isCurrentOffer, appliedOfferIds, appliedOfferLabel } from "../../lib/foodOffers.js";
 import LoadingState from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatWallTime, formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
@@ -196,7 +199,7 @@ export default function CustomerReservationDetailsPage() {
     {
       user, reservation, loading, error, notice, busy, reloadKey,
       confirmCancellation, orderMenu, availableOffers, cart, offerCode,
-      offerResult, orderError, orderTaxPercent, myReviews, reviewForm,
+      orderError, orderTaxPercent, myReviews, reviewForm,
       editingReviewId, reviewBusy, reviewError, reviewMessage, hoverRating,
     },
     {
@@ -204,7 +207,7 @@ export default function CustomerReservationDetailsPage() {
       error: setError, notice: setNotice, busy: setBusy, reloadKey: setReloadKey,
       confirmCancellation: setConfirmCancellation, orderMenu: setOrderMenu,
       availableOffers: setAvailableOffers, cart: setCart, offerCode: setOfferCode,
-      offerResult: setOfferResult, orderError: setOrderError,
+      orderError: setOrderError,
       orderTaxPercent: setOrderTaxPercent, myReviews: setMyReviews,
       reviewForm: setReviewForm, editingReviewId: setEditingReviewId,
       reviewBusy: setReviewBusy, reviewError: setReviewError,
@@ -223,7 +226,6 @@ export default function CustomerReservationDetailsPage() {
     availableOffers: [],
     cart: [],
     offerCode: "",
-    offerResult: null,
     orderError: "",
     orderTaxPercent: 18,
     myReviews: [],
@@ -504,11 +506,14 @@ export default function CustomerReservationDetailsPage() {
       setReviewError(reason.message);
     }
   }
+  const { result: offerResult, busy: offerBusy, error: offerError, ready: offerReady, applyCoupon, clearCoupon, refresh: refreshOffer } = useCartOffer({
+    reservationId, items: cart, enabled: reservation?.status === "SEATED",
+  });
   const availableVariants = orderMenu
     .flatMap((category) => category.foods || [])
     .flatMap((food) => food.variants || [])
     .filter((variant) => variant.is_available);
-  const cartSubtotal = cart.reduce(
+  const estimatedCartSubtotal = cart.reduce(
     (sum, line) =>
       sum +
       Number(
@@ -518,13 +523,14 @@ export default function CustomerReservationDetailsPage() {
         line.quantity,
     0,
   );
+  const cartSubtotal = offerResult?.subtotal ?? estimatedCartSubtotal;
   const cartNet = Math.max(
     0,
     cartSubtotal -
       (offerResult?.valid ? Number(offerResult.discount_amount) : 0),
   );
-  const cartTaxAmount = Math.round(cartNet * orderTaxPercent) / 100;
-  const cartTotalWithTax = cartNet + cartTaxAmount;
+  const cartTaxAmount = offerResult?.tax_amount ?? Math.round(cartNet * orderTaxPercent) / 100;
+  const cartTotalWithTax = offerResult?.total ?? cartNet + cartTaxAmount;
   const cartFoodIds = new Set(
     cart.flatMap((line) =>
       orderMenu
@@ -548,7 +554,7 @@ export default function CustomerReservationDetailsPage() {
   );
   const relevantOffers = availableOffers.filter(
     (offer) =>
-      offer.status === "ACTIVE" &&
+      isCurrentOffer(offer) &&
       (offer.applicability === "RESTAURANT" ||
         (offer.applicability === "ITEMS" &&
           (offer.eligible_food_ids || []).some((id) => cartFoodIds.has(id))) ||
@@ -558,7 +564,6 @@ export default function CustomerReservationDetailsPage() {
           ))),
   );
   function changeQuantity(variantId, delta) {
-    setOfferResult(null);
     setCart((current) => {
       const row = current.find((line) => line.variant_id === variantId);
       if (!row && delta > 0)
@@ -572,32 +577,14 @@ export default function CustomerReservationDetailsPage() {
         .filter((line) => line.quantity > 0);
     });
   }
-  async function validateOrderOffer(code = offerCode) {
-    setOrderError("");
-    setOfferResult(null);
-    if (!code.trim() || cart.length === 0) {
-      setOrderError("Add menu items and choose an offer first.");
-      return;
-    }
-    const normalizedCode = code.trim().toUpperCase();
-    setOfferCode(normalizedCode);
-    try {
-      const result = await requestJson("/api/customer/orders/offers/validate", {
-        method: "POST",
-        body: JSON.stringify({
-          reservation_id: reservationId,
-          offer_code: normalizedCode,
-          items: cart,
-        }),
-      });
-      setOfferResult(result);
-      if (!result.valid)
-        setOrderError(result.reason || "This offer cannot be applied.");
-    } catch (reason) {
-      setOrderError(reason.message);
-    }
+  function validateOrderOffer(code = offerCode) {
+    if (!code.trim() || !cart.length) return;
+    setOfferCode(code.trim().toUpperCase());
+    applyCoupon(code);
   }
+
   async function placeFoodOrder() {
+    if (!offerReady) return;
     setBusy(true);
     setOrderError("");
     try {
@@ -609,7 +596,8 @@ export default function CustomerReservationDetailsPage() {
             idempotency_key: window.crypto.randomUUID(),
             reservation_id: reservationId,
             items: cart,
-            offer_code: offerResult?.valid ? offerCode.trim() : null,
+            expected_total: cartTotalWithTax,
+            offer_code: offerResult?.valid && isCoupon(offerResult.offer) ? offerResult.offer.code : null,
             payment_method: "PAY_AT_DESK",
           }),
         },
@@ -619,10 +607,11 @@ export default function CustomerReservationDetailsPage() {
       );
       setCart([]);
       setOfferCode("");
-      setOfferResult(null);
+      clearCoupon();
       setReloadKey((key) => key + 1);
     } catch (reason) {
       setOrderError(reason.message);
+      if (reason.status === 409) refreshOffer();
     } finally {
       setBusy(false);
     }
@@ -905,6 +894,7 @@ export default function CustomerReservationDetailsPage() {
                         <div>
                           <b>{food.name}</b>
                           <small>{food.category_name}</small>
+                          <FoodOfferBadges offers={availableOffers} food={food} />
                         </div>
                         {(food.variants || [])
                           .filter((v) => v.is_available)
@@ -921,6 +911,7 @@ export default function CustomerReservationDetailsPage() {
                                 <span>
                                   {variant.name} · ₹
                                   {Number(variant.price).toFixed(2)}
+                                  <ItemOfferSaving discount={offerResult?.item_discounts?.[variant.id]} />
                                 </span>
                                 <div>
                                   {quantity > 0 && (
@@ -961,7 +952,7 @@ export default function CustomerReservationDetailsPage() {
                         <strong>Offers for your order</strong>
                         <small>
                           {relevantOffers.length
-                            ? "Choose an offer to check your savings."
+                            ? "Each item gets its best eligible offer. Offers never stack on an item. A coupon replaces automatic offers."
                             : "No available offers match the items in your cart."}
                         </small>
                       </div>
@@ -970,8 +961,7 @@ export default function CustomerReservationDetailsPage() {
                       <article
                         key={offer.id}
                         className={
-                          offerResult?.valid &&
-                          offerResult.offer.id === offer.id
+                          appliedOfferIds(offerResult).includes(offer.id)
                             ? "applied"
                             : ""
                         }
@@ -984,19 +974,18 @@ export default function CustomerReservationDetailsPage() {
                               : `₹${Number(offer.discount_percent).toFixed(2)} off`}
                           </span>
                           <small>
-                            {offer.code} · Min. subtotal ₹
+                            {isCoupon(offer) ? `Coupon ${offer.code}` : "Automatic offer"} · Min. subtotal ₹
                             {Number(offer.minimum_subtotal).toFixed(2)}
                           </small>
                         </div>
                         <button
                           type="button"
-                          disabled={busy}
+                          disabled={busy || offerBusy || !isCoupon(offer)}
                           onClick={() => validateOrderOffer(offer.code)}
                         >
-                          {offerResult?.valid &&
-                          offerResult.offer.id === offer.id
+                          {appliedOfferIds(offerResult).includes(offer.id)
                             ? "Applied"
-                            : "Apply"}
+                            : isCoupon(offer) ? "Apply coupon" : "Automatic"}
                         </button>
                       </article>
                     ))}
@@ -1005,33 +994,34 @@ export default function CustomerReservationDetailsPage() {
                     <label>
                       <Tag size={15} />
                       <input
-                        aria-label="Offer code"
-                        placeholder="Enter offer code"
+                        aria-label="Coupon code"
+                        placeholder="Enter coupon code"
                         value={offerCode}
                         onChange={(e) => {
                           setOfferCode(e.target.value.toUpperCase());
-                          setOfferResult(null);
                         }}
                       />
                     </label>
                     <button type="button" onClick={() => validateOrderOffer()}>
                       Apply code
                     </button>
-                    {offerResult?.valid && (
+                    {offerCode && (
                       <button
                         type="button"
                         onClick={() => {
                           setOfferCode("");
-                          setOfferResult(null);
+                          clearCoupon();
                         }}
                       >
                         Remove
                       </button>
                     )}
                   </div>
+                  {offerError && <p role="alert" className="customer-food-error">{offerError}<button type="button" onClick={refreshOffer}>Retry discount check</button></p>}
+                  {offerBusy && <p role="status">Checking the best discount…</p>}
                   {offerResult?.valid && (
                     <p className="customer-offer-valid">
-                      {offerResult.offer.title} applied · −₹
+                      {appliedOfferLabel(offerResult)} applied · −₹
                       {Number(offerResult.discount_amount).toFixed(2)}
                     </p>
                   )}
@@ -1058,7 +1048,7 @@ export default function CustomerReservationDetailsPage() {
                   <button
                     className="customer-place-order"
                     type="button"
-                    disabled={busy}
+                    disabled={busy || offerBusy || !offerReady}
                     onClick={placeFoodOrder}
                   >
                     {busy

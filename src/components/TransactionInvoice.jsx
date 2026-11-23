@@ -17,7 +17,11 @@ export function downloadTransactionInvoice(invoice) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export default function TransactionInvoiceButton({ invoice, className = "" }) {
+export default function TransactionInvoiceButton({
+  invoice,
+  className = "",
+  label: customLabel,
+}) {
   const status = String(invoice?.status || "").toUpperCase();
   const label =
     invoice?.category === "refund" ||
@@ -33,7 +37,7 @@ export default function TransactionInvoiceButton({ invoice, className = "" }) {
       className={`transaction-invoice-button ${className}`.trim()}
       onClick={() => downloadTransactionInvoice(invoice)}
     >
-      <Download size={16} aria-hidden="true" /> {label}
+      <Download size={16} aria-hidden="true" /> {customLabel || label}
     </button>
   );
 }

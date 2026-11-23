@@ -6,9 +6,10 @@ export default function PortalBreadcrumb({
   items,
   className = "portal-breadcrumb",
   entityLabel,
+  entityLabels,
 }) {
   const { pathname } = useLocation();
-  const derived = breadcrumbsFor(pathname, entityLabel);
+  const derived = breadcrumbsFor(pathname, entityLabel, entityLabels);
   const portal = pathname.split("/")[1];
   const entries = (home ? [home, ...(items || [])] : derived).map((entry) => ({
     ...entry, to: entry.to === `/${portal}` || entry.to?.startsWith(`/${portal}/`) ? entry.to : undefined,

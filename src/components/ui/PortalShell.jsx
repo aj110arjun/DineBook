@@ -16,12 +16,12 @@ export function usePortalShell() {
 }
 
 // Existing page wrappers keep their API; the actual frame lives at the route level.
-export function PortalPage({ title, breadcrumbLabel, children }) {
+export function PortalPage({ title, breadcrumbLabel, hideHeader, hideBreadcrumb, children }) {
   const shell = usePortalShell();
   const { pathname } = useLocation();
   useLayoutEffect(() => {
-    shell.setPage({ pathname, title, breadcrumbLabel });
-  }, [shell.setPage, pathname, title, breadcrumbLabel]);
+    shell.setPage({ pathname, title, breadcrumbLabel, hideHeader, hideBreadcrumb });
+  }, [shell.setPage, pathname, title, breadcrumbLabel, hideHeader, hideBreadcrumb]);
   return children;
 }
 
@@ -33,10 +33,15 @@ export default function PortalShell({ Frame }) {
   const current = page?.pathname === pathname ? page : null;
   const crumbs = breadcrumbsFor(pathname, current?.breadcrumbLabel);
   return (
-    <Frame title={current?.title || crumbs.at(-1)?.label || "Dashboard"}>
+    <Frame
+      title={current?.title || crumbs.at(-1)?.label || "Dashboard"}
+      hideHeader={current?.hideHeader}
+    >
       <ShellContext.Provider value={context}>
         <PageTransition>
-          <PortalBreadcrumb entityLabel={current?.breadcrumbLabel} />
+          {!current?.hideBreadcrumb && (
+            <PortalBreadcrumb entityLabel={current?.breadcrumbLabel} />
+          )}
           <Outlet context={outlet} />
         </PageTransition>
       </ShellContext.Provider>

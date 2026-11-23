@@ -2,7 +2,7 @@ import LoadingState from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatWallTime, shiftLocalMonth } from "../../lib/localDate.js";
 import CustomForm from "../../components/forms/CustomForm.jsx";
-import { Fragment, useCallback, useEffect, useMemo, useRef } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   AlertTriangle,
@@ -15,17 +15,23 @@ import {
   Table2,
   Utensils,
   QrCode,
+  Minus,
+  Plus,
+  Tag,
   Upload,
   Search,
   Users,
   X,
 } from "lucide-react";
 import ReservationDateStrip from "../../components/manager/ReservationDateStrip.jsx";
+import { buildCalendarActivities, ManagerCalendarOrderCard, ManagerCalendarOrderDetails } from "../../components/manager/ManagerCalendarOrders.jsx";
+import ManagerOrderItems from "../../components/manager/ManagerOrderItems.jsx";
 import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
 import Pagination from "../../components/Pagination.jsx";
+import { displayOffersForFood, isCoupon, offerSavingLabel } from "../../lib/foodOffers.js";
 import jsQR from "jsqr";
 import "../../assets/css/ManagerReservationsPage.css";
 
@@ -49,14 +55,39 @@ const statusLabel = {
 };
 const activityStatusLabels = {
   ...statusLabel,
-  PLACED: "Sent to kitchen",
-  ACCEPTED: "Accepted by kitchen",
+  PLACED: "Awaiting acceptance",
+  ACCEPTED: "Sent to kitchen",
   PREPARING: "Being prepared",
   READY: "Ready to serve",
   SERVED: "Served",
 };
 const dayKey = (date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+const isCalendarDate = (value) =>
+  typeof value === "string" &&
+  /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+  !Number.isNaN(new Date(`${value}T12:00:00`).getTime());
+const reservationLookupPrefix = (value) => {
+  const normalized = String(value || "")
+    .trim()
+    .replace(/^res-/i, "")
+    .replaceAll("-", "")
+    .toLowerCase();
+  return normalized.length >= 6 && [...normalized].every((char) => "0123456789abcdef".includes(char))
+    ? normalized
+    : null;
+};
+const reservationCode = (reservation) =>
+  reservation?.reservation_code || `RES-${reservation?.id?.replaceAll("-", "").slice(0, 8).toUpperCase() || ""}`;
+const initials = (name) => name?.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "G";
+
+function ReservationAvatar({ name, url, detail = false }) {
+  const [failedUrl, setFailedUrl] = useState("");
+  const showImage = Boolean(url && url !== failedUrl);
+  return <span className={`reservation-avatar${detail ? " reservation-avatar-detail" : ""}`}>
+    {showImage ? <img src={url} alt="" loading="lazy" onError={() => setFailedUrl(url)} /> : initials(name)}
+  </span>;
+}
 const orderTone = (status) =>
   ({
     PLACED: "pending",
@@ -80,7 +111,6 @@ const orderStatusLabel = (status) =>
     REJECTED: "Declined by kitchen",
   })[status] || "Order update pending";
 const shortTime = formatWallTime;
-const isActiveReservation = (item) => ["CONFIRMED", "PENDING_PAYMENT", "SEATED"].includes(item.status);
 const consolidateDeskOrderLines = (lines) => {
   const quantities = new Map();
   lines.forEach(({ variant_id, quantity }) => {
@@ -105,7 +135,7 @@ export default function ManagerReservationsPage() {
       expandedId, error, cancellationNotice, busyId, pendingAction,
       pendingOrderRemoval, actionReason, scannerOpen, scanValue, scanBusy,
       scanError, foodReservation, deskOrderReservation, deskOrderKey,
-      deskOrderLines, reservationOrders, ordersLoadingId, menu, menuBusy,
+      deskOrderLines, deskOrderOffers, deskOrderSearch, deskOrderSearchLoading, reservationOrders, ordersLoadingId, menu, menuBusy,
       variantId, foodQuantity, cameraActive,
     },
     {
@@ -126,6 +156,9 @@ export default function ManagerReservationsPage() {
       scanError: setScanError, foodReservation: setFoodReservation,
       deskOrderReservation: setDeskOrderReservation,
       deskOrderKey: setDeskOrderKey, deskOrderLines: setDeskOrderLines,
+      deskOrderOffers: setDeskOrderOffers,
+      deskOrderSearch: setDeskOrderSearch,
+      deskOrderSearchLoading: setDeskOrderSearchLoading,
       reservationOrders: setReservationOrders,
       ordersLoadingId: setOrdersLoadingId, menu: setMenu, menuBusy: setMenuBusy,
       variantId: setVariantId, foodQuantity: setFoodQuantity,
@@ -167,6 +200,9 @@ export default function ManagerReservationsPage() {
     deskOrderReservation: null,
     deskOrderKey: "",
     deskOrderLines: [],
+    deskOrderOffers: [],
+    deskOrderSearch: "",
+    deskOrderSearchLoading: false,
     reservationOrders: {},
     ordersLoadingId: "",
     menu: [],
@@ -268,7 +304,7 @@ export default function ManagerReservationsPage() {
         setReservationTotal(result.reservations.total || 0);
         setReservationGuestCount(result.reservations.guest_count || 0);
         setOrdersTotal(result.orders.total || 0);
-        if (result.reservation_lookup_date) {
+        if (isCalendarDate(result.reservation_lookup_date)) {
           setSelectedDate(result.reservation_lookup_date);
           setMonthTime(new Date(`${result.reservation_lookup_date}T12:00:00`).getTime());
           setExpandedId(result.reservations.items?.[0]?.id || "");
@@ -369,20 +405,15 @@ export default function ManagerReservationsPage() {
       Math.min(current, Math.max(1, Math.ceil(ordersTotal / listPageSize))),
     );
   }, [reservationTotal, ordersTotal, listPageSize]);
-  const reservationIdQuery = query.trim().replaceAll("-", "").toLowerCase();
-  const isReservationIdLookup =
-    reservationIdQuery.length >= 6 &&
-    [...reservationIdQuery].every((char) => "0123456789abcdef".includes(char));
+  const isReservationIdLookup = Boolean(reservationLookupPrefix(query));
   const selectedItems = items;
   const selectedStandaloneOrders = orders;
-  const selectedDateOrderCount = calendarDays[selectedDate]?.orders_count || 0;
-  const visibleSelectedItems = [
-    ...selectedItems.filter(isActiveReservation),
-    ...selectedItems.filter((item) => !isActiveReservation(item)),
-  ];
+  const visibleActivities = buildCalendarActivities(selectedItems, selectedStandaloneOrders);
   const dayGuestCount = reservationGuestCount;
 
-  const selectedReservation = items.find((item) => item.id === expandedId) || visibleSelectedItems[0] || null;
+  const selectedActivity = visibleActivities.find((entry) => entry.selectionId === expandedId) || visibleActivities[0] || null;
+  const selectedReservation = selectedActivity?.type === "reservation" ? selectedActivity.item : null;
+  const selectedOrder = selectedActivity?.type === "order" ? selectedActivity.item : null;
 
   async function update(item, action, reason = "") {
     setBusyId(item.id);
@@ -442,20 +473,30 @@ export default function ManagerReservationsPage() {
     } catch {
       // Some passes may contain the reservation ID as plain text.
     }
-    const normalized = String(id).replaceAll("-", "").toLowerCase();
+    const normalized = reservationLookupPrefix(id);
     const match = items.find((reservation) =>
-      reservation.id.replaceAll("-", "").toLowerCase().startsWith(normalized),
+      normalized && reservation.id.replaceAll("-", "").toLowerCase().startsWith(normalized),
     );
-    if (match && normalized.length >= 6) id = match.id;
+    if (match) id = match.id;
+    // A printed RES code contains only the UUID prefix. Let the calendar
+    // lookup resolve it instead of sending an incomplete UUID to detail API.
+    if (normalized && !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(String(id))) {
+      setQuery(`RES-${normalized.toUpperCase()}`);
+      setScannerOpen(false);
+      setScanValue("");
+      return;
+    }
     setScanBusy(true);
     setScanError("");
     try {
       const reservation = await requestJson(
         `/api/manager/reservations/${encodeURIComponent(id)}`,
       );
-      setQuery(reservation.id);
-      setSelectedDate(reservation.reservation_date);
-      setMonthTime(shiftLocalMonth(`${reservation.reservation_date}T12:00:00`));
+      setQuery(reservation.reservation_code || reservation.id);
+      if (isCalendarDate(reservation.reservation_date_iso)) {
+        setSelectedDate(reservation.reservation_date_iso);
+        setMonthTime(shiftLocalMonth(`${reservation.reservation_date_iso}T12:00:00`));
+      }
       setExpandedId(reservation.id);
       loadReservationOrders(reservation.id);
       setScannerOpen(false);
@@ -560,18 +601,19 @@ export default function ManagerReservationsPage() {
   async function openDeskOrder(item) {
     setDeskOrderReservation(item);
     setDeskOrderKey(window.crypto.randomUUID());
-    setDeskOrderLines([
-      { key: window.crypto.randomUUID(), variant_id: "", quantity: 1 },
-    ]);
+    setDeskOrderLines([]);
+    setDeskOrderOffers([]);
+    setDeskOrderSearch("");
+    setDeskOrderSearchLoading(true);
+    setMenu([]);
     setVariantId("");
     setFoodQuantity(1);
-    setMenuBusy(true);
     try {
-      setMenu(await requestJson("/api/manager/menu"));
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setMenuBusy(false);
+      const offerData = await requestJson("/api/manager/orders/offers?status=ACTIVE&limit=200");
+      setDeskOrderOffers(offerData.items || []);
+    } catch {
+      // Menu selection remains available if offer badges cannot be loaded.
+      setDeskOrderOffers([]);
     }
   }
 
@@ -646,9 +688,74 @@ export default function ManagerReservationsPage() {
         .flatMap((food) =>
           (food.variants || [])
             .filter((variant) => variant.is_available)
-            .map((variant) => ({ ...variant, foodName: food.name })),
+            .map((variant) => ({
+              ...variant,
+              foodName: food.name,
+              foodDescription: food.description,
+              image_url: food.image_url,
+              foodId: food.id,
+              categoryId: food.category_id,
+            })),
         ),
     );
+  const deskOrderItemCount = deskOrderLines.reduce(
+    (total, line) => total + Number(line.quantity || 0),
+    0,
+  );
+  const deskOrderTotal = deskOrderLines.reduce((total, line) => {
+    const variant = availableVariants.find((item) => item.id === line.variant_id);
+    return total + Number(variant?.price || 0) * Number(line.quantity || 0);
+  }, 0);
+  const normalizedDeskOrderSearch = deskOrderSearch.trim().toLowerCase();
+  const visibleDeskOrderVariants = normalizedDeskOrderSearch
+    ? availableVariants.filter((variant) => [
+      variant.foodName,
+      variant.name,
+      variant.foodDescription,
+    ].some((value) => value?.toLowerCase().includes(normalizedDeskOrderSearch)))
+    : availableVariants;
+
+  function setDeskOrderQuantity(variantId, quantity) {
+    setDeskOrderLines((current) => {
+      const existing = current.find((line) => line.variant_id === variantId);
+      if (quantity < 1) return current.filter((line) => line.variant_id !== variantId);
+      if (existing) {
+        return current.map((line) =>
+          line.variant_id === variantId ? { ...line, quantity } : line,
+        );
+      }
+      if (current.length >= 50) return current;
+      return [...current, {
+        key: window.crypto.randomUUID(),
+        variant_id: variantId,
+        quantity,
+      }];
+    });
+  }
+
+  useEffect(() => {
+    if (!deskOrderReservation) return undefined;
+    const controller = new AbortController();
+    const query = deskOrderSearch.trim();
+    const delay = window.setTimeout(async () => {
+      setDeskOrderSearchLoading(true);
+      try {
+        const params = new URLSearchParams();
+        if (query) params.set("search", query);
+        const path = params.size ? `/api/manager/menu?${params}` : "/api/manager/menu";
+        const result = await requestJson(path, { signal: controller.signal });
+        if (!controller.signal.aborted) setMenu(result);
+      } catch (e) {
+        if (!controller.signal.aborted && e.name !== "AbortError") setError(e.message);
+      } finally {
+        if (!controller.signal.aborted) setDeskOrderSearchLoading(false);
+      }
+    }, query ? 250 : 0);
+    return () => {
+      window.clearTimeout(delay);
+      controller.abort();
+    };
+  }, [deskOrderReservation?.id, deskOrderSearch]);
 
   useEffect(() => {
     if (selectedReservation?.id && !calendarLoading) loadReservationOrders(selectedReservation.id);
@@ -660,7 +767,7 @@ export default function ManagerReservationsPage() {
     if (isReservationIdLookup) setQuery("");
   }
 
-  function selectReservation(id) {
+  function selectActivity(id) {
     setExpandedId(id);
     if (window.matchMedia("(max-width: 760px)").matches) {
       document.getElementById("reservation-detail-panel")?.scrollIntoView({
@@ -683,13 +790,11 @@ export default function ManagerReservationsPage() {
   }
 
   const selectedLabel = new Date(`${selectedDate}T12:00:00`).toLocaleDateString("en", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
-  const initials = (name) => name?.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "G";
-
   function renderReservationDetails(item) {
     return <>
       <header className="reservation-detail-heading">
         <span className="reservation-eyebrow">RESERVATION DETAILS</span>
-        <span>#{item.id.slice(0, 8).toUpperCase()}</span>
+        <span className="reservation-detail-code"><small>Reservation code</small><code>{reservationCode(item)}</code></span>
       </header>
       <div className="reservation-detail-hero">
         <div className="reservation-detail-tags">
@@ -697,7 +802,7 @@ export default function ManagerReservationsPage() {
           <span>{item.fulfillment_type === "PREORDER" ? "Table + preorder" : "Table reservation"}</span>
         </div>
         <div className="reservation-detail-guest">
-          <div className="reservation-avatar">{initials(item.customer_name)}</div>
+          <ReservationAvatar name={item.customer_name} url={item.customer_avatar_url} detail />
           <div><h3>{item.customer_name}</h3><p><Mail size={14} />{item.customer_email || "Restaurant guest"}</p></div>
         </div>
         <div className="reservation-detail-hero-footer"><CalendarDays size={15} /><span>{selectedLabel}</span><span className="reservation-detail-duration">{shortTime(item.start_time)} – {shortTime(item.end_time)}</span></div>
@@ -705,6 +810,7 @@ export default function ManagerReservationsPage() {
       <section className="reservation-information">
         <h3>Visit information</h3>
         <div className="reservation-information-grid">
+          <div className="reservation-code-information"><QrCode size={20} /><span><small>Reservation code</small><strong>{reservationCode(item)}</strong></span></div>
           <div><CalendarDays size={20} /><span><small>Reservation date</small><strong>{selectedLabel}</strong></span></div>
           <div><Clock3 size={20} /><span><small>Arrival & departure</small><strong>{shortTime(item.start_time)} – {shortTime(item.end_time)}</strong></span></div>
           <div><Users size={20} /><span><small>Party size</small><strong>{item.number_of_guests} {item.number_of_guests === 1 ? "guest" : "guests"}</strong></span></div>
@@ -723,7 +829,7 @@ export default function ManagerReservationsPage() {
         {Number(item.extra_fee_amount) > 0 && <p className="reservation-extra-fee">Includes ₹{Number(item.extra_fee_amount).toFixed(2)} for {item.extra_hours} extra hour{item.extra_hours === 1 ? "" : "s"}.</p>}
       </section>
       <div className="reservation-expanded-details">
-        {item.preorder_items?.length > 0 && <section className="reservation-preorder-summary"><h3>Preordered items</h3><ul>{item.preorder_items.map((food) => <li key={food.variant_id}><span>{food.quantity} × {food.food_name} · {food.variant_name}</span><strong>₹{Number(food.line_total).toFixed(2)}</strong></li>)}</ul></section>}
+        {item.preorder_items?.length > 0 && <section className="reservation-preorder-summary"><ManagerOrderItems items={item.preorder_items} title="Preordered items" /></section>}
         <div className="reservation-linked-orders">
           <strong>Food orders for this visit</strong>
           {ordersLoadingId === item.id ? (
@@ -767,29 +873,7 @@ export default function ManagerReservationsPage() {
                           {orderStatusLabel(order.status)}
                         </span>
                       </div>
-                      <ul>
-                        {(order.items || []).map(
-                          (food, index) => (
-                            <li
-                              key={`${food.variant_id || food.food_name}-${index}`}
-                            >
-                              <span>
-                                {food.quantity} ×{" "}
-                                {food.food_name}
-                                {food.variant_name
-                                  ? ` · ${food.variant_name}`
-                                  : ""}
-                              </span>
-                              <strong>
-                                ₹
-                                {Number(
-                                  food.line_total,
-                                ).toFixed(2)}
-                              </strong>
-                            </li>
-                          ),
-                        )}
-                      </ul>
+                      <ManagerOrderItems items={order.items || []} />
                       <div className="reservation-linked-order-footer">
                         <strong>
                           Order total · ₹
@@ -1069,8 +1153,8 @@ export default function ManagerReservationsPage() {
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              aria-label="Search reservations, orders, guests, or items"
-              placeholder="Search guests, reservations, orders…"
+              aria-label="Search by reservation code, guest, order, or item"
+              placeholder="Search reservation code, guest, order…"
             />
           </div>
         </div>
@@ -1102,7 +1186,7 @@ export default function ManagerReservationsPage() {
                 <h3>{isReservationIdLookup ? "Reservation lookup" : "Reservations & orders"}</h3>
                 <p>{selectedLabel} · {dayGuestCount} {dayGuestCount === 1 ? "guest" : "guests"}</p>
               </div>
-              <span className="reservation-activity-total" aria-label={`${reservationTotal} reservations and ${selectedDateOrderCount} orders`}>{reservationTotal + selectedDateOrderCount}</span>
+              <span className="reservation-activity-total" aria-label={`${reservationTotal} reservations and ${ordersTotal} orders`}>{reservationTotal + ordersTotal}</span>
             </header>
             <div className="reservation-list-scroll">
               {calendarLoading ? (
@@ -1118,31 +1202,33 @@ export default function ManagerReservationsPage() {
                 </div>
               ) : (
                 <>
-                  {visibleSelectedItems.map((item, index) => (
-                    <Fragment key={item.id}>
-                      {(index === 0 || isActiveReservation(item) !== isActiveReservation(visibleSelectedItems[index - 1])) && (
+                  {visibleActivities.map(({ type, item, selectionId, active }, index) => (
+                    <Fragment key={selectionId}>
+                      {(index === 0 || active !== visibleActivities[index - 1].active) && (
                         <h4 className="reservation-list-group-title">
                           <CalendarDays size={15} />
-                          {isActiveReservation(item) ? "Upcoming & active" : "Completed & cancelled"}
+                          {active ? "Upcoming & active" : "Completed & cancelled"}
                         </h4>
                       )}
-                      <article
+                      {type === "order" ? (
+                        <ManagerCalendarOrderCard order={item} selected={selectedOrder?.id === item.id} onSelect={() => selectActivity(selectionId)} />
+                      ) : <article
                         className={`reservation-guest-card${selectedReservation?.id === item.id ? " expanded" : ""}`}
                       >
                         <button
                           type="button"
                           className="reservation-card-select"
-                          aria-label={`View reservation for ${item.customer_name}`}
+                          aria-label={`View reservation ${reservationCode(item)} for ${item.customer_name}`}
                           aria-pressed={selectedReservation?.id === item.id}
                           aria-controls="reservation-detail-panel"
-                          onClick={() => selectReservation(item.id)}
+                          onClick={() => selectActivity(selectionId)}
                         >
                           <div className="reservation-card-tags">
-                            <span>#{item.id.slice(0, 8).toUpperCase()}</span>
+                            <span className="reservation-card-code"><small>Reservation code</small><strong>{reservationCode(item)}</strong></span>
                             <span>{item.fulfillment_type === "PREORDER" ? "Preorder" : "Table booking"}</span>
                           </div>
                           <div className="reservation-guest-top">
-                            <span className="reservation-avatar">{initials(item.customer_name)}</span>
+                            <ReservationAvatar name={item.customer_name} url={item.customer_avatar_url} />
                             <span className="reservation-guest-name">
                               <strong>{item.customer_name}</strong>
                               <span>{item.customer_email || "Restaurant guest"}</span>
@@ -1160,75 +1246,31 @@ export default function ManagerReservationsPage() {
                           </div>
                         </button>
 
-                      </article>
+                      </article>}
                     </Fragment>
                   ))}
                   {reservationTotal > 0 && (
                     <Pagination page={listPage} pageSize={listPageSize} total={reservationTotal} onPageChange={setListPage} label="reservations" />
                   )}
-                  {selectedStandaloneOrders.length > 0 && (
-                    <section className="reservation-standalone-orders">
-                      <h4>Walk-in &amp; spot orders</h4>
-                      {selectedStandaloneOrders.map((order) => (
-                        <Link
-                          className="reservation-standalone-order"
-                          key={order.id}
-                          to={`/manager/orders/${order.id}?returnTo=${encodeURIComponent("/manager/reservations")}`}
-                        >
-                          <span className="reservation-standalone-order-main">
-                            <strong>
-                              {order.customer_name || "Guest order"}
-                            </strong>
-                            <small>
-                              {order.service_type === "TAKEAWAY"
-                                ? "Takeaway order"
-                                : order.is_preorder
-                                  ? "Preorder"
-                                  : order.order_source === "SPOT"
-                                    ? "Spot order"
-                                    : "Walk-in order"}{" "}
-                              ·{" "}
-                              {shortTime(
-                                new Date(order.created_at).toTimeString(),
-                              )}{" "}
-                              ·{" "}
-                              {order.items
-                                ?.map(
-                                  (food) =>
-                                    `${food.quantity} × ${food.food_name}`,
-                                )
-                                .join(", ")}
-                            </small>
-                          </span>
-                          <span
-                            className={`reservation-status ${orderTone(order.status)}`}
-                          >
-                            {orderStatusLabel(order.status)}
-                          </span>
-                          <strong>₹{Number(order.total).toFixed(2)}</strong>
-                        </Link>
-                      ))}
-                      {ordersTotal > 0 && (
-                        <Pagination
-                          page={orderPage}
-                          pageSize={listPageSize}
-                          total={ordersTotal}
-                          onPageChange={setOrderPage}
-                          label="orders"
-                        />
-                      )}
-                    </section>
+                  {ordersTotal > 0 && (
+                    <Pagination
+                      page={orderPage}
+                      pageSize={listPageSize}
+                      total={ordersTotal}
+                      onPageChange={setOrderPage}
+                      label="orders"
+                    />
                   )}
                 </>
               )}
             </div>
           </aside>
-          <section id="reservation-detail-panel" className="reservation-detail-panel" aria-label="Reservation details" aria-busy={calendarLoading}>
-            {calendarLoading ? <LoadingState variant="cards" label="Loading reservation details…" /> : selectedReservation ? renderReservationDetails(selectedReservation) : (
+          <section id="reservation-detail-panel" className="reservation-detail-panel" aria-label={selectedOrder ? "Order details" : "Reservation details"} aria-busy={calendarLoading}>
+            {calendarLoading ? <LoadingState variant="cards" label="Loading reservation and order details…" /> : selectedOrder ? <ManagerCalendarOrderDetails order={selectedOrder} dateLabel={selectedLabel} /> : selectedReservation ? renderReservationDetails(selectedReservation) : (
               <div className="reservation-detail-empty">
                 <span><Utensils size={30} /></span>
                 <h3>Your service, at a glance</h3>
-                <p>{selectedStandaloneOrders.length ? "Open a walk-in or spot order to view its details, or choose another date for reservations." : "Choose a date with reservations to view guest information, payments, and food orders here."}</p>
+                <p>Choose a date with reservations or orders to view guest information, payments, and food orders here.</p>
               </div>
             )}
           </section>
@@ -1572,7 +1614,7 @@ export default function ManagerReservationsPage() {
               </label>
             </div>
             <div className="reservation-pass-divider">
-              <span>Or enter the reservation ID</span>
+              <span>Or enter the reservation code or ID</span>
             </div>
             <CustomForm
               onSubmit={(event) => {
@@ -1584,8 +1626,8 @@ export default function ManagerReservationsPage() {
               <input
                 value={scanValue}
                 onChange={(event) => setScanValue(event.target.value)}
-                placeholder="Reservation ID"
-                aria-label="Reservation ID"
+                placeholder="Reservation code or ID"
+                aria-label="Reservation code or ID"
               />
               <button type="submit" disabled={scanBusy || !scanValue.trim()}>
                 {scanBusy ? "Verifying…" : "Verify ID"}
@@ -1623,10 +1665,8 @@ export default function ManagerReservationsPage() {
               Add dishes to this reservation before confirming. The updated
               total will appear in reservation details.
             </p>
-            {menuBusy ? (
+            {deskOrderSearchLoading && menu.length === 0 && !deskOrderSearch.trim() ? (
               <LoadingState variant="menu" label="Loading menu…" />
-            ) : availableVariants.length === 0 ? (
-              <p>No available menu items right now.</p>
             ) : (
               <CustomForm onSubmit={addFood} className="reservation-food-form">
                 <label>
@@ -1702,7 +1742,7 @@ export default function ManagerReservationsPage() {
           role="presentation"
         >
           <section
-            className="manager-reservation-confirm reservation-food-dialog"
+            className="manager-reservation-confirm reservation-food-dialog desk-order-dialog"
             role="dialog"
             aria-modal="true"
             aria-labelledby="desk-order-title"
@@ -1721,94 +1761,51 @@ export default function ManagerReservationsPage() {
               order to the kitchen. Payment will be due at the desk for{" "}
               {deskOrderReservation.customer_name}.
             </p>
-            {menuBusy ? (
-              <LoadingState variant="menu" label="Loading menu…" />
-            ) : availableVariants.length === 0 ? (
-              <p>No available menu items right now.</p>
-            ) : (
-              <CustomForm
+            <CustomForm
                 onSubmit={createDeskOrder}
-                className="reservation-food-form"
+                className="reservation-food-form desk-order-form"
               >
-                <div className="desk-order-lines">
-                  {deskOrderLines.map((line) => (
-                    <div className="desk-order-line" key={line.key}>
-                      <label>
-                        Dish
-                        <select
-                          value={line.variant_id}
-                          onChange={(event) =>
-                            setDeskOrderLines((current) =>
-                              current.map((entry) =>
-                                entry.key === line.key
-                                  ? { ...entry, variant_id: event.target.value }
-                                  : entry,
-                              ),
-                            )
-                          }
-                          required
-                        >
-                          <option value="">Choose a dish</option>
-                          {availableVariants.map((variant) => (
-                            <option key={variant.id} value={variant.id}>
-                              {variant.foodName} · {variant.name} — ₹
-                              {Number(variant.price).toFixed(2)}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <label>
-                        Quantity
-                        <input
-                          type="number"
-                          min="1"
-                          max="99"
-                          value={line.quantity}
-                          onChange={(event) =>
-                            setDeskOrderLines((current) =>
-                              current.map((entry) =>
-                                entry.key === line.key
-                                  ? { ...entry, quantity: event.target.value }
-                                  : entry,
-                              ),
-                            )
-                          }
-                          required
-                        />
-                      </label>
-                      {deskOrderLines.length > 1 && (
-                        <button
-                          type="button"
-                          className="desk-order-remove"
-                          onClick={() =>
-                            setDeskOrderLines((current) =>
-                              current.filter((entry) => entry.key !== line.key),
-                            )
-                          }
-                        >
-                          Remove item
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                <div className="desk-order-picker-heading">
+                  <div><h4>Choose dishes</h4><p>Select an item to add it. Eligible automatic offers are calculated when the order is sent.</p></div>
+                  <span aria-live="polite">{deskOrderItemCount} {deskOrderItemCount === 1 ? "item" : "items"} · Subtotal ₹{deskOrderTotal.toFixed(2)}</span>
+                  <label className="desk-order-search">
+                    <Search size={16} aria-hidden="true" />
+                    <input aria-label="Search dishes" value={deskOrderSearch} onChange={(event) => setDeskOrderSearch(event.target.value)} placeholder="Search dishes, variants, or descriptions" />
+                    {deskOrderSearchLoading && <span className="desk-order-search-status" role="status">Searching…</span>}
+                    {deskOrderSearch && <button type="button" className="desk-order-search-clear" onClick={() => setDeskOrderSearch("")} aria-label="Clear dish search"><X size={15} /></button>}
+                  </label>
                 </div>
-                <button
-                  type="button"
-                  className="desk-order-add"
-                  disabled={deskOrderLines.length >= 50}
-                  onClick={() =>
-                    setDeskOrderLines((current) => [
-                      ...current,
-                      {
-                        key: window.crypto.randomUUID(),
-                        variant_id: "",
-                        quantity: 1,
-                      },
-                    ])
-                  }
-                >
-                  Add another dish
-                </button>
+                <div className="desk-order-menu" role="list" aria-label="Available dishes">
+                  {visibleDeskOrderVariants.length === 0 ? <p className="desk-order-menu-empty" role="status">{menuBusy || deskOrderSearchLoading ? deskOrderSearch.trim() ? "Searching dishes…" : "Loading menu…" : deskOrderSearch.trim() ? `No available dishes match “${deskOrderSearch.trim()}”.` : "No available menu items right now."}</p> : visibleDeskOrderVariants.map((variant) => {
+                    const line = deskOrderLines.find((entry) => entry.variant_id === variant.id);
+                    const quantity = Number(line?.quantity || 0);
+                    const offers = displayOffersForFood(deskOrderOffers, {
+                      id: variant.foodId,
+                      category_id: variant.categoryId,
+                      is_available: true,
+                      variants: [variant],
+                    }, variant.categoryId);
+                    return <article className={`desk-order-dish${quantity ? " is-selected" : ""}`} role="listitem" key={variant.id}>
+                      <div className="desk-order-dish-media" aria-hidden="true"><Utensils size={22} />
+                        {variant.image_url && <img src={variant.image_url} alt="" loading="lazy" onError={(event) => { event.currentTarget.hidden = true; }} />}
+                      </div>
+                      {offers.length > 0 && <div className="desk-order-dish-offers" aria-label={`Offers for ${variant.foodName}`}>
+                        {offers.map((offer) => <span key={offer.id}><Tag size={12} aria-hidden="true" />{offerSavingLabel(offer)}{isCoupon(offer) && " · Coupon"}</span>)}
+                      </div>}
+                      <div className="desk-order-dish-copy">
+                        <h5>{variant.foodName}</h5>
+                        {variant.name && <span>{variant.name}</span>}
+                        {variant.foodDescription && <p>{variant.foodDescription}</p>}
+                        <strong>₹{Number(variant.price).toFixed(2)}</strong>
+                      </div>
+                      {quantity ? <div className="desk-order-quantity" aria-label={`${variant.foodName} quantity`}>
+                        <button type="button" onClick={() => setDeskOrderQuantity(variant.id, quantity - 1)} aria-label={`Remove one ${variant.foodName}`}><Minus size={15} /></button>
+                        <output aria-label={`${quantity} ${variant.foodName}`}>{quantity}</output>
+                        <button type="button" onClick={() => setDeskOrderQuantity(variant.id, Math.min(99, quantity + 1))} disabled={quantity >= 99} aria-label={`Add one ${variant.foodName}`}><Plus size={15} /></button>
+                      </div> : <button type="button" className="desk-order-select" disabled={deskOrderLines.length >= 50} onClick={() => setDeskOrderQuantity(variant.id, 1)}><Plus size={15} /> Add</button>}
+                    </article>;
+                  })}
+                </div>
                 <div className="manager-reservation-confirm-actions">
                   <button
                     type="button"
@@ -1821,7 +1818,7 @@ export default function ManagerReservationsPage() {
                     type="submit"
                     className="confirm-success"
                     disabled={
-                      deskOrderLines.some(
+                      deskOrderLines.length === 0 || deskOrderLines.some(
                         (line) =>
                           !line.variant_id ||
                           !Number.isInteger(Number(line.quantity)) ||
@@ -1840,7 +1837,6 @@ export default function ManagerReservationsPage() {
                   </button>
                 </div>
               </CustomForm>
-            )}
           </section>
         </div>
       )}

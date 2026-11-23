@@ -100,7 +100,7 @@ export default function ChefOrdersWorkspace({ orders, total, calendarOrderCounts
     </header>
     <div className="chef-orders-toolbar" aria-label="Kitchen order filters">
       <label className="chef-orders-search"><Search size={17} /><input type="search" aria-label="Search order ID, customer, or item" value={filters.search} onChange={(event) => onSearch(event.target.value)} placeholder="Search orders, guests, dishes…" /></label>
-      <select aria-label="Filter kitchen orders by status" value={filters.status} onChange={(event) => onStatus(event.target.value)}><option value="ACTIVE">Active orders</option><option value="ALL">All statuses</option>{STATUSES.map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}</select>
+      <select aria-label="Filter kitchen orders by status" value={filters.status} onChange={(event) => onStatus(event.target.value)}><option value="ALL">All statuses</option><option value="ACTIVE">Active orders</option>{STATUSES.map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}</select>
       <select aria-label="Sort kitchen orders" value={filters.sort} onChange={(event) => onSort(event.target.value)}><option value="oldest">Oldest first</option><option value="newest">Newest first</option></select>
       <button type="button" onClick={onResetFilters}>Clear filters</button>
     </div>
