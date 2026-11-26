@@ -780,6 +780,66 @@
   margin: 8px 0;
   font-size: var(--font-size-sm);
 }
+.booking-preorder-customer-note {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 14px;
+  border: 1px solid #eee5e1;
+  border-radius: 12px;
+  background: #fffaf7;
+}
+.booking-preorder-note-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.booking-preorder-note-heading h3 {
+  margin: 0;
+  color: #3e322f;
+  font-size: var(--font-size-sm);
+}
+.booking-preorder-note-heading span {
+  color: #9a8f89;
+  font-size: var(--font-size-xs);
+}
+.booking-preorder-customer-note p {
+  margin: 0;
+  color: #8d827d;
+  font-size: var(--font-size-xs);
+  line-height: 1.45;
+}
+.booking-preorder-customer-note textarea {
+  width: 100%;
+  min-height: 88px;
+  resize: vertical;
+  padding: 10px 12px;
+  border: 1px solid #e4dad5;
+  border-radius: 9px;
+  background: #fff;
+  color: #473a37;
+  font: inherit;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+.booking-preorder-customer-note textarea:focus-visible {
+  outline: 2px solid #79323d;
+  outline-offset: 2px;
+}
+:root[data-theme="dark"] .booking-preorder-customer-note {
+  border-color: #514246;
+  background: #211d1f;
+}
+:root[data-theme="dark"] .booking-preorder-note-heading h3,
+:root[data-theme="dark"] .booking-preorder-customer-note textarea {
+  color: #eee4e2;
+}
+:root[data-theme="dark"] .booking-preorder-customer-note textarea {
+  border-color: #514246;
+  background: #181516;
+  color-scheme: dark;
+}
 :root[data-theme="dark"] .booking-menu-controls label {
   color: #c0b5b1;
 }

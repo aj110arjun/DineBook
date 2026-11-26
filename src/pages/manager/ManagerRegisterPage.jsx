@@ -30,6 +30,7 @@ import { countryCallingCodes } from "../../lib/countryCallingCodes.js";
 
 import {
   getManagerRegistrationStepErrors,
+  isManagerEmailVerified,
   getRestaurantContactErrors,
   formatRestaurantPhoneNumber,
 } from "../../lib/managerRegistrationValidation.js";
@@ -270,16 +271,16 @@ export default function ManagerRegisterPage() {
     confirmPassword: "",
   });
   const [emailCode, setEmailCode] = useState("");
+  const [emailVerification, setEmailVerification] = useState(null);
+  const emailRequestRef = useRef(null);
   const [
-    { emailCodeSent, emailVerified, emailBusy },
+    { emailCodeSent, emailBusy },
     {
       emailCodeSent: setEmailCodeSent,
-      emailVerified: setEmailVerified,
       emailBusy: setEmailBusy,
     },
   ] = usePageState("ManagerRegisterPage", () => ({
     emailCodeSent: false,
-    emailVerified: false,
     emailBusy: false,
   }));
   const [pendingBanner, setPendingBanner] = useState(null);
@@ -291,6 +292,27 @@ export default function ManagerRegisterPage() {
     }),
   );
   const managerEmail = application.email.trim().toLowerCase();
+  const emailVerified = isManagerEmailVerified(managerEmail, emailVerification);
+
+  useEffect(() => () => emailRequestRef.current?.abort(), []);
+  useEffect(() => {
+    if (!emailVerification) return;
+    const timeout = window.setTimeout(() => {
+      invalidateEmailVerification(
+        "Your email verification has expired. Verify your email again to continue.",
+      );
+    }, Math.max(0, Date.parse(emailVerification.expires_at) - Date.now()));
+    return () => window.clearTimeout(timeout);
+  }, [emailVerification]);
+
+  function invalidateEmailVerification(message) {
+    setEmailVerification(null);
+    setEmailCode("");
+    setEmailCodeSent(false);
+    setStep(1);
+    setFieldErrors((current) => ({ ...current, email: message }));
+    setError(message);
+  }
   const [
     {
       addressLookupQuery,
@@ -722,9 +744,12 @@ export default function ManagerRegisterPage() {
       setFieldErrors((current) => ({ ...current, [field]: "" }));
     }
     if (field === "email") {
+      emailRequestRef.current?.abort();
+      emailRequestRef.current = null;
+      setEmailBusy(false);
       setEmailCode("");
       setEmailCodeSent(false);
-      setEmailVerified(false);
+      setEmailVerification(null);
       setError("");
     }
     setApplication((current) => ({
@@ -921,6 +946,7 @@ export default function ManagerRegisterPage() {
   }
 
   async function requestEmailCode() {
+    if (emailRequestRef.current) return;
     const email = managerEmail;
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
       setFieldErrors((current) => ({
@@ -929,6 +955,9 @@ export default function ManagerRegisterPage() {
       }));
       return;
     }
+    const controller = new AbortController();
+    emailRequestRef.current = controller;
+    setEmailVerification(null);
     setEmailBusy(true);
     setError("");
     try {
@@ -937,22 +966,31 @@ export default function ManagerRegisterPage() {
         validateStatus: () => true,
         method: "POST",
         withCredentials: true,
+        signal: controller.signal,
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify({ email }),
       });
+      if (controller.signal.aborted) return;
       const data = response.data;
       if (response.status < 200 || response.status >= 300)
         throw new Error(data?.detail || "Unable to send a confirmation code.");
       setEmailCodeSent(true);
-      setEmailVerified(false);
+      setEmailCode("");
     } catch (reason) {
-      setError(reason.message);
+      if (!controller.signal.aborted) setError(reason.message);
     } finally {
-      setEmailBusy(false);
+      if (emailRequestRef.current === controller) {
+        emailRequestRef.current = null;
+        setEmailBusy(false);
+      }
     }
   }
 
   async function verifyEmailCode() {
+    if (emailRequestRef.current) return;
+    const email = managerEmail;
+    const controller = new AbortController();
+    emailRequestRef.current = controller;
     setEmailBusy(true);
     setError("");
     try {
@@ -961,22 +999,37 @@ export default function ManagerRegisterPage() {
         validateStatus: () => true,
         method: "POST",
         withCredentials: true,
+        signal: controller.signal,
         headers: { "Content-Type": "application/json" },
         data: JSON.stringify({
-          email: managerEmail,
+          email,
           code: emailCode,
         }),
       });
+      if (controller.signal.aborted) return;
       const data = response.data;
       if (response.status < 200 || response.status >= 300)
         throw new Error(data?.detail || "Unable to verify this email.");
-      setEmailVerified(true);
+      if (!isManagerEmailVerified(email, data)) {
+        throw new Error(
+          "Email confirmation could not be completed. Request a new code.",
+        );
+      }
+      setEmailVerification({
+        email: data.email,
+        verification_token: data.verification_token,
+        expires_at: data.expires_at,
+      });
+      setEmailCode("");
       setFieldErrors((current) => ({ ...current, email: "" }));
       setError("");
     } catch (reason) {
-      setError(reason.message);
+      if (!controller.signal.aborted) setError(reason.message);
     } finally {
-      setEmailBusy(false);
+      if (emailRequestRef.current === controller) {
+        emailRequestRef.current = null;
+        setEmailBusy(false);
+      }
     }
   }
 
@@ -984,7 +1037,7 @@ export default function ManagerRegisterPage() {
     return getManagerRegistrationStepErrors(stepNumber, {
       application,
       credentials,
-      emailVerified,
+      emailVerification,
       documents,
       hours,
       interiorMedia,
@@ -1005,6 +1058,11 @@ export default function ManagerRegisterPage() {
 
   function validateStep(stepNumber, form) {
     const errors = getStepErrors(stepNumber);
+
+    if (stepNumber > 1 && errors.email) {
+      invalidateEmailVerification(errors.email);
+      return false;
+    }
 
     setFieldErrors(errors);
     setError("");
@@ -1050,7 +1108,7 @@ export default function ManagerRegisterPage() {
   async function handleFinalSubmit(event) {
     event.preventDefault();
 
-    for (const stepNumber of [1, 2, 3, 4]) {
+    for (const stepNumber of [1, 2, 3, 4, 5]) {
       const errors = getStepErrors(stepNumber);
 
       if (Object.keys(errors).length > 0) {
@@ -1072,6 +1130,10 @@ export default function ManagerRegisterPage() {
       formData.append("name", application.name);
       formData.append("email", managerEmail);
       formData.append("password", credentials.password);
+      formData.append(
+        "verification_token",
+        emailVerification.verification_token,
+      );
 
       // Restaurant information
       formData.append("restaurant_name", application.restaurantName);
@@ -1143,6 +1205,10 @@ export default function ManagerRegisterPage() {
       const data = response.data;
 
       if (response.status < 200 || response.status >= 300) {
+        if (data?.detail?.code === "email_verification_required") {
+          invalidateEmailVerification(data.detail.message);
+          return;
+        }
         throw new Error(
           data?.detail || "Unable to submit manager registration.",
         );
@@ -1151,6 +1217,7 @@ export default function ManagerRegisterPage() {
       console.log("Manager application submitted:", data);
 
       // Go to waiting for admin approval page
+      setEmailVerification(null);
       navigate("/manager/pending");
     } catch (err) {
       console.error("Manager registration failed:", err);
@@ -1226,6 +1293,16 @@ export default function ManagerRegisterPage() {
             })}
           </div>
         </div>
+
+        {step > 1 && emailVerified && (
+          <p
+            className="mb-5 flex items-center gap-2 text-sm font-medium text-emerald-700"
+            role="status"
+          >
+            <ShieldCheck size={18} aria-hidden="true" />
+            Email confirmed: {managerEmail}
+          </p>
+        )}
 
         {/* STEP 1 */}
         {step === 1 && (

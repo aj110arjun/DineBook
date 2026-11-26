@@ -1,0 +1,371 @@
+.admin-restaurant-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 14px;
+  min-width: 0;
+}
+
+.admin-restaurant-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+  padding: 15px;
+  border: 1px solid var(--color-border, #40383a);
+  border-radius: 13px;
+  background: var(--color-surface, #211d1f);
+  color: var(--color-text-primary, #f1e9e8);
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.admin-restaurant-card:hover {
+  transform: translateY(-2px);
+  border-color: #695157;
+  background: var(--color-surface-raised, #292426);
+  box-shadow: 0 8px 20px rgb(0 0 0 / 14%);
+}
+
+.admin-restaurant-card-header,
+.admin-restaurant-identity {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.admin-restaurant-card-header {
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.admin-restaurant-identity {
+  flex: 1;
+  gap: 11px;
+}
+
+.admin-restaurant-avatar {
+  display: grid;
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid var(--color-border, #514047);
+  border-radius: 12px;
+  background: color-mix(
+    in srgb,
+    var(--color-primary, #b66a77) 12%,
+    var(--color-surface, #211d1f)
+  );
+  color: var(--color-primary, #b66a77);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.admin-restaurant-title {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.admin-restaurant-title > span {
+  overflow: hidden;
+  color: var(--color-text-muted, #a99b9e);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.admin-restaurant-title h3 {
+  overflow: hidden;
+  max-width: 100%;
+  margin: 0;
+  color: var(--color-text-primary, #f1e9e8);
+  font-size: 14px;
+  font-weight: 680;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-restaurant-card .restaurant-status {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 3px 8px;
+  border: 1px solid var(--db-status-border, #40383a);
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.admin-restaurant-info {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 12px;
+  margin-top: 14px;
+}
+
+.admin-restaurant-info-item {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+
+.admin-restaurant-info-item > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--color-text-muted, #a99b9e);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.admin-restaurant-info-item > span svg,
+.admin-restaurant-registered > svg {
+  flex: 0 0 auto;
+  color: var(--color-accent, #c9929b);
+}
+
+.admin-restaurant-info-item strong,
+.admin-restaurant-info-item a {
+  overflow: hidden;
+  color: var(--color-text-primary, #e6dfe0);
+  font-size: 11px;
+  font-weight: 550;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-restaurant-info-item.owner {
+  grid-column: 1 / -1;
+}
+
+.admin-restaurant-info-item.owner a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  color: var(--color-text-secondary, #b0a5a5);
+  text-decoration: none;
+}
+
+.admin-restaurant-info-item.owner a:hover {
+  color: var(--color-accent, #c9929b);
+  text-decoration: underline;
+}
+
+.admin-restaurant-info-item.owner a svg {
+  flex: 0 0 auto;
+}
+
+.admin-restaurant-email-missing {
+  overflow: hidden;
+  color: var(--color-text-secondary, #b0a5a5);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-restaurant-card-footer {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border, #40383a);
+}
+
+.admin-restaurant-registered {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  color: var(--color-text-secondary, #b0a5a5);
+  font-size: 10px;
+}
+
+.admin-restaurant-registered-copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.admin-restaurant-registered-copy > span {
+  color: var(--color-text-secondary, #b0a5a5);
+  font-size: 10px;
+}
+
+.admin-restaurant-registered time {
+  color: var(--color-text-primary, #d6ccce);
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.admin-restaurant-registered small {
+  overflow: hidden;
+  color: var(--color-text-muted, #a99b9e);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-restaurant-view {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  min-height: 34px;
+  padding: 0 9px;
+  border: 1px solid var(--color-border, #494044);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-primary, #e6dfe0);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+.admin-restaurant-view:hover {
+  border-color: var(--color-primary, #b66a77);
+  background: color-mix(
+    in srgb,
+    var(--color-primary, #b66a77) 10%,
+    var(--color-surface, #211d1f)
+  );
+}
+
+.admin-restaurant-card-skeleton {
+  display: grid;
+  align-content: start;
+  gap: 13px;
+  min-height: 225px;
+  padding: 18px;
+  border: 1px solid var(--color-border, #40383a);
+  border-radius: 13px;
+  background: var(--color-surface, #211d1f);
+}
+
+.admin-restaurant-card-skeleton span {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-raised, #302a2d),
+    color-mix(in srgb, var(--color-text-muted, #a99b9e) 18%, var(--color-surface, #211d1f)),
+    var(--color-surface-raised, #302a2d)
+  );
+  background-size: 200% 100%;
+  animation: admin-restaurant-shimmer 1.35s ease-in-out infinite;
+}
+
+.admin-restaurant-card-skeleton span:first-child {
+  width: 58%;
+  height: 38px;
+  margin-bottom: 5px;
+}
+
+.admin-restaurant-card-skeleton span:nth-child(2) { width: 82%; }
+.admin-restaurant-card-skeleton span:nth-child(3) { width: 67%; }
+.admin-restaurant-card-skeleton span:nth-child(4) { width: 93%; margin-top: 22px; }
+
+.admin-restaurant-empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 44px 20px;
+  border: 1px dashed var(--color-border, #494044);
+  border-radius: 13px;
+  background: var(--color-surface, #211d1f);
+  color: var(--color-text-secondary, #b0a5a5);
+  text-align: center;
+}
+
+.admin-restaurant-empty-icon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 3px;
+  place-items: center;
+  border-radius: 13px;
+  background: color-mix(
+    in srgb,
+    var(--color-primary, #b66a77) 12%,
+    var(--color-surface, #211d1f)
+  );
+  color: var(--color-primary, #b66a77);
+}
+
+.admin-restaurant-empty strong {
+  color: var(--color-text-primary, #f1e9e8);
+  font-size: 14px;
+}
+
+.admin-restaurant-empty > span:not(.admin-restaurant-empty-icon) {
+  color: var(--color-text-secondary, #b0a5a5);
+  font-size: 12px;
+}
+
+.admin-restaurant-empty button {
+  min-height: 36px;
+  margin-top: 5px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border, #494044);
+  border-radius: 8px;
+  background: var(--color-surface-raised, #292426);
+  color: var(--color-text-primary, #f1e9e8);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.admin-restaurant-empty button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.admin-restaurants-page :is(button, a):focus-visible {
+  outline: 2px solid #d5a5ac;
+  outline-offset: 2px;
+}
+
+@keyframes admin-restaurant-shimmer {
+  to { background-position: -200% 0; }
+}
+
+@media (max-width: 1100px) {
+  .admin-restaurant-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .admin-restaurant-card-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-restaurant-card-skeleton span {
+    animation: none;
+  }
+
+  .admin-restaurant-card,
+  .admin-restaurant-view {
+    transition: none;
+  }
+}

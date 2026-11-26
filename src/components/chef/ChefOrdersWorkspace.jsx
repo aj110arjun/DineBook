@@ -69,7 +69,10 @@ export function ChefOrderDetails({ order, busy, disabled, onUpdate }) {
     </section>
 
     {order.customer_note && <section className="chef-order-kitchen-note"><h3><AlertTriangle size={17} />Preparation &amp; allergy notes</h3><p>{order.customer_note}</p></section>}
-    {order.reservation?.special_request && <section className="chef-order-visit-note"><h3>Visit request</h3><p>{order.reservation.special_request}</p></section>}
+    {order.reservation?.special_request &&
+      order.reservation.special_request.trim() !== order.customer_note?.trim() && (
+        <section className="chef-order-visit-note"><h3>Visit request</h3><p>{order.reservation.special_request}</p></section>
+      )}
     {order.status_reason && <section className="chef-order-visit-note"><h3>Status note</h3><p>{order.status_reason}</p></section>}
 
     <section className="chef-order-preparation-actions">

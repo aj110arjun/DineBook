@@ -6,6 +6,7 @@ import { Link, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
 import TransactionInvoiceButton from "../../components/TransactionInvoice.jsx";
+import { readableId } from "../../lib/transactionInvoicePdf.js";
 import { requestJson } from "../../lib/authApi.js";
 import "../../assets/css/AdminTransactionsPage.css";
 
@@ -136,7 +137,7 @@ export default function AdminTransactionDetailsPage() {
                 <Fields
                   title="Payment information"
                   fields={[
-                    ["Transaction ID", item.transaction_id],
+                    ["Transaction ID", readableId(item.transaction_id, "TXN")],
                     ["Payment method", humanize(item.payment_method)],
                     ["Refund status", humanize(item.refund_status)],
                     ["Created", formatLocalDateTime(item.created_at, { timeStyle: "medium" })],
@@ -167,8 +168,8 @@ export default function AdminTransactionDetailsPage() {
                     order ? "Order information" : "Reservation information"
                   }
                   fields={[
-                    ["Order ID", item.order_id],
-                    ["Reservation ID", item.reservation_id],
+                    ["Order ID", readableId(item.order_id, "ORD")],
+                    ["Reservation ID", readableId(item.reservation_id, "RES")],
                     ...(!order
                       ? [
                           ["Reservation date", formatLocalDate(item.reservation_date)],

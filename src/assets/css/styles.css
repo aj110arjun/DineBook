@@ -3970,6 +3970,67 @@ a:focus-visible,
   gap: 10px;
 }
 
+.admin-restaurants-page .admin-page-heading {
+  align-items: stretch;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-restaurants-page .admin-page-actions {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(180px, 1.45fr) repeat(4, minmax(135px, 1fr)) auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #e7eaec;
+  border-radius: 12px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.admin-restaurants-page .admin-search,
+.admin-restaurants-page .admin-filter-select,
+.admin-restaurants-page .admin-refresh-button {
+  width: 100%;
+  height: 38px;
+  box-sizing: border-box;
+}
+
+.admin-restaurants-page .admin-search {
+  min-width: 0;
+  border: 1px solid #dfe5e8;
+  background: #fff;
+}
+
+.admin-restaurants-page .admin-filter-select {
+  min-width: 0;
+  cursor: pointer;
+}
+
+.admin-restaurants-page .admin-refresh-button {
+  white-space: nowrap;
+  padding-inline: 12px;
+}
+
+.admin-restaurants-page .admin-search:focus-within,
+.admin-restaurants-page .admin-filter-select:focus,
+.admin-restaurants-page .admin-refresh-button:focus-visible {
+  border-color: #a9707b;
+  outline: 2px solid rgba(169, 112, 123, 0.16);
+  outline-offset: 1px;
+}
+
+@media (max-width: 1200px) {
+  .admin-restaurants-page .admin-page-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-restaurants-page .admin-search {
+    grid-column: 1 / -1;
+  }
+}
+
 .admin-primary-button {
   height: 37px;
   display: inline-flex;
@@ -4226,6 +4287,14 @@ a:focus-visible,
 
   .admin-page-actions .admin-search {
     width: 100%;
+  }
+
+  .admin-restaurants-page .admin-page-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-restaurants-page .admin-search {
+    grid-column: 1 / -1;
   }
 
   .admin-table-card {
@@ -11661,6 +11730,12 @@ a:focus-visible,
   .admin-page-actions .admin-filter-select {
     width: 100%;
   }
+  .admin-restaurants-page .admin-page-actions {
+    grid-template-columns: 1fr;
+  }
+  .admin-restaurants-page .admin-search {
+    grid-column: auto;
+  }
   .admin-pagination {
     align-items: flex-start;
     flex-direction: column;
@@ -11679,6 +11754,11 @@ a:focus-visible,
   border-color: #494044;
   background: #292426;
   color: #e6dfe0;
+}
+:root[data-theme="dark"] .admin-restaurants-page .admin-page-actions,
+:root[data-theme="dark"] .admin-restaurants-page .admin-search {
+  border-color: #494044;
+  background: #292426;
 }
 :root[data-theme="dark"] .admin-pagination {
   color: #b0a5a5;
@@ -14824,4 +14904,73 @@ a:focus-visible,
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Manager registration confirmation */
+.manager-pending-status {
+  position: relative;
+  display: grid;
+  width: 80px;
+  height: 80px;
+  place-items: center;
+  isolation: isolate;
+}
+
+.manager-pending-status-icon {
+  position: relative;
+  z-index: 1;
+  animation: manager-pending-float 3.6s ease-in-out infinite;
+}
+
+.manager-pending-status-ring {
+  position: absolute;
+  inset: -8px;
+  border: 1px solid rgb(198 166 107 / 46%);
+  border-radius: 999px;
+  opacity: 0;
+  animation: manager-pending-pulse 3.6s ease-out infinite;
+}
+
+.manager-pending-status-ring-two {
+  animation-delay: 1.8s;
+}
+
+.manager-pending-reveal {
+  opacity: 0;
+  animation: manager-pending-reveal 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.manager-pending-reveal-eyebrow { animation-delay: 90ms; }
+.manager-pending-reveal-title { animation-delay: 160ms; }
+.manager-pending-reveal-copy { animation-delay: 240ms; }
+.manager-pending-reveal-card { animation-delay: 340ms; }
+.manager-pending-reveal-action { animation-delay: 430ms; }
+.manager-pending-reveal-note { animation-delay: 500ms; }
+
+@keyframes manager-pending-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes manager-pending-pulse {
+  0% { transform: scale(0.86); opacity: 0; }
+  18% { opacity: 0.65; }
+  72%, 100% { transform: scale(1.36); opacity: 0; }
+}
+
+@keyframes manager-pending-reveal {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .manager-pending-status-icon,
+  .manager-pending-status-ring,
+  .manager-pending-reveal {
+    animation: none;
+  }
+
+  .manager-pending-reveal {
+    opacity: 1;
+  }
 }

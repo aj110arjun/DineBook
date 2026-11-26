@@ -13,6 +13,10 @@ import "./assets/css/design-system.css";
 import "./assets/css/layout-refresh.css";
 import "./assets/css/ux-improvements.css";
 import "./assets/css/ui-experience.css";
+import "./assets/css/AdminFilters.css";
+import "./assets/css/AdminRequestsPage.css";
+import "./assets/css/AdminRestaurantsPage.css";
+import "./assets/css/AdminRestaurantDetailsPage.css";
 
 try {
   document.documentElement.dataset.theme = window.localStorage.getItem("dinebook-theme") === "dark" ? "dark" : "light";

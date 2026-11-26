@@ -8,6 +8,7 @@ import { ReceiptText, RotateCcw } from "lucide-react";
 import "../../assets/css/AdminTransactionsPage.css";
 import Pagination from "../../components/Pagination.jsx";
 import CustomDatePicker from "../../components/CustomDatePicker.jsx";
+import { readableId } from "../../lib/transactionInvoicePdf.js";
 import { requestJson } from "../../lib/authApi.js";
 
 export default function AdminRestaurantPaymentsPanel({ restaurantId }) {
@@ -338,9 +339,12 @@ export default function AdminRestaurantPaymentsPanel({ restaurantId }) {
               {transactions.map((item) => (
                 <tr key={`${item.type}-${item.id}`}>
                   {global && <td>{item.restaurant_name}</td>}
-                  <td>{item.transaction_id.slice(0, 12)}</td>
+                  <td>{readableId(item.transaction_id, "TXN")}</td>
                   <td>
-                    {(item.order_id || item.reservation_id || "—").slice(0, 12)}
+                    {readableId(
+                      item.order_id || item.reservation_id,
+                      item.order_id ? "ORD" : "RES",
+                    )}
                   </td>
                   <td>
                     {item.type === "ORDER_PAYMENT"
