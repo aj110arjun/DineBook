@@ -1,10 +1,19 @@
 import useLoadingPhase from "../../hooks/useLoadingPhase.js";
 import { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
-import { SkeletonRows } from "../../components/ui/Skeleton.jsx";
 import { usePageState } from "../../state/usePageState.js";
-import { formatLocalDate } from "../../lib/localDate.js";
-import { useEffect } from "react";
-import { Eye, RefreshCw, Search } from "lucide-react";
+import { formatLocalDateTime, formatTimeAgo } from "../../lib/localDate.js";
+import { useEffect, useState } from "react";
+import {
+  Building2,
+  CalendarDays,
+  Eye,
+  Mail,
+  MapPin,
+  RefreshCw,
+  Search,
+  Store,
+  UserRound,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
 import Pagination from "../../components/Pagination.jsx";
@@ -12,17 +21,39 @@ import { requestJson } from "../../lib/authApi.js";
 
 export default function AdminRestaurantsPage() {
   const navigate = useNavigate();
+  const [relativeNow, setRelativeNow] = useState(Date.now());
   const [
     {
-      restaurants, total, cuisines, locations, query, cuisineFilter,
-      locationFilter, statusFilter, sort, page, pageSize, loading, error, refresh,
+      restaurants,
+      total,
+      cuisines,
+      locations,
+      query,
+      cuisineFilter,
+      locationFilter,
+      statusFilter,
+      sort,
+      page,
+      pageSize,
+      loading,
+      error,
+      refresh,
     },
     {
-      restaurants: setRestaurants, total: setTotal, cuisines: setCuisines,
-      locations: setLocations, query: setQuery, cuisineFilter: setCuisineFilter,
-      locationFilter: setLocationFilter, statusFilter: setStatusFilter,
-      sort: setSort, page: setPage, pageSize: setPageSize, loading: setLoading,
-      error: setError, refresh: setRefresh,
+      restaurants: setRestaurants,
+      total: setTotal,
+      cuisines: setCuisines,
+      locations: setLocations,
+      query: setQuery,
+      cuisineFilter: setCuisineFilter,
+      locationFilter: setLocationFilter,
+      statusFilter: setStatusFilter,
+      sort: setSort,
+      page: setPage,
+      pageSize: setPageSize,
+      loading: setLoading,
+      error: setError,
+      refresh: setRefresh,
     },
   ] = usePageState("AdminRestaurantsPage", () => ({
     restaurants: [],
@@ -35,19 +66,36 @@ export default function AdminRestaurantsPage() {
     statusFilter: "",
     sort: "newest",
     page: 1,
-    pageSize: 10,
+    pageSize: 6,
     loading: true,
     error: "",
     refresh: 0,
   }));
 
-  const { initialLoading, refreshing } = useLoadingPhase(loading, restaurants.length, error);
+  const { initialLoading, refreshing } = useLoadingPhase(
+    loading,
+    restaurants.length,
+    error,
+  );
+
+  useEffect(() => {
+    const timer = setInterval(() => setRelativeNow(Date.now()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
     setLoading(true);
     setError("");
-    const params = new URLSearchParams({ page, page_size: pageSize, search: query, cuisine: cuisineFilter, location: locationFilter, status: statusFilter, sort });
+    const params = new URLSearchParams({
+      page,
+      page_size: pageSize,
+      search: query,
+      cuisine: cuisineFilter,
+      location: locationFilter,
+      status: statusFilter,
+      sort,
+    });
     requestJson(`/api/admin/restaurants?${params}`)
       .then((data) => {
         if (!mounted) return;
@@ -61,10 +109,22 @@ export default function AdminRestaurantsPage() {
     return () => {
       mounted = false;
     };
-  }, [refresh, page, pageSize, query, cuisineFilter, locationFilter, statusFilter, sort]);
+  }, [
+    refresh,
+    page,
+    pageSize,
+    query,
+    cuisineFilter,
+    locationFilter,
+    statusFilter,
+    sort,
+  ]);
 
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   const visibleRestaurants = restaurants;
+  const hasActiveFilters = Boolean(
+    query.trim() || cuisineFilter || locationFilter || statusFilter,
+  );
 
   useEffect(() => {
     setPage(1);
@@ -75,7 +135,7 @@ export default function AdminRestaurantsPage() {
 
   return (
     <AdminLayout title="Restaurants" activePath="/admin/restaurants">
-      <div className="admin-dashboard-content">
+      <div className="admin-dashboard-content admin-restaurants-page">
         <div className="admin-page-heading">
           <div>
             <h2>Restaurant Management</h2>
@@ -180,80 +240,167 @@ export default function AdminRestaurantsPage() {
           </div>
         )}
         <RefreshIndicator active={refreshing} />
-        <div className="admin-table-card">
-          <table className="admin-table" aria-busy={loading}>
-            <thead>
-              <tr>
-                <th>Restaurant</th>
-                <th>Location</th>
-                <th>Owner</th>
-                <th>Status</th>
-                <th>Registered</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {initialLoading ? (
-                <SkeletonRows columns={6} />
-              ) : visibleRestaurants.length ? (
-                visibleRestaurants.map((restaurant) => (
-                  <tr
-                    key={restaurant.id}
-                    className="admin-restaurant-row"
-                    onClick={() =>
-                      navigate(`/admin/restaurants/${restaurant.id}`)
-                    }
-                  >
-                    <td>
-                      <strong>{restaurant.name}</strong>
-                      <small>
-                        {restaurant.cuisine_type || "Cuisine not provided"}
-                      </small>
-                    </td>
-                    <td>{restaurant.location || "—"}</td>
-                    <td>
-                      <strong>{restaurant.manager?.name || "—"}</strong>
-                      <small>{restaurant.manager?.email || ""}</small>
-                    </td>
-                    <td>
+        {initialLoading ? (
+          <div
+            className="admin-restaurant-card-grid"
+            role="status"
+            aria-label="Loading restaurants"
+          >
+            {Array.from({ length: 6 }, (_, index) => (
+              <div
+                className="admin-restaurant-card-skeleton"
+                key={index}
+                aria-hidden="true"
+              >
+                <span />
+                <span />
+                <span />
+                <span />
+              </div>
+            ))}
+          </div>
+        ) : visibleRestaurants.length ? (
+          <div className="admin-restaurant-card-grid">
+            {visibleRestaurants.map((restaurant) => {
+              const restaurantName = restaurant.name || "Restaurant";
+              const status = String(
+                restaurant.status || "UNKNOWN",
+              ).toUpperCase();
+              const location = restaurant.location || "Not provided";
+              const detailsPath = `/admin/restaurants/${restaurant.id}`;
+              const registeredAt = restaurant.created_at
+                ? formatLocalDateTime(restaurant.created_at, {
+                    timeStyle: "medium",
+                  })
+                : "";
+
+              return (
+                <article
+                  className={`admin-restaurant-card ${status.toLowerCase()}`}
+                  key={restaurant.id}
+                >
+                  <div className="admin-restaurant-card-header">
+                    <div className="admin-restaurant-identity">
                       <span
-                        className={`restaurant-status ${restaurant.status?.toLowerCase()}`}
+                        className="admin-restaurant-avatar"
+                        aria-hidden="true"
                       >
-                        {restaurant.status}
+                        {restaurantName.charAt(0).toUpperCase()}
                       </span>
-                    </td>
-                    <td>
-                      {restaurant.created_at
-                        ? formatLocalDate(restaurant.created_at)
-                        : "—"}
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className="admin-table-action"
-                        aria-label={`View ${restaurant.name} details`}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          navigate(`/admin/restaurants/${restaurant.id}`);
-                        }}
+                      <div className="admin-restaurant-title">
+                        <span>Restaurant</span>
+                        <h3 title={restaurantName}>{restaurantName}</h3>
+                      </div>
+                    </div>
+                    <span
+                      className={`restaurant-status ${status.toLowerCase()}`}
+                    >
+                      {status}
+                    </span>
+                  </div>
+
+                  <div className="admin-restaurant-info">
+                    <div className="admin-restaurant-info-item">
+                      <span>
+                        <Building2 size={13} /> Cuisine
+                      </span>
+                      <strong title={restaurant.cuisine_type || "Not provided"}>
+                        {restaurant.cuisine_type || "Not provided"}
+                      </strong>
+                    </div>
+                    <div className="admin-restaurant-info-item">
+                      <span>
+                        <MapPin size={13} /> Location
+                      </span>
+                      <strong title={location}>{location}</strong>
+                    </div>
+                    <div className="admin-restaurant-info-item owner">
+                      <span>
+                        <UserRound size={13} /> Owner
+                      </span>
+                      <strong
+                        title={restaurant.manager?.name || "Not provided"}
                       >
-                        <Eye size={16} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="6" className="admin-table-empty">
-                    {restaurants.length === 0
-                      ? "No approved restaurants are available yet."
-                      : "No approved restaurants match these filters."}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                        {restaurant.manager?.name || "Not provided"}
+                      </strong>
+                      {restaurant.manager?.email ? (
+                        <a
+                          href={`mailto:${restaurant.manager.email}`}
+                          title={restaurant.manager.email}
+                        >
+                          <Mail size={12} />
+                          {restaurant.manager.email}
+                        </a>
+                      ) : (
+                        <span className="admin-restaurant-email-missing">
+                          Not provided
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="admin-restaurant-card-footer">
+                    <div className="admin-restaurant-registered">
+                      <CalendarDays size={14} />
+                      <span className="admin-restaurant-registered-copy">
+                        <span>
+                          Registered{" "}
+                          <time
+                            dateTime={restaurant.created_at || undefined}
+                            title={registeredAt || undefined}
+                          >
+                            {formatTimeAgo(restaurant.created_at, {
+                              now: relativeNow,
+                            }) || "Time unavailable"}
+                          </time>
+                        </span>
+                        {registeredAt && <small>{registeredAt}</small>}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className="admin-restaurant-view"
+                      aria-label={`View ${restaurantName} details`}
+                      onClick={() => navigate(detailsPath)}
+                    >
+                      <Eye size={14} />
+                      View details
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="admin-restaurant-empty">
+            <span className="admin-restaurant-empty-icon">
+              {error ? <RefreshCw size={21} /> : <Store size={23} />}
+            </span>
+            <strong>
+              {error
+                ? "Unable to load restaurants"
+                : hasActiveFilters
+                  ? "No approved restaurants match these filters."
+                  : "No approved restaurants are available yet."}
+            </strong>
+            <span>
+              {error
+                ? "Retry to load restaurant profiles."
+                : hasActiveFilters
+                  ? "Try another search or clear the selected filters."
+                  : "Approved restaurant profiles will appear here."}
+            </span>
+            {error && (
+              <button
+                type="button"
+                onClick={() => setRefresh((value) => value + 1)}
+                disabled={loading}
+              >
+                Retry
+              </button>
+            )}
+          </div>
+        )}
         {!loading && restaurants.length > 0 && (
           <Pagination
             page={page}

@@ -567,11 +567,14 @@ export default function OrdersPage({ mode = "customer" }) {
                     {order.customer_note}
                   </p>
                 )}
-                {mode === "chef" && order.reservation?.special_request && (
-                  <p className="food-order-note">
-                    Reservation request: {order.reservation.special_request}
-                  </p>
-                )}
+                {mode === "chef" &&
+                  order.reservation?.special_request &&
+                  order.reservation.special_request.trim() !==
+                    order.customer_note?.trim() && (
+                    <p className="food-order-note">
+                      Reservation request: {order.reservation.special_request}
+                    </p>
+                  )}
                 {order.status_reason && (
                   <p className="food-order-note">
                     Status note: {order.status_reason}

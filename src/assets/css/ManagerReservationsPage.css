@@ -2161,6 +2161,99 @@
   font-size: 0.8125rem;
   font-weight: 600;
 }
+.reservation-list-section {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.reservation-list-section + .reservation-list-section {
+  margin-top: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+}
+.reservation-list-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.reservation-list-section-title svg {
+  color: var(--color-primary);
+}
+.reservation-list-section-title > span {
+  display: inline-grid;
+  min-width: 24px;
+  height: 24px;
+  margin-left: auto;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+}
+.reservation-list-section-empty {
+  margin: 0;
+  padding: 12px;
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  text-align: center;
+}
+.reservation-list-skeleton {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  margin-top: 4px;
+}
+.reservation-skeleton-card {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 10px;
+  min-height: 88px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+}
+.reservation-skeleton-card > span,
+.reservation-skeleton-card i {
+  display: block;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-raised) 25%,
+    var(--reservation-tint) 50%,
+    var(--color-surface-raised) 75%
+  );
+  background-size: 200% 100%;
+  animation: reservation-skeleton-shimmer 1.25s infinite linear;
+}
+.reservation-skeleton-card > span {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+}
+.reservation-skeleton-card > div {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+}
+.reservation-skeleton-card i {
+  width: 78%;
+  height: 10px;
+}
+.reservation-skeleton-card i:last-child {
+  width: 54%;
+}
+@keyframes reservation-skeleton-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
 .reservation-list-group-title svg {
   color: var(--color-primary);
 }

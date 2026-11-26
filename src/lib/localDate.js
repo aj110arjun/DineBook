@@ -85,6 +85,24 @@ export function formatLocalDateTime(value, timeOptions = {}, preferences = custo
   return `${label}, ${formatLocalTime(value, timeOptions, preferences)}`;
 }
 
+export function formatTimeAgo(value, { compact = false, now = Date.now() } = {}) {
+  const date = parseTimestamp(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const elapsedSeconds = Math.max(0, Math.floor((now - date.getTime()) / 1000));
+  if (elapsedSeconds < 60) return "Just now";
+
+  const [amount, unit, shortUnit] = elapsedSeconds < 3600
+    ? [Math.floor(elapsedSeconds / 60), "minute", "m"]
+    : elapsedSeconds < 86400
+      ? [Math.floor(elapsedSeconds / 3600), "hour", "h"]
+      : [Math.floor(elapsedSeconds / 86400), "day", "d"];
+
+  if (compact) return `${amount}${shortUnit} ago`;
+  if (unit === "minute") return `${amount} min ago`;
+  return `${amount} ${unit}${amount === 1 ? "" : "s"} ago`;
+}
+
 export function shiftLocalMonth(value, offset = 0) {
   const date = new Date(value);
   return new Date(date.getFullYear(), date.getMonth() + offset, 1).getTime();

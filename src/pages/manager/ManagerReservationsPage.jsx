@@ -30,7 +30,6 @@ import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
 import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import { useRealtimeEvents } from "../../lib/useRealtimeEvents.js";
-import Pagination from "../../components/Pagination.jsx";
 import { displayOffersForFood, isCoupon, offerSavingLabel } from "../../lib/foodOffers.js";
 import jsQR from "jsqr";
 import "../../assets/css/ManagerReservationsPage.css";
@@ -126,6 +125,9 @@ const consolidateDeskOrderLines = (lines) => {
 };
 
 export default function ManagerReservationsPage() {
+  const reservationListScrollRef = useRef(null);
+  const loadingNextPageRef = useRef(false);
+  const [loadingNextPage, setLoadingNextPage] = useState(false);
   const [
     {
       items, orders, calendarDays, tables, reservationTotal,
@@ -285,8 +287,8 @@ export default function ManagerReservationsPage() {
       setCalendarLoading(true);
       const params = new URLSearchParams({
         day: selectedDate,
-        page: String(listPage),
-        order_page: String(orderPage),
+        page: "1",
+        order_page: "1",
         page_size: String(listPageSize),
         sort: reservationSort,
       });
@@ -325,8 +327,6 @@ export default function ManagerReservationsPage() {
     },
     [
       selectedDate,
-      listPage,
-      orderPage,
       listPageSize,
       reservationSort,
       debouncedQuery,
@@ -335,6 +335,91 @@ export default function ManagerReservationsPage() {
       guestFilter,
     ],
   );
+
+  const loadNextCalendarPage = useCallback(async () => {
+    if (
+      loadingNextPageRef.current ||
+      items.length >= reservationTotal &&
+      orders.length >= ordersTotal
+    ) {
+      return;
+    }
+
+    loadingNextPageRef.current = true;
+    setLoadingNextPage(true);
+    const nextListPage =
+      items.length < reservationTotal ? listPage + 1 : listPage;
+    const nextOrderPage =
+      orders.length < ordersTotal ? orderPage + 1 : orderPage;
+    const params = new URLSearchParams({
+      day: selectedDate,
+      page: String(nextListPage),
+      order_page: String(nextOrderPage),
+      page_size: String(listPageSize),
+      sort: reservationSort,
+    });
+    if (debouncedQuery.trim()) params.set("search", debouncedQuery.trim());
+    if (statusFilter !== "all") params.set("status", statusFilter);
+    if (tableFilter !== "all") params.set("table_id", tableFilter);
+    if (guestFilter !== "all") params.set("guest_filter", guestFilter);
+
+    try {
+      const result = await requestJson(
+        `/api/manager/calendar/activities?${params}`,
+      );
+      const nextReservations = result.reservations.items || [];
+      const nextOrders = result.orders.items || [];
+      setItems((current) => [
+        ...current,
+        ...nextReservations.filter(
+          (entry) =>
+            !current.some((existing) => existing.id === entry.id),
+        ),
+      ]);
+      setOrders((current) => [
+        ...current,
+        ...nextOrders.filter(
+          (entry) =>
+            !current.some((existing) => existing.id === entry.id),
+        ),
+      ]);
+      setReservationTotal(result.reservations.total || reservationTotal);
+      setOrdersTotal(result.orders.total || ordersTotal);
+      setListPage(nextListPage);
+      setOrderPage(nextOrderPage);
+      setReservationGuestCount(
+        result.reservations.guest_count || reservationGuestCount,
+      );
+    } catch (reason) {
+      setError(reason.message);
+    } finally {
+      loadingNextPageRef.current = false;
+      setLoadingNextPage(false);
+    }
+  }, [
+    debouncedQuery,
+    guestFilter,
+    items.length,
+    listPage,
+    orderPage,
+    orders.length,
+    ordersTotal,
+    reservationGuestCount,
+    reservationSort,
+    reservationTotal,
+    selectedDate,
+    statusFilter,
+    tableFilter,
+    listPageSize,
+    setError,
+    setItems,
+    setListPage,
+    setOrderPage,
+    setOrders,
+    setOrdersTotal,
+    setReservationGuestCount,
+    setReservationTotal,
+  ]);
 
   const realtimeStatus = useRealtimeEvents({
     enabled: true,
@@ -374,15 +459,19 @@ export default function ManagerReservationsPage() {
     const filtersChanged =
       previousCalendarFilterKey.current !== calendarFilterKey;
     previousCalendarFilterKey.current = calendarFilterKey;
-    if (filtersChanged && (listPage !== 1 || orderPage !== 1)) {
+    if (filtersChanged) {
       setListPage(1);
       setOrderPage(1);
-      return;
     }
     const controller = new AbortController();
     loadCalendarActivities(controller.signal);
     return () => controller.abort();
-  }, [calendarFilterKey, listPage, orderPage, loadCalendarActivities]);
+  }, [
+    calendarFilterKey,
+    loadCalendarActivities,
+    setListPage,
+    setOrderPage,
+  ]);
   useEffect(() => {
     requestJson("/api/auth/manager/me")
       .then((manager) =>
@@ -409,6 +498,12 @@ export default function ManagerReservationsPage() {
   const selectedItems = items;
   const selectedStandaloneOrders = orders;
   const visibleActivities = buildCalendarActivities(selectedItems, selectedStandaloneOrders);
+  const visibleReservations = visibleActivities.filter(
+    ({ type }) => type === "reservation",
+  );
+  const visibleSpotOrders = visibleActivities.filter(
+    ({ type }) => type === "order",
+  );
   const dayGuestCount = reservationGuestCount;
 
   const selectedActivity = visibleActivities.find((entry) => entry.selectionId === expandedId) || visibleActivities[0] || null;
@@ -1183,12 +1278,27 @@ export default function ManagerReservationsPage() {
             <header className="reservation-list-summary">
               <div>
                 <span className="reservation-eyebrow">DAILY OVERVIEW</span>
-                <h3>{isReservationIdLookup ? "Reservation lookup" : "Reservations & orders"}</h3>
+                <h3>{isReservationIdLookup ? "Reservation lookup" : "Reservations & spot orders"}</h3>
                 <p>{selectedLabel} · {dayGuestCount} {dayGuestCount === 1 ? "guest" : "guests"}</p>
               </div>
               <span className="reservation-activity-total" aria-label={`${reservationTotal} reservations and ${ordersTotal} orders`}>{reservationTotal + ordersTotal}</span>
             </header>
-            <div className="reservation-list-scroll">
+            <div
+              ref={reservationListScrollRef}
+              className="reservation-list-scroll"
+              onScroll={(event) => {
+                const element = event.currentTarget;
+                if (
+                  element.scrollTop + element.clientHeight >=
+                    element.scrollHeight - 80 &&
+                  !loadingNextPageRef.current &&
+                  (items.length < reservationTotal ||
+                    orders.length < ordersTotal)
+                ) {
+                  void loadNextCalendarPage();
+                }
+              }}
+            >
               {calendarLoading ? (
                 <LoadingState variant="list" label="Loading this date…" />
               ) : selectedItems.length === 0 &&
@@ -1202,64 +1312,184 @@ export default function ManagerReservationsPage() {
                 </div>
               ) : (
                 <>
-                  {visibleActivities.map(({ type, item, selectionId, active }, index) => (
-                    <Fragment key={selectionId}>
-                      {(index === 0 || active !== visibleActivities[index - 1].active) && (
-                        <h4 className="reservation-list-group-title">
-                          <CalendarDays size={15} />
-                          {active ? "Upcoming & active" : "Completed & cancelled"}
-                        </h4>
-                      )}
-                      {type === "order" ? (
-                        <ManagerCalendarOrderCard order={item} selected={selectedOrder?.id === item.id} onSelect={() => selectActivity(selectionId)} />
-                      ) : <article
-                        className={`reservation-guest-card${selectedReservation?.id === item.id ? " expanded" : ""}`}
-                      >
-                        <button
-                          type="button"
-                          className="reservation-card-select"
-                          aria-label={`View reservation ${reservationCode(item)} for ${item.customer_name}`}
-                          aria-pressed={selectedReservation?.id === item.id}
-                          aria-controls="reservation-detail-panel"
-                          onClick={() => selectActivity(selectionId)}
-                        >
-                          <div className="reservation-card-tags">
-                            <span className="reservation-card-code"><small>Reservation code</small><strong>{reservationCode(item)}</strong></span>
-                            <span>{item.fulfillment_type === "PREORDER" ? "Preorder" : "Table booking"}</span>
-                          </div>
-                          <div className="reservation-guest-top">
-                            <ReservationAvatar name={item.customer_name} url={item.customer_avatar_url} />
-                            <span className="reservation-guest-name">
-                              <strong>{item.customer_name}</strong>
-                              <span>{item.customer_email || "Restaurant guest"}</span>
-                            </span>
-                            <ChevronRight size={17} className="reservation-card-chevron" />
-                          </div>
-                          <div className="reservation-guest-meta">
-                            <span><Clock3 size={14} />{shortTime(item.start_time)}</span>
-                            <span><Users size={14} />{item.number_of_guests} {item.number_of_guests === 1 ? "guest" : "guests"}</span>
-                            <span><Table2 size={14} />{item.tables.map((table) => `Table ${table.table_number}`).join(", ")}</span>
-                          </div>
-                          <div className={`reservation-card-status ${statusClass[item.status] || "pending"}`}>
-                            <span>{statusLabel[item.status] || item.status}</span>
-                            <small>{selectedReservation?.id === item.id ? "Viewing details" : "View reservation"}</small>
-                          </div>
-                        </button>
+                  <section
+                    className="reservation-list-section"
+                    aria-labelledby="reservation-list-section-title"
+                  >
+                    <h4
+                      id="reservation-list-section-title"
+                      className="reservation-list-section-title"
+                    >
+                      <CalendarDays size={16} />
+                      Reservations
+                      <span>{visibleReservations.length}</span>
+                    </h4>
+                    {visibleReservations.length === 0 ? (
+                      <p className="reservation-list-section-empty">
+                        No reservations on this date.
+                      </p>
+                    ) : (
+                      visibleReservations.map(
+                        ({ item, selectionId, active }, index) => (
+                          <Fragment key={selectionId}>
+                            {(index === 0 ||
+                              active !==
+                                visibleReservations[index - 1].active) && (
+                              <h5 className="reservation-list-group-title">
+                                {active
+                                  ? "Upcoming & active"
+                                  : "Completed & cancelled"}
+                              </h5>
+                            )}
+                            <article
+                              className={`reservation-guest-card${selectedReservation?.id === item.id ? " expanded" : ""}`}
+                            >
+                              <button
+                                type="button"
+                                className="reservation-card-select"
+                                aria-label={`View reservation ${reservationCode(item)} for ${item.customer_name}`}
+                                aria-pressed={
+                                  selectedReservation?.id === item.id
+                                }
+                                aria-controls="reservation-detail-panel"
+                                onClick={() =>
+                                  selectActivity(selectionId)
+                                }
+                              >
+                                <div className="reservation-card-tags">
+                                  <span className="reservation-card-code">
+                                    <small>Reservation code</small>
+                                    <strong>
+                                      {reservationCode(item)}
+                                    </strong>
+                                  </span>
+                                  <span>
+                                    {item.fulfillment_type === "PREORDER"
+                                      ? "Preorder"
+                                      : "Table booking"}
+                                  </span>
+                                </div>
+                                <div className="reservation-guest-top">
+                                  <ReservationAvatar
+                                    name={item.customer_name}
+                                    url={item.customer_avatar_url}
+                                  />
+                                  <span className="reservation-guest-name">
+                                    <strong>{item.customer_name}</strong>
+                                    <span>
+                                      {item.customer_email ||
+                                        "Restaurant guest"}
+                                    </span>
+                                  </span>
+                                  <ChevronRight
+                                    size={17}
+                                    className="reservation-card-chevron"
+                                  />
+                                </div>
+                                <div className="reservation-guest-meta">
+                                  <span>
+                                    <Clock3 size={14} />
+                                    {shortTime(item.start_time)}
+                                  </span>
+                                  <span>
+                                    <Users size={14} />
+                                    {item.number_of_guests}{" "}
+                                    {item.number_of_guests === 1
+                                      ? "guest"
+                                      : "guests"}
+                                  </span>
+                                  <span>
+                                    <Table2 size={14} />
+                                    {item.tables
+                                      .map(
+                                        (table) =>
+                                          `Table ${table.table_number}`,
+                                      )
+                                      .join(", ")}
+                                  </span>
+                                </div>
+                                <div
+                                  className={`reservation-card-status ${statusClass[item.status] || "pending"}`}
+                                >
+                                  <span>
+                                    {statusLabel[item.status] || item.status}
+                                  </span>
+                                  <small>
+                                    {selectedReservation?.id === item.id
+                                      ? "Viewing details"
+                                      : "View reservation"}
+                                  </small>
+                                </div>
+                              </button>
+                            </article>
+                          </Fragment>
+                        ),
+                      )
+                    )}
+                  </section>
 
-                      </article>}
-                    </Fragment>
-                  ))}
-                  {reservationTotal > 0 && (
-                    <Pagination page={listPage} pageSize={listPageSize} total={reservationTotal} onPageChange={setListPage} label="reservations" />
-                  )}
-                  {ordersTotal > 0 && (
-                    <Pagination
-                      page={orderPage}
-                      pageSize={listPageSize}
-                      total={ordersTotal}
-                      onPageChange={setOrderPage}
-                      label="orders"
-                    />
+                  <section
+                    className="reservation-list-section"
+                    aria-labelledby="spot-order-list-section-title"
+                  >
+                    <h4
+                      id="spot-order-list-section-title"
+                      className="reservation-list-section-title"
+                    >
+                      <Utensils size={16} />
+                      Spot orders
+                      <span>{visibleSpotOrders.length}</span>
+                    </h4>
+                    {visibleSpotOrders.length === 0 ? (
+                      <p className="reservation-list-section-empty">
+                        No spot orders on this date.
+                      </p>
+                    ) : (
+                      visibleSpotOrders.map(
+                        ({ item, selectionId, active }, index) => (
+                          <Fragment key={selectionId}>
+                            {(index === 0 ||
+                              active !==
+                                visibleSpotOrders[index - 1].active) && (
+                              <h5 className="reservation-list-group-title">
+                                {active
+                                  ? "Upcoming & active"
+                                  : "Completed & cancelled"}
+                              </h5>
+                            )}
+                            <ManagerCalendarOrderCard
+                              order={item}
+                              selected={selectedOrder?.id === item.id}
+                              onSelect={() =>
+                                selectActivity(selectionId)
+                              }
+                            />
+                          </Fragment>
+                        ),
+                      )
+                    )}
+                  </section>
+                  {loadingNextPage && (
+                    <div
+                      className="reservation-list-skeleton"
+                      aria-label="Loading more reservations and orders"
+                      aria-live="polite"
+                    >
+                      <div className="reservation-skeleton-card">
+                        <span />
+                        <div>
+                          <i />
+                          <i />
+                        </div>
+                      </div>
+                      <div className="reservation-skeleton-card">
+                        <span />
+                        <div>
+                          <i />
+                          <i />
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </>
               )}

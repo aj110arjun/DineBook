@@ -1,7 +1,6 @@
 import LoadingState from "../../components/ui/LoadingState.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
-import CustomForm from "../../components/forms/CustomForm.jsx";
 import { useEffect } from "react";
 import {
   ArrowLeft,
@@ -12,6 +11,7 @@ import {
   Mail,
   MapPin,
   Phone,
+  RefreshCw,
   Store,
   User,
   Users,
@@ -24,7 +24,6 @@ import AdminLayout from "../../components/admin/AdminLayout.jsx";
 import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import Pagination from "../../components/Pagination.jsx";
-import AdminRestaurantPaymentsPanel from "./AdminRestaurantPaymentsPanel.jsx";
 
 function Detail({ label, value, icon: Icon }) {
   return (
@@ -52,25 +51,73 @@ function formatTableStatus(status) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
+function getFloorTableLayout(tables) {
+  const placed = [];
+  const unplaced = [];
+  const occupied = new Set();
+  let maxRow = -1;
+  let maxColumn = 3;
+
+  for (const table of [...tables].sort((left, right) =>
+    compareLabels(left.table_number, right.table_number),
+  )) {
+    const row = table.grid_row;
+    const column = table.grid_col;
+    const key = `${row}:${column}`;
+    if (
+      Number.isInteger(row) &&
+      row >= 0 &&
+      Number.isInteger(column) &&
+      column >= 0 &&
+      !occupied.has(key)
+    ) {
+      placed.push({ table, row, column });
+      occupied.add(key);
+      maxRow = Math.max(maxRow, row);
+      maxColumn = Math.max(maxColumn, column);
+    } else {
+      unplaced.push(table);
+    }
+  }
+
+  unplaced.forEach((table, index) => {
+    const row = maxRow + 1 + Math.floor(index / 4);
+    const column = index % 4;
+    placed.push({ table, row, column });
+    maxColumn = Math.max(maxColumn, column);
+  });
+
+  return {
+    columns: maxColumn + 1,
+    tables: placed.sort(
+      (left, right) =>
+        left.row - right.row ||
+        left.column - right.column ||
+        compareLabels(left.table.table_number, right.table.table_number),
+    ),
+  };
+}
+
 export default function AdminRestaurantDetailsPage() {
   const { restaurantId } = useParams();
   const [action, setAction] = useModalState("");
   const [reason, setReason] = useModalState("");
   const [busy, setBusy] = useModalState(false);
   const [actionError, setActionError] = useModalState("");
+  const [detailsRefresh, setDetailsRefresh] = useModalState(0);
+  const [scheduleRefresh, setScheduleRefresh] = useModalState(0);
   const [
     {
-      restaurant, floorData, operatingSchedule, inspectionDate, inspectionTime,
-      inspectionGuests, inspection, inspectionError, inspectionBusy, loading,
-      error, tableQuery, tableStatus, menuQuery, menuCategory, menuAvailability,
-      menuSort, menuPage,
+      restaurant, floorData, operatingSchedule, loading, error,
+      operatingScheduleError, operatingScheduleLoading, tableQuery, tableStatus,
+      menuQuery, menuCategory, menuAvailability, menuSort, menuPage,
     },
     {
       restaurant: setRestaurant, floorData: setFloorData,
-      operatingSchedule: setOperatingSchedule, inspectionDate: setInspectionDate,
-      inspectionTime: setInspectionTime, inspectionGuests: setInspectionGuests,
-      inspection: setInspection, inspectionError: setInspectionError,
-      inspectionBusy: setInspectionBusy, loading: setLoading, error: setError,
+      operatingSchedule: setOperatingSchedule, loading: setLoading,
+      error: setError,
+      operatingScheduleError: setOperatingScheduleError,
+      operatingScheduleLoading: setOperatingScheduleLoading,
       tableQuery: setTableQuery, tableStatus: setTableStatus,
       menuQuery: setMenuQuery, menuCategory: setMenuCategory,
       menuAvailability: setMenuAvailability, menuSort: setMenuSort,
@@ -80,12 +127,8 @@ export default function AdminRestaurantDetailsPage() {
     restaurant: null,
     floorData: [],
     operatingSchedule: null,
-    inspectionDate: new Date().toISOString().slice(0, 10),
-    inspectionTime: "19:00",
-    inspectionGuests: "2",
-    inspection: null,
-    inspectionError: "",
-    inspectionBusy: false,
+    operatingScheduleError: "",
+    operatingScheduleLoading: true,
     loading: true,
     error: "",
     tableQuery: "",
@@ -154,7 +197,7 @@ export default function AdminRestaurantDetailsPage() {
     return () => {
       mounted = false;
     };
-  }, [restaurantId]);
+  }, [restaurantId, detailsRefresh]);
 
   useEffect(() => {
     requestJson(`/api/admin/restaurants/${restaurantId}/floors`)
@@ -163,35 +206,31 @@ export default function AdminRestaurantDetailsPage() {
   }, [restaurantId]);
 
   useEffect(() => {
+    let active = true;
+    setOperatingScheduleLoading(true);
+    setOperatingScheduleError("");
     requestJson(
-      `/api/admin/restaurants/${restaurantId}/operating-hours?day=${inspectionDate}`,
+      `/api/admin/restaurants/${restaurantId}/operating-hours`,
     )
-      .then(setOperatingSchedule)
-      .catch(() => setOperatingSchedule(null));
-  }, [restaurantId, inspectionDate]);
-
-  async function inspectAvailability(event) {
-    event.preventDefault();
-    setInspectionBusy(true);
-    setInspectionError("");
-    try {
-      const query = new URLSearchParams({
-        reservation_date: inspectionDate,
-        start_time: inspectionTime,
-        number_of_guests: inspectionGuests,
-      });
-      setInspection(
-        await requestJson(
-          `/api/admin/restaurants/${restaurantId}/availability-inspection?${query}`,
-        ),
-      );
-    } catch (reason) {
-      setInspection(null);
-      setInspectionError(reason.message);
-    } finally {
-      setInspectionBusy(false);
-    }
-  }
+      .then((data) => active && setOperatingSchedule(data))
+      .catch((reason) => {
+        if (!active) return;
+        setOperatingSchedule(null);
+        setOperatingScheduleError(
+          reason.message || "Unable to load operating hours.",
+        );
+      })
+      .finally(() => active && setOperatingScheduleLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [
+    restaurantId,
+    scheduleRefresh,
+    setOperatingSchedule,
+    setOperatingScheduleError,
+    setOperatingScheduleLoading,
+  ]);
 
   async function confirmStatusChange() {
     setBusy(true);
@@ -230,20 +269,33 @@ export default function AdminRestaurantDetailsPage() {
         {loading ? (
           <LoadingState variant="detail" label="Loading restaurant details…" />
         ) : error ? (
-          <div className="admin-request-error" role="alert">
+          <div className="admin-request-error admin-restaurant-load-error" role="alert">
             {error}
+            <button type="button" onClick={() => setDetailsRefresh((value) => value + 1)}>
+              <RefreshCw size={15} /> Retry
+            </button>
           </div>
         ) : restaurant ? (
           <>
             <div className="admin-restaurant-detail-heading">
-              <div>
-                <span>RESTAURANT PROFILE</span>
-                <h2>{restaurant.name}</h2>
-                <p>
-                  {[restaurant.cuisine_type, restaurant.city, restaurant.state]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </p>
+              <div className="admin-restaurant-profile">
+                <span className="admin-restaurant-profile-icon" aria-hidden="true">
+                  <Store size={23} />
+                </span>
+                <div className="admin-restaurant-profile-copy">
+                  <span className="admin-restaurant-eyebrow">RESTAURANT PROFILE</span>
+                  <h2 title={restaurant.name}>{restaurant.name}</h2>
+                  <p>
+                    {[restaurant.cuisine_type, restaurant.city, restaurant.state]
+                      .filter(Boolean)
+                      .join(" · ") || "Restaurant details"}
+                  </p>
+                  {restaurant.created_at && (
+                    <small>
+                      Registered {formatLocalDateTime(restaurant.created_at, { timeStyle: "medium" })}
+                    </small>
+                  )}
+                </div>
               </div>
               <div className="admin-restaurant-status-actions">
                 <span
@@ -269,12 +321,15 @@ export default function AdminRestaurantDetailsPage() {
               </div>
             </div>
             {actionError && (
-              <div className="admin-request-error" role="alert">
+              <div
+                className="admin-request-error admin-restaurant-wide-card admin-restaurant-action-error"
+                role="alert"
+              >
                 {actionError}
               </div>
             )}
 
-            <section className="admin-restaurant-detail-card">
+            <section className="admin-restaurant-detail-card admin-restaurant-information-card">
               <h3>
                 <Store size={17} /> Restaurant information
               </h3>
@@ -300,13 +355,9 @@ export default function AdminRestaurantDetailsPage() {
                   icon={CalendarDays}
                 />
               </div>
-              <div className="admin-restaurant-description">
-                <span>Description</span>
-                <p>{restaurant.description || "No description provided."}</p>
-              </div>
             </section>
 
-            <section className="admin-restaurant-detail-card">
+            <section className="admin-restaurant-detail-card admin-restaurant-manager-card">
               <h3>
                 <User size={17} /> Manager information
               </h3>
@@ -326,10 +377,30 @@ export default function AdminRestaurantDetailsPage() {
                   value={restaurant.manager?.status}
                   icon={User}
                 />
+                <Detail
+                  label="Manager access"
+                  value={
+                    restaurant.manager?.is_active == null
+                      ? null
+                      : restaurant.manager.is_active
+                        ? "Active"
+                        : "Inactive"
+                  }
+                  icon={ShieldAlert}
+                />
               </div>
             </section>
 
-            <section className="admin-restaurant-detail-card">
+            <section className="admin-restaurant-detail-card admin-restaurant-wide-card admin-restaurant-description-card">
+              <h3>
+                <FileText size={17} /> Description
+              </h3>
+              <p className="admin-restaurant-description-text">
+                {restaurant.description || "No description provided."}
+              </p>
+            </section>
+
+            <section className="admin-restaurant-detail-card admin-restaurant-wide-card admin-restaurant-address-card">
               <h3>
                 <MapPin size={17} /> Address
               </h3>
@@ -349,140 +420,113 @@ export default function AdminRestaurantDetailsPage() {
               </div>
             </section>
 
-            <section className="admin-restaurant-detail-card">
+            <section className="admin-restaurant-detail-card admin-restaurant-wide-card admin-restaurant-hours-card">
               <h3>
                 <Clock3 size={17} /> Operating hours
               </h3>
-              {operatingSchedule?.days?.length ? (
+              {operatingScheduleLoading && !operatingSchedule ? (
+                <div
+                  className="admin-restaurant-hours-skeleton"
+                  role="status"
+                  aria-label="Loading operating schedule"
+                  aria-busy="true"
+                >
+                  {Array.from({ length: 7 }, (_, index) => (
+                    <span key={index} />
+                  ))}
+                </div>
+              ) : operatingSchedule?.days?.length ? (
                 <div className="admin-restaurant-hours">
                   {operatingSchedule.days.map((day) => (
-                    <div key={day.day}>
-                      <span>{day.day}</span>
-                      <strong>
-                        {day.periods.length
-                          ? day.periods
-                              .map(
-                                (period) =>
-                                  `${period.opens} – ${period.closes}`,
-                              )
-                              .join(" · ")
-                          : "Closed"}
-                        {day.updated_at && (
-                          <small className="operating-audit">
-                            Updated {formatLocalDateTime(day.updated_at, { timeStyle: "medium" })}
-                            {day.updated_by ? ` · user ${day.updated_by}` : ""}
-                          </small>
-                        )}
-                      </strong>
+                    <div
+                      className={`admin-restaurant-hours-day ${day.periods.length ? "is-open" : "is-closed"}`}
+                      key={day.day}
+                    >
+                      <div className="admin-restaurant-hours-day-heading">
+                        <strong>{day.day}</strong>
+                        <span>{day.periods.length ? "Open" : "Closed"}</span>
+                      </div>
+                      {day.periods.length ? (
+                        <div className="admin-restaurant-hours-periods">
+                          {day.periods.map((period) => (
+                            <span key={`${period.opens}-${period.closes}`}>
+                              {period.opens} – {period.closes}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p>Closed all day</p>
+                      )}
+                      {day.updated_at && (
+                        <small className="operating-audit">
+                          Updated {formatLocalDateTime(day.updated_at, { timeStyle: "medium" })}
+                          {day.updated_by ? ` · user ${day.updated_by}` : ""}
+                        </small>
+                      )}
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="admin-restaurant-empty">
-                  {restaurant.hours?.length
-                    ? "Loading current schedule…"
-                    : "No operating hours have been provided."}
-                </p>
+                <div className="admin-restaurant-schedule-message">
+                  <p className="admin-restaurant-empty">
+                    {operatingScheduleLoading
+                      ? "Loading operating schedule…"
+                      : operatingScheduleError || "No operating hours have been provided."}
+                  </p>
+                  {operatingScheduleError && (
+                    <button
+                      type="button"
+                      className="admin-restaurant-retry"
+                      onClick={() => setScheduleRefresh((value) => value + 1)}
+                    >
+                      <RefreshCw size={14} /> Retry schedule
+                    </button>
+                  )}
+                </div>
               )}
               <small>
                 Schedule time zone:{" "}
                 {operatingSchedule?.timezone || "Asia/Kolkata"}
               </small>
-              <h4>Schedule exceptions and history</h4>
-              {operatingSchedule?.exceptions?.length ? (
-                <ul className="operating-exception-list">
-                  {operatingSchedule.exceptions.map((item) => (
-                    <li key={item.id}>
-                      <div>
-                        <strong>
-                          {formatLocalDate(item.start_date)}
-                          {item.end_date !== item.start_date
-                            ? ` – ${formatLocalDate(item.end_date)}`
-                            : ""}
-                        </strong>
-                        <span>
-                          {item.is_closed
-                            ? "Closed"
-                            : item.periods
-                                .map(
-                                  (period) =>
-                                    `${period.opens}–${period.closes}`,
-                                )
-                                .join(" · ")}
-                        </span>
-                        {item.reason && <small>{item.reason}</small>}
-                        {item.updated_at && (
-                          <small>
-                            Updated {formatLocalDateTime(item.updated_at, { timeStyle: "medium" })}
-                            {item.created_by
-                              ? ` · user ${item.created_by}`
+              <details className="admin-restaurant-exceptions">
+                <summary>
+                  Schedule exceptions and history
+                  <span>{operatingSchedule?.exceptions?.length || 0}</span>
+                </summary>
+                {operatingSchedule?.exceptions?.length ? (
+                  <ul className="operating-exception-list">
+                    {operatingSchedule.exceptions.map((item) => (
+                      <li key={item.id}>
+                        <div>
+                          <strong>
+                            {formatLocalDate(item.start_date)}
+                            {item.end_date !== item.start_date
+                              ? ` – ${formatLocalDate(item.end_date)}`
                               : ""}
-                          </small>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>No exceptions have been recorded.</p>
-              )}
-              <h4>Availability inspection</h4>
-              <CustomForm
-                className="operating-inspection-form"
-                onSubmit={inspectAvailability}
-              >
-                <label>
-                  Date
-                  <input
-                    type="date"
-                    value={inspectionDate}
-                    onChange={(event) => setInspectionDate(event.target.value)}
-                  />
-                </label>
-                <label>
-                  Start time
-                  <input
-                    type="time"
-                    value={inspectionTime}
-                    onChange={(event) => setInspectionTime(event.target.value)}
-                  />
-                </label>
-                <label>
-                  Guests
-                  <input
-                    type="number"
-                    min="1"
-                    max="16"
-                    value={inspectionGuests}
-                    onChange={(event) =>
-                      setInspectionGuests(event.target.value)
-                    }
-                  />
-                </label>
-                <button type="submit" disabled={inspectionBusy}>
-                  {inspectionBusy ? "Checking…" : "Inspect slot"}
-                </button>
-              </CustomForm>
-              {inspectionError && <p role="alert">{inspectionError}</p>}
-              {inspection && (
-                <div className="operating-inspection-result">
-                  <strong>
-                    {inspection.available ? "Available" : "Unavailable"}
-                  </strong>
-                  <span>
-                    {inspection.reason ||
-                      `${inspection.tables.length} suitable table option(s)`}
-                  </span>
-                  {inspection.exception_reason && (
-                    <small>
-                      Schedule exception: {inspection.exception_reason}
-                    </small>
-                  )}
-                </div>
-              )}
+                          </strong>
+                          <span>
+                            {item.is_closed
+                              ? "Closed"
+                              : item.periods
+                                  .map((period) => `${period.opens}–${period.closes}`)
+                                  .join(" · ")}
+                          </span>
+                          {item.reason && <small>{item.reason}</small>}
+                          {item.updated_at && (
+                            <small>
+                              Updated {formatLocalDateTime(item.updated_at, { timeStyle: "medium" })}
+                              {item.created_by ? ` · user ${item.created_by}` : ""}
+                            </small>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>No exceptions have been recorded.</p>
+                )}
+              </details>
             </section>
-
-            <AdminRestaurantPaymentsPanel restaurantId={restaurant.id} />
 
             <section className="admin-restaurant-detail-card admin-restaurant-wide-card">
               <h3>
@@ -557,18 +601,16 @@ export default function AdminRestaurantDetailsPage() {
                   </div>
                   <div className="admin-floor-list">
                     {orderedFloors.map((floor) => {
-                      const tables = [...floor.tables]
+                      const floorLayout = getFloorTableLayout(floor.tables);
+                      const tables = floorLayout.tables
                         .filter(
-                          (table) =>
+                          ({ table }) =>
                             (tableStatus === "ALL" ||
                               table.status === tableStatus) &&
                             (!tableQuery.trim() ||
                               `${table.table_number} ${table.id} ${floor.name}`
                                 .toLowerCase()
                                 .includes(tableQuery.trim().toLowerCase())),
-                        )
-                        .sort((left, right) =>
-                          compareLabels(left.table_number, right.table_number),
                         );
                       return (
                         <article className="admin-floor-item" key={floor.id}>
@@ -580,21 +622,35 @@ export default function AdminRestaurantDetailsPage() {
                             </span>
                           </div>
                           {tables.length ? (
-                            <div className="admin-floor-table-list">
-                              {tables.map((table) => (
-                                <div
-                                  className="admin-floor-table"
-                                  key={table.id}
-                                >
-                                  <strong>Table {table.table_number}</strong>
-                                  <span>{table.seats} seats</span>
-                                  <span
-                                    className={`admin-floor-table-status ${table.status?.toLowerCase()}`}
+                            <div className="admin-floor-map-scroll">
+                              <div
+                                className="admin-floor-map"
+                                role="group"
+                                aria-label={`${floor.name} table layout`}
+                                style={{
+                                  gridTemplateColumns: `repeat(${floorLayout.columns}, minmax(94px, 1fr))`,
+                                  minWidth: `max(100%, ${floorLayout.columns * 118}px)`,
+                                }}
+                              >
+                                {tables.map(({ table, row, column }) => (
+                                  <div
+                                    className={`admin-floor-map-table ${table.table_type || "round"} ${table.status?.toLowerCase() || ""}`}
+                                    key={table.id}
+                                    style={{
+                                      gridRow: row + 1,
+                                      gridColumn: column + 1,
+                                    }}
+                                    role="img"
+                                    aria-label={`Table ${table.table_number}, ${table.seats} seats, ${formatTableStatus(table.status)}`}
                                   >
-                                    {formatTableStatus(table.status)}
-                                  </span>
-                                </div>
-                              ))}
+                                    <strong>Table {table.table_number}</strong>
+                                    <span>{table.seats} seats</span>
+                                    <small>
+                                      {formatTableStatus(table.status)}
+                                    </small>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
                           ) : (
                             <p className="admin-floor-empty">

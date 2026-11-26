@@ -271,6 +271,7 @@ export default function CustomerReservationPage() {
       preorderVariants,
       menuLoading,
       preorderCart,
+      preorderCustomerNote,
       availableOffers,
       offerCode,
       offerPreview,
@@ -301,6 +302,7 @@ export default function CustomerReservationPage() {
       preorderVariants: setPreorderVariants,
       menuLoading: setMenuLoading,
       preorderCart: setPreorderCart,
+      preorderCustomerNote: setPreorderCustomerNote,
       availableOffers: setAvailableOffers,
       offerCode: setOfferCode,
       offerPreview: setOfferPreview,
@@ -340,6 +342,7 @@ export default function CustomerReservationPage() {
     preorderVariants: {},
     menuLoading: true,
     preorderCart: [],
+    preorderCustomerNote: "",
     availableOffers: [],
     offerCode: "",
     offerPreview: null,
@@ -1061,6 +1064,10 @@ export default function CustomerReservationPage() {
           preorder_payment_method:
             fulfillmentType === "PREORDER" ? preorderPaymentMethod : null,
           preorder_items: fulfillmentType === "PREORDER" ? preorderCart : [],
+          special_request:
+            fulfillmentType === "PREORDER"
+              ? preorderCustomerNote.trim() || null
+              : null,
           offer_code:
             fulfillmentType === "PREORDER" && offerPreview?.valid
               ? offerCode
@@ -1866,6 +1873,31 @@ export default function CustomerReservationPage() {
                         })}
                       </section>
                     )}
+                    <section
+                      className="booking-preorder-customer-note"
+                      aria-labelledby="preorder-customer-note-title"
+                    >
+                      <div className="booking-preorder-note-heading">
+                        <h3 id="preorder-customer-note-title">
+                          Customer note
+                        </h3>
+                        <span>{preorderCustomerNote.length}/500</span>
+                      </div>
+                      <p>
+                        Share allergies, dietary concerns, or preparation
+                        requests with the manager or chef.
+                      </p>
+                      <textarea
+                        id="preorder-customer-note"
+                        value={preorderCustomerNote}
+                        maxLength={500}
+                        rows={3}
+                        placeholder="Example: Peanut allergy — please use separate utensils."
+                        onChange={(event) =>
+                          setPreorderCustomerNote(event.target.value)
+                        }
+                      />
+                    </section>
                     <button
                       type="button"
                       className="booking-back-button"

@@ -1,5 +1,5 @@
 import { formatLocalDateTime } from "./localDate.js";
-const readableId = (value, prefix) =>
+export const readableId = (value, prefix) =>
   value
     ? `${prefix}-${String(value).replaceAll("-", "").slice(0, 8).toUpperCase()}`
     : "—";
