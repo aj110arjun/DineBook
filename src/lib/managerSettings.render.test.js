@@ -10,7 +10,7 @@ import { DEFAULT_GENERAL } from "./customerSettings.js";
 
 let content, temporary;
 before(async () => {
-  const output = await build({ logLevel: "silent", build: { ssr: "src/pages/manager/ManagerSettingsPage.jsx", write: false } });
+  const output = await build({ logLevel: "silent", build: { ssr: "src/features/manager/ManagerSettingsPage.jsx", write: false } });
   temporary = await mkdtemp(join(process.cwd(), "node_modules/.manager-settings-test-"));
   for (const chunk of output.output) if (chunk.type === "chunk") await writeFile(join(temporary, chunk.fileName), chunk.code);
   ({ ManagerSettingsContent: content } = await import(pathToFileURL(join(temporary, "ManagerSettingsPage.js"))));

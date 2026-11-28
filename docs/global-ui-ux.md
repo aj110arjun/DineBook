@@ -167,50 +167,50 @@ frontend repository.
 | `src/lib/routeMetadata.js` | Created. Describe only registered internal routes and safe dynamic-label fallbacks. |
 | `src/lib/uiExperience.test.js` | Created. Add nine focused route, state, refresh, animation and navigation regression tests. |
 | `src/main.jsx` | Modified. Load the shared UI stylesheet and React Router future flags. |
-| `src/pages/admin/AdminDashboardPage.jsx` | Modified. Use shared dashboard loading compositions. |
-| `src/pages/admin/AdminManagerRequestDetailsPage.jsx` | Modified. Use shared detail loading compositions. |
-| `src/pages/admin/AdminOffersPage.jsx` | Modified. Use shared table loading compositions; retain settled content during refresh. |
-| `src/pages/admin/AdminProfilePage.jsx` | Modified. Use shared form loading compositions; retain settled content during refresh. |
-| `src/pages/admin/AdminRequestsPage.jsx` | Modified. Use shared table loading compositions; retain settled content during refresh. |
-| `src/pages/admin/AdminRestaurantDetailsPage.jsx` | Modified. Use shared detail, menu loading compositions; supply entity names from existing page data. |
-| `src/pages/admin/AdminRestaurantPaymentsPanel.jsx` | Modified. Use shared table loading compositions; retain settled content during refresh. |
-| `src/pages/admin/AdminRestaurantsPage.jsx` | Modified. retain settled content during refresh. |
-| `src/pages/admin/AdminReviewModerationPage.jsx` | Modified. Use shared list loading compositions; retain settled content during refresh. |
-| `src/pages/admin/AdminSettingsPage.jsx` | Modified. Use shared form loading compositions. |
-| `src/pages/admin/AdminTransactionDetailsPage.jsx` | Modified. Use shared detail loading compositions. |
-| `src/pages/chef/ChefDashboardPage.jsx` | Modified. Use shared dashboard loading compositions. |
-| `src/pages/chef/ChefMenuPage.jsx` | Modified. Use shared menu loading compositions; retain settled content during refresh; supply entity names from existing page data. |
-| `src/pages/chef/ChefProfilePage.jsx` | Modified. Use shared form loading compositions; retain settled content during refresh. |
-| `src/pages/chef/ChefServiceHoursPage.jsx` | Modified. Use shared form loading compositions; retain settled content during refresh. |
-| `src/pages/chef/ChefSettingsPage.jsx` | Modified. Use shared form loading compositions. |
-| `src/pages/customer/CustomerLandingPage.jsx` | Modified. Use shared cards loading compositions; animate content without remounting its shell. |
-| `src/pages/customer/CustomerProfilePage.jsx` | Modified. Use shared form loading compositions; animate content without remounting its shell. |
-| `src/pages/customer/CustomerReservationDetailsPage.jsx` | Modified. Use shared detail loading compositions. |
-| `src/pages/customer/CustomerReservationPage.jsx` | Modified. Use shared detail, menu loading compositions; supply entity names from existing page data; animate content without remounting its shell. |
-| `src/pages/customer/CustomerReservationsPage.jsx` | Modified. Use shared list loading compositions; retain settled content during refresh; animate content without remounting its shell. |
-| `src/pages/customer/CustomerRestaurantDetailsPage.jsx` | Modified. Use shared detail, list, menu loading compositions; supply entity names from existing page data; animate content without remounting its shell. |
-| `src/pages/customer/CustomerRestaurantListingPage.jsx` | Modified. Use shared cards loading compositions; retain settled content during refresh; animate content without remounting its shell. |
-| `src/pages/customer/CustomerSavedRestaurantsPage.jsx` | Modified. Use shared cards loading compositions; retain settled content during refresh. |
-| `src/pages/customer/CustomerSettingsPage.jsx` | Modified. Use shared form loading compositions. |
-| `src/pages/customer/CustomerTransactionDetailsPage.jsx` | Modified. Use shared detail loading compositions. |
-| `src/pages/customer/CustomerTransactionsPage.jsx` | Modified. Use shared table loading compositions; retain settled content during refresh. |
-| `src/pages/customer/CustomerWalletPage.jsx` | Modified. Use shared table, wallet loading compositions. |
-| `src/pages/manager/ManagerChefWalletTransfers.jsx` | Modified. Use shared detail loading compositions. |
-| `src/pages/manager/ManagerDashboardPage.jsx` | Modified. Use shared dashboard loading compositions. |
-| `src/pages/manager/ManagerFloorsPage.jsx` | Modified. Use shared calendar loading compositions. |
-| `src/pages/manager/ManagerMenuPage.jsx` | Modified. Use shared detail, menu loading compositions; retain settled content during refresh; supply entity names from existing page data. |
-| `src/pages/manager/ManagerOffersPage.jsx` | Modified. Use shared list loading compositions; retain settled content during refresh. |
-| `src/pages/manager/ManagerOperatingHoursPage.jsx` | Modified. Use shared form loading compositions; retain settled content during refresh. |
-| `src/pages/manager/ManagerOrderDetailsPage.jsx` | Modified. Use shared detail loading compositions. |
-| `src/pages/manager/ManagerPaymentsPage.jsx` | Modified. Use shared detail, table loading compositions; retain settled content during refresh. |
-| `src/pages/manager/ManagerProfilePage.jsx` | Modified. Use shared form loading compositions; retain settled content during refresh. |
-| `src/pages/manager/ManagerReservationsPage.jsx` | Modified. Use shared list, menu loading compositions. |
-| `src/pages/manager/ManagerReviewsPage.jsx` | Modified. Use shared list loading compositions; retain settled content during refresh. |
-| `src/pages/manager/ManagerSettingsPage.jsx` | Modified. Use shared form loading compositions. |
-| `src/pages/manager/ManagerSpotOrderPage.jsx` | Modified. Use shared menu loading compositions. |
-| `src/pages/manager/ManagerStaffPage.jsx` | Modified. Use shared list loading compositions; retain settled content during refresh. |
-| `src/pages/shared/OrdersPage.jsx` | Modified. Use shared list loading compositions; retain settled content during refresh; animate content without remounting its shell. |
-| `src/pages/shared/RevenueWalletPage.jsx` | Modified. Use shared dashboard loading compositions. |
+| `src/features/admin/AdminDashboardPage.jsx` | Modified. Use shared dashboard loading compositions. |
+| `src/features/admin/AdminManagerRequestDetailsPage.jsx` | Modified. Use shared detail loading compositions. |
+| `src/features/admin/AdminOffersPage.jsx` | Modified. Use shared table loading compositions; retain settled content during refresh. |
+| `src/features/admin/AdminProfilePage.jsx` | Modified. Use shared form loading compositions; retain settled content during refresh. |
+| `src/features/admin/AdminRequestsPage.jsx` | Modified. Use shared table loading compositions; retain settled content during refresh. |
+| `src/features/admin/AdminRestaurantDetailsPage.jsx` | Modified. Use shared detail, menu loading compositions; supply entity names from existing page data. |
+| `src/features/admin/AdminRestaurantPaymentsPanel.jsx` | Modified. Use shared table loading compositions; retain settled content during refresh. |
+| `src/features/admin/AdminRestaurantsPage.jsx` | Modified. retain settled content during refresh. |
+| `src/features/admin/AdminReviewModerationPage.jsx` | Modified. Use shared list loading compositions; retain settled content during refresh. |
+| `src/features/admin/AdminSettingsPage.jsx` | Modified. Use shared form loading compositions. |
+| `src/features/admin/AdminTransactionDetailsPage.jsx` | Modified. Use shared detail loading compositions. |
+| `src/features/chef/ChefDashboardPage.jsx` | Modified. Use shared dashboard loading compositions. |
+| `src/features/chef/ChefMenuPage.jsx` | Modified. Use shared menu loading compositions; retain settled content during refresh; supply entity names from existing page data. |
+| `src/features/chef/ChefProfilePage.jsx` | Modified. Use shared form loading compositions; retain settled content during refresh. |
+| `src/features/chef/ChefServiceHoursPage.jsx` | Modified. Use shared form loading compositions; retain settled content during refresh. |
+| `src/features/chef/ChefSettingsPage.jsx` | Modified. Use shared form loading compositions. |
+| `src/features/customer/CustomerLandingPage.jsx` | Modified. Use shared cards loading compositions; animate content without remounting its shell. |
+| `src/features/customer/CustomerProfilePage.jsx` | Modified. Use shared form loading compositions; animate content without remounting its shell. |
+| `src/features/customer/CustomerReservationDetailsPage.jsx` | Modified. Use shared detail loading compositions. |
+| `src/features/customer/CustomerReservationPage.jsx` | Modified. Use shared detail, menu loading compositions; supply entity names from existing page data; animate content without remounting its shell. |
+| `src/features/customer/CustomerReservationsPage.jsx` | Modified. Use shared list loading compositions; retain settled content during refresh; animate content without remounting its shell. |
+| `src/features/customer/CustomerRestaurantDetailsPage.jsx` | Modified. Use shared detail, list, menu loading compositions; supply entity names from existing page data; animate content without remounting its shell. |
+| `src/features/customer/CustomerRestaurantListingPage.jsx` | Modified. Use shared cards loading compositions; retain settled content during refresh; animate content without remounting its shell. |
+| `src/features/customer/CustomerSavedRestaurantsPage.jsx` | Modified. Use shared cards loading compositions; retain settled content during refresh. |
+| `src/features/customer/CustomerSettingsPage.jsx` | Modified. Use shared form loading compositions. |
+| `src/features/customer/CustomerTransactionDetailsPage.jsx` | Modified. Use shared detail loading compositions. |
+| `src/features/customer/CustomerTransactionsPage.jsx` | Modified. Use shared table loading compositions; retain settled content during refresh. |
+| `src/features/customer/CustomerWalletPage.jsx` | Modified. Use shared table, wallet loading compositions. |
+| `src/features/manager/ManagerChefWalletTransfers.jsx` | Modified. Use shared detail loading compositions. |
+| `src/features/manager/ManagerDashboardPage.jsx` | Modified. Use shared dashboard loading compositions. |
+| `src/features/manager/ManagerFloorsPage.jsx` | Modified. Use shared calendar loading compositions. |
+| `src/features/manager/ManagerMenuPage.jsx` | Modified. Use shared detail, menu loading compositions; retain settled content during refresh; supply entity names from existing page data. |
+| `src/features/manager/ManagerOffersPage.jsx` | Modified. Use shared list loading compositions; retain settled content during refresh. |
+| `src/features/manager/ManagerOperatingHoursPage.jsx` | Modified. Use shared form loading compositions; retain settled content during refresh. |
+| `src/features/manager/ManagerOrderDetailsPage.jsx` | Modified. Use shared detail loading compositions. |
+| `src/features/manager/ManagerPaymentsPage.jsx` | Modified. Use shared detail, table loading compositions; retain settled content during refresh. |
+| `src/features/manager/ManagerProfilePage.jsx` | Modified. Use shared form loading compositions; retain settled content during refresh. |
+| `src/features/manager/ManagerReservationsPage.jsx` | Modified. Use shared list, menu loading compositions. |
+| `src/features/manager/ManagerReviewsPage.jsx` | Modified. Use shared list loading compositions; retain settled content during refresh. |
+| `src/features/manager/ManagerSettingsPage.jsx` | Modified. Use shared form loading compositions. |
+| `src/features/manager/ManagerSpotOrderPage.jsx` | Modified. Use shared menu loading compositions. |
+| `src/features/manager/ManagerStaffPage.jsx` | Modified. Use shared list loading compositions; retain settled content during refresh. |
+| `src/features/shared/OrdersPage.jsx` | Modified. Use shared list loading compositions; retain settled content during refresh; animate content without remounting its shell. |
+| `src/features/shared/RevenueWalletPage.jsx` | Modified. Use shared dashboard loading compositions. |
 | `tests/customer-ai-preview.jsx` | Modified. Load the shared skeleton stylesheet in the existing isolated AI preview. |
 | `tests/manager-ai-preview.jsx` | Modified. Load the shared skeleton stylesheet in the existing isolated AI preview. |
 | `tests/ui-experience-preview.html` | Created. Provide a development-only four-portal integration entry. |

@@ -14,7 +14,7 @@ const fixture = {
   restaurant: { id: "restaurant", name: "Real Kitchen", description: "Seasonal food", cuisine_type: "Indian", email: "hello@example.com", phone: "+91 9876543210", address: "Main Street", city: "Pune", state: "Maharashtra", pin_code: "411001", status: "APPROVED", branding_image_url: null, latitude: null, longitude: null, created_at: "2026-01-01T00:00:00Z", updated_at: "2026-11-13T00:00:00Z", documents: [{ id: "document", document_type: "FSSAI_LICENSE", file_name: "license.pdf", created_at: "2026-01-01T00:00:00Z" }], operation: { date: "2026-11-13", timezone: "Asia/Kolkata", schedule_configured: false, is_open_now: null, periods: [] } },
 };
 before(async () => {
-  const output = await build({ logLevel: "silent", build: { ssr: "src/pages/manager/ManagerProfilePage.jsx", write: false } });
+  const output = await build({ logLevel: "silent", build: { ssr: "src/features/manager/ManagerProfilePage.jsx", write: false } });
   temporary = await mkdtemp(join(process.cwd(), "node_modules/.manager-profile-render-"));
   for (const chunk of output.output) if (chunk.type === "chunk") await writeFile(join(temporary, chunk.fileName), chunk.code);
   ({ ManagerProfileContent: content } = await import(pathToFileURL(join(temporary, "ManagerProfilePage.js"))));

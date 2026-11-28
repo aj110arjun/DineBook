@@ -3,6 +3,7 @@ import PageTransition from "../../components/ui/PageTransition.jsx";
 import { usePageState } from "../../state/usePageState.js";
 import { useEffect, useMemo } from "react";
 import { useDispatch } from "react-redux";
+import { Clock3, MapPin, Utensils } from "lucide-react";
 import {
   setCustomerSession,
   clearCustomerSession,
@@ -17,6 +18,9 @@ import RestaurantSection from "../../components/landing/RestaurantSection.jsx";
 import CustomerOrderTracker from "../../components/landing/CustomerOrderTracker.jsx";
 import { requestJson } from "../../lib/authApi.js";
 import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
+import { customerLandingConfig } from "../../data/customerLandingConfig.js";
+import RevealOnScroll from "../../components/landing/RevealOnScroll.jsx";
+import "../../assets/css/CustomerLandingPage.css";
 
 const cuisineMatches = {
   Italian: ["italian", "global"],
@@ -37,6 +41,7 @@ export default function CustomerLandingPage() {
       user,
       loading,
       restaurants,
+      apiCuisines,
       restaurantsLoading,
       restaurantsError,
       restaurantRefresh,
@@ -46,6 +51,7 @@ export default function CustomerLandingPage() {
       user: setUser,
       loading: setLoading,
       restaurants: setRestaurants,
+      apiCuisines: setApiCuisines,
       restaurantsLoading: setRestaurantsLoading,
       restaurantsError: setRestaurantsError,
       restaurantRefresh: setRestaurantRefresh,
@@ -55,6 +61,7 @@ export default function CustomerLandingPage() {
     user: null,
     loading: true,
     restaurants: [],
+    apiCuisines: [],
     restaurantsLoading: true,
     restaurantsError: "",
     restaurantRefresh: 0,
@@ -103,15 +110,22 @@ export default function CustomerLandingPage() {
   useEffect(() => {
     let mounted = true;
     setRestaurantsError("");
-    requestJson("/api/customer/restaurants")
-      .then((items) => {
+    requestJson("/api/customer/restaurants?page=1&page_size=100")
+      .then((result) => {
         if (mounted) {
+          const items = Array.isArray(result) ? result : result?.items;
           setRestaurants(Array.isArray(items) ? items : []);
+          setApiCuisines(
+            Array.isArray(result?.cuisines) ? result.cuisines : [],
+          );
           setRestaurantsError("");
         }
       })
       .catch((reason) => {
-        if (mounted) setRestaurantsError(reason.message);
+        if (mounted) {
+          setApiCuisines([]);
+          setRestaurantsError(reason.message);
+        }
       })
       .finally(() => {
         if (mounted) setRestaurantsLoading(false);
@@ -140,6 +154,59 @@ export default function CustomerLandingPage() {
       );
     return restaurants.filter(matches);
   }, [restaurants, selectedCuisine]);
+  const cuisineItems = useMemo(() => {
+    if (!apiCuisines.length) return customerLandingConfig.cuisines.items;
+    return apiCuisines.map((name) => ({
+      name,
+      image:
+        customerLandingConfig.cuisines.items.find(
+          (cuisine) => cuisine.name.toLowerCase() === name.toLowerCase(),
+        )?.image || customerLandingConfig.cuisines.fallbackImage,
+    }));
+  }, [apiCuisines]);
+  const featuredRestaurants = useMemo(
+    () =>
+      [...matchingRestaurants]
+        .sort(
+          (left, right) =>
+            Number(right.rating || 0) - Number(left.rating || 0) ||
+            Number(right.review_count || 0) -
+              Number(left.review_count || 0),
+        )
+        .slice(0, customerLandingConfig.featuredRestaurants.limit),
+    [matchingRestaurants],
+  );
+  const featuredRestaurantIds = useMemo(
+    () => new Set(featuredRestaurants.map((restaurant) => restaurant.id)),
+    [featuredRestaurants],
+  );
+  const recentlyAddedRestaurants = useMemo(
+    () =>
+      [...matchingRestaurants]
+        .sort(
+          (left, right) =>
+            new Date(right.created_at || 0) -
+            new Date(left.created_at || 0),
+        )
+        .filter((restaurant) => !featuredRestaurantIds.has(restaurant.id))
+        .slice(0, customerLandingConfig.recentRestaurants.limit),
+    [featuredRestaurantIds, matchingRestaurants],
+  );
+
+  function selectCuisine(cuisine) {
+    setSelectedCuisine((current) => (current === cuisine ? "" : cuisine));
+    window.requestAnimationFrame(() => {
+      document
+        .getElementById("restaurants-near-you")
+        ?.scrollIntoView({
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
+            .matches
+            ? "instant"
+            : "smooth",
+          block: "start",
+        });
+    });
+  }
 
   if (loading)
     return (
@@ -149,28 +216,71 @@ export default function CustomerLandingPage() {
     );
 
   return (
-    <div className="customer-home">
+    <div className="customer-home customer-landing">
       <CustomerHeader user={user} onLogout={() => setUser(null)} />
-      <HeroBanner />
+      <HeroBanner config={customerLandingConfig.hero} />
       <CustomerOrderTracker enabled={Boolean(user) && !isDemoSession} />
       <PageTransition as="main">
-        <CuisineGrid selected={selectedCuisine} onSelect={setSelectedCuisine} />
+        <CuisineGrid
+          selected={selectedCuisine}
+          onSelect={selectCuisine}
+          config={{ ...customerLandingConfig.cuisines, items: cuisineItems }}
+        />
+        <section className="landing-highlights" aria-label="DineBook benefits">
+          {customerLandingConfig.highlights.map(({ title, description }, index) => {
+            const Icon = [MapPin, Clock3, Utensils][index % 3];
+            return (
+              <RevealOnScroll
+                as="article"
+                className="landing-highlight"
+                key={title}
+                delay={index * 80}
+              >
+                <span className="landing-highlight-icon">
+                  <Icon size={18} aria-hidden="true" />
+                </span>
+                <div>
+                  <h3>{title}</h3>
+                  <p>{description}</p>
+                </div>
+              </RevealOnScroll>
+            );
+          })}
+        </section>
         <RestaurantSection
           id="restaurants-near-you"
-          eyebrow="DISCOVER YOUR NEXT TABLE"
-          title="Restaurants to Explore"
-          restaurants={matchingRestaurants.slice(0, 4)}
+          eyebrow={customerLandingConfig.featuredRestaurants.eyebrow}
+          title={
+            matchingRestaurants.some((restaurant) => restaurant.rating != null)
+              ? customerLandingConfig.featuredRestaurants.title
+              : "Restaurants to discover"
+          }
+          restaurants={featuredRestaurants}
           emptyMessage={
             selectedCuisine
               ? `No approved ${selectedCuisine} restaurants are available yet. Choose another cuisine to explore.`
-              : "No approved restaurants are available yet."
+              : customerLandingConfig.featuredRestaurants.emptyMessage
           }
+          emptyTitle={customerLandingConfig.featuredRestaurants.emptyTitle}
           loading={restaurantsLoading}
           error={restaurantsError}
           onRetry={() => setRestaurantRefresh((value) => value + 1)}
-          actionLabel="View All Restaurants"
-          actionHref="/customer/restaurants"
+          actionLabel={customerLandingConfig.featuredRestaurants.actionLabel}
+          actionHref={customerLandingConfig.featuredRestaurants.actionHref}
         />
+        {recentlyAddedRestaurants.length > 0 && (
+          <RestaurantSection
+            id="recently-added"
+            eyebrow={customerLandingConfig.recentRestaurants.eyebrow}
+            title={customerLandingConfig.recentRestaurants.title}
+            restaurants={recentlyAddedRestaurants}
+            loading={restaurantsLoading}
+            error={restaurantsError}
+            onRetry={() => setRestaurantRefresh((value) => value + 1)}
+            actionLabel={customerLandingConfig.recentRestaurants.actionLabel}
+            actionHref={customerLandingConfig.recentRestaurants.actionHref}
+          />
+        )}
         <HowItWorks />
       </PageTransition>
       <LandingFooter />

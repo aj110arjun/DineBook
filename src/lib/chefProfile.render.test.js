@@ -13,7 +13,7 @@ let content, temporary;
 const chef = { id: "chef", name: "Chef Name", email: "chef@example.com", phone: null, role: "CHEF", status: "ACTIVE", avatar_url: null, created_at: "2026-01-01T00:00:00Z", updated_at: "2026-11-14T00:00:00Z" };
 const restaurant = { id: "restaurant", name: "Assigned Kitchen", cuisine_type: "Indian", phone: null, address: "Main Street", city: "Pune", state: null, pin_code: null, status: "APPROVED" };
 before(async () => {
-  const output = await build({ logLevel: "silent", build: { ssr: "src/pages/chef/ChefProfilePage.jsx", write: false } });
+  const output = await build({ logLevel: "silent", build: { ssr: "src/features/chef/ChefProfilePage.jsx", write: false } });
   temporary = await mkdtemp(join(process.cwd(), "node_modules/.chef-profile-render-"));
   for (const chunk of output.output) if (chunk.type === "chunk") await writeFile(join(temporary, chunk.fileName), chunk.code);
   ({ ChefProfileContent: content } = await import(pathToFileURL(join(temporary, "ChefProfilePage.js"))));

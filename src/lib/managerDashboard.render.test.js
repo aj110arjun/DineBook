@@ -10,7 +10,7 @@ import { pathToFileURL } from "node:url";
 let page, temporary;
 const fixture = JSON.parse(await readFile(new URL("../../tests/fixtures/manager-dashboard.json", import.meta.url), "utf8"));
 before(async () => {
-  const output = await build({ logLevel: "silent", build: { ssr: "src/pages/manager/ManagerDashboardPage.jsx", write: false } });
+  const output = await build({ logLevel: "silent", build: { ssr: "src/features/manager/ManagerDashboardPage.jsx", write: false } });
   temporary = await mkdtemp(join(process.cwd(), "node_modules/.dashboard-render-"));
   for (const chunk of output.output) if (chunk.type === "chunk") await writeFile(join(temporary, chunk.fileName), chunk.code);
   page = await import(pathToFileURL(join(temporary, "ManagerDashboardPage.js")));
