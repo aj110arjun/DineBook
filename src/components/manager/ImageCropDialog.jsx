@@ -214,7 +214,7 @@ export default function ImageCropDialog({
             <img
               ref={imageRef}
               src={imageUrl}
-              alt="Restaurant banner crop preview"
+              alt={`${title} preview`}
               onLoad={handleImageLoad}
               draggable="false"
               style={{

@@ -1,11 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
 import NotificationSession from "../notifications/NotificationSession.jsx";
+import { useAccountPreferences } from "../preferences/AccountPreferences.jsx";
 
 const SESSION_CHECK_INTERVAL = 50000;
 
 export default function ChefProtectedRoute() {
+  const preferences = useAccountPreferences();
   const { pathname } = useLocation();
   const [chef, setChef] = useState(undefined);
   const [suspended, setSuspended] = useState(false);
@@ -52,10 +54,20 @@ export default function ChefProtectedRoute() {
     };
   }, [sessionVersion]);
 
+  useEffect(() => {
+    preferences?.setChefId(chef && !chef.must_change_password && pathname !== "/chef/change-password" ? chef.id : null);
+  }, [chef?.id, chef?.must_change_password, pathname, preferences?.setChefId]);
+
   function refreshChef() {
     setChef(undefined);
     setSessionVersion((version) => version + 1);
   }
+
+  const updateChefProfile = useCallback((profile) => {
+    setChef((current) => current?.id === profile.id ? {
+      ...current, name: profile.name, phone: profile.phone, avatar_url: profile.avatar_url,
+    } : current);
+  }, []);
 
   if (chef === undefined) {
     return (
@@ -83,7 +95,7 @@ export default function ChefProtectedRoute() {
   if (!chef.must_change_password && pathname === "/chef/change-password") {
     return <Navigate to="/chef/dashboard" replace />;
   }
-  const outlet = <Outlet context={{ chef, refreshChef }} />;
+  const outlet = <Outlet context={{ chef, refreshChef, updateChefProfile }} />;
   return chef.must_change_password ? outlet : (
     <NotificationSession key={chef.id}>{outlet}</NotificationSession>
   );

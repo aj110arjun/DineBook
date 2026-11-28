@@ -804,7 +804,7 @@
 }
 
 /* Keep manager orders on the reservation calendar's burgundy and stone visual system. */
-.manager-dashboard-main > .orders-page-manager {
+.manager-dashboard-main .orders-page-manager {
   width: 100%;
   max-width: 1600px;
   margin: 0 auto;

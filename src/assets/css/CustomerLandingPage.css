@@ -1,0 +1,616 @@
+.customer-landing {
+  overflow: clip;
+  background: var(--color-background, #fbf8f5);
+}
+
+.customer-landing .landing-hero {
+  min-height: clamp(500px, 67vh, 690px);
+}
+
+.customer-landing .landing-hero::before {
+  background-image: var(--landing-hero-image);
+  animation: landing-hero-drift 24s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.customer-landing .landing-hero::after {
+  background:
+    linear-gradient(90deg, rgb(43 15 23 / 91%) 0%, rgb(49 20 26 / 77%) 48%, rgb(48 22 24 / 42%) 100%),
+    linear-gradient(0deg, rgb(31 18 18 / 42%), transparent 58%);
+}
+
+.customer-landing .landing-hero-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.75fr);
+  align-items: center;
+  gap: clamp(30px, 6vw, 88px);
+  padding-block: clamp(68px, 9vh, 112px);
+}
+
+.landing-hero-copy {
+  min-width: 0;
+  animation: landing-hero-enter 650ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.customer-landing .landing-hero-copy h1 {
+  max-width: 700px;
+  margin: 20px 0 16px;
+  color: #fff;
+  font-size: clamp(2.7rem, 5.2vw, 5rem);
+  font-weight: 650;
+  line-height: 1.03;
+  letter-spacing: -0.055em;
+  text-wrap: balance;
+}
+
+.customer-landing .landing-hero-copy > p {
+  max-width: 560px;
+  color: #f0e5e4;
+  font-size: clamp(1rem, 1.3vw, 1.125rem);
+  line-height: 1.65;
+}
+
+.customer-landing .ux-hero-search {
+  margin-top: 26px;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.customer-landing .ux-hero-search:focus-within {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 36px rgb(0 0 0 / 28%);
+}
+
+.customer-landing .ux-hero-search button,
+.customer-landing .landing-hero-primary {
+  min-height: 46px;
+  border-radius: 10px;
+  font-weight: 700;
+  transition:
+    transform 170ms ease,
+    box-shadow 170ms ease,
+    background-color 170ms ease;
+}
+
+.customer-landing .ux-hero-search button:hover,
+.customer-landing .landing-hero-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgb(0 0 0 / 20%);
+}
+
+.customer-landing .landing-hero-actions {
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 22px;
+  margin-top: 22px;
+}
+
+.customer-landing .landing-hero-primary,
+.customer-landing .landing-hero-actions .ux-hero-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  text-decoration: none;
+}
+
+.customer-landing .landing-hero-primary {
+  padding: 0 17px;
+  border: 1px solid #e0c17a;
+  background: #d7b86c;
+  color: #35251e;
+}
+
+.customer-landing .landing-hero-actions .ux-hero-secondary {
+  color: #fff;
+}
+
+.landing-hero-visual {
+  position: relative;
+  width: min(100%, 410px);
+  justify-self: end;
+  padding: 9px;
+  border: 1px solid rgb(255 255 255 / 28%);
+  border-radius: 22px;
+  background: rgb(255 255 255 / 10%);
+  box-shadow: 0 24px 70px rgb(0 0 0 / 28%);
+  transform: rotate(1.5deg);
+  animation: landing-hero-enter 800ms 120ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.landing-hero-visual img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1.12;
+  border-radius: 16px;
+  object-fit: cover;
+}
+
+.landing-hero-image-note {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 40px);
+  padding: 10px 13px;
+  border: 1px solid rgb(255 255 255 / 25%);
+  border-radius: 10px;
+  background: rgb(43 26 27 / 90%);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.landing-hero-image-note svg {
+  flex: none;
+  color: #e6c77e;
+}
+
+.landing-reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 520ms ease var(--landing-reveal-delay, 0ms),
+    transform 520ms cubic-bezier(0.2, 0.7, 0.2, 1) var(--landing-reveal-delay, 0ms);
+}
+
+.landing-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.customer-landing .cuisine-section {
+  padding-top: clamp(42px, 5vw, 70px);
+}
+
+.customer-landing .cuisine-card {
+  width: 100%;
+  min-height: 118px;
+  border: 1px solid rgb(255 255 255 / 24%);
+  background-position: center;
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    background-size 400ms ease;
+}
+
+.customer-landing .cuisine-card:hover,
+.customer-landing .cuisine-card:focus-visible {
+  transform: translateY(-4px) scale(1.015);
+  box-shadow: 0 12px 24px rgb(55 24 24 / 18%);
+}
+
+.customer-landing .cuisine-card:focus-visible {
+  outline: 3px solid var(--color-accent, #c59c50);
+  outline-offset: 3px;
+}
+
+.landing-cuisine-reveal {
+  min-width: 0;
+}
+
+.landing-highlights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  width: min(var(--content-width, 1680px), 100%);
+  margin: clamp(38px, 5vw, 66px) auto 0;
+  padding: 0 clamp(18px, 3vw, 48px);
+  box-sizing: border-box;
+}
+
+.landing-highlight {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  min-width: 0;
+  padding: 20px 18px;
+  border: 1px solid var(--color-border, #eee5e1);
+  border-radius: 14px;
+  background: var(--color-surface, #fff);
+  box-shadow: 0 5px 18px rgb(50 28 24 / 4%);
+}
+
+.landing-highlight-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  place-items: center;
+  border-radius: 11px;
+  background: rgb(121 50 61 / 9%);
+  color: var(--color-primary, #79323d);
+}
+
+.landing-highlight h3 {
+  margin: 1px 0 5px;
+  color: var(--color-text-primary, #302a29);
+  font-size: 0.9rem;
+}
+
+.landing-highlight p {
+  margin: 0;
+  color: var(--color-text-muted, #756b68);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.customer-landing .restaurant-section {
+  padding-top: clamp(44px, 5vw, 72px);
+}
+
+.customer-landing .section-heading h2 {
+  color: var(--color-text-primary, #302a29);
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+}
+
+.customer-landing .section-heading .eyebrow {
+  font-weight: 700;
+}
+
+.landing-restaurant-reveal {
+  min-width: 0;
+  height: 100%;
+}
+
+.customer-landing .restaurant-card {
+  height: 100%;
+  border-color: var(--color-border, #eee5e1);
+  border-radius: 16px;
+  background: var(--color-surface, #fff);
+  transition:
+    transform 240ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    box-shadow 240ms ease,
+    border-color 240ms ease;
+}
+
+.customer-landing .restaurant-card:hover {
+  transform: translateY(-5px);
+  border-color: rgb(121 50 61 / 30%);
+  box-shadow: 0 18px 34px rgb(43 25 22 / 13%);
+}
+
+.customer-landing .restaurant-photo {
+  position: relative;
+  overflow: hidden;
+  background: #eee7e2;
+}
+
+.customer-landing .restaurant-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 650ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.customer-landing .restaurant-card:hover .restaurant-photo img {
+  transform: scale(1.055);
+}
+
+.customer-landing .restaurant-photo::after {
+  position: absolute;
+  inset: auto 0 0;
+  height: 34%;
+  background: linear-gradient(transparent, rgb(27 18 17 / 25%));
+  content: "";
+  pointer-events: none;
+}
+
+.customer-landing .restaurant-badge {
+  z-index: 1;
+  border-radius: 999px;
+  box-shadow: 0 3px 12px rgb(0 0 0 / 16%);
+}
+
+.customer-landing .save-button {
+  z-index: 2;
+  width: 38px;
+  height: 38px;
+  box-shadow: 0 3px 12px rgb(0 0 0 / 15%);
+  transition:
+    transform 170ms ease,
+    color 170ms ease,
+    background-color 170ms ease;
+}
+
+.customer-landing .save-button:hover {
+  transform: scale(1.08);
+  background: #fff;
+}
+
+.customer-landing .restaurant-info {
+  padding: 17px;
+}
+
+.customer-landing .restaurant-title h3 {
+  color: var(--color-text-primary, #302a29);
+  font-size: 1rem;
+}
+
+.customer-landing .restaurant-title p,
+.customer-landing .restaurant-location {
+  color: var(--color-text-muted, #756b68);
+}
+
+.customer-landing .restaurant-card-actions {
+  margin-top: 16px;
+}
+
+.customer-landing .restaurant-card-actions .reserve-button {
+  gap: 6px;
+  background: var(--color-primary, #79323d);
+  color: #fff;
+  transition:
+    transform 170ms ease,
+    background-color 170ms ease,
+    box-shadow 170ms ease;
+}
+
+.customer-landing .restaurant-card-actions .reserve-button:hover {
+  transform: translateY(-1px);
+  background: #5f2330;
+  box-shadow: 0 6px 15px rgb(95 35 48 / 20%);
+}
+
+.landing-restaurant-skeleton-grid {
+  align-items: stretch;
+}
+
+.landing-restaurant-skeleton {
+  overflow: hidden;
+  border: 1px solid var(--color-border, #eee5e1);
+  border-radius: 16px;
+  background: var(--color-surface, #fff);
+}
+
+.landing-skeleton-image {
+  display: block;
+  height: 205px;
+}
+
+.landing-restaurant-skeleton > div {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+
+.landing-restaurant-skeleton > div span,
+.landing-skeleton-image {
+  border-radius: 6px;
+  background: linear-gradient(
+    100deg,
+    var(--color-surface-raised, #f1ece8) 20%,
+    rgb(255 255 255 / 75%) 45%,
+    var(--color-surface-raised, #f1ece8) 70%
+  );
+  background-size: 220% 100%;
+  animation: landing-skeleton-shimmer 1.35s linear infinite;
+}
+
+.landing-restaurant-skeleton > div span {
+  width: 78%;
+  height: 12px;
+}
+
+.landing-restaurant-skeleton > div span:nth-child(2) {
+  width: 55%;
+}
+
+.landing-restaurant-skeleton > div span:nth-child(3) {
+  width: 92%;
+  height: 34px;
+  margin-top: 10px;
+}
+
+.landing-empty-state {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 34px 22px;
+  background: var(--color-surface, #fff);
+}
+
+.landing-empty-state > svg {
+  color: var(--color-primary, #79323d);
+}
+
+.landing-empty-state strong {
+  color: var(--color-text-primary, #302a29);
+}
+
+.landing-empty-state p {
+  margin: 0;
+  color: var(--color-text-muted, #756b68);
+}
+
+.landing-empty-state button.section-action {
+  border: 0;
+  background: var(--color-primary, #641b2b);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+}
+
+.landing-empty-state button.section-action:hover {
+  filter: brightness(0.9);
+}
+
+.landing-refresh-status {
+  margin: -8px 0 12px;
+  color: var(--color-text-muted, #756b68);
+  font-size: 0.75rem;
+}
+
+.customer-landing .how-section {
+  padding-bottom: clamp(46px, 6vw, 82px);
+}
+
+.customer-landing .landing-step-card {
+  height: 100%;
+  border: 1px solid var(--color-border, #eee5e1);
+  border-radius: 14px;
+  background: var(--color-surface, #fff);
+  transition:
+    transform 200ms ease,
+    box-shadow 200ms ease,
+    border-color 200ms ease;
+}
+
+.customer-landing .landing-step-card:hover {
+  transform: translateY(-3px);
+  border-color: rgb(121 50 61 / 28%);
+  box-shadow: 0 12px 24px rgb(43 25 22 / 8%);
+}
+
+@keyframes landing-hero-drift {
+  from {
+    transform: scale(1.03) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.08) translate3d(-0.5%, -0.4%, 0);
+  }
+}
+
+@keyframes landing-hero-enter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes landing-skeleton-shimmer {
+  to {
+    background-position: -220% 0;
+  }
+}
+
+:root[data-theme="dark"] .customer-landing {
+  background: var(--color-background, #1d1b1b);
+}
+
+:root[data-theme="dark"] .landing-highlight,
+:root[data-theme="dark"] .customer-landing .restaurant-card,
+:root[data-theme="dark"] .landing-restaurant-skeleton,
+:root[data-theme="dark"] .landing-empty-state,
+:root[data-theme="dark"] .customer-landing .landing-step-card {
+  border-color: var(--color-border, #40383a);
+  background: var(--color-surface, #252122);
+}
+
+:root[data-theme="dark"] .landing-highlight h3,
+:root[data-theme="dark"] .customer-landing .restaurant-title h3,
+:root[data-theme="dark"] .landing-empty-state strong,
+:root[data-theme="dark"] .customer-landing .section-heading h2 {
+  color: var(--color-text-primary, #f1e9e8);
+}
+
+:root[data-theme="dark"] .landing-highlight p,
+:root[data-theme="dark"] .customer-landing .restaurant-title p,
+:root[data-theme="dark"] .customer-landing .restaurant-location,
+:root[data-theme="dark"] .landing-empty-state p {
+  color: var(--color-text-muted, #b9afac);
+}
+
+:root[data-theme="dark"] .customer-landing .restaurant-menu-link {
+  border-color: #514246;
+  background: #211d1f;
+  color: #e8c1c5;
+}
+
+:root[data-theme="dark"] .landing-restaurant-skeleton > div span,
+:root[data-theme="dark"] .landing-skeleton-image {
+  background: linear-gradient(
+    100deg,
+    #353031 20%,
+    #494143 45%,
+    #353031 70%
+  );
+  background-size: 220% 100%;
+}
+
+@media (max-width: 900px) {
+  .customer-landing .landing-hero-content {
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 0.7fr);
+    gap: 28px;
+  }
+
+  .landing-hero-visual {
+    width: 100%;
+  }
+
+  .landing-highlights {
+    gap: 10px;
+  }
+
+  .landing-highlight {
+    gap: 10px;
+    padding: 16px 13px;
+  }
+}
+
+@media (max-width: 700px) {
+  .customer-landing .landing-hero-content {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-hero-visual {
+    display: none;
+  }
+
+  .landing-highlights {
+    grid-template-columns: 1fr;
+    padding-inline: 18px;
+  }
+}
+
+@media (max-width: 560px) {
+  .customer-landing .landing-hero {
+    min-height: 470px;
+  }
+
+  .customer-landing .landing-hero-copy h1 {
+    font-size: clamp(2.4rem, 11vw, 3.4rem);
+  }
+
+  .customer-landing .ux-hero-search {
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    padding: 8px 10px;
+  }
+
+  .customer-landing .ux-hero-search input {
+    flex: 1 1 calc(100% - 38px);
+  }
+
+  .customer-landing .ux-hero-search button {
+    width: 100%;
+  }
+
+  .customer-landing .section-heading {
+    align-items: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .customer-landing *,
+  .customer-landing *::before,
+  .customer-landing *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .customer-landing .landing-reveal {
+    opacity: 1;
+    transform: none;
+  }
+}

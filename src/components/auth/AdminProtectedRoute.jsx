@@ -1,38 +1,80 @@
-import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
+import { AdminSessionContext } from "../admin/AdminSessionContext.jsx";
 import NotificationSession from "../notifications/NotificationSession.jsx";
+import { useAccountPreferences } from "../preferences/AccountPreferences.jsx";
 
 export default function AdminProtectedRoute({ children }) {
-  const [signedIn, setSignedIn] = useState(false);
-  const [checking, setChecking] = useState(true);
+  const { pathname } = useLocation();
+  const { setAdminId } = useAccountPreferences();
+  // undefined = checking; null = signed out; object = authenticated.
+  const [admin, setAdmin] = useState(undefined);
+  const [error, setError] = useState("");
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    let active = true;
+    const controller = new AbortController();
 
-    requestJson("/api/auth/admin/me")
-      .then(() => {
-        if (active) {
-          setSignedIn(true);
+    // Keep the verified shell while repeating the existing check on navigation.
+    setAdmin((current) => current || undefined);
+    setError("");
+
+    requestJson("/api/auth/admin/me", {
+      signal: controller.signal,
+      timeout: 10000,
+      fallbackMessage: "Unable to check administrator access.",
+    })
+      .then((account) => {
+        if (!controller.signal.aborted) {
+          setAdmin(account);
         }
       })
-      .catch(() => {
-        if (active) {
-          setSignedIn(false);
-        }
-      })
-      .finally(() => {
-        if (active) {
-          setChecking(false);
+      .catch((reason) => {
+        if (controller.signal.aborted) return;
+
+        if ([401, 403].includes(reason.status)) {
+          setAdmin(null);
+        } else {
+          setError(reason.message);
         }
       });
 
-    return () => {
-      active = false;
-    };
+    return () => controller.abort();
+  }, [attempt, pathname]);
+
+  const updateAdminProfile = useCallback((profile) => {
+    setAdmin((current) =>
+      current?.id === profile.id
+        ? { ...current, ...profile }
+        : current,
+    );
   }, []);
 
-  if (checking) {
+  const clearAdmin = useCallback(() => {
+    setAdmin(null);
+  }, []);
+
+  useEffect(() => {
+    setAdminId(admin?.id ?? null);
+    return () => setAdminId(null);
+  }, [admin?.id, setAdminId]);
+
+  if (error) {
+    return (
+      <main className="landing-loading">
+        <p role="alert">{error}</p>
+        <button
+          type="button"
+          onClick={() => setAttempt((value) => value + 1)}
+        >
+          Try again
+        </button>
+      </main>
+    );
+  }
+
+  if (admin === undefined) {
     return (
       <main className="landing-loading" aria-live="polite">
         <span className="loading-mark">D</span>
@@ -41,9 +83,17 @@ export default function AdminProtectedRoute({ children }) {
     );
   }
 
-  if (!signedIn) {
+  if (!admin) {
     return <Navigate to="/admin/login" replace />;
   }
 
-  return <NotificationSession>{children}</NotificationSession>;
+  return (
+    <AdminSessionContext.Provider
+      value={{ admin, updateAdminProfile, clearAdmin }}
+    >
+      <NotificationSession key={admin.id}>
+        {children || <Outlet />}
+      </NotificationSession>
+    </AdminSessionContext.Provider>
+  );
 }

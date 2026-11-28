@@ -12,19 +12,19 @@ export default function AdminActionConfirmModal({
   return (
     <ConfirmActionDialog
       action={action}
-      resourceType="manager application"
+      resourceType="restaurant request"
       resourceName={subject}
       title={
         approving
-          ? "Approve manager application?"
-          : "Reject manager application?"
+          ? "Approve restaurant request?"
+          : "Reject restaurant request?"
       }
       description={
         approving
-          ? `This will approve ${subject} and allow the manager to access the platform.`
-          : `This will reject ${subject}. The manager will not be able to access the platform.`
+          ? `Confirm approval for ${subject}. The manager will be able to access the platform.`
+          : `Confirm rejection for ${subject}. The manager will not be able to access the platform.`
       }
-      confirmLabel={approving ? "Approve application" : "Reject application"}
+      confirmLabel={approving ? "Confirm Approval" : "Confirm Rejection"}
       busy={busy}
       onCancel={onCancel}
       onConfirm={onConfirm}

@@ -1,3 +1,6 @@
+import PageTransition from "../ui/PageTransition.jsx";
+import { PortalPage, usePortalShell } from "../ui/PortalShell.jsx";
+import PortalBreadcrumb from "../PortalBreadcrumb.jsx";
 import useNavigationDisclosure from "../../hooks/useNavigationDisclosure.js";
 import {
   CalendarDays,
@@ -10,16 +13,19 @@ import {
   Clock3,
   Star,
   Store,
+  Settings,
   Table2,
   Tag,
   Utensils,
   Users,
+  UserRound,
   X,
 } from "lucide-react";
-import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useRef, useState } from "react";
+import { Link, useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import { requestJson } from "../../lib/authApi.js";
 import NotificationBell from "../notifications/NotificationBell.jsx";
+import ManagerAiWidget from "./ManagerAiWidget.jsx";
 
 const navigationGroups = [
   {
@@ -41,11 +47,6 @@ const navigationGroups = [
   {
     label: "Restaurant setup",
     items: [
-      {
-        label: "Restaurant details",
-        icon: Store,
-        to: "/manager/restaurant-location",
-      },
       { label: "Opening hours", icon: Clock3, to: "/manager/operating-hours" },
       { label: "Tables & floors", icon: Table2, to: "/manager/tables" },
       { label: "Menu", icon: Utensils, to: "/manager/menu" },
@@ -67,9 +68,17 @@ const navigationGroups = [
   },
 ];
 
-export default function ManagerLayout({ children, title = "Dashboard" }) {
+export function ManagerFrame({
+  children,
+  title = "Dashboard",
+  managerId: providedManagerId,
+  hideHeader = false,
+}) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const outlet = useOutletContext();
+  const managerId = providedManagerId || outlet?.managerId;
+  const menuButton = useRef(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   useNavigationDisclosure(
     sidebarOpen,
@@ -143,6 +152,30 @@ export default function ManagerLayout({ children, title = "Dashboard" }) {
           ))}
         </nav>
         <div className="manager-sidebar-bottom">
+          {managerId && <ManagerAiWidget
+            key={managerId}
+            userId={managerId}
+            onOpen={() => setSidebarOpen(false)}
+            returnFocusRef={menuButton}
+          />}
+          <Link
+            to="/manager/profile"
+            className={`manager-nav-item ${pathname === "/manager/profile" ? "active" : ""}`}
+            aria-current={pathname === "/manager/profile" ? "page" : undefined}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <UserRound size={16} />
+            <span>Profile</span>
+          </Link>
+          <Link
+            to="/manager/settings"
+            className={`manager-nav-item ${pathname === "/manager/settings" ? "active" : ""}`}
+            aria-current={pathname === "/manager/settings" ? "page" : undefined}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Settings size={16} />
+            <span>Settings</span>
+          </Link>
           <button
             className="manager-nav-item"
             type="button"
@@ -155,25 +188,43 @@ export default function ManagerLayout({ children, title = "Dashboard" }) {
       </aside>
 
       <section className="manager-dashboard-main db-portal-main">
-        <header className="manager-topbar db-portal-topbar">
-          <div className="manager-topbar-left">
-            <button
-              className="manager-menu-button"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Open menu"
-              aria-expanded={sidebarOpen}
-              aria-controls="manager-primary-nav"
-            >
-              <Menu size={21} />
-            </button>
-            <h1>{title}</h1>
-          </div>
-          <div className="manager-topbar-right">
-            <NotificationBell role="manager" />
-          </div>
-        </header>
+        {!hideHeader && (
+          <header className="manager-topbar db-portal-topbar">
+            <div className="manager-topbar-left">
+              <button
+                ref={menuButton}
+                className="manager-menu-button"
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Open menu"
+                aria-expanded={sidebarOpen}
+                aria-controls="manager-primary-nav"
+              >
+                <Menu size={21} />
+              </button>
+              <h1>{title}</h1>
+            </div>
+            <div className="manager-topbar-right">
+              <NotificationBell role="manager" />
+            </div>
+          </header>
+        )}
         {children}
       </section>
     </main>
+  );
+}
+
+export default function ManagerLayout(props) {
+  const shell = usePortalShell();
+  if (shell) return <PortalPage {...props} />;
+  return (
+    <ManagerFrame title={props.title} hideHeader={props.hideHeader}>
+      <PageTransition>
+        {!props.hideBreadcrumb && (
+          <PortalBreadcrumb entityLabel={props.breadcrumbLabel} />
+        )}
+        {props.children}
+      </PageTransition>
+    </ManagerFrame>
   );
 }

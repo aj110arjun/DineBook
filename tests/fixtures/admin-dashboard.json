@@ -1,0 +1,2269 @@
+{
+  "data": {
+    "admin_name": "Actual admin",
+    "as_of": "2026-11-14T08:00:00Z",
+    "period": {
+      "start_date": "2026-11-01",
+      "end_date": "2026-11-30",
+      "timezone": "Asia/Kolkata",
+      "group_by": "day"
+    },
+    "kpis": {
+      "restaurants": 2,
+      "active_restaurants": 1,
+      "pending_approvals": 1,
+      "customers": 2,
+      "managers": 2,
+      "reservations": 1,
+      "orders": 3,
+      "completed_orders": 1,
+      "gross": "1500.00",
+      "earned_commission": "150.00",
+      "outstanding_commission": "50.00"
+    },
+    "revenue": {
+      "summary": {
+        "gross": "1500.00",
+        "refunds": "0.00",
+        "net_transaction_value": "1500.00",
+        "generated": "150.00",
+        "reversed": "0.00",
+        "earned": "150.00",
+        "collected": "100.00",
+        "collection_reversals": "0.00",
+        "collected_net": "100.00",
+        "outstanding_start": "0.00",
+        "outstanding_end": "50.00"
+      },
+      "trend": [
+        {
+          "date": "2026-11-01",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-02",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-03",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-04",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-05",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-06",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-07",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-08",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-09",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-10",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-11",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-12",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-13",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-14",
+          "gross": "1500.00",
+          "refunds": "0.00",
+          "generated": "150.00",
+          "reversed": "0.00",
+          "collected": "100.00",
+          "collection_reversals": "0.00",
+          "earned": "150.00",
+          "collected_net": "100.00",
+          "outstanding": "50.00"
+        },
+        {
+          "date": "2026-11-15",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "50.00"
+        },
+        {
+          "date": "2026-11-16",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "50.00"
+        },
+        {
+          "date": "2026-11-17",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "50.00"
+        },
+        {
+          "date": "2026-11-18",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "50.00"
+        },
+        {
+          "date": "2026-11-19",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "50.00"
+        },
+        {
+          "date": "2026-11-20",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "50.00"
+        },
+        {
+          "date": "2026-11-21",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "50.00"
+        },
+        {
+          "date": "2026-11-22",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "50.00"
+        },
+        {
+          "date": "2026-11-23",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "50.00"
+        },
+        {
+          "date": "2026-11-24",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "50.00"
+        },
+        {
+          "date": "2026-11-25",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "50.00"
+        },
+        {
+          "date": "2026-11-26",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "50.00"
+        },
+        {
+          "date": "2026-11-27",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "50.00"
+        },
+        {
+          "date": "2026-11-28",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "50.00"
+        },
+        {
+          "date": "2026-11-29",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "50.00"
+        },
+        {
+          "date": "2026-11-30",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "50.00"
+        }
+      ]
+    },
+    "orders": {
+      "total": 3,
+      "pending": 2,
+      "preparing": 0,
+      "completed": 1,
+      "cancelled": 0,
+      "refunded": 0,
+      "statuses": [
+        {
+          "status": "PLACED",
+          "count": 2
+        },
+        {
+          "status": "ACCEPTED",
+          "count": 0
+        },
+        {
+          "status": "PREPARING",
+          "count": 0
+        },
+        {
+          "status": "READY",
+          "count": 0
+        },
+        {
+          "status": "SERVED",
+          "count": 0
+        },
+        {
+          "status": "COMPLETED",
+          "count": 1
+        },
+        {
+          "status": "CANCELLED",
+          "count": 0
+        },
+        {
+          "status": "REJECTED",
+          "count": 0
+        }
+      ],
+      "trend": [
+        {
+          "date": "2026-11-01",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-02",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-03",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-04",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-05",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-06",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-07",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-08",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-09",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-10",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-11",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-12",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-13",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-14",
+          "total": 3,
+          "completed": 1,
+          "pending": 2,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-15",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-16",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-17",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-18",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-19",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-20",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-21",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-22",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-23",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-24",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-25",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-26",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-27",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-28",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-29",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-30",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        }
+      ]
+    },
+    "reservations": {
+      "total": 1,
+      "upcoming": 1,
+      "completed": 0,
+      "cancelled": 0,
+      "no_show": 0,
+      "statuses": [
+        {
+          "status": "PENDING_PAYMENT",
+          "count": 0
+        },
+        {
+          "status": "CONFIRMED",
+          "count": 1
+        },
+        {
+          "status": "SEATED",
+          "count": 0
+        },
+        {
+          "status": "COMPLETED",
+          "count": 0
+        },
+        {
+          "status": "CANCELLED",
+          "count": 0
+        },
+        {
+          "status": "REJECTED",
+          "count": 0
+        },
+        {
+          "status": "NO_SHOW",
+          "count": 0
+        }
+      ],
+      "trend": [
+        {
+          "date": "2026-11-01",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-02",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-03",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-04",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-05",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-06",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-07",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-08",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-09",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-10",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-11",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-12",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-13",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-14",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-15",
+          "total": 1,
+          "completed": 0,
+          "pending": 1,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-16",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-17",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-18",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-19",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-20",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-21",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-22",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-23",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-24",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-25",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-26",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-27",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-28",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-29",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-30",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        }
+      ]
+    },
+    "customers": {
+      "total": 2,
+      "new": 1,
+      "active": 1,
+      "repeat": 1,
+      "activity_definition": "Active: a registered customer who created a non-cancelled, non-refunded order or a confirmed/seated/completed reservation in the selected period. Repeat: an active customer with at least two such interactions by period end. Kitchen preorder copies and guest walk-ins are excluded. This does not measure logins.",
+      "trend": [
+        {
+          "date": "2026-11-01",
+          "new": 0
+        },
+        {
+          "date": "2026-11-02",
+          "new": 0
+        },
+        {
+          "date": "2026-11-03",
+          "new": 0
+        },
+        {
+          "date": "2026-11-04",
+          "new": 0
+        },
+        {
+          "date": "2026-11-05",
+          "new": 0
+        },
+        {
+          "date": "2026-11-06",
+          "new": 0
+        },
+        {
+          "date": "2026-11-07",
+          "new": 0
+        },
+        {
+          "date": "2026-11-08",
+          "new": 0
+        },
+        {
+          "date": "2026-11-09",
+          "new": 0
+        },
+        {
+          "date": "2026-11-10",
+          "new": 0
+        },
+        {
+          "date": "2026-11-11",
+          "new": 0
+        },
+        {
+          "date": "2026-11-12",
+          "new": 0
+        },
+        {
+          "date": "2026-11-13",
+          "new": 0
+        },
+        {
+          "date": "2026-11-14",
+          "new": 1
+        },
+        {
+          "date": "2026-11-15",
+          "new": 0
+        },
+        {
+          "date": "2026-11-16",
+          "new": 0
+        },
+        {
+          "date": "2026-11-17",
+          "new": 0
+        },
+        {
+          "date": "2026-11-18",
+          "new": 0
+        },
+        {
+          "date": "2026-11-19",
+          "new": 0
+        },
+        {
+          "date": "2026-11-20",
+          "new": 0
+        },
+        {
+          "date": "2026-11-21",
+          "new": 0
+        },
+        {
+          "date": "2026-11-22",
+          "new": 0
+        },
+        {
+          "date": "2026-11-23",
+          "new": 0
+        },
+        {
+          "date": "2026-11-24",
+          "new": 0
+        },
+        {
+          "date": "2026-11-25",
+          "new": 0
+        },
+        {
+          "date": "2026-11-26",
+          "new": 0
+        },
+        {
+          "date": "2026-11-27",
+          "new": 0
+        },
+        {
+          "date": "2026-11-28",
+          "new": 0
+        },
+        {
+          "date": "2026-11-29",
+          "new": 0
+        },
+        {
+          "date": "2026-11-30",
+          "new": 0
+        }
+      ]
+    },
+    "payments": {
+      "channels": [
+        {
+          "method": "PAY_AT_DESK",
+          "count": 1,
+          "amount": "500.00"
+        },
+        {
+          "method": "WALLET",
+          "count": 1,
+          "amount": "1000.00"
+        }
+      ],
+      "pending": {
+        "count": 1,
+        "amount": "100.00"
+      },
+      "failed": {
+        "count": 1,
+        "amount": "250.00"
+      },
+      "unledgered_paid": {
+        "count": 0,
+        "amount": "0.00"
+      },
+      "refunded": "0.00",
+      "wallets": [
+        {
+          "role": "ADMIN",
+          "accounts": 1,
+          "balance": "100.00",
+          "positive_balances": "100.00",
+          "negative_balances": "0.00"
+        },
+        {
+          "role": "MANAGER",
+          "accounts": 1,
+          "balance": "900.00",
+          "positive_balances": "900.00",
+          "negative_balances": "0.00"
+        }
+      ],
+      "commission_receivables": "50.00",
+      "commission_settlements": "100.00",
+      "bank_settlement_amount": null,
+      "bank_settlement_note": "Unavailable: no bank settlement records are stored. Wallet settlements and captured customer payments do not confirm bank receipt."
+    },
+    "notes": [
+      "Restaurant, customer and manager counts are current all-time snapshots; operational statuses are current statuses within the selected creation/visit cohort.",
+      "GTV and refunds use unique recorded payment sources (orders, reservation fees and preorders). Wallet top-ups and internal transfers are excluded. Unledgered paid records are reported separately; historical commission rates are never estimated.",
+      "Commission earned is generated commission less reversals dated in the period. Collected commission is actual internal wallet settlement less collection reversals, not bank receipts. Outstanding is the unpaid, unreversed balance at the end of the selected period, including earlier receivables.",
+      "Digital payments include wallet-funded purchases and verified Razorpay captures. The database has no bank settlement ledger, so bank receipts are unavailable. Historical direct-payment commissions already settled remain collected.",
+      "Orders use creation date; reservations use scheduled visit date; payment and commission trends use their recorded event timestamps. All boundaries use Asia/Kolkata. Pending/failed payments use the source creation cohort; retry attempt history is unavailable.",
+      "Recent activity uses stored registrations, reservation creations, completion timestamps, payment sources, commission payouts and admin approval notifications. Missing historical events are not reconstructed."
+    ]
+  },
+  "empty": {
+    "admin_name": "Actual admin",
+    "as_of": "2026-11-14T08:00:00Z",
+    "period": {
+      "start_date": "2026-11-01",
+      "end_date": "2026-11-30",
+      "timezone": "Asia/Kolkata",
+      "group_by": "day"
+    },
+    "kpis": {
+      "restaurants": 2,
+      "active_restaurants": 1,
+      "pending_approvals": 1,
+      "customers": 1,
+      "managers": 2,
+      "reservations": 0,
+      "orders": 0,
+      "completed_orders": 0,
+      "gross": "0.00",
+      "earned_commission": "0.00",
+      "outstanding_commission": "0.00"
+    },
+    "revenue": {
+      "summary": {
+        "gross": "0.00",
+        "refunds": "0.00",
+        "net_transaction_value": "0.00",
+        "generated": "0.00",
+        "reversed": "0.00",
+        "earned": "0.00",
+        "collected": "0.00",
+        "collection_reversals": "0.00",
+        "collected_net": "0.00",
+        "outstanding_start": "0.00",
+        "outstanding_end": "0.00"
+      },
+      "trend": [
+        {
+          "date": "2026-11-01",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-02",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-03",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-04",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-05",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-06",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-07",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-08",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-09",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-10",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-11",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-12",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-13",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-14",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-15",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-16",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-17",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-18",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-19",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-20",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-21",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-22",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-23",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-24",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-25",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-26",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-27",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-28",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-29",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        },
+        {
+          "date": "2026-11-30",
+          "gross": "0.00",
+          "refunds": "0.00",
+          "generated": "0.00",
+          "reversed": "0.00",
+          "collected": "0.00",
+          "collection_reversals": "0.00",
+          "earned": "0.00",
+          "collected_net": "0.00",
+          "outstanding": "0.00"
+        }
+      ]
+    },
+    "orders": {
+      "total": 0,
+      "pending": 0,
+      "preparing": 0,
+      "completed": 0,
+      "cancelled": 0,
+      "refunded": 0,
+      "statuses": [
+        {
+          "status": "PLACED",
+          "count": 0
+        },
+        {
+          "status": "ACCEPTED",
+          "count": 0
+        },
+        {
+          "status": "PREPARING",
+          "count": 0
+        },
+        {
+          "status": "READY",
+          "count": 0
+        },
+        {
+          "status": "SERVED",
+          "count": 0
+        },
+        {
+          "status": "COMPLETED",
+          "count": 0
+        },
+        {
+          "status": "CANCELLED",
+          "count": 0
+        },
+        {
+          "status": "REJECTED",
+          "count": 0
+        }
+      ],
+      "trend": [
+        {
+          "date": "2026-11-01",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-02",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-03",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-04",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-05",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-06",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-07",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-08",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-09",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-10",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-11",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-12",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-13",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-14",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-15",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-16",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-17",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-18",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-19",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-20",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-21",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-22",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-23",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-24",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-25",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-26",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-27",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-28",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-29",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-30",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        }
+      ]
+    },
+    "reservations": {
+      "total": 0,
+      "upcoming": 0,
+      "completed": 0,
+      "cancelled": 0,
+      "no_show": 0,
+      "statuses": [
+        {
+          "status": "PENDING_PAYMENT",
+          "count": 0
+        },
+        {
+          "status": "CONFIRMED",
+          "count": 0
+        },
+        {
+          "status": "SEATED",
+          "count": 0
+        },
+        {
+          "status": "COMPLETED",
+          "count": 0
+        },
+        {
+          "status": "CANCELLED",
+          "count": 0
+        },
+        {
+          "status": "REJECTED",
+          "count": 0
+        },
+        {
+          "status": "NO_SHOW",
+          "count": 0
+        }
+      ],
+      "trend": [
+        {
+          "date": "2026-11-01",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-02",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-03",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-04",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-05",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-06",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-07",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-08",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-09",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-10",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-11",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-12",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-13",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-14",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-15",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-16",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-17",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-18",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-19",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-20",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-21",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-22",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-23",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-24",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-25",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-26",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-27",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-28",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-29",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        },
+        {
+          "date": "2026-11-30",
+          "total": 0,
+          "completed": 0,
+          "pending": 0,
+          "cancelled": 0
+        }
+      ]
+    },
+    "customers": {
+      "total": 1,
+      "new": 0,
+      "active": 0,
+      "repeat": 0,
+      "activity_definition": "Active: a registered customer who created a non-cancelled, non-refunded order or a confirmed/seated/completed reservation in the selected period. Repeat: an active customer with at least two such interactions by period end. Kitchen preorder copies and guest walk-ins are excluded. This does not measure logins.",
+      "trend": [
+        {
+          "date": "2026-11-01",
+          "new": 0
+        },
+        {
+          "date": "2026-11-02",
+          "new": 0
+        },
+        {
+          "date": "2026-11-03",
+          "new": 0
+        },
+        {
+          "date": "2026-11-04",
+          "new": 0
+        },
+        {
+          "date": "2026-11-05",
+          "new": 0
+        },
+        {
+          "date": "2026-11-06",
+          "new": 0
+        },
+        {
+          "date": "2026-11-07",
+          "new": 0
+        },
+        {
+          "date": "2026-11-08",
+          "new": 0
+        },
+        {
+          "date": "2026-11-09",
+          "new": 0
+        },
+        {
+          "date": "2026-11-10",
+          "new": 0
+        },
+        {
+          "date": "2026-11-11",
+          "new": 0
+        },
+        {
+          "date": "2026-11-12",
+          "new": 0
+        },
+        {
+          "date": "2026-11-13",
+          "new": 0
+        },
+        {
+          "date": "2026-11-14",
+          "new": 0
+        },
+        {
+          "date": "2026-11-15",
+          "new": 0
+        },
+        {
+          "date": "2026-11-16",
+          "new": 0
+        },
+        {
+          "date": "2026-11-17",
+          "new": 0
+        },
+        {
+          "date": "2026-11-18",
+          "new": 0
+        },
+        {
+          "date": "2026-11-19",
+          "new": 0
+        },
+        {
+          "date": "2026-11-20",
+          "new": 0
+        },
+        {
+          "date": "2026-11-21",
+          "new": 0
+        },
+        {
+          "date": "2026-11-22",
+          "new": 0
+        },
+        {
+          "date": "2026-11-23",
+          "new": 0
+        },
+        {
+          "date": "2026-11-24",
+          "new": 0
+        },
+        {
+          "date": "2026-11-25",
+          "new": 0
+        },
+        {
+          "date": "2026-11-26",
+          "new": 0
+        },
+        {
+          "date": "2026-11-27",
+          "new": 0
+        },
+        {
+          "date": "2026-11-28",
+          "new": 0
+        },
+        {
+          "date": "2026-11-29",
+          "new": 0
+        },
+        {
+          "date": "2026-11-30",
+          "new": 0
+        }
+      ]
+    },
+    "payments": {
+      "channels": [],
+      "pending": {
+        "count": 0,
+        "amount": "0.00"
+      },
+      "failed": {
+        "count": 0,
+        "amount": "0.00"
+      },
+      "unledgered_paid": {
+        "count": 0,
+        "amount": "0.00"
+      },
+      "refunded": "0.00",
+      "wallets": [],
+      "commission_receivables": "0.00",
+      "commission_settlements": "0.00",
+      "bank_settlement_amount": null,
+      "bank_settlement_note": "Unavailable: no bank settlement records are stored. Wallet settlements and captured customer payments do not confirm bank receipt."
+    },
+    "notes": [
+      "Restaurant, customer and manager counts are current all-time snapshots; operational statuses are current statuses within the selected creation/visit cohort.",
+      "GTV and refunds use unique recorded payment sources (orders, reservation fees and preorders). Wallet top-ups and internal transfers are excluded. Unledgered paid records are reported separately; historical commission rates are never estimated.",
+      "Commission earned is generated commission less reversals dated in the period. Collected commission is actual internal wallet settlement less collection reversals, not bank receipts. Outstanding is the unpaid, unreversed balance at the end of the selected period, including earlier receivables.",
+      "Digital payments include wallet-funded purchases and verified Razorpay captures. The database has no bank settlement ledger, so bank receipts are unavailable. Historical direct-payment commissions already settled remain collected.",
+      "Orders use creation date; reservations use scheduled visit date; payment and commission trends use their recorded event timestamps. All boundaries use Asia/Kolkata. Pending/failed payments use the source creation cohort; retry attempt history is unavailable.",
+      "Recent activity uses stored registrations, reservation creations, completion timestamps, payment sources, commission payouts and admin approval notifications. Missing historical events are not reconstructed."
+    ]
+  },
+  "restaurants": {
+    "items": [
+      {
+        "id": "91df093b-7348-464e-9b13-84047e6fecc4",
+        "name": "Actual restaurant",
+        "manager_name": "Actual manager",
+        "status": "APPROVED",
+        "orders": 3,
+        "completed": 1,
+        "reservations": 1,
+        "gross": "1500.00",
+        "commission": "150.00",
+        "outstanding": "50.00"
+      },
+      {
+        "id": "30e51322-18e7-4342-b8ed-4cfb11362e8d",
+        "name": "Pending restaurant",
+        "manager_name": "Second manager",
+        "status": "PENDING",
+        "orders": 0,
+        "completed": 0,
+        "reservations": 0,
+        "gross": "0.00",
+        "commission": "0.00",
+        "outstanding": "0.00"
+      }
+    ],
+    "total": 2,
+    "page": 1,
+    "page_size": 10,
+    "period": {
+      "start_date": "2026-11-01",
+      "end_date": "2026-11-30",
+      "timezone": "Asia/Kolkata",
+      "group_by": "day"
+    },
+    "leaders": [
+      {
+        "id": "91df093b-7348-464e-9b13-84047e6fecc4",
+        "name": "Actual restaurant",
+        "manager_name": "Actual manager",
+        "status": "APPROVED",
+        "orders": 3,
+        "completed": 1,
+        "reservations": 1,
+        "gross": "1500.00",
+        "commission": "150.00",
+        "outstanding": "50.00"
+      },
+      {
+        "id": "30e51322-18e7-4342-b8ed-4cfb11362e8d",
+        "name": "Pending restaurant",
+        "manager_name": "Second manager",
+        "status": "PENDING",
+        "orders": 0,
+        "completed": 0,
+        "reservations": 0,
+        "gross": "0.00",
+        "commission": "0.00",
+        "outstanding": "0.00"
+      }
+    ]
+  },
+  "activity": {
+    "items": [
+      {
+        "id": "COMMISSION_SETTLED:33d675be70aa4426869353b61f772432",
+        "event_type": "COMMISSION_SETTLED",
+        "title": "Commission settled to admin wallet",
+        "subject": "Actual restaurant",
+        "occurred_at": "2026-11-14T08:00:00Z"
+      },
+      {
+        "id": "CUSTOMER_REGISTERED:25ac355cc84442f5a61b86561f9dfe70",
+        "event_type": "CUSTOMER_REGISTERED",
+        "title": "Customer registered",
+        "subject": "Customer account",
+        "occurred_at": "2026-11-14T08:00:00Z"
+      },
+      {
+        "id": "ORDER_COMPLETED:5e9bf60a2aa84a158c58ae744ffe1d6d",
+        "event_type": "ORDER_COMPLETED",
+        "title": "Order completed",
+        "subject": "Actual restaurant",
+        "occurred_at": "2026-11-14T08:00:00Z"
+      },
+      {
+        "id": "PAYMENT_RECORDED:78d565c95a4c42638f55228eaf4466e3",
+        "event_type": "PAYMENT_RECORDED",
+        "title": "Payment recorded",
+        "subject": "Actual restaurant",
+        "occurred_at": "2026-11-14T08:00:00Z"
+      },
+      {
+        "id": "PAYMENT_RECORDED:afdec489d0fa45089ea64fc88cd4a294",
+        "event_type": "PAYMENT_RECORDED",
+        "title": "Payment recorded",
+        "subject": "Actual restaurant",
+        "occurred_at": "2026-11-14T08:00:00Z"
+      },
+      {
+        "id": "RESERVATION_CREATED:5e2138c891bd4b12a044c584b197ed07",
+        "event_type": "RESERVATION_CREATED",
+        "title": "Reservation created",
+        "subject": "Actual restaurant",
+        "occurred_at": "2026-11-14T08:00:00Z"
+      },
+      {
+        "id": "RESTAURANT_REGISTERED:30e5132218e74342b8ed4cfb11362e8d",
+        "event_type": "RESTAURANT_REGISTERED",
+        "title": "Restaurant registered",
+        "subject": "Pending restaurant",
+        "occurred_at": "2026-11-14T08:00:00Z"
+      }
+    ],
+    "total": 7,
+    "page": 1,
+    "page_size": 10
+  }
+}

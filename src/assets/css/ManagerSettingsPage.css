@@ -1,0 +1,8 @@
+.manager-settings-page { max-width: 1120px; }
+.manager-settings-page .customer-settings-heading h2 { margin: 8px 0; font-family: var(--font-display); font-size: clamp(26px, 4vw, 34px); }
+.manager-settings-page .profile-card { background: var(--color-surface); color: var(--color-text-primary); border: 1px solid var(--color-border); border-radius: var(--radius-card); }
+.manager-settings-page .customer-settings-card { margin-top: 20px; }
+.manager-settings-page .customer-settings-card header { flex-wrap: nowrap; }
+.manager-settings-page .customer-setting-switch { cursor: pointer; }
+.manager-settings-page .customer-setting-switch:disabled { cursor: wait; }
+.manager-sidebar-bottom .manager-nav-item + .manager-nav-item { margin-top: 4px; }

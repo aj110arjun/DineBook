@@ -1,0 +1,342 @@
+/* Kitchen orders share the reservation workspace's visual structure. */
+.chef-dashboard-main .orders-page-chef.chef-orders-workspace-page {
+  --chef-order-tint: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
+  width: 100%;
+  max-width: 1600px;
+  margin-inline: auto;
+  padding: 0;
+  color: var(--color-text-primary);
+  background: transparent;
+  overflow-wrap: anywhere;
+}
+.chef-orders-page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 4px 0 22px;
+}
+.chef-orders-eyebrow {
+  color: var(--color-primary);
+  font-size: .6875rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+}
+.chef-orders-page-heading h2 {
+  margin: 7px 0;
+  color: var(--color-text-primary);
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 2.5vw, 2.1rem);
+  font-weight: 600;
+}
+.chef-orders-page-heading p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: .875rem;
+  line-height: 1.6;
+}
+.chef-orders-connection {
+  display: block;
+  margin-top: 6px;
+  color: var(--color-text-muted);
+  font-size: .75rem;
+}
+.chef-orders-refresh,
+.chef-orders-toolbar > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font: inherit;
+  font-size: .8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.chef-orders-workspace-page button:disabled { opacity: .55; cursor: default; }
+.chef-orders-workspace-page button:focus-visible,
+.chef-orders-workspace-page input:focus-visible,
+.chef-orders-workspace-page select:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+.chef-orders-workspace-page .chef-orders-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 22px;
+  padding: 0;
+}
+.chef-orders-search,
+.chef-orders-toolbar > select {
+  min-height: 42px;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: .8125rem;
+}
+.chef-orders-search {
+  display: flex;
+  flex: 1 1 240px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+}
+.chef-orders-search svg { flex-shrink: 0; color: var(--color-text-muted); }
+.chef-orders-search input {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+}
+.chef-orders-toolbar > select { flex: 0 1 180px; padding: 0 30px 0 12px; }
+.chef-orders-notice,
+.chef-orders-error {
+  margin: 0 0 18px;
+  padding: 13px 15px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: .875rem;
+}
+.chef-orders-error { display: flex; justify-content: space-between; gap: 12px; color: var(--color-danger); }
+.chef-orders-error button { border: 0; background: transparent; color: inherit; font: inherit; text-decoration: underline; cursor: pointer; }
+.chef-orders-workspace {
+  display: grid;
+  grid-template-columns: minmax(300px, .85fr) minmax(0, 1.9fr);
+  align-items: start;
+  gap: 18px;
+}
+.chef-orders-list-panel,
+.chef-order-detail-panel {
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+.chef-orders-list-panel { padding: 14px; }
+.chef-orders-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 80px;
+  padding: 4px 4px 17px;
+  border-bottom: 1px solid var(--color-border);
+}
+.chef-orders-list-heading h3 { margin: 7px 0 4px; font-size: .9375rem; font-weight: 650; }
+.chef-orders-list-heading p { margin: 0; color: var(--color-text-muted); font-size: .75rem; }
+.chef-orders-list-heading > span {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  min-width: 34px;
+  height: 34px;
+  padding: 5px;
+  border-radius: 9px;
+  background: var(--chef-order-tint);
+  color: var(--color-primary);
+  font-size: .8125rem;
+  font-weight: 700;
+}
+.chef-orders-list-scroll {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  max-height: 810px;
+  overflow-y: auto;
+  padding: 2px 4px 10px 1px;
+  margin-top: 16px;
+  scrollbar-width: thin;
+}
+.chef-orders-list-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 3px 0 0;
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
+  font-size: .8125rem;
+  font-weight: 600;
+}
+.chef-orders-list-group svg { color: var(--color-primary); }
+.chef-order-list-card {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 13px;
+  background: var(--color-surface);
+}
+.chef-order-list-card.selected { border-color: var(--color-accent); box-shadow: 0 0 0 1px var(--color-accent); }
+.chef-order-card-select {
+  display: block;
+  width: 100%;
+  padding: 15px 14px 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.chef-order-card-select:hover { background: var(--color-surface-raised); }
+.chef-orders-workspace-page .chef-order-card-select:focus-visible { outline-offset: -3px; }
+.chef-order-card-tags,
+.chef-order-detail-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 15px; }
+.chef-order-card-tags > span,
+.chef-order-detail-tags > span {
+  padding: 5px 7px;
+  border-radius: 6px;
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
+  font-size: .6875rem;
+  font-weight: 600;
+}
+.chef-order-card-guest,
+.chef-order-detail-guest { display: flex; align-items: center; gap: 11px; }
+.chef-order-avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--chef-order-tint);
+  color: var(--color-primary);
+  font-size: .8125rem;
+  font-weight: 700;
+}
+.chef-order-card-guest > span:nth-child(2) { display: grid; gap: 4px; min-width: 0; flex: 1; }
+.chef-order-card-guest strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .9375rem; }
+.chef-order-card-guest small { color: var(--color-text-muted); font-size: .75rem; }
+.chef-order-card-guest > svg { flex-shrink: 0; color: var(--color-text-muted); }
+.chef-order-list-card.selected .chef-order-card-guest > svg { color: var(--color-primary); }
+.chef-order-card-meta { display: flex; flex-wrap: wrap; gap: 10px 14px; margin: 16px 0; color: var(--color-text-secondary); font-size: .75rem; }
+.chef-order-card-meta > span { display: inline-flex; align-items: center; gap: 5px; }
+.chef-order-card-meta svg { flex-shrink: 0; }
+.chef-order-card-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-inline: -14px;
+  padding: 9px 14px;
+  font-size: .6875rem;
+  font-weight: 650;
+}
+.chef-order-card-status small { font-size: .625rem; font-weight: 400; }
+.chef-order-status.pending,
+.chef-order-card-status.pending { background: var(--db-status-warning-bg); color: var(--db-status-warning-text); }
+.chef-order-status.confirmed,
+.chef-order-card-status.confirmed { background: var(--db-status-info-bg); color: var(--db-status-info-text); }
+.chef-order-status.preparing,
+.chef-order-card-status.preparing { background: var(--db-status-warning-bg); color: var(--db-status-warning-text); }
+.chef-order-status.completed,
+.chef-order-card-status.completed { background: var(--db-status-success-bg); color: var(--db-status-success-text); }
+.chef-order-status.cancelled,
+.chef-order-card-status.cancelled { background: var(--db-status-danger-bg); color: var(--db-status-danger-text); }
+.chef-orders-list-scroll .admin-pagination { display: grid; min-width: 0; gap: 10px; margin: 8px 0 0; font-size: .75rem; }
+.chef-orders-list-scroll .admin-pagination-controls { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+.chef-orders-list-scroll .admin-pagination-controls button { padding: 7px 9px; font-size: .75rem; }
+.chef-order-detail-panel { min-height: 620px; padding: 24px; scroll-margin-top: 90px; }
+.chef-order-detail-heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-bottom: 18px; }
+.chef-order-detail-heading > span:last-child { color: var(--color-text-muted); font-size: .6875rem; }
+.chef-order-detail-hero {
+  padding: 20px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
+  border-radius: 13px;
+  background: var(--chef-order-tint);
+}
+.chef-order-detail-guest > div { min-width: 0; }
+.chef-order-detail-guest h3 { margin: 0 0 5px; font-size: 1.3rem; letter-spacing: -.025em; }
+.chef-order-detail-guest p { margin: 0; color: var(--color-text-secondary); font-size: .8125rem; }
+.chef-order-detail-guest .chef-order-avatar { flex-basis: 56px; width: 56px; height: 56px; border: 1px solid var(--color-border); background: var(--color-surface); font-size: 1.125rem; }
+.chef-order-detail-hero-footer { display: flex; align-items: center; gap: 7px; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--color-border); color: var(--color-text-secondary); font-size: .8125rem; }
+.chef-order-detail-hero-footer svg { flex-shrink: 0; }
+.chef-order-information,
+.chef-order-dishes { margin-top: 26px; }
+.chef-order-detail-panel section > h3,
+.chef-order-section-heading h3 { margin: 0 0 13px; font-size: .9375rem; font-weight: 650; }
+.chef-order-information-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.chef-order-information-item { display: flex; align-items: flex-start; gap: 10px; min-width: 0; padding: 14px 11px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface-raised); }
+.chef-order-information-item > svg { flex-shrink: 0; width: 18px; margin-top: 3px; color: var(--color-primary); }
+.chef-order-information-item > span { display: grid; gap: 5px; min-width: 0; }
+.chef-order-information-item small { color: var(--color-text-muted); font-size: .6875rem; }
+.chef-order-information-item strong { color: var(--color-text-primary); font-size: .8125rem; font-weight: 600; line-height: 1.5; }
+.chef-order-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 13px; }
+.chef-order-section-heading h3 { margin: 0; }
+.chef-order-section-heading > span { color: var(--color-text-muted); font-size: .75rem; }
+.chef-order-dishes ul { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.chef-order-dishes li { display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px solid var(--color-border); border-radius: 11px; background: var(--color-surface-raised); }
+.chef-order-dishes li > div { display: grid; gap: 4px; min-width: 0; flex: 1; }
+.chef-order-dishes li strong { font-size: .9375rem; }
+.chef-order-dishes li :is(span, small) { color: var(--color-text-secondary); font-size: .8125rem; }
+.chef-order-dishes img,
+.chef-order-food-placeholder { flex: 0 0 48px; width: 48px; height: 48px; border-radius: 10px; object-fit: cover; }
+.chef-order-food-placeholder { display: grid; place-items: center; background: var(--chef-order-tint); color: var(--color-primary); }
+.chef-order-dishes li .chef-order-quantity { flex-shrink: 0; min-width: 35px; padding: 5px 8px; border-radius: 8px; background: var(--color-surface); color: var(--color-primary); text-align: center; font-size: 1rem; font-weight: 700; }
+.chef-order-kitchen-note,
+.chef-order-visit-note { margin-top: 22px; padding: 15px; border-left: 3px solid var(--color-accent); border-radius: 0 9px 9px 0; background: var(--color-surface-raised); }
+.chef-order-kitchen-note { border-color: var(--color-warning); background: var(--db-status-warning-bg); color: var(--db-status-warning-text); }
+.chef-order-kitchen-note h3 { display: flex; align-items: center; gap: 8px; }
+.chef-order-detail-panel .chef-order-kitchen-note h3,
+.chef-order-detail-panel .chef-order-visit-note h3 { margin-bottom: 7px; font-size: .8125rem; }
+.chef-order-kitchen-note p,
+.chef-order-visit-note p { margin: 0; font-size: .875rem; line-height: 1.65; }
+.chef-order-preparation-actions { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--color-border); }
+.chef-order-preparation-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 10px 14px; border: 1px solid #641b2b; border-radius: 9px; background: #641b2b; color: #fff; font: inherit; font-size: .875rem; font-weight: 600; cursor: pointer; }
+.chef-order-preparation-actions button:hover:not(:disabled) { background: #47111e; }
+.chef-order-muted { margin: 0; color: var(--color-text-secondary); font-size: .8125rem; line-height: 1.65; }
+.chef-orders-empty { display: grid; justify-items: center; align-content: center; gap: 10px; min-height: 260px; padding: 28px 18px; border: 1px dashed var(--color-border); border-radius: 13px; background: var(--color-surface-raised); color: var(--color-text-secondary); text-align: center; }
+.chef-orders-empty strong { color: var(--color-text-primary); font-size: .9375rem; }
+.chef-orders-empty p { margin: 0; font-size: .8125rem; line-height: 1.6; }
+.chef-order-detail-empty { display: grid; align-content: center; justify-items: center; min-height: 550px; padding: 24px; text-align: center; }
+.chef-order-detail-empty > span { display: grid; place-items: center; width: 72px; height: 72px; margin-bottom: 14px; border: 1px solid var(--color-border); border-radius: 22px; background: var(--chef-order-tint); color: var(--color-primary); }
+.chef-order-detail-empty h3 { margin: 0 0 10px; font-family: var(--font-display); font-size: 1.5rem; }
+.chef-order-detail-empty p { max-width: 330px; margin: 0; color: var(--color-text-secondary); font-size: .875rem; line-height: 1.7; }
+@media (max-width: 1250px) {
+  .chef-orders-workspace { grid-template-columns: minmax(280px, .85fr) minmax(0, 1.4fr); }
+  .chef-order-information-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .chef-order-detail-panel { padding: 18px; }
+}
+@media (max-width: 950px) {
+  .chef-orders-workspace { grid-template-columns: minmax(250px, .85fr) minmax(0, 1.2fr); gap: 12px; }
+  .chef-orders-list-panel { padding: 10px; }
+  .chef-order-detail-panel,
+  .chef-order-detail-hero { padding: 15px; }
+  .chef-order-information-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .chef-dashboard-main .orders-page-chef.chef-orders-workspace-page { padding-inline: 14px; }
+  .chef-orders-workspace { grid-template-columns: minmax(0, 1fr); }
+  .chef-orders-list-scroll { max-height: 500px; }
+  .chef-order-detail-panel { min-height: 380px; }
+  .chef-order-detail-empty { min-height: 340px; }
+  .chef-order-information-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .chef-orders-page-heading { align-items: flex-start; }
+  .chef-orders-refresh { min-width: 42px; padding-inline: 10px; }
+  .chef-orders-workspace-page .chef-orders-toolbar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .chef-orders-search { grid-column: 1 / -1; }
+  .chef-orders-toolbar > select { width: 100%; }
+  .chef-orders-toolbar > button { justify-self: start; }
+  .chef-order-information-grid { grid-template-columns: 1fr; }
+}

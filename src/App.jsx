@@ -1,71 +1,83 @@
+import CustomerShell from "./components/ui/CustomerShell.jsx";
+import PortalShell from "./components/ui/PortalShell.jsx";
+import { ManagerFrame } from "./components/manager/ManagerLayout.jsx";
+import { ChefFrame } from "./components/chef/ChefLayout.jsx";
+import { AdminFrame } from "./components/admin/AdminLayout.jsx";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { NotFoundPage } from "./components/AppExperience.jsx";
-import CustomerChangePasswordPage from "./pages/customer/CustomerChangePasswordPage.jsx";
-import CustomerLoginPage from "./pages/customer/CustomerLoginPage.jsx";
-import CustomerRecoveryPage from "./pages/customer/CustomerRecoveryPage.jsx";
-import CustomerRegisterPage from "./pages/customer/CustomerRegisterPage.jsx";
-import CustomerLandingPage from "./pages/customer/CustomerLandingPage.jsx";
-import CustomerEmailVerificationPage from "./pages/customer/CustomerEmailVerificationPage.jsx";
-import CustomerRestaurantDetailsPage from "./pages/customer/CustomerRestaurantDetailsPage.jsx";
-import CustomerReservationPage from "./pages/customer/CustomerReservationPage.jsx";
-import CustomerRestaurantListingPage from "./pages/customer/CustomerRestaurantListingPage.jsx";
-import CustomerProfilePage from "./pages/customer/CustomerProfilePage.jsx";
-import CustomerSavedRestaurantsPage from "./pages/customer/CustomerSavedRestaurantsPage.jsx";
-import CustomerWalletPage from "./pages/customer/CustomerWalletPage.jsx";
-import CustomerReservationsPage from "./pages/customer/CustomerReservationsPage.jsx";
-import CustomerReservationDetailsPage from "./pages/customer/CustomerReservationDetailsPage.jsx";
-import CustomerTransactionsPage from "./pages/customer/CustomerTransactionsPage.jsx";
-import CustomerTransactionDetailsPage from "./pages/customer/CustomerTransactionDetailsPage.jsx";
+import CustomerChangePasswordPage from "./features/customer/CustomerChangePasswordPage.jsx";
+import CustomerLoginPage from "./features/customer/CustomerLoginPage.jsx";
+import CustomerRecoveryPage from "./features/customer/CustomerRecoveryPage.jsx";
+import CustomerRegisterPage from "./features/customer/CustomerRegisterPage.jsx";
+import CustomerLandingPage from "./features/customer/CustomerLandingPage.jsx";
+import CustomerEmailVerificationPage from "./features/customer/CustomerEmailVerificationPage.jsx";
+import CustomerRestaurantDetailsPage from "./features/customer/CustomerRestaurantDetailsPage.jsx";
+import CustomerReservationPage from "./features/customer/CustomerReservationPage.jsx";
+import CustomerRestaurantListingPage from "./features/customer/CustomerRestaurantListingPage.jsx";
+import CustomerProfilePage from "./features/customer/CustomerProfilePage.jsx";
+import CustomerSettingsPage from "./features/customer/CustomerSettingsPage.jsx";
+import { useAccountPreferences } from "./components/preferences/AccountPreferences.jsx";
+import CustomerSavedRestaurantsPage from "./features/customer/CustomerSavedRestaurantsPage.jsx";
+import CustomerWalletPage from "./features/customer/CustomerWalletPage.jsx";
+import CustomerReservationsPage from "./features/customer/CustomerReservationsPage.jsx";
+import CustomerReservationDetailsPage from "./features/customer/CustomerReservationDetailsPage.jsx";
+import CustomerTransactionsPage from "./features/customer/CustomerTransactionsPage.jsx";
+import CustomerTransactionDetailsPage from "./features/customer/CustomerTransactionDetailsPage.jsx";
 import GuestOnlyRoute from "./components/auth/GuestOnlyRoute.jsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 import AdminProtectedRoute from "./components/auth/AdminProtectedRoute.jsx";
-import AdminTransactionDetailsPage from "./pages/admin/AdminTransactionDetailsPage.jsx";
-import AdminTransactionsPage from "./pages/admin/AdminTransactionsPage.jsx";
-import AdminLoginPage from "./pages/admin/AdminLoginPage.jsx";
-import AdminDashboardPage from "./pages/admin/AdminDashboardPage.jsx";
-import AdminRestaurantsPage from "./pages/admin/AdminRestaurantsPage.jsx";
-import AdminRestaurantDetailsPage from "./pages/admin/AdminRestaurantDetailsPage.jsx";
-import AdminRequestsPage from "./pages/admin/AdminRequestsPage.jsx";
-import AdminManagerRequestDetailsPage from "./pages/admin/AdminManagerRequestDetailsPage.jsx";
-import AdminOffersPage from "./pages/admin/AdminOffersPage.jsx";
-import ManagerRegisterPage from "./pages/manager/ManagerRegisterPage.jsx";
-import ManagerLoginPage from "./pages/manager/ManagerLoginPage.jsx";
-import ManagerDashboardPage from "./pages/manager/ManagerDashboardPage.jsx";
-import ManagerRestaurantLocationPage from "./pages/manager/ManagerRestaurantLocationPage.jsx";
+import AdminTransactionDetailsPage from "./features/admin/AdminTransactionDetailsPage.jsx";
+import AdminTransactionsPage from "./features/admin/AdminTransactionsPage.jsx";
+import AdminLoginPage from "./features/admin/AdminLoginPage.jsx";
+import AdminDashboardPage from "./features/admin/AdminDashboardPage.jsx";
+import AdminRestaurantsPage from "./features/admin/AdminRestaurantsPage.jsx";
+import AdminRestaurantDetailsPage from "./features/admin/AdminRestaurantDetailsPage.jsx";
+import AdminRequestsPage from "./features/admin/AdminRequestsPage.jsx";
+import AdminManagerRequestDetailsPage from "./features/admin/AdminManagerRequestDetailsPage.jsx";
+import AdminOffersPage from "./features/admin/AdminOffersPage.jsx";
+import ManagerRegisterPage from "./features/manager/ManagerRegisterPage.jsx";
+import ManagerLoginPage from "./features/manager/ManagerLoginPage.jsx";
+import ManagerDashboardPage from "./features/manager/ManagerDashboardPage.jsx";
+import ManagerSettingsPage from "./features/manager/ManagerSettingsPage.jsx";
+import ManagerProfilePage from "./features/manager/ManagerProfilePage.jsx";
+import ManagerRestaurantLocationPage from "./features/manager/ManagerRestaurantLocationPage.jsx";
 import ManagerProtectedRoute from "./components/auth/ManagerProtectedRoute.jsx";
-import ManagerPendingPage from "./pages/manager/ManagerPendingPage.jsx";
-import ManagerStaffPage from "./pages/manager/ManagerStaffPage.jsx";
-import ManagerMenuPage from "./pages/manager/ManagerMenuPage.jsx";
-import ManagerFloorsPage from "./pages/manager/ManagerFloorsPage.jsx";
-import ManagerReservationsPage from "./pages/manager/ManagerReservationsPage.jsx";
-import ChefLoginPage from "./pages/chef/ChefLoginPage.jsx";
-import ChefDashboardPage from "./pages/chef/ChefDashboardPage.jsx";
-import ChefMenuPage from "./pages/chef/ChefMenuPage.jsx";
-import ChefChangePasswordPage from "./pages/chef/ChefChangePasswordPage.jsx";
+import ManagerPendingPage from "./features/manager/ManagerPendingPage.jsx";
+import ManagerStaffPage from "./features/manager/ManagerStaffPage.jsx";
+import ManagerMenuPage from "./features/manager/ManagerMenuPage.jsx";
+import ManagerFloorsPage from "./features/manager/ManagerFloorsPage.jsx";
+import ManagerReservationsPage from "./features/manager/ManagerReservationsPage.jsx";
+import ChefLoginPage from "./features/chef/ChefLoginPage.jsx";
+import ChefDashboardPage from "./features/chef/ChefDashboardPage.jsx";
+import ChefSettingsPage from "./features/chef/ChefSettingsPage.jsx";
+import ChefProfilePage from "./features/chef/ChefProfilePage.jsx";
+import ChefMenuPage from "./features/chef/ChefMenuPage.jsx";
+import ChefChangePasswordPage from "./features/chef/ChefChangePasswordPage.jsx";
 import ChefProtectedRoute from "./components/auth/ChefProtectedRoute.jsx";
 import PortalGuestOnlyRoute from "./components/auth/PortalGuestOnlyRoute.jsx";
-import ThemeToggle from "./components/ThemeToggle.jsx";
-import OrdersPage from "./pages/shared/OrdersPage.jsx";
-import ManagerOrderDetailsPage from "./pages/manager/ManagerOrderDetailsPage.jsx";
-import ManagerSpotOrderPage from "./pages/manager/ManagerSpotOrderPage.jsx";
-import ManagerOperatingHoursPage from "./pages/manager/ManagerOperatingHoursPage.jsx";
-import ManagerOffersPage from "./pages/manager/ManagerOffersPage.jsx";
-import ChefServiceHoursPage from "./pages/chef/ChefServiceHoursPage.jsx";
-import ManagerPaymentsPage from "./pages/manager/ManagerPaymentsPage.jsx";
-import ManagerReviewsPage from "./pages/manager/ManagerReviewsPage.jsx";
-import AdminReviewModerationPage from "./pages/admin/AdminReviewModerationPage.jsx";
-import {
-  AdminRevenuePage,
-  ChefRevenuePage,
-  ManagerRevenuePage,
-} from "./pages/shared/RevenueWalletPage.jsx";
+import OrdersPage from "./features/shared/OrdersPage.jsx";
+import ManagerOrderDetailsPage from "./features/manager/ManagerOrderDetailsPage.jsx";
+import ManagerSpotOrderPage from "./features/manager/ManagerSpotOrderPage.jsx";
+import ManagerOperatingHoursPage from "./features/manager/ManagerOperatingHoursPage.jsx";
+import ManagerOffersPage from "./features/manager/ManagerOffersPage.jsx";
+import ChefServiceHoursPage from "./features/chef/ChefServiceHoursPage.jsx";
+import ManagerPaymentsPage from "./features/manager/ManagerPaymentsPage.jsx";
+import ManagerReviewsPage from "./features/manager/ManagerReviewsPage.jsx";
+import AdminReviewModerationPage from "./features/admin/AdminReviewModerationPage.jsx";
+import {AdminRevenuePage, ChefRevenuePage, ManagerRevenuePage} from "./features/shared/RevenueWalletPage.jsx";
+import AdminProfilePage from "./features/admin/AdminProfilePage.jsx"
+import AdminSettingsPage from "./features/admin/AdminSettingsPage.jsx";
+
 
 export default function App() {
+  useAccountPreferences();
   return (
     <>
       <Routes>
         <Route path="/" element={<Navigate to="/customer" replace />} />
+        <Route element={<CustomerShell />}>
         <Route path="/customer" element={<CustomerLandingPage />} />
+        <Route path="/customer/settings" element={<ProtectedRoute><CustomerSettingsPage /></ProtectedRoute>} />
         <Route
           path="/customer/profile"
           element={
@@ -154,6 +166,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        </Route>
         <Route
           path="/customer/login"
           element={
@@ -209,86 +222,80 @@ export default function App() {
           path="/admin"
           element={<Navigate to="/admin/dashboard" replace />}
         />
+        <Route element={<AdminProtectedRoute />}><Route element={<PortalShell Frame={AdminFrame} />}>
         <Route
           path="/admin/dashboard"
           element={
-            <AdminProtectedRoute>
-              <AdminDashboardPage />
-            </AdminProtectedRoute>
+            <AdminDashboardPage />
           }
         />
         <Route
           path="/admin/restaurants"
           element={
-            <AdminProtectedRoute>
-              <AdminRestaurantsPage />
-            </AdminProtectedRoute>
+            <AdminRestaurantsPage />
           }
         />
         <Route
           path="/admin/restaurants/:restaurantId"
           element={
-            <AdminProtectedRoute>
-              <AdminRestaurantDetailsPage />
-            </AdminProtectedRoute>
+            <AdminRestaurantDetailsPage />
           }
         />
         <Route
           path="/admin/orders"
           element={
-            <AdminProtectedRoute>
-              <Navigate to="/admin/dashboard" replace />
-            </AdminProtectedRoute>
+            <Navigate to="/admin/dashboard" replace />
           }
         />
         <Route
           path="/admin/offers"
           element={
-            <AdminProtectedRoute>
-              <AdminOffersPage />
-            </AdminProtectedRoute>
+            <AdminOffersPage />
           }
         />
         <Route
           path="/admin/transactions/:restaurantId/:transactionId"
-          element={<AdminProtectedRoute><AdminTransactionDetailsPage /></AdminProtectedRoute>}
+          element={<AdminTransactionDetailsPage />}
         />
         <Route
           path="/admin/transactions"
-          element={<AdminProtectedRoute><AdminTransactionsPage /></AdminProtectedRoute>}
+          element={<AdminTransactionsPage />}
         />
         <Route
           path="/admin/revenue"
           element={
-            <AdminProtectedRoute>
-              <AdminRevenuePage />
-            </AdminProtectedRoute>
+            <AdminRevenuePage />
           }
         />
         <Route
           path="/admin/reviews"
           element={
-            <AdminProtectedRoute>
-              <AdminReviewModerationPage />
-            </AdminProtectedRoute>
+            <AdminReviewModerationPage />
           }
         />
         <Route
           path="/admin/requests"
           element={
-            <AdminProtectedRoute>
-              <AdminRequestsPage />
-            </AdminProtectedRoute>
+            <AdminRequestsPage />
           }
         />
         <Route
           path="/admin/requests/:requestId"
           element={
-            <AdminProtectedRoute>
-              <AdminManagerRequestDetailsPage />
-            </AdminProtectedRoute>
+            <AdminManagerRequestDetailsPage />
           }
         />
+        <Route
+          path="/admin/profile"
+          element={
+            <AdminProfilePage />
+          }
+        />
+        <Route
+          path="/admin/settings"
+          element={<AdminSettingsPage />}
+        />
+        </Route></Route>
         <Route path="/manager/register" element={<ManagerRegisterPage />} />
         <Route
           path="/manager/login"
@@ -307,8 +314,10 @@ export default function App() {
           element={<Navigate to="/manager/dashboard" replace />}
         />
         <Route path="/manager/pending" element={<ManagerPendingPage />} />
-        <Route element={<ManagerProtectedRoute />}>
+        <Route element={<ManagerProtectedRoute />}><Route element={<PortalShell Frame={ManagerFrame} />}>
           <Route path="/manager/dashboard" element={<ManagerDashboardPage />} />
+          <Route path="/manager/settings" element={<ManagerSettingsPage />} />
+          <Route path="/manager/profile" element={<ManagerProfilePage />} />
           <Route
             path="/manager/restaurant-location"
             element={<ManagerRestaurantLocationPage />}
@@ -343,6 +352,7 @@ export default function App() {
             element={<ManagerOrderDetailsPage />}
           />
         </Route>
+        </Route>
         <Route
           path="/manager/floors"
           element={<Navigate to="/manager/tables" replace />}
@@ -363,13 +373,16 @@ export default function App() {
             </PortalGuestOnlyRoute>
           }
         />
-        <Route element={<ChefProtectedRoute />}>
+        <Route element={<ChefProtectedRoute />}><Route element={<PortalShell Frame={ChefFrame} />}>
           <Route path="/chef/dashboard" element={<ChefDashboardPage />} />
+          <Route path="/chef/settings" element={<ChefSettingsPage />} />
+          <Route path="/chef/profile" element={<ChefProfilePage />} />
           <Route path="/chef/orders" element={<OrdersPage mode="chef" />} />
           <Route path="/chef/menu" element={<ChefMenuPage />} />
           <Route path="/chef/menu/:foodId" element={<ChefMenuPage />} />
           <Route path="/chef/revenue" element={<ChefRevenuePage />} />
           <Route path="/chef/service-hours" element={<ChefServiceHoursPage />} />
+          </Route>
           <Route
             path="/chef/change-password"
             element={<ChefChangePasswordPage />}
@@ -377,7 +390,6 @@ export default function App() {
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
-      <ThemeToggle />
     </>
   );
 }

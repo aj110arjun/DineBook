@@ -1,0 +1,573 @@
+{
+  "manager_name": "Manager",
+  "restaurant_name": "Actual restaurant",
+  "period": {
+    "start_date": "2026-11-01",
+    "end_date": "2026-11-13",
+    "previous_start_date": "2026-10-19",
+    "previous_end_date": "2026-10-31",
+    "timezone": "Asia/Kolkata",
+    "group_by": "day"
+  },
+  "overview": {
+    "revenue": {
+      "value": "2750.00",
+      "previous": "0.00",
+      "change_percent": null
+    },
+    "orders": {
+      "value": "1.00",
+      "previous": "0.00",
+      "change_percent": null
+    },
+    "reservations": {
+      "value": "1.00",
+      "previous": "0.00",
+      "change_percent": null
+    },
+    "customers": {
+      "value": "1.00",
+      "previous": "0.00",
+      "change_percent": null
+    },
+    "average_order_value": {
+      "value": "100.00",
+      "previous": "0.00",
+      "change_percent": null
+    },
+    "rating": {
+      "value": "0.00",
+      "previous": "0.00",
+      "change_percent": "0"
+    }
+  },
+  "revenue": {
+    "gross": "2750.00",
+    "refunds": "0.00",
+    "commissions": "275.00",
+    "revenue": "2750.00",
+    "net": "2475.00"
+  },
+  "revenue_chart": [
+    {
+      "date": "2026-11-01",
+      "gross": "0",
+      "refunds": "0",
+      "commissions": "0",
+      "revenue": "0",
+      "net": "0"
+    },
+    {
+      "date": "2026-11-02",
+      "gross": "0",
+      "refunds": "0",
+      "commissions": "0",
+      "revenue": "0",
+      "net": "0"
+    },
+    {
+      "date": "2026-11-03",
+      "gross": "0",
+      "refunds": "0",
+      "commissions": "0",
+      "revenue": "0",
+      "net": "0"
+    },
+    {
+      "date": "2026-11-04",
+      "gross": "0",
+      "refunds": "0",
+      "commissions": "0",
+      "revenue": "0",
+      "net": "0"
+    },
+    {
+      "date": "2026-11-05",
+      "gross": "0",
+      "refunds": "0",
+      "commissions": "0",
+      "revenue": "0",
+      "net": "0"
+    },
+    {
+      "date": "2026-11-06",
+      "gross": "0",
+      "refunds": "0",
+      "commissions": "0",
+      "revenue": "0",
+      "net": "0"
+    },
+    {
+      "date": "2026-11-07",
+      "gross": "0",
+      "refunds": "0",
+      "commissions": "0",
+      "revenue": "0",
+      "net": "0"
+    },
+    {
+      "date": "2026-11-08",
+      "gross": "0",
+      "refunds": "0",
+      "commissions": "0",
+      "revenue": "0",
+      "net": "0"
+    },
+    {
+      "date": "2026-11-09",
+      "gross": "0",
+      "refunds": "0",
+      "commissions": "0",
+      "revenue": "0",
+      "net": "0"
+    },
+    {
+      "date": "2026-11-10",
+      "gross": "0",
+      "refunds": "0",
+      "commissions": "0",
+      "revenue": "0",
+      "net": "0"
+    },
+    {
+      "date": "2026-11-11",
+      "gross": "0",
+      "refunds": "0",
+      "commissions": "0",
+      "revenue": "0",
+      "net": "0"
+    },
+    {
+      "date": "2026-11-12",
+      "gross": "0",
+      "refunds": "0",
+      "commissions": "0",
+      "revenue": "0",
+      "net": "0"
+    },
+    {
+      "date": "2026-11-13",
+      "gross": "2750.00",
+      "refunds": "0.00",
+      "commissions": "275.00",
+      "revenue": "2750.00",
+      "net": "2475.00"
+    }
+  ],
+  "operations": {
+    "order_status": [
+      {
+        "status": "PLACED",
+        "count": 0
+      },
+      {
+        "status": "ACCEPTED",
+        "count": 0
+      },
+      {
+        "status": "PREPARING",
+        "count": 0
+      },
+      {
+        "status": "READY",
+        "count": 0
+      },
+      {
+        "status": "SERVED",
+        "count": 0
+      },
+      {
+        "status": "COMPLETED",
+        "count": 1
+      },
+      {
+        "status": "CANCELLED",
+        "count": 0
+      },
+      {
+        "status": "REJECTED",
+        "count": 0
+      }
+    ],
+    "reservation_status": [
+      {
+        "status": "PENDING_PAYMENT",
+        "count": 0
+      },
+      {
+        "status": "CONFIRMED",
+        "count": 1
+      },
+      {
+        "status": "SEATED",
+        "count": 0
+      },
+      {
+        "status": "COMPLETED",
+        "count": 0
+      },
+      {
+        "status": "CANCELLED",
+        "count": 0
+      },
+      {
+        "status": "REJECTED",
+        "count": 0
+      },
+      {
+        "status": "NO_SHOW",
+        "count": 0
+      }
+    ],
+    "order_trend": [
+      {
+        "date": "2026-11-01",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-02",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-03",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-04",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-05",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-06",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-07",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-08",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-09",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-10",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-11",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-12",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-13",
+        "total": 1,
+        "completed": 1,
+        "pending": 0,
+        "cancelled": 0
+      }
+    ],
+    "reservation_trend": [
+      {
+        "date": "2026-11-01",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-02",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-03",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-04",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-05",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-06",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-07",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-08",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-09",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-10",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-11",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-12",
+        "total": 0,
+        "completed": 0,
+        "pending": 0,
+        "cancelled": 0
+      },
+      {
+        "date": "2026-11-13",
+        "total": 1,
+        "completed": 0,
+        "pending": 1,
+        "cancelled": 0
+      }
+    ],
+    "order_completion_percent": "100.00",
+    "reservation_completion_percent": "0.00",
+    "average_party_size": "4.00",
+    "expected_guests": 4,
+    "peak_order_hours": [
+      {
+        "label": "13",
+        "count": 1
+      }
+    ],
+    "peak_reservation_hours": [
+      {
+        "label": "13",
+        "count": 1
+      }
+    ],
+    "peak_reservation_days": [
+      {
+        "label": "Friday",
+        "count": 1
+      }
+    ]
+  },
+  "popular_items": [],
+  "customers": {
+    "new": 1,
+    "returning": 0,
+    "retention_percent": "0.00",
+    "trend": [
+      {
+        "date": "2026-11-01",
+        "total": 0,
+        "new": 0,
+        "returning": 0
+      },
+      {
+        "date": "2026-11-02",
+        "total": 0,
+        "new": 0,
+        "returning": 0
+      },
+      {
+        "date": "2026-11-03",
+        "total": 0,
+        "new": 0,
+        "returning": 0
+      },
+      {
+        "date": "2026-11-04",
+        "total": 0,
+        "new": 0,
+        "returning": 0
+      },
+      {
+        "date": "2026-11-05",
+        "total": 0,
+        "new": 0,
+        "returning": 0
+      },
+      {
+        "date": "2026-11-06",
+        "total": 0,
+        "new": 0,
+        "returning": 0
+      },
+      {
+        "date": "2026-11-07",
+        "total": 0,
+        "new": 0,
+        "returning": 0
+      },
+      {
+        "date": "2026-11-08",
+        "total": 0,
+        "new": 0,
+        "returning": 0
+      },
+      {
+        "date": "2026-11-09",
+        "total": 0,
+        "new": 0,
+        "returning": 0
+      },
+      {
+        "date": "2026-11-10",
+        "total": 0,
+        "new": 0,
+        "returning": 0
+      },
+      {
+        "date": "2026-11-11",
+        "total": 0,
+        "new": 0,
+        "returning": 0
+      },
+      {
+        "date": "2026-11-12",
+        "total": 0,
+        "new": 0,
+        "returning": 0
+      },
+      {
+        "date": "2026-11-13",
+        "total": 1,
+        "new": 1,
+        "returning": 0
+      }
+    ]
+  },
+  "payment_methods": [
+    {
+      "method": "UNKNOWN",
+      "count": 1,
+      "amount": "2750.00"
+    }
+  ],
+  "reviews": {
+    "total": 0,
+    "average": "0",
+    "distribution": [
+      {
+        "status": "1",
+        "count": 0
+      },
+      {
+        "status": "2",
+        "count": 0
+      },
+      {
+        "status": "3",
+        "count": 0
+      },
+      {
+        "status": "4",
+        "count": 0
+      },
+      {
+        "status": "5",
+        "count": 0
+      }
+    ],
+    "recent": []
+  },
+  "live": {
+    "as_of": "2026-11-13T08:00:00Z",
+    "tables": {
+      "total": 0,
+      "occupied": 0,
+      "available": 0,
+      "reserved": 0,
+      "maintenance": 0,
+      "occupancy_percent": "0.00"
+    },
+    "table_preview": [],
+    "upcoming_reservations": [],
+    "active_orders": []
+  },
+  "notes": [
+    "Revenue uses recorded collections and subtracts refunds on their reversal date; net revenue also subtracts commission after reversals. Tax is included in collected revenue.",
+    "Orders and item sales use order creation dates; reservations use scheduled arrival dates; payments use collection dates; reviews use publication record creation dates.",
+    "Customer counts exclude anonymous walk-ins and cancelled, rejected or refunded orders; reservation activity includes confirmed, seated and completed bookings. Returning customers have earlier eligible restaurant history.",
+    "Item sales allocate saved discounts before tax and commission; only paid, non-cancelled orders qualify. Reservation preorders appear after a kitchen order exists.",
+    "Collections missing a commission ledger record are excluded from revenue. No payment method is inferred when its source is missing.",
+    "Live seating uses active floors, seated bookings and today's manual table states. Maintenance tables remain in the active table total. Live panels do not follow the historical date filter."
+  ]
+}

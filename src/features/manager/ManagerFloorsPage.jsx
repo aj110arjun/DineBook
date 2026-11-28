@@ -1,0 +1,983 @@
+import LoadingState, { RefreshIndicator } from "../../components/ui/LoadingState.jsx";
+import { usePageState } from "../../state/usePageState.js";
+import CustomForm from "../../components/forms/CustomForm.jsx";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  PlusCircle,
+  ChevronDown,
+  MapPin,
+  Search,
+  X,
+  Pencil,
+  Trash2,
+} from "lucide-react";
+import { requestJson } from "../../lib/authApi.js";
+import ManagerLayout from "../../components/manager/ManagerLayout.jsx";
+import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
+import ManagerFloorZones from "../../components/manager/ManagerFloorZones.jsx";
+import "../../assets/css/ManagerFloorZones.css";
+
+const statusLabels = {
+  available: "Available",
+  reserved: "Reserved",
+  occupied: "Occupied",
+  maintenance: "Maintenance",
+  inactive: "Inactive",
+};
+
+export default function ManagerFloorsPage() {
+  const [loading, setLoading] = useState(true);
+  const [
+    {
+      floors, floorFilter, statusFilter, tableQuery, capacityFilter, typeFilter,
+      tableSort, form, name, floorNumber, description, floorId, number, seats,
+      reservationFee, extraHourFee, gridRow, gridCol, shape, tableStatus,
+      editingTable, editingFloor, error, notice, saving, pendingConfirmation,
+      zoneFilter, zoneId, zoneName, zoneFloorId, editingZone, floorZoneNames,
+    },
+    {
+      floors: setFloors, floorFilter: setFloorFilter,
+      statusFilter: setStatusFilter, tableQuery: setTableQuery,
+      capacityFilter: setCapacityFilter, typeFilter: setTypeFilter,
+      tableSort: setTableSort, form: setForm, name: setName,
+      floorNumber: setFloorNumber, description: setDescription,
+      floorId: setFloorId, number: setNumber, seats: setSeats,
+      reservationFee: setReservationFee, extraHourFee: setExtraHourFee,
+      gridRow: setGridRow, gridCol: setGridCol, shape: setShape,
+      tableStatus: setTableStatus, editingTable: setEditingTable,
+      editingFloor: setEditingFloor, error: setError, notice: setNotice,
+      saving: setSaving, pendingConfirmation: setPendingConfirmation,
+      zoneFilter: setZoneFilter, zoneId: setZoneId, zoneName: setZoneName,
+      zoneFloorId: setZoneFloorId, editingZone: setEditingZone, floorZoneNames: setFloorZoneNames,
+    },
+  ] = usePageState("ManagerFloorsPage", () => ({
+    floors: [],
+    floorFilter: "all",
+    statusFilter: "all",
+    tableQuery: "",
+    capacityFilter: "all",
+    typeFilter: "all",
+    tableSort: "number",
+    form: "",
+    name: "",
+    floorNumber: "",
+    description: "",
+    floorId: "",
+    number: "",
+    seats: "2",
+    reservationFee: "250",
+    extraHourFee: "0",
+    gridRow: "",
+    gridCol: "",
+    shape: "round",
+    tableStatus: "available",
+    editingTable: null,
+    editingFloor: null,
+    error: "",
+    notice: "",
+    saving: false,
+    pendingConfirmation: null,
+    zoneFilter: "all", zoneId: "", zoneName: "", zoneFloorId: "", editingZone: null, floorZoneNames: "",
+  }));
+  const load = useCallback(
+    () => {
+      setLoading(true);
+      setError("");
+      return requestJson("/api/manager/floors")
+        .then((data) => {
+          setFloors(data);
+          setFloorId((current) => current || data[0]?.id || "");
+        })
+        .catch((e) => setError(e.message))
+        .finally(() => setLoading(false));
+    },
+    [],
+  );
+  useEffect(() => {
+    load();
+  }, [load]);
+  const allTables = useMemo(
+    () =>
+      floors.flatMap((floor) =>
+        floor.tables.map((table) => ({
+          ...table,
+          floorId: floor.id,
+          floorName: floor.floor_name || floor.name,
+        })),
+      ),
+    [floors],
+  );
+  const scopedTables = allTables.filter(
+    (table) => (floorFilter === "all" || table.floorId === floorFilter) &&
+      (zoneFilter === "all" || (zoneFilter === "general" ? !table.zone_id : table.zone_id === zoneFilter)),
+  );
+  const counts = scopedTables.reduce((result, table) => {
+    result[table.status] = (result[table.status] || 0) + 1;
+    return result;
+  }, {});
+  const scopedFloors = floors.filter(
+    (floor) => floorFilter === "all" || floor.id === floorFilter,
+  );
+  const shownFloors = scopedFloors.filter((floor) => zoneFilter === "all" || zoneFilter === "general" ||
+    (floor.zones || []).some((zone) => zone.id === zoneFilter));
+  const visibleTables = (floor) =>
+    floor.tables
+      .filter(
+        (table) =>
+          (zoneFilter === "all" || (zoneFilter === "general" ? !table.zone_id : table.zone_id === zoneFilter)) &&
+          (statusFilter === "all" || table.status === statusFilter) &&
+          (capacityFilter === "all" ||
+            (capacityFilter === "8+"
+              ? Number(table.capacity ?? table.seats) >= 8
+              : Number(table.capacity ?? table.seats) ===
+                Number(capacityFilter))) &&
+          (typeFilter === "all" || table.table_type === typeFilter) &&
+          (!tableQuery.trim() ||
+            `${table.table_number} ${table.id} ${floor.floor_name || floor.name} ${table.zone_name || ""} ${table.table_type || ""}`
+              .toLowerCase()
+              .includes(tableQuery.trim().toLowerCase())),
+      )
+      .sort((left, right) =>
+        tableSort === "capacity"
+          ? Number(left.capacity ?? left.seats) -
+            Number(right.capacity ?? right.seats)
+          : tableSort === "status"
+            ? String(left.status).localeCompare(String(right.status))
+            : String(left.table_number || "").localeCompare(
+                String(right.table_number || ""),
+                undefined,
+                { numeric: true },
+              ),
+      );
+
+  async function addFloor(event) {
+    event.preventDefault();
+    setError("");
+    const cleanName = name.trim().replace(/\s+/g, " ");
+    if (!cleanName) {
+      setError("Enter a floor name.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload = {
+        floor_number: Number(floorNumber),
+        floor_name: cleanName,
+        description: description.trim() || null,
+        ...(!editingFloor && { zones: floorZoneNames.split("\n").map((value) => value.trim()).filter(Boolean) }),
+      };
+      const created = editingFloor
+        ? await requestJson(`/api/manager/floors/${editingFloor.id}`, {
+            method: "PATCH",
+            body: JSON.stringify(payload),
+          })
+        : await requestJson("/api/manager/floors", {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+      setFloors((current) => {
+        const next = editingFloor
+          ? current.map((floor) =>
+              floor.id === created.id
+                ? { ...created, tables: floor.tables }
+                : floor,
+            )
+          : [...current, { ...created, tables: [] }];
+        return next.sort((a, b) => a.floor_number - b.floor_number);
+      });
+      setName("");
+      setDescription("");
+      setFloorNumber("");
+      setEditingFloor(null);
+      setForm("");
+      setFloorFilter(created.id);
+      setZoneFilter("all");
+      setFloorId(created.id);
+      setNotice(
+        editingFloor ? "Floor updated." : "Floor created successfully.",
+      );
+      window.setTimeout(() => setNotice(""), 3500);
+      await load();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+  async function addTable(event) {
+    event.preventDefault();
+    setError("");
+    setSaving(true);
+    try {
+      const payload = {
+        floor_id: floorId,
+        zone_id: zoneId || null,
+        table_number: number.trim(),
+        capacity: Number(seats),
+        reservation_fee: Number(reservationFee),
+        extra_hour_fee: Number(extraHourFee),
+        grid_row: Number(gridRow),
+        grid_col: Number(gridCol),
+        table_type: shape,
+        status: tableStatus,
+      };
+      await requestJson(
+        editingTable
+          ? `/api/manager/tables/${editingTable.id}`
+          : "/api/manager/tables",
+        {
+          method: editingTable ? "PATCH" : "POST",
+          body: JSON.stringify(payload),
+        },
+      );
+      setNumber("");
+      setEditingTable(null);
+      setForm("");
+      await load();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+  function openAddTable() {
+    const selectedZoneFloor = floors.find((floor) => (floor.zones || []).some((zone) => zone.id === zoneFilter));
+    const targetFloor = selectedZoneFloor?.id || (floorFilter !== "all" ? floorFilter : floors[0]?.id || "");
+    setFloorId(targetFloor);
+    setZoneId((floors.find((floor) => floor.id === targetFloor)?.zones || []).some((zone) => zone.id === zoneFilter) ? zoneFilter : "");
+    setNumber("");
+    setSeats("4");
+    setReservationFee("250");
+    setExtraHourFee("0");
+    setGridRow("");
+    setGridCol("");
+    setShape("round");
+    setTableStatus("available");
+    setEditingTable(null);
+    setError("");
+    setForm("table");
+  }
+  function openAddFloor() {
+    setName("");
+    setFloorZoneNames("");
+    setDescription("");
+    setFloorNumber(
+      String(
+        Math.max(0, ...floors.map((floor) => Number(floor.floor_number) || 0)) +
+          1,
+      ),
+    );
+    setEditingFloor(null);
+    setError("");
+    setForm("floor");
+  }
+  function openEditFloor(floor) {
+    setName(floor.floor_name || floor.name);
+    setFloorNumber(String(floor.floor_number));
+    setDescription(floor.description || "");
+    setEditingFloor(floor);
+    setError("");
+    setForm("floor");
+  }
+  function openEditTable(table, floor) {
+    setEditingTable({ ...table, floorId: floor.id });
+    setFloorId(floor.id);
+    setZoneId(table.zone_id || "");
+    setNumber(table.table_number);
+    setSeats(String(table.capacity ?? table.seats));
+    setReservationFee(String(table.reservation_fee ?? 0));
+    setExtraHourFee(String(table.extra_hour_fee ?? 0));
+    setGridRow(table.grid_row == null ? "" : String(table.grid_row));
+    setGridCol(table.grid_col == null ? "" : String(table.grid_col));
+    setShape(table.table_type || "round");
+    setTableStatus(table.status);
+    setError("");
+    setForm("table");
+  }
+  function selectFloor(id) {
+    setFloorFilter(id);
+    setZoneFilter("all");
+  }
+  function openZone(floor, zone = null) {
+    setZoneFloorId(floor.id);
+    setZoneName(zone?.name || "");
+    setEditingZone(zone);
+    setError("");
+    setForm("zone");
+  }
+  async function saveZone(event) {
+    event.preventDefault();
+    setSaving(true);
+    setError("");
+    try {
+      await requestJson(`/api/manager/floors/${zoneFloorId}/zones${editingZone ? `/${editingZone.id}` : ""}`, {
+        method: editingZone ? "PATCH" : "POST", body: JSON.stringify({ name: zoneName.trim() }),
+      });
+      setForm("");
+      setNotice(editingZone ? "Zone updated." : "Zone added. Assign tables to it when adding or editing a table.");
+      await load();
+    } catch (reason) { setError(reason.message); }
+    finally { setSaving(false); }
+  }
+  async function removeZone(zone) {
+    setSaving(true);
+    setError("");
+    try {
+      await requestJson(`/api/manager/floors/${zone.floor_id}/zones/${zone.id}`, { method: "DELETE" });
+      if (zoneFilter === zone.id) setZoneFilter("all");
+      setPendingConfirmation(null);
+      await load();
+      return true;
+    } catch (reason) { setError(reason.message); return false; }
+    finally { setSaving(false); }
+  }
+  async function removeTable() {
+    if (!editingTable) return false;
+    setSaving(true);
+    try {
+      await requestJson(`/api/manager/tables/${editingTable.id}`, {
+        method: "DELETE",
+      });
+      setEditingTable(null);
+      setForm("");
+      await load();
+      setPendingConfirmation(null);
+      return true;
+    } catch (e) {
+      setError(e.message);
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  }
+  async function deactivateFloor(floor) {
+    if (floor.tables.some((table) => table.status !== "inactive")) {
+      setError(
+        "Move or delete the tables on this floor before deactivating it.",
+      );
+      return false;
+    }
+    try {
+      await requestJson(`/api/manager/floors/${floor.id}`, {
+        method: "DELETE",
+      });
+      if (floorFilter === floor.id) selectFloor("all");
+      else if ((floor.zones || []).some((zone) => zone.id === zoneFilter)) setZoneFilter("all");
+      await load();
+      setPendingConfirmation(null);
+      return true;
+    } catch (e) {
+      setError(e.message);
+      return false;
+    }
+  }
+
+  if (loading && !floors.length && !error) return <ManagerLayout title="Tables & floors"><div className="manager-dashboard-content"><LoadingState variant="calendar" label="Loading floors and tables…" /></div></ManagerLayout>;
+
+  return (
+    <ManagerLayout title="Table Layout & Live Seating">
+      <div className="manager-dashboard-content table-layout-page">
+
+        {notice && (
+          <div className="table-layout-notice" role="status">
+            {notice}
+          </div>
+        )}
+        {error && (
+          <div className="table-layout-error" role="alert">
+            {error}
+          </div>
+        )}
+        <RefreshIndicator active={loading && Boolean(floors.length)} />
+        <section
+          className="table-stat-grid"
+          aria-label="Table availability summary"
+        >
+          {[
+            { key: "all", label: "Total Tables", value: scopedTables.length },
+            ...Object.entries(statusLabels).map(([key, label]) => ({
+              key,
+              label: `${label} Tables`,
+              value: counts[key] || 0,
+            })),
+          ].map((stat) => (
+            <button
+              type="button"
+              key={stat.key}
+              onClick={() => setStatusFilter(stat.key)}
+              className={`table-stat-card ${stat.key} ${statusFilter === stat.key ? "selected" : ""}`}
+            >
+              <span>{stat.label}</span>
+              <strong>{stat.value}</strong>
+            </button>
+          ))}
+        </section>
+        <div className="table-layout-toolbar">
+          <label className="table-layout-search">
+            <Search size={15} />
+            <input
+              type="search"
+              value={tableQuery}
+              onChange={(event) => setTableQuery(event.target.value)}
+              placeholder="Search table, floor or zone"
+              aria-label="Search tables"
+            />
+          </label>
+          <label className="table-layout-select">
+            <span className="sr-only">Sort tables</span>
+            <select
+              value={tableSort}
+              onChange={(event) => setTableSort(event.target.value)}
+            >
+              <option value="number">Table number</option>
+              <option value="capacity">Capacity</option>
+              <option value="status">Status</option>
+            </select>
+            <ChevronDown size={15} />
+          </label>
+          <label className="table-layout-select">
+            <span className="sr-only">Filter by capacity</span>
+            <select
+              value={capacityFilter}
+              onChange={(event) => setCapacityFilter(event.target.value)}
+            >
+              <option value="all">All capacities</option>
+              {[2, 4, 6].map((value) => (
+                <option key={value} value={String(value)}>
+                  {value} seats
+                </option>
+              ))}
+              <option value="8+">8+ seats</option>
+            </select>
+            <ChevronDown size={15} />
+          </label>
+          <label className="table-layout-select">
+            <span className="sr-only">Filter by table type</span>
+            <select
+              value={typeFilter}
+              onChange={(event) => setTypeFilter(event.target.value)}
+            >
+              <option value="all">All table types</option>
+              {[
+                ...new Set(
+                  allTables.map((table) => table.table_type).filter(Boolean),
+                ),
+              ]
+                .sort()
+                .map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+            </select>
+            <ChevronDown size={15} />
+          </label>
+          <label className="table-layout-select">
+            <span className="sr-only">Filter tables by status</span>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">All Tables</option>
+              {Object.entries(statusLabels).map(([key, label]) => (
+                <option value={key} key={key}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={15} />
+          </label>
+          <label className="table-layout-select">
+            <span className="sr-only">Choose floor</span>
+            <select
+              value={floorFilter}
+              onChange={(e) => selectFloor(e.target.value)}
+            >
+              <option value="all">All Floors</option>
+              {floors.map((floor) => (
+                <option value={floor.id} key={floor.id}>
+                  {floor.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={15} />
+          </label>
+          <label className="table-layout-select">
+            <span className="sr-only">Choose zone</span>
+            <select value={zoneFilter} onChange={(event) => setZoneFilter(event.target.value)}>
+              <option value="all">All Zones</option>
+              <option value="general">General seating</option>
+              {scopedFloors.flatMap((floor) => (floor.zones || []).map((zone) =>
+                <option key={zone.id} value={zone.id}>{floorFilter === "all" ? `${floor.floor_name || floor.name} · ` : ""}{zone.name}</option>))}
+            </select>
+            <ChevronDown size={15} />
+          </label>
+          <button
+            type="button"
+            className="table-layout-primary"
+            onClick={openAddTable}
+            disabled={!floors.length}
+          >
+            <PlusCircle size={17} /> Add Table
+          </button>
+        </div>
+
+        {form === "floor" && (
+          <div
+            className="table-modal-backdrop"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget && !saving) setForm("");
+            }}
+          >
+            <CustomForm
+              className="table-entry-modal"
+              onSubmit={addFloor}
+              aria-labelledby="add-floor-title"
+            >
+              <button
+                className="table-modal-close"
+                type="button"
+                aria-label="Close"
+                onClick={() => !saving && setForm("")}
+              >
+                <X size={20} />
+              </button>
+              <h2 id="add-floor-title">
+                {editingFloor ? "Edit Floor" : "Add Floor"}
+              </h2>
+              <p>Set up a floor, then divide its seating into optional zones.</p>
+              <label>
+                Floor Number <b>*</b>
+                <input
+                  autoFocus
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={floorNumber}
+                  onChange={(e) => setFloorNumber(e.target.value)}
+                  required
+                />
+              </label>
+              <label>
+                Floor Name <b>*</b>
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Indoor Dining Hall"
+                  required
+                  maxLength={100}
+                />
+              </label>
+              <label>
+                Description
+                <input
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Optional notes about this floor"
+                  maxLength={1000}
+                />
+              </label>
+              {!editingFloor && <label>
+                Zones (optional)
+                <textarea rows={3} value={floorZoneNames} onChange={(event) => setFloorZoneNames(event.target.value)}
+                  placeholder={"Main Dining\nWindow Seats\nTerrace"} maxLength={5000} />
+                <small>Enter one zone per line. You can add more zones later.</small>
+              </label>}
+              {error && (
+                <div className="table-layout-error" role="alert">
+                  {error}
+                </div>
+              )}
+              <footer>
+                <button
+                  type="button"
+                  className="table-modal-secondary"
+                  onClick={() => setForm("")}
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="table-layout-primary"
+                  type="submit"
+                  disabled={saving}
+                >
+                  {saving
+                    ? "Saving…"
+                    : editingFloor
+                      ? "Save Changes"
+                      : "Save Floor"}
+                </button>
+              </footer>
+            </CustomForm>
+          </div>
+        )}
+
+        {form === "zone" && <div className="table-modal-backdrop" onMouseDown={(event) => {
+          if (event.target === event.currentTarget && !saving) setForm("");
+        }}>
+          <CustomForm className="table-entry-modal floor-zone-modal" role="dialog" aria-modal="true" aria-labelledby="zone-title" onSubmit={saveZone}>
+            <button className="table-modal-close" type="button" aria-label="Close" disabled={saving} onClick={() => setForm("")}><X size={20} /></button>
+            <h2 id="zone-title">{editingZone ? "Edit Zone" : "Add Zone"}</h2>
+            <p>{floors.find((floor) => floor.id === zoneFloorId)?.floor_name || "Selected floor"} · Keep tables organised by seating area.</p>
+            <label>Zone Name <b>*</b><input autoFocus required maxLength={100} value={zoneName} onChange={(event) => setZoneName(event.target.value)} placeholder="e.g. Window Seats" /></label>
+            {error && <p role="alert" className="table-layout-error">{error}</p>}
+            <footer><button className="table-modal-secondary" type="button" disabled={saving} onClick={() => setForm("")}>Cancel</button>
+              <button className="table-layout-primary" type="submit" disabled={saving}>{saving ? "Saving…" : editingZone ? "Save Changes" : "Add Zone"}</button></footer>
+          </CustomForm>
+        </div>}
+
+        {form === "table" && (
+          <div
+            className="table-modal-backdrop"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) setForm("");
+            }}
+          >
+            <div
+              className="table-entry-modal table-entry-modal-wide"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="add-table-title"
+            >
+              <button
+                className="table-modal-close"
+                type="button"
+                aria-label="Close"
+                onClick={() => setForm("")}
+              >
+                <X size={20} />
+              </button>
+              <div className="table-modal-breadcrumb">
+                Home&nbsp; / &nbsp;Tables&nbsp; / &nbsp;
+                <strong>{editingTable ? "Edit Table" : "Add Table"}</strong>
+              </div>
+              <div className="table-entry-grid">
+                <CustomForm className="table-spec-form" onSubmit={addTable}>
+                  <h2 id="add-table-title">Table Specifications</h2>
+                  <label>
+                    Table Name / Number <b>*</b>
+                    <input
+                      autoFocus
+                      value={number}
+                      onChange={(e) => setNumber(e.target.value)}
+                      placeholder="e.g. T-12"
+                      required
+                      maxLength={30}
+                    />
+                  </label>
+                  <label>
+                    Table Type <b>*</b>
+                    <select
+                      value={shape}
+                      onChange={(e) => setShape(e.target.value)}
+                    >
+                      <option value="round">Round</option>
+                      <option value="square">Square</option>
+                      <option value="rectangle">Rectangle</option>
+                    </select>
+                  </label>
+                  <label>
+                    Seating Capacity <b>*</b>
+                    <input
+                      type="number"
+                      min="1"
+                      max="50"
+                      value={seats}
+                      onChange={(e) => setSeats(e.target.value)}
+                      required
+                    />
+                  </label>
+                  <label>
+                    Reservation fee (₹ per table, first hour) <b>*</b>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={reservationFee}
+                      onChange={(e) => setReservationFee(e.target.value)}
+                      required
+                    />
+                  </label>
+                  <label>
+                    Extra hour fee (₹ per table) <b>*</b>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100000"
+                      step="0.01"
+                      value={extraHourFee}
+                      onChange={(event) => setExtraHourFee(event.target.value)}
+                      required
+                    />
+                    <small>Charged for each started hour after the first. Set 0 for no extra charge.</small>
+                  </label>
+                  <label>
+                    Layout row (starts at 0) <b>*</b>
+                    <input type="number" min="0" max="100" step="1" required
+                      value={gridRow} onChange={(event) => setGridRow(event.target.value)} />
+                  </label>
+                  <label>
+                    Layout column (starts at 0) <b>*</b>
+                    <input type="number" min="0" max="100" step="1" required
+                      value={gridCol} onChange={(event) => setGridCol(event.target.value)} />
+                  </label>
+                  <label>
+                    Floor <b>*</b>
+                    <select
+                      value={floorId}
+                      onChange={(e) => { setFloorId(e.target.value); setZoneId(""); }}
+                      required
+                    >
+                      {floors.map((floor) => (
+                        <option key={floor.id} value={floor.id}>
+                          {floor.floor_name || floor.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Zone (optional)
+                    <select value={zoneId} onChange={(event) => setZoneId(event.target.value)}>
+                      <option value="">General seating</option>
+                      {(floors.find((floor) => floor.id === floorId)?.zones || []).map((zone) => <option key={zone.id} value={zone.id}>{zone.name}</option>)}
+                    </select>
+                    <small>Zones belong to the selected floor.</small>
+                  </label>
+                  <label>
+                    Table Status <b>*</b>
+                    <select
+                      value={tableStatus}
+                      onChange={(e) => setTableStatus(e.target.value)}
+                    >
+                      {Object.entries(statusLabels)
+                        .filter(([key]) => editingTable || key !== "inactive")
+                        .map(([key, label]) => (
+                          <option key={key} value={key}>
+                            {label}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+                  {error && (
+                    <div className="table-layout-error" role="alert">
+                      {error}
+                    </div>
+                  )}
+                  <footer>
+                    {editingTable && (
+                      <button
+                        type="button"
+                        className="table-delete-button"
+                        onClick={() =>
+                          setPendingConfirmation({
+                            type: "table",
+                            item: editingTable,
+                          })
+                        }
+                        disabled={saving}
+                      >
+                        <Trash2 size={15} /> Delete Table
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="table-modal-secondary"
+                      onClick={() => setForm("")}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="table-layout-primary"
+                      type="submit"
+                      disabled={saving}
+                    >
+                      {saving
+                        ? "Saving…"
+                        : editingTable
+                          ? "Save Changes"
+                          : "Save Table"}
+                    </button>
+                  </footer>
+                </CustomForm>
+                <section className="table-preview-card">
+                  <h2>Visual Layout Preview</h2>
+                  <div className="table-preview-canvas">
+                    <small>LIVE SHAPE RENDERING</small>
+                    <div
+                      className={`table-preview-shape ${shape} ${tableStatus}`}
+                    >
+                      <strong>
+                        {number
+                          ? number.toUpperCase().startsWith("T-")
+                            ? number
+                            : `T-${number}`
+                          : "T-#"}
+                      </strong>
+                      <span>
+                        {seats} {Number(seats) === 1 ? "Seat" : "Seats"}
+                      </span>
+                      <em>{statusLabels[tableStatus]}</em>
+                    </div>
+                    <p>Rendered scale based on standard dining parameters</p>
+                  </div>
+                  <strong className="table-preview-guide">
+                    Status Key Guide
+                  </strong>
+                  <div className="table-layout-legend">
+                    <span>
+                      <i className="available" />
+                      Available
+                    </span>
+                    <span>
+                      <i className="reserved" />
+                      Reserved
+                    </span>
+                    <span>
+                      <i className="occupied" />
+                      Occupied
+                    </span>
+                    <span>
+                      <i className="maintenance" />
+                      Maintenance
+                    </span>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="table-layout-columns">
+          <section className="table-layout-card">
+            <h2>
+              <MapPin size={17} /> Live Floor Map
+            </h2>
+            <div className="live-floor-scroll">
+              {shownFloors.map((floor) => {
+                const tables = visibleTables(floor);
+                return (
+                  <div className="live-floor" key={floor.id}>
+                    <ManagerFloorZones floor={floor} tables={tables} zoneFilter={zoneFilter} onAddZone={openZone}
+                      onEditZone={openZone} onDeleteZone={(zone) => setPendingConfirmation({ type: "zone", item: zone })} onEditTable={openEditTable} />
+                  </div>
+                );
+              })}
+            </div>
+            {floors.length === 0 && (
+              <div className="table-layout-empty">
+                <p>No floors yet. Add a floor to start mapping tables.</p>
+                <button type="button" onClick={openAddFloor}>
+                  Add your first floor
+                </button>
+              </div>
+            )}
+            <div className="table-layout-legend">
+              {Object.entries(statusLabels).map(([key, label]) => (
+                <span key={key}>
+                  <i className={key} />
+                  {label} ({counts[key] || 0})
+                </span>
+              ))}
+            </div>
+          </section>
+          <section className="table-layout-card floor-selection">
+            <header>
+              <h2>Floor Selection</h2>
+              <button
+                className="table-layout-primary"
+                type="button"
+                onClick={openAddFloor}
+              >
+                <PlusCircle size={16} /> Add Floor
+              </button>
+            </header>
+            {floors.map((floor) => {
+              const free = floor.tables.filter(
+                (table) => table.status === "available",
+              ).length;
+              return (
+                <div
+                  className={`floor-selection-row ${floorFilter === floor.id ? "active" : ""}`}
+                  key={floor.id}
+                >
+                  <button
+                    type="button"
+                    className="floor-selection-main"
+                    onClick={() => selectFloor(floor.id)}
+                  >
+                    <strong>
+                      {floor.floor_number}. {floor.floor_name || floor.name}
+                    </strong>
+                    <span className={free ? "available" : "maintenance"}>
+                      {free ? `${free} Available` : "No Availability"}
+                    </span>
+                    <small>{floor.tables.length} tables · {floor.zones?.length || 0} zones</small>
+                  </button>
+                  <div className="floor-row-actions">
+                    <button
+                      type="button"
+                      aria-label={`Edit ${floor.floor_name || floor.name}`}
+                      title="Edit floor"
+                      onClick={() => openEditFloor(floor)}
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Deactivate ${floor.floor_name || floor.name}`}
+                      title="Deactivate floor"
+                      onClick={() =>
+                        setPendingConfirmation({ type: "floor", item: floor })
+                      }
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+            {floors.length === 0 && (
+              <p className="table-layout-empty">
+                Your floors will appear here.
+              </p>
+            )}
+          </section>
+        </div>
+      </div>
+      {pendingConfirmation && (
+        <ConfirmActionDialog
+          action={pendingConfirmation.type === "zone" ? "delete" : "deactivate"}
+          resourceType={
+            pendingConfirmation.type === "table" ? "dining table" : pendingConfirmation.type === "zone" ? "zone" : "floor"
+          }
+          resourceName={
+            pendingConfirmation.type === "table"
+              ? `Table ${pendingConfirmation.item.table_number}`
+              : pendingConfirmation.item.floor_name ||
+                pendingConfirmation.item.name
+          }
+          title={
+            pendingConfirmation.type === "table"
+              ? "Deactivate this table?"
+              : pendingConfirmation.type === "zone" ? "Delete this zone?" : "Deactivate this floor?"
+          }
+          description={
+            pendingConfirmation.type === "table"
+              ? "This table will be removed from new reservations. Existing reservations and table history will be preserved. You can reactivate it by editing its status."
+              : pendingConfirmation.type === "zone" ? "Only empty zones can be deleted. Move assigned tables to another zone or general seating first." : "This floor will be hidden from active floor lists. Floor records and reservation history will be preserved."
+          }
+          busy={saving}
+          onCancel={() => {
+            if (!saving) setPendingConfirmation(null);
+          }}
+          onConfirm={() =>
+            pendingConfirmation.type === "table"
+              ? removeTable()
+              : pendingConfirmation.type === "zone" ? removeZone(pendingConfirmation.item) : deactivateFloor(pendingConfirmation.item)
+          }
+        />
+      )}
+    </ManagerLayout>
+  );
+}

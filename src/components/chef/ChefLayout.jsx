@@ -1,5 +1,8 @@
+import PageTransition from "../ui/PageTransition.jsx";
+import { PortalPage, usePortalShell } from "../ui/PortalShell.jsx";
+import PortalBreadcrumb from "../PortalBreadcrumb.jsx";
 import useNavigationDisclosure from "../../hooks/useNavigationDisclosure.js";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Bell,
   Check,
@@ -9,6 +12,8 @@ import {
   List,
   LogOut,
   Menu,
+  Settings,
+  UserRound,
   X,
 } from "lucide-react";
 import { Link, useLocation, useNavigate, useOutletContext } from "react-router-dom";
@@ -21,13 +26,16 @@ const navigation = [
   { label: "Menu", icon: List, to: "/chef/menu" },
   { label: "Service Hours", icon: Clock3, to: "/chef/service-hours" },
   { label: "Revenue & Wallet", icon: ChartNoAxesColumn, to: "/chef/revenue" },
+  { label: "Profile", icon: UserRound, to: "/chef/profile" },
+  { label: "Settings", icon: Settings, to: "/chef/settings" },
 ];
 
-export default function ChefLayout({ title, children }) {
+export function ChefFrame({ title, children }) {
   const navigate = useNavigate();
   const { hash, pathname } = useLocation();
   const { chef } = useOutletContext();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [failedAvatar, setFailedAvatar] = useState(null);
   useNavigationDisclosure(sidebarOpen, () => setSidebarOpen(false), "chef-primary-nav");
   const avatar =
     chef?.name
@@ -38,15 +46,7 @@ export default function ChefLayout({ title, children }) {
       .join("")
       .toUpperCase() || "CA";
 
-  useEffect(() => {
-    if (!hash) return;
-    const sectionId = hash.slice(1);
-    window.requestAnimationFrame(() => {
-      document
-        .getElementById(sectionId)
-        ?.scrollIntoView({ behavior: "smooth" });
-    });
-  }, [hash]);
+
 
   async function logout() {
     try {
@@ -80,7 +80,11 @@ export default function ChefLayout({ title, children }) {
           </button>
         </div>
         <div className="chef-identity-card">
-          <div className="chef-avatar-large">{avatar}</div>
+          <div className="chef-avatar-large">
+            {chef?.avatar_url && failedAvatar !== chef.avatar_url
+              ? <img src={chef.avatar_url} alt="" onError={() => setFailedAvatar(chef.avatar_url)} />
+              : avatar}
+          </div>
           <div className="chef-identity-copy">
             <strong>{chef?.name || "Chef"}</strong>
             <span>{chef?.restaurant_name || "Kitchen Team"}</span>
@@ -145,4 +149,10 @@ export default function ChefLayout({ title, children }) {
       </section>
     </main>
   );
+}
+
+export default function ChefLayout(props) {
+  const shell = usePortalShell();
+  if (shell) return <PortalPage {...props} />;
+  return <ChefFrame title={props.title}><PageTransition><PortalBreadcrumb entityLabel={props.breadcrumbLabel} />{props.children}</PageTransition></ChefFrame>;
 }

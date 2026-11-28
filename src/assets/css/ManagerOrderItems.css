@@ -1,0 +1,121 @@
+.manager-order-item-cards {
+  min-width: 0;
+}
+.manager-order-item-cards .manager-order-items-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 13px;
+}
+.manager-order-item-cards .manager-order-items-heading h3 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 0.9375rem;
+  font-weight: 650;
+}
+.manager-order-items-heading > span {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+.manager-order-item-cards .manager-order-items-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.manager-order-items-list .manager-order-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 11px;
+  background: var(--color-surface-raised);
+}
+.manager-order-item .manager-order-item-media {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-primary);
+}
+.manager-order-item-media img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.manager-order-item .manager-order-item-description {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 4px;
+  overflow-wrap: anywhere;
+}
+.manager-order-item-description > strong {
+  color: var(--color-text-primary);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+.manager-order-item-description > span,
+.manager-order-item-description > small {
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.manager-order-item-description > small {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+.manager-order-item .manager-order-item-summary {
+  display: grid;
+  justify-items: end;
+  flex-shrink: 0;
+  gap: 6px;
+}
+.manager-order-item-summary .manager-order-item-quantity {
+  min-width: 35px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+}
+.manager-order-item-summary > strong {
+  color: var(--color-text-primary);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+.manager-order-items-empty {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+}
+.reservation-linked-order-content > .manager-order-item-cards {
+  margin: 12px 0;
+}
+.manager-order-details-items > .manager-order-item-cards {
+  padding: 18px 20px;
+}
+@media (max-width: 480px) {
+  .manager-order-items-list .manager-order-item {
+    gap: 10px;
+    padding: 12px;
+  }
+  .manager-order-item .manager-order-item-media {
+    flex-basis: 40px;
+    width: 40px;
+    height: 40px;
+  }
+}

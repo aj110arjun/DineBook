@@ -1,0 +1,817 @@
+import LoadingState from "../../components/ui/LoadingState.jsx";
+import { usePageState } from "../../state/usePageState.js";
+import { formatLocalDate, formatLocalDateTime } from "../../lib/localDate.js";
+import { useEffect } from "react";
+import {
+  ArrowLeft,
+  Building2,
+  CalendarDays,
+  Clock3,
+  FileText,
+  Mail,
+  MapPin,
+  Phone,
+  RefreshCw,
+  Store,
+  User,
+  Users,
+  ShieldAlert,
+  Search,
+} from "lucide-react";
+import { Link, useParams } from "react-router-dom";
+import { useState as useModalState } from "react";
+import AdminLayout from "../../components/admin/AdminLayout.jsx";
+import ConfirmActionDialog from "../../components/ConfirmActionDialog.jsx";
+import { requestJson } from "../../lib/authApi.js";
+import Pagination from "../../components/Pagination.jsx";
+
+function Detail({ label, value, icon: Icon }) {
+  return (
+    <div className="admin-restaurant-detail-item">
+      {Icon && <Icon size={15} />}
+      <div>
+        <span>{label}</span>
+        <strong>{value || "Not provided"}</strong>
+      </div>
+    </div>
+  );
+}
+
+function compareLabels(left, right) {
+  return String(left ?? "").localeCompare(String(right ?? ""), undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
+}
+
+function formatTableStatus(status) {
+  return String(status || "Unknown")
+    .replaceAll("_", " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function getFloorTableLayout(tables) {
+  const placed = [];
+  const unplaced = [];
+  const occupied = new Set();
+  let maxRow = -1;
+  let maxColumn = 3;
+
+  for (const table of [...tables].sort((left, right) =>
+    compareLabels(left.table_number, right.table_number),
+  )) {
+    const row = table.grid_row;
+    const column = table.grid_col;
+    const key = `${row}:${column}`;
+    if (
+      Number.isInteger(row) &&
+      row >= 0 &&
+      Number.isInteger(column) &&
+      column >= 0 &&
+      !occupied.has(key)
+    ) {
+      placed.push({ table, row, column });
+      occupied.add(key);
+      maxRow = Math.max(maxRow, row);
+      maxColumn = Math.max(maxColumn, column);
+    } else {
+      unplaced.push(table);
+    }
+  }
+
+  unplaced.forEach((table, index) => {
+    const row = maxRow + 1 + Math.floor(index / 4);
+    const column = index % 4;
+    placed.push({ table, row, column });
+    maxColumn = Math.max(maxColumn, column);
+  });
+
+  return {
+    columns: maxColumn + 1,
+    tables: placed.sort(
+      (left, right) =>
+        left.row - right.row ||
+        left.column - right.column ||
+        compareLabels(left.table.table_number, right.table.table_number),
+    ),
+  };
+}
+
+export default function AdminRestaurantDetailsPage() {
+  const { restaurantId } = useParams();
+  const [action, setAction] = useModalState("");
+  const [reason, setReason] = useModalState("");
+  const [busy, setBusy] = useModalState(false);
+  const [actionError, setActionError] = useModalState("");
+  const [detailsRefresh, setDetailsRefresh] = useModalState(0);
+  const [scheduleRefresh, setScheduleRefresh] = useModalState(0);
+  const [
+    {
+      restaurant, floorData, operatingSchedule, loading, error,
+      operatingScheduleError, operatingScheduleLoading, tableQuery, tableStatus,
+      menuQuery, menuCategory, menuAvailability, menuSort, menuPage,
+    },
+    {
+      restaurant: setRestaurant, floorData: setFloorData,
+      operatingSchedule: setOperatingSchedule, loading: setLoading,
+      error: setError,
+      operatingScheduleError: setOperatingScheduleError,
+      operatingScheduleLoading: setOperatingScheduleLoading,
+      tableQuery: setTableQuery, tableStatus: setTableStatus,
+      menuQuery: setMenuQuery, menuCategory: setMenuCategory,
+      menuAvailability: setMenuAvailability, menuSort: setMenuSort,
+      menuPage: setMenuPage,
+    },
+  ] = usePageState("AdminRestaurantDetailsPage", () => ({
+    restaurant: null,
+    floorData: [],
+    operatingSchedule: null,
+    operatingScheduleError: "",
+    operatingScheduleLoading: true,
+    loading: true,
+    error: "",
+    tableQuery: "",
+    tableStatus: "ALL",
+    menuQuery: "",
+    menuCategory: "ALL",
+    menuAvailability: "ALL",
+    menuSort: "name",
+    menuPage: 1,
+  }));
+  const menuPageSize = 10;
+
+  const orderedFloors = [...floorData].sort(
+    (left, right) =>
+      Number(left.floor_number ?? Number.MAX_SAFE_INTEGER) -
+        Number(right.floor_number ?? Number.MAX_SAFE_INTEGER) ||
+      compareLabels(left.name, right.name),
+  );
+  const [
+    { visibleMenuFoods, menuTotal, menuCategories, menuLoading, menuError },
+    {
+      visibleMenuFoods: setVisibleMenuFoods, menuTotal: setMenuTotal,
+      menuCategories: setMenuCategories, menuLoading: setMenuLoading,
+      menuError: setMenuError,
+    },
+  ] = usePageState("AdminRestaurantDetailsPage", () => ({
+    visibleMenuFoods: [],
+    menuTotal: 0,
+    menuCategories: [],
+    menuLoading: false,
+    menuError: "",
+  }));
+  const menuPageCount = Math.max(1, Math.ceil(menuTotal / menuPageSize));
+  useEffect(() => {
+    let alive = true;
+    setMenuLoading(true);
+    setMenuError("");
+    const params = new URLSearchParams({ page: menuPage, page_size: menuPageSize, search: menuQuery, availability: menuAvailability, sort: menuSort });
+    if (menuCategory !== "ALL") params.set("category_id", menuCategory);
+    requestJson(`/api/admin/restaurants/${restaurantId}/menu?${params}`)
+      .then((data) => {
+        if (!alive) return;
+        setVisibleMenuFoods(data.items);
+        setMenuTotal(data.total);
+        setMenuCategories(data.categories);
+      })
+      .catch((reason) => alive && setMenuError(reason.message))
+      .finally(() => alive && setMenuLoading(false));
+    return () => { alive = false; };
+  }, [restaurantId, menuPage, menuQuery, menuCategory, menuAvailability, menuSort]);
+  useEffect(() => {
+    setMenuPage(1);
+  }, [menuCategory, menuQuery, menuAvailability, menuSort]);
+  useEffect(() => {
+    setMenuPage((current) => Math.min(current, menuPageCount));
+  }, [menuPageCount]);
+
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    setError("");
+    requestJson(`/api/admin/restaurants/${restaurantId}?include_menu=false`)
+      .then((data) => mounted && setRestaurant(data))
+      .catch((reason) => mounted && setError(reason.message))
+      .finally(() => mounted && setLoading(false));
+    return () => {
+      mounted = false;
+    };
+  }, [restaurantId, detailsRefresh]);
+
+  useEffect(() => {
+    requestJson(`/api/admin/restaurants/${restaurantId}/floors`)
+      .then(setFloorData)
+      .catch(() => setFloorData([]));
+  }, [restaurantId]);
+
+  useEffect(() => {
+    let active = true;
+    setOperatingScheduleLoading(true);
+    setOperatingScheduleError("");
+    requestJson(
+      `/api/admin/restaurants/${restaurantId}/operating-hours`,
+    )
+      .then((data) => active && setOperatingSchedule(data))
+      .catch((reason) => {
+        if (!active) return;
+        setOperatingSchedule(null);
+        setOperatingScheduleError(
+          reason.message || "Unable to load operating hours.",
+        );
+      })
+      .finally(() => active && setOperatingScheduleLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [
+    restaurantId,
+    scheduleRefresh,
+    setOperatingSchedule,
+    setOperatingScheduleError,
+    setOperatingScheduleLoading,
+  ]);
+
+  async function confirmStatusChange() {
+    setBusy(true);
+    setActionError("");
+    try {
+      const suspending = action === "suspend";
+      const updated = await requestJson(
+        `/api/admin/restaurants/${restaurantId}/${action}`,
+        {
+          method: "POST",
+          ...(suspending ? { body: JSON.stringify({ reason }) } : {}),
+        },
+      );
+      setRestaurant((current) => ({ ...current, status: updated.status }));
+      setAction("");
+      setReason("");
+      if (updated.email_sent === false)
+        setActionError(
+          "Restaurant suspended, but the manager notification email could not be sent.",
+        );
+    } catch (err) {
+      setActionError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <AdminLayout breadcrumbLabel={restaurant?.name} title="Restaurant Details" activePath="/admin/restaurants">
+      <div
+        className={`admin-dashboard-content ${restaurant && !loading && !error ? "admin-restaurant-detail-layout" : ""}`}
+      >
+        <Link className="admin-restaurant-back" to="/admin/restaurants">
+          <ArrowLeft size={16} /> Back to restaurants
+        </Link>
+        {loading ? (
+          <LoadingState variant="detail" label="Loading restaurant details…" />
+        ) : error ? (
+          <div className="admin-request-error admin-restaurant-load-error" role="alert">
+            {error}
+            <button type="button" onClick={() => setDetailsRefresh((value) => value + 1)}>
+              <RefreshCw size={15} /> Retry
+            </button>
+          </div>
+        ) : restaurant ? (
+          <>
+            <div className="admin-restaurant-detail-heading">
+              <div className="admin-restaurant-profile">
+                <span className="admin-restaurant-profile-icon" aria-hidden="true">
+                  <Store size={23} />
+                </span>
+                <div className="admin-restaurant-profile-copy">
+                  <span className="admin-restaurant-eyebrow">RESTAURANT PROFILE</span>
+                  <h2 title={restaurant.name}>{restaurant.name}</h2>
+                  <p>
+                    {[restaurant.cuisine_type, restaurant.city, restaurant.state]
+                      .filter(Boolean)
+                      .join(" · ") || "Restaurant details"}
+                  </p>
+                  {restaurant.created_at && (
+                    <small>
+                      Registered {formatLocalDateTime(restaurant.created_at, { timeStyle: "medium" })}
+                    </small>
+                  )}
+                </div>
+              </div>
+              <div className="admin-restaurant-status-actions">
+                <span
+                  className={`restaurant-status ${restaurant.status?.toLowerCase()}`}
+                >
+                  {restaurant.status}
+                </span>
+                {restaurant.status === "SUSPENDED" ? (
+                  <button
+                    className="admin-confirm-submit approve"
+                    onClick={() => setAction("resume")}
+                  >
+                    Resume restaurant
+                  </button>
+                ) : restaurant.status === "APPROVED" ? (
+                  <button
+                    className="admin-confirm-submit reject"
+                    onClick={() => setAction("suspend")}
+                  >
+                    <ShieldAlert size={15} /> Suspend restaurant
+                  </button>
+                ) : null}
+              </div>
+            </div>
+            {actionError && (
+              <div
+                className="admin-request-error admin-restaurant-wide-card admin-restaurant-action-error"
+                role="alert"
+              >
+                {actionError}
+              </div>
+            )}
+
+            <section className="admin-restaurant-detail-card admin-restaurant-information-card">
+              <h3>
+                <Store size={17} /> Restaurant information
+              </h3>
+              <div className="admin-restaurant-detail-grid">
+                <Detail
+                  label="Cuisine"
+                  value={restaurant.cuisine_type}
+                  icon={Store}
+                />
+                <Detail
+                  label="Restaurant email"
+                  value={restaurant.email}
+                  icon={Mail}
+                />
+                <Detail label="Phone" value={restaurant.phone} icon={Phone} />
+                <Detail
+                  label="Registered"
+                  value={
+                    restaurant.created_at
+                      ? formatLocalDateTime(restaurant.created_at, { timeStyle: "medium" })
+                      : null
+                  }
+                  icon={CalendarDays}
+                />
+              </div>
+            </section>
+
+            <section className="admin-restaurant-detail-card admin-restaurant-manager-card">
+              <h3>
+                <User size={17} /> Manager information
+              </h3>
+              <div className="admin-restaurant-detail-grid">
+                <Detail
+                  label="Manager name"
+                  value={restaurant.manager?.name}
+                  icon={User}
+                />
+                <Detail
+                  label="Manager email"
+                  value={restaurant.manager?.email}
+                  icon={Mail}
+                />
+                <Detail
+                  label="Manager account status"
+                  value={restaurant.manager?.status}
+                  icon={User}
+                />
+                <Detail
+                  label="Manager access"
+                  value={
+                    restaurant.manager?.is_active == null
+                      ? null
+                      : restaurant.manager.is_active
+                        ? "Active"
+                        : "Inactive"
+                  }
+                  icon={ShieldAlert}
+                />
+              </div>
+            </section>
+
+            <section className="admin-restaurant-detail-card admin-restaurant-wide-card admin-restaurant-description-card">
+              <h3>
+                <FileText size={17} /> Description
+              </h3>
+              <p className="admin-restaurant-description-text">
+                {restaurant.description || "No description provided."}
+              </p>
+            </section>
+
+            <section className="admin-restaurant-detail-card admin-restaurant-wide-card admin-restaurant-address-card">
+              <h3>
+                <MapPin size={17} /> Address
+              </h3>
+              <div className="admin-restaurant-detail-grid">
+                <Detail
+                  label="Street address"
+                  value={restaurant.address}
+                  icon={MapPin}
+                />
+                <Detail label="City" value={restaurant.city} icon={MapPin} />
+                <Detail label="State" value={restaurant.state} icon={MapPin} />
+                <Detail
+                  label="PIN code"
+                  value={restaurant.pin_code}
+                  icon={MapPin}
+                />
+              </div>
+            </section>
+
+            <section className="admin-restaurant-detail-card admin-restaurant-wide-card admin-restaurant-hours-card">
+              <h3>
+                <Clock3 size={17} /> Operating hours
+              </h3>
+              {operatingScheduleLoading && !operatingSchedule ? (
+                <div
+                  className="admin-restaurant-hours-skeleton"
+                  role="status"
+                  aria-label="Loading operating schedule"
+                  aria-busy="true"
+                >
+                  {Array.from({ length: 7 }, (_, index) => (
+                    <span key={index} />
+                  ))}
+                </div>
+              ) : operatingSchedule?.days?.length ? (
+                <div className="admin-restaurant-hours">
+                  {operatingSchedule.days.map((day) => (
+                    <div
+                      className={`admin-restaurant-hours-day ${day.periods.length ? "is-open" : "is-closed"}`}
+                      key={day.day}
+                    >
+                      <div className="admin-restaurant-hours-day-heading">
+                        <strong>{day.day}</strong>
+                        <span>{day.periods.length ? "Open" : "Closed"}</span>
+                      </div>
+                      {day.periods.length ? (
+                        <div className="admin-restaurant-hours-periods">
+                          {day.periods.map((period) => (
+                            <span key={`${period.opens}-${period.closes}`}>
+                              {period.opens} – {period.closes}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p>Closed all day</p>
+                      )}
+                      {day.updated_at && (
+                        <small className="operating-audit">
+                          Updated {formatLocalDateTime(day.updated_at, { timeStyle: "medium" })}
+                          {day.updated_by ? ` · user ${day.updated_by}` : ""}
+                        </small>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="admin-restaurant-schedule-message">
+                  <p className="admin-restaurant-empty">
+                    {operatingScheduleLoading
+                      ? "Loading operating schedule…"
+                      : operatingScheduleError || "No operating hours have been provided."}
+                  </p>
+                  {operatingScheduleError && (
+                    <button
+                      type="button"
+                      className="admin-restaurant-retry"
+                      onClick={() => setScheduleRefresh((value) => value + 1)}
+                    >
+                      <RefreshCw size={14} /> Retry schedule
+                    </button>
+                  )}
+                </div>
+              )}
+              <small>
+                Schedule time zone:{" "}
+                {operatingSchedule?.timezone || "Asia/Kolkata"}
+              </small>
+              <details className="admin-restaurant-exceptions">
+                <summary>
+                  Schedule exceptions and history
+                  <span>{operatingSchedule?.exceptions?.length || 0}</span>
+                </summary>
+                {operatingSchedule?.exceptions?.length ? (
+                  <ul className="operating-exception-list">
+                    {operatingSchedule.exceptions.map((item) => (
+                      <li key={item.id}>
+                        <div>
+                          <strong>
+                            {formatLocalDate(item.start_date)}
+                            {item.end_date !== item.start_date
+                              ? ` – ${formatLocalDate(item.end_date)}`
+                              : ""}
+                          </strong>
+                          <span>
+                            {item.is_closed
+                              ? "Closed"
+                              : item.periods
+                                  .map((period) => `${period.opens}–${period.closes}`)
+                                  .join(" · ")}
+                          </span>
+                          {item.reason && <small>{item.reason}</small>}
+                          {item.updated_at && (
+                            <small>
+                              Updated {formatLocalDateTime(item.updated_at, { timeStyle: "medium" })}
+                              {item.created_by ? ` · user ${item.created_by}` : ""}
+                            </small>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>No exceptions have been recorded.</p>
+                )}
+              </details>
+            </section>
+
+            <section className="admin-restaurant-detail-card admin-restaurant-wide-card">
+              <h3>
+                <FileText size={17} /> Submitted documents
+              </h3>
+              {restaurant.documents?.length ? (
+                <div className="admin-restaurant-documents">
+                  {restaurant.documents.map((document) => (
+                    <a
+                      key={document.id}
+                      href={document.file_path}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <FileText size={17} />
+                      <span>
+                        <strong>
+                          {document.document_type.replaceAll("_", " ")}
+                        </strong>
+                        <small>{document.file_name}</small>
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <p className="admin-restaurant-empty">
+                  No documents have been uploaded.
+                </p>
+              )}
+            </section>
+
+            <section className="admin-restaurant-detail-card admin-restaurant-wide-card">
+              <h3>
+                <Building2 size={17} /> Floor and table oversight
+              </h3>
+              {orderedFloors.length ? (
+                <>
+                  <div className="admin-page-actions">
+                    <div className="admin-search">
+                      <Search size={15} />
+                      <input
+                        type="search"
+                        value={tableQuery}
+                        onChange={(event) => setTableQuery(event.target.value)}
+                        placeholder="Search table or floor"
+                        aria-label="Search floor tables"
+                      />
+                    </div>
+                    <select
+                      className="admin-filter-select"
+                      aria-label="Filter tables by status"
+                      value={tableStatus}
+                      onChange={(event) => setTableStatus(event.target.value)}
+                    >
+                      <option value="ALL">All table statuses</option>
+                      {[
+                        ...new Set(
+                          orderedFloors
+                            .flatMap((floor) =>
+                              floor.tables.map((table) => table.status),
+                            )
+                            .filter(Boolean),
+                        ),
+                      ]
+                        .sort()
+                        .map((status) => (
+                          <option key={status} value={status}>
+                            {formatTableStatus(status)}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  <div className="admin-floor-list">
+                    {orderedFloors.map((floor) => {
+                      const floorLayout = getFloorTableLayout(floor.tables);
+                      const tables = floorLayout.tables
+                        .filter(
+                          ({ table }) =>
+                            (tableStatus === "ALL" ||
+                              table.status === tableStatus) &&
+                            (!tableQuery.trim() ||
+                              `${table.table_number} ${table.id} ${floor.name}`
+                                .toLowerCase()
+                                .includes(tableQuery.trim().toLowerCase())),
+                        );
+                      return (
+                        <article className="admin-floor-item" key={floor.id}>
+                          <div className="admin-floor-heading">
+                            <strong>{floor.name}</strong>
+                            <span>
+                              {tables.length}{" "}
+                              {tables.length === 1 ? "table" : "tables"}
+                            </span>
+                          </div>
+                          {tables.length ? (
+                            <div className="admin-floor-map-scroll">
+                              <div
+                                className="admin-floor-map"
+                                role="group"
+                                aria-label={`${floor.name} table layout`}
+                                style={{
+                                  gridTemplateColumns: `repeat(${floorLayout.columns}, minmax(94px, 1fr))`,
+                                  minWidth: `max(100%, ${floorLayout.columns * 118}px)`,
+                                }}
+                              >
+                                {tables.map(({ table, row, column }) => (
+                                  <div
+                                    className={`admin-floor-map-table ${table.table_type || "round"} ${table.status?.toLowerCase() || ""}`}
+                                    key={table.id}
+                                    style={{
+                                      gridRow: row + 1,
+                                      gridColumn: column + 1,
+                                    }}
+                                    role="img"
+                                    aria-label={`Table ${table.table_number}, ${table.seats} seats, ${formatTableStatus(table.status)}`}
+                                  >
+                                    <strong>Table {table.table_number}</strong>
+                                    <span>{table.seats} seats</span>
+                                    <small>
+                                      {formatTableStatus(table.status)}
+                                    </small>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="admin-floor-empty">
+                              No tables match these filters.
+                            </p>
+                          )}
+                        </article>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                <p className="admin-restaurant-empty">
+                  No floors or tables configured.
+                </p>
+              )}
+            </section>
+
+            <section className="admin-restaurant-detail-card admin-restaurant-wide-card">
+              <h3>
+                <Store size={17} /> Menu inspection
+              </h3>
+              {menuError && <p role="alert">{menuError}</p>}
+              {menuLoading && <LoadingState variant="menu" label="Loading menu…" />}
+              {menuCategories.length ? (
+                <>
+                  <div className="admin-page-actions">
+                    <div className="admin-search">
+                      <Search size={15} />
+                      <input
+                        type="search"
+                        value={menuQuery}
+                        onChange={(event) => setMenuQuery(event.target.value)}
+                        placeholder="Search dish or description"
+                        aria-label="Search inspected menu"
+                      />
+                    </div>
+                    <select
+                      className="admin-filter-select"
+                      aria-label="Filter menu category"
+                      value={menuCategory}
+                      onChange={(event) => setMenuCategory(event.target.value)}
+                    >
+                      <option value="ALL">All categories</option>
+                      {menuCategories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className="admin-filter-select"
+                      aria-label="Filter dish availability"
+                      value={menuAvailability}
+                      onChange={(event) =>
+                        setMenuAvailability(event.target.value)
+                      }
+                    >
+                      <option value="ALL">All availability</option>
+                      <option value="AVAILABLE">Available</option>
+                      <option value="UNAVAILABLE">Unavailable</option>
+                    </select>
+                    <select
+                      className="admin-filter-select"
+                      aria-label="Sort menu dishes"
+                      value={menuSort}
+                      onChange={(event) => setMenuSort(event.target.value)}
+                    >
+                      <option value="name">Name A–Z</option>
+                      <option value="name-desc">Name Z–A</option>
+                    </select>
+                  </div>
+                  {visibleMenuFoods.length ? (
+                    <div className="admin-menu-inspection-grid">
+                      {visibleMenuFoods.map((food) => (
+                        <article key={food.id}>
+                          {food.image_url && (
+                            <img
+                              src={food.image_url}
+                              alt={food.name}
+                              loading="lazy"
+                            />
+                          )}
+                          <small>{food.category_name}</small>
+                          <h4>
+                            {food.name}
+                            {!food.is_available && " · Unavailable"}
+                          </h4>
+                          {food.description && <p>{food.description}</p>}
+                          {food.variants?.length ? (
+                            <ul>
+                              {food.variants.map((variant) => (
+                                <li key={variant.id}>
+                                  {variant.name} · ₹
+                                  {Number(variant.price).toFixed(2)}
+                                  {!variant.is_available && " · Unavailable"}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <small>No variants</small>
+                          )}
+                        </article>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="admin-restaurant-empty">
+                      No menu items match these filters.
+                    </p>
+                  )}
+                  {menuTotal > 0 && (
+                    <Pagination
+                      page={menuPage}
+                      pageSize={menuPageSize}
+                      total={menuTotal}
+                      onPageChange={setMenuPage}
+                      label="menu items"
+                    />
+                  )}
+                </>
+              ) : (
+                <p className="admin-restaurant-empty">
+                  No menu categories have been added.
+                </p>
+              )}
+            </section>
+          </>
+        ) : null}
+      </div>
+      {action && (
+        <ConfirmActionDialog
+          action={action}
+          resourceType="restaurant"
+          resourceName={restaurant?.name}
+          title={
+            action === "suspend"
+              ? "Suspend this restaurant?"
+              : "Resume this restaurant?"
+          }
+          description={
+            action === "suspend"
+              ? `${restaurant?.name} will disappear from customer pages. The owner and chefs will lose portal access, and the owner will be notified by email.`
+              : `${restaurant?.name} will return to customer pages and manager portal access will be restored.`
+          }
+          confirmLabel={
+            action === "suspend" ? "Suspend restaurant" : "Resume restaurant"
+          }
+          busy={busy}
+          requireReason={action === "suspend"}
+          reasonLabel="Reason for suspension"
+          reason={reason}
+          onReasonChange={setReason}
+          onCancel={() => {
+            if (!busy) {
+              setAction("");
+              setReason("");
+            }
+          }}
+          onConfirm={confirmStatusChange}
+        />
+      )}
+    </AdminLayout>
+  );
+}

@@ -1,0 +1,453 @@
+:root {
+  --motion-fast: 140ms;
+  --motion-page: 220ms;
+  --motion-ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.db-page-transition {
+  min-width: 0;
+}
+.db-page-transition > .portal-breadcrumb {
+  margin: var(--space-5) var(--space-6) 0;
+}
+.portal-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+.portal-breadcrumb-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  max-width: 100%;
+}
+.portal-breadcrumb :is(a, strong) {
+  display: inline-block;
+  min-width: 0;
+  max-width: min(36vw, 280px);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+.portal-breadcrumb a {
+  color: var(--color-link);
+  text-decoration: none;
+  padding-block: var(--space-2);
+}
+.portal-breadcrumb a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.portal-breadcrumb [aria-current="page"] {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+.customer-portal-shell {
+  --customer-content-width: var(--content-width);
+  --customer-content-gutter: clamp(18px, 3vw, 48px);
+  min-height: 100dvh;
+}
+.customer-portal-shell > .customer-home {
+  min-height: 0;
+}
+.customer-portal-shell:has(.restaurant-details-page) {
+  --customer-content-width: 1440px;
+  --customer-content-gutter: clamp(22px, 4.5vw, 64px);
+}
+.customer-portal-shell .header-inner {
+  max-width: var(--customer-content-width);
+  padding-inline: var(--customer-content-gutter);
+}
+.customer-route-breadcrumb {
+  width: 100%;
+  box-sizing: border-box;
+  max-width: var(--customer-content-width, var(--content-width));
+  min-height: 30px;
+  margin: var(--space-5) auto var(--space-3);
+  padding-inline: var(--customer-content-gutter, var(--space-6));
+}
+.customer-portal-shell .restaurant-details-page {
+  max-width: var(--customer-content-width);
+  padding-inline: var(--customer-content-gutter);
+}
+.db-skeleton {
+  display: block;
+  flex-shrink: 0;
+  width: 100%;
+  height: var(--space-3);
+  border-radius: var(--radius-control);
+  background: var(--color-border);
+  animation: db-skeleton-pulse 1.8s ease-in-out infinite;
+}
+.db-skeleton.is-circle {
+  border-radius: 50%;
+}
+.db-skeleton.is-static {
+  animation: none;
+}
+.db-skeleton-text {
+  display: grid;
+  gap: var(--space-3);
+  width: 100%;
+}
+.db-skeleton-card {
+  display: grid;
+  align-content: start;
+  gap: var(--space-5);
+  min-width: 0;
+  padding: var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+.db-skeleton-image {
+  height: 180px;
+  margin: calc(-1 * var(--space-6)) calc(-1 * var(--space-6)) 0;
+  width: calc(100% + var(--space-12));
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+}
+.db-skeleton-grid,
+.db-skeleton-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin-block: var(--space-4);
+}
+.db-skeleton-grid.has-cards,
+.db-skeleton-stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.db-skeleton-grid.is-list {
+  grid-template-columns: 1fr;
+}
+.db-skeleton-chart {
+  height: 220px;
+  display: flex;
+  align-items: end;
+  gap: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+.db-skeleton-chart > .db-skeleton {
+  flex: 1;
+  min-width: 0;
+  border-radius: var(--radius-control) var(--radius-control) 0 0;
+}
+.db-skeleton-table {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  margin-block: var(--space-4);
+}
+.db-skeleton-table table {
+  width: 100%;
+  min-width: 420px;
+  border-collapse: collapse;
+}
+.db-skeleton-table :is(th, td) {
+  padding: var(--space-5) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+.db-skeleton-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+.db-skeleton-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6);
+}
+.db-skeleton-fields > div {
+  display: grid;
+  gap: var(--space-3);
+}
+.db-skeleton-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--space-2);
+  padding: var(--space-4);
+}
+.db-skeleton-chat {
+  padding: var(--space-5);
+  display: grid;
+  gap: var(--space-5);
+}
+.db-skeleton-chat > div {
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+}
+.db-skeleton-chat > div:nth-child(2) {
+  justify-self: end;
+}
+.db-loading-state {
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+}
+.db-skeleton.db-skeleton-copy {
+  width: fit-content;
+  max-width: 100%;
+  height: auto;
+  color: transparent;
+  border-radius: 4px;
+  user-select: none;
+}
+.db-dashboard-skeleton-bars {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  padding: 12px 12px 32px 48px;
+}
+.db-dashboard-skeleton-bars > .db-skeleton {
+  flex: 1;
+  min-width: 0;
+  border-radius: 3px 3px 0 0;
+}
+.db-dashboard-skeleton-pair {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+.db-dashboard-skeleton-donut .manager-order-legend { flex: 1; min-width: 0; }
+.db-dashboard-skeleton-donut .manager-order-legend > div > .db-skeleton:nth-child(2) { flex-shrink: 1; min-width: 0; }
+.db-refresh-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block: var(--space-3);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.db-refresh-indicator svg {
+  animation: db-refresh-spin 1.5s linear infinite;
+  flex-shrink: 0;
+}
+.db-content-state {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  padding: var(--space-8);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+.db-content-state p,
+.db-content-state h3 {
+  margin: 0;
+}
+.db-content-state.is-error {
+  color: var(--color-danger);
+}
+.db-content-state button {
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+:where(
+  button,
+  .db-portal-button,
+  .db-portal-nav-item,
+  .manager-nav-item,
+  .chef-nav-item,
+  .admin-nav-item,
+  .profile-menu a
+) {
+  transition:
+    background-color var(--motion-fast),
+    color var(--motion-fast),
+    border-color var(--motion-fast),
+    box-shadow var(--motion-fast);
+}
+.db-portal-button,
+.db-portal-control {
+  transition:
+    background-color var(--motion-fast),
+    color var(--motion-fast),
+    border-color var(--motion-fast),
+    box-shadow var(--motion-fast);
+}
+button:enabled:active {
+  filter: brightness(0.96);
+}
+button:disabled {
+  opacity: 0.6;
+}
+:is(.manager-nav-item, .chef-nav-item, .admin-nav-item) {
+  transition:
+    background-color var(--motion-page),
+    color var(--motion-page),
+    box-shadow var(--motion-page);
+}
+@media (hover: hover) {
+  :is(
+    a.restaurant-card,
+    .restaurant-card:has(a),
+    .manager-quick-actions button
+  ) {
+    transition:
+      transform var(--motion-page),
+      box-shadow var(--motion-page);
+  }
+  :is(
+    a.restaurant-card,
+    .restaurant-card:has(a),
+    .manager-quick-actions button
+  ):hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-popover);
+  }
+}
+.action-confirm-backdrop {
+  animation: db-overlay-in var(--motion-fast) ease-out;
+}
+.action-confirm-dialog {
+  animation: db-dialog-in var(--motion-page) var(--motion-ease);
+}
+.action-confirm-backdrop.is-closing {
+  animation: db-overlay-out var(--motion-fast) ease-in forwards;
+  pointer-events: none;
+}
+.action-confirm-backdrop.is-closing .action-confirm-dialog {
+  animation: db-dialog-out var(--motion-fast) ease-in forwards;
+}
+:is(
+  .db-notification-popover,
+  .db-notification-toast,
+  .custom-date-popover,
+  .custom-time-popover
+) {
+  animation: db-dialog-in var(--motion-fast) ease-out;
+}
+.db-notification-toast.is-closing {
+  animation: db-dialog-out var(--motion-fast) ease-in forwards;
+}
+@keyframes db-skeleton-pulse {
+  50% {
+    opacity: 0.48;
+  }
+}
+@keyframes db-refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes db-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes db-overlay-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes db-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes db-dialog-out {
+  to {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+}
+/* Off-screen mobile links leave the keyboard order when the drawer closes. */
+@media (max-width: 900px) {
+  .manager-sidebar {
+    visibility: hidden;
+    transition:
+      transform var(--motion-page) ease,
+      visibility 0s var(--motion-page);
+  }
+  .manager-sidebar.open {
+    visibility: visible;
+    transition-delay: 0s;
+  }
+}
+@media (max-width: 800px) {
+  .admin-sidebar {
+    visibility: hidden;
+    transition:
+      transform var(--motion-page) ease,
+      visibility 0s var(--motion-page);
+  }
+  .admin-sidebar.is-open {
+    visibility: visible;
+    transition-delay: 0s;
+  }
+}
+@media (max-width: 760px) {
+  .chef-sidebar {
+    visibility: hidden;
+    transition:
+      transform var(--motion-page) ease,
+      visibility 0s var(--motion-page);
+  }
+  .chef-sidebar.is-open {
+    visibility: visible;
+    transition-delay: 0s;
+  }
+}
+@media (max-width: 800px) {
+  .db-skeleton-grid.has-cards,
+  .db-skeleton-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 1280px) {
+  .customer-portal-shell:has(.restaurant-details-page) {
+    --customer-content-gutter: clamp(16px, 3vw, 32px);
+  }
+}
+@media (max-width: 520px) {
+  .db-skeleton-grid,
+  .db-skeleton-grid.has-cards,
+  .db-skeleton-stats,
+  .db-skeleton-fields {
+    grid-template-columns: 1fr;
+  }
+  .db-skeleton-chart {
+    height: 180px;
+  }
+  .db-page-transition > .portal-breadcrumb {
+    margin-inline: var(--space-4);
+  }
+  .portal-breadcrumb :is(a, strong) {
+    max-width: 42vw;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .db-skeleton,
+  .db-refresh-indicator svg,
+  .action-confirm-backdrop,
+  .action-confirm-dialog,
+  .db-notification-toast {
+    animation: none !important;
+  }
+  .manager-sidebar,
+  .chef-sidebar,
+  .admin-sidebar {
+    transition: none !important;
+  }
+}

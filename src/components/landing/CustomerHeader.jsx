@@ -1,14 +1,17 @@
+import { CustomerHeaderRegistration, useCustomerShell } from "../ui/CustomerShell.jsx";
 import useNavigationDisclosure from "../../hooks/useNavigationDisclosure.js";
-import axios from "axios";
 import { useState, useEffect } from "react";
-import { MapPin, Menu, Utensils, X } from "lucide-react";
+import { MapPin, Menu, Settings, Utensils, X } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { API_BASE } from "../../lib/authApi.js";
-import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
+import { demoCustomer } from "../../data/demoCustomer.js";
 import NotificationSession from "../notifications/NotificationSession.jsx";
 import NotificationBell from "../notifications/NotificationBell.jsx";
+import { useSelector } from "react-redux";
+import CustomerAiSupport from "../customer/CustomerAiSupport.jsx";
 
-export default function CustomerHeader({ user, onLogout }) {
+export function CustomerHeaderFrame({ user }) {
+  const sharedUser = useSelector((state) => state.customerSession.user);
+  if (user && sharedUser?.id === user.id) user = sharedUser;
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -32,34 +35,6 @@ export default function CustomerHeader({ user, onLogout }) {
       desktop.removeEventListener("change", closeOnDsktop);
     };
   }, []);
-
-  async function signOut() {
-    try {
-      // Development demo session
-      if (
-        import.meta.env.DEV &&
-        sessionStorage.getItem(demoSessionKey) === "active"
-      ) {
-        sessionStorage.removeItem(demoSessionKey);
-        onLogout?.();
-        return;
-      }
-
-      // Real backend logout
-      await axios.request({
-        url: `${API_BASE}/api/auth/logout`,
-        validateStatus: () => true,
-        method: "POST",
-        withCredentials: true,
-      });
-    } catch (error) {
-      console.error("Logout failed:", error);
-    } finally {
-      // Update the landing page state.
-      // We intentionally DO NOT navigate to login.
-      onLogout?.();
-    }
-  }
 
   const closeMenu = () => setMenuOpen(false);
 
@@ -180,6 +155,17 @@ export default function CustomerHeader({ user, onLogout }) {
                     navigate("/customer/profile");
                   }}
                 >
+                  {user.avatar_url && (
+                    <img
+                      key={user.avatar_url}
+                      className="customer-header-avatar"
+                      src={user.avatar_url}
+                      alt=""
+                      onError={(event) => {
+                        event.currentTarget.hidden = true;
+                      }}
+                    />
+                  )}
                   {user?.name?.split(" ")[0] || "Profile"}
                 </button>
               </>
@@ -208,6 +194,7 @@ export default function CustomerHeader({ user, onLogout }) {
             )}
           </div>
         </nav>
+        {(!user?.role || user.role === "CUSTOMER") && <CustomerAiSupport onOpen={closeMenu} />}
       </div>
     </header>
   );
@@ -217,4 +204,9 @@ export default function CustomerHeader({ user, onLogout }) {
   ) : (
     header
   );
+}
+
+export default function CustomerHeader(props) {
+  const shell = useCustomerShell();
+  return shell ? <CustomerHeaderRegistration {...props} /> : <CustomerHeaderFrame {...props} />;
 }

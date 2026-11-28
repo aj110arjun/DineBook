@@ -1,4 +1,4 @@
-import { formatLocalDate } from "../lib/localDate.js";
+import { formatLocalDate, formatWallTime } from "../lib/localDate.js";
 import { useEffect, useRef, useState } from "react";
 import { CalendarDays, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -17,12 +17,50 @@ function today() {
   }).format(new Date());
 }
 
-export default function RestaurantBookingDock({ restaurant, open, onOpenChange }) {
+export default function RestaurantBookingDock({
+  restaurant,
+  open,
+  onOpenChange,
+  eligibility,
+  eligibilityLoading = false,
+  eligibilityError = "",
+}) {
   const navigate = useNavigate();
   const dialogRef = useRef(null);
+  const dockRef = useRef(null);
   const [date, setDate] = useState(today);
   const [guests, setGuests] = useState("2");
   const [time, setTime] = useState("20:00");
+  const retryTimestamp = eligibility?.retry_at
+    ? Date.parse(eligibility.retry_at)
+    : Number.NaN;
+  const reservationBlocked = eligibility?.can_reserve === false;
+  const retryAtLabel = Number.isFinite(retryTimestamp)
+    ? new Intl.DateTimeFormat("en-IN", {
+        dateStyle: "medium",
+        timeStyle: "short",
+        timeZone: "Asia/Kolkata",
+      }).format(new Date(retryTimestamp))
+    : null;
+
+  useEffect(() => {
+    const dock = dockRef.current;
+    const root = document.documentElement;
+    const property = "--restaurant-booking-dock-height";
+    const previous = root.style.getPropertyValue(property);
+    const measure = () => {
+      const height = `${Math.ceil(dock.getBoundingClientRect().height)}px`;
+      if (root.style.getPropertyValue(property) !== height) root.style.setProperty(property, height);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(dock);
+    return () => {
+      observer.disconnect();
+      if (previous) root.style.setProperty(property, previous);
+      else root.style.removeProperty(property);
+    };
+  }, []);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -40,22 +78,35 @@ export default function RestaurantBookingDock({ restaurant, open, onOpenChange }
   }, [open]);
 
   const dateLabel = formatLocalDate(date);
-  const timeLabel = new Intl.DateTimeFormat("en-IN", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-    timeZone: "Asia/Kolkata",
-  }).format(new Date(`${date}T${time}:00+05:30`));
+  const timeLabel = formatWallTime(time);
+  const bookingStatusMessage = reservationBlocked
+    ? `You can't reserve a table until ${retryAtLabel || "the cooldown ends"} IST after a recent no-show.${eligibilityError ? " Reload the page if this time has passed." : ""}`
+    : eligibilityLoading
+      ? "Checking whether you can reserve a table..."
+      : eligibilityError ||
+        `${dateLabel} · ${guests} ${Number(guests) === 1 ? "guest" : "guests"} · ${timeLabel}`;
 
   return (
     <>
-      <aside className="restaurant-booking-dock" aria-label="Table reservation">
+      <aside
+        ref={dockRef}
+        className={`restaurant-booking-dock${reservationBlocked ? " is-blocked" : ""}`}
+        aria-label="Table reservation"
+      >
         <span className="restaurant-booking-dock-icon" aria-hidden="true">
           <CalendarDays size={22} />
         </span>
-        <div className="restaurant-booking-dock-copy">
-          <strong>Secure a Table</strong>
-          <span>{dateLabel} · {guests} {Number(guests) === 1 ? "guest" : "guests"} · {timeLabel}</span>
+        <div className="restaurant-booking-dock-copy" role="status" aria-live="polite">
+          <strong>
+            {reservationBlocked
+              ? "Reservations unavailable"
+              : eligibilityLoading
+                ? "Checking reservation status"
+                : "Secure a Table"}
+          </strong>
+          <span className={eligibilityError ? "reservation-status-error" : ""}>
+            {bookingStatusMessage}
+          </span>
         </div>
         <button
           type="button"
@@ -63,9 +114,14 @@ export default function RestaurantBookingDock({ restaurant, open, onOpenChange }
           aria-haspopup="dialog"
           aria-controls="restaurant-booking-dialog"
           aria-expanded={open}
+          disabled={reservationBlocked || eligibilityLoading}
           onClick={() => onOpenChange(true)}
         >
-          Reserve a Table
+          {reservationBlocked
+            ? "Unavailable"
+            : eligibilityLoading
+              ? "Checking..."
+              : "Reserve a Table"}
         </button>
       </aside>
 

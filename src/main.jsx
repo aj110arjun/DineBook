@@ -1,31 +1,34 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { Provider } from "react-redux";
-import { BrowserRouter } from "react-router-dom";
 import App from "./App.jsx";
-import { store } from "./state/store.js";
 import AppExperience, { AppErrorBoundary } from "./components/AppExperience.jsx";
 import ConfirmDialogHost from "./components/ConfirmDialogHost.jsx";
+import AppProviders from "./app/providers/AppProviders.jsx";
 import "./assets/css/index.css";
 import "./assets/css/styles.css";
 import "./assets/css/design-system.css";
 import "./assets/css/layout-refresh.css";
 import "./assets/css/ux-improvements.css";
+import "./assets/css/ui-experience.css";
+import "./assets/css/AdminFilters.css";
+import "./assets/css/AdminRequestsPage.css";
+import "./assets/css/AdminRestaurantsPage.css";
+import "./assets/css/AdminRestaurantDetailsPage.css";
 
-const savedTheme = window.localStorage.getItem("dinebook-theme");
-document.documentElement.dataset.theme =
-  savedTheme === "dark" ? "dark" : "light";
+try {
+  document.documentElement.dataset.theme = window.localStorage.getItem("dinebook-theme") === "dark" ? "dark" : "light";
+} catch {
+  document.documentElement.dataset.theme = "light";
+}
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <Provider store={store}>
-      <BrowserRouter>
+    <AppProviders>
         <AppExperience />
         <AppErrorBoundary>
           <App />
           <ConfirmDialogHost />
         </AppErrorBoundary>
-      </BrowserRouter>
-    </Provider>
+    </AppProviders>
   </React.StrictMode>,
 );

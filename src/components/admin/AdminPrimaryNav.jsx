@@ -1,9 +1,11 @@
 import {
   FileText,
   LayoutDashboard,
+  Settings,
   SlidersHorizontal,
   Store,
   WalletCards,
+  UserRound
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -31,6 +33,13 @@ const groups = [
     items: [
       { label: "Transactions", icon: FileText, path: "/admin/transactions" },
       { label: "Revenue & wallet", icon: WalletCards, path: "/admin/revenue" },
+    ],
+  },
+  {
+    label: "Account",
+    items: [
+      { label: "Profile", icon: UserRound, path: "/admin/profile" },
+      { label: "Settings", icon: Settings, path: "/admin/settings" },
     ],
   },
 ];

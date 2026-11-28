@@ -5,6 +5,17 @@
   color: #302a28;
 }
 
+.manager-payments-toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+}
+.manager-payments-toolbar .manager-payments-tabs {
+  flex: 1 1 auto;
+}
+
 .manager-payment-eyebrow {
   display: block;
   margin-bottom: 6px;
@@ -306,6 +317,162 @@
   background: #fff7f7;
   color: #a33434;
 }
+
+.manager-payment-modal-backdrop {
+  position: fixed;
+  z-index: 2200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  padding: 24px;
+  background: rgb(27 23 24 / 56%);
+  backdrop-filter: blur(3px);
+}
+.manager-payment-modal {
+  position: relative;
+  box-sizing: border-box;
+  width: min(100%, 620px);
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  padding: 34px;
+  border: 1px solid #eee5e0;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 28px 72px rgb(22 15 17 / 28%);
+  color: #302a28;
+}
+.manager-payment-modal:focus {
+  outline: none;
+}
+.manager-payment-modal-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  display: inline-grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #786d69;
+  cursor: pointer;
+}
+.manager-payment-modal-close:hover {
+  background: #f7f1ee;
+  color: #302a28;
+}
+.manager-payment-modal-mark {
+  display: grid;
+  width: 68px;
+  height: 68px;
+  margin: 0 auto 14px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e9f7ef;
+  color: #28734d;
+}
+.manager-payment-modal-heading {
+  text-align: center;
+}
+.manager-payment-modal-heading .manager-payment-eyebrow {
+  margin-bottom: 5px;
+}
+.manager-payment-modal-heading h2 {
+  margin: 0;
+  color: #302a28;
+  font-size: clamp(21px, 3vw, 27px);
+}
+.manager-payment-modal-heading p {
+  margin: 7px 0 0;
+  color: #786d69;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.manager-payment-modal-amount {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  margin: 24px 0 18px;
+  padding: 18px;
+  border-radius: 14px;
+  background: #faf7f5;
+}
+.manager-payment-modal-amount > span:first-child {
+  color: #786d69;
+  font-size: 12px;
+  font-weight: 700;
+}
+.manager-payment-modal-amount strong {
+  color: #302a28;
+  font-size: clamp(28px, 5vw, 38px);
+  line-height: 1.15;
+}
+.manager-payment-modal-card {
+  padding: 17px;
+  border: 1px solid #eee5e0;
+  border-radius: 13px;
+  background: #fff;
+}
+.manager-payment-modal-card + .manager-payment-modal-card {
+  margin-top: 12px;
+}
+.manager-payment-modal-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  color: #403633;
+  font-size: 14px;
+}
+.manager-payment-modal-card h3 svg {
+  color: #87525a;
+}
+.manager-payment-modal-card dl {
+  display: grid;
+  grid-template-columns: minmax(125px, 0.85fr) minmax(0, 1.15fr);
+  gap: 10px 14px;
+  margin: 0;
+  font-size: 13px;
+}
+.manager-payment-modal-card dt {
+  color: #81736e;
+}
+.manager-payment-modal-card dd {
+  min-width: 0;
+  margin: 0;
+  color: #403633;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+.manager-payment-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 22px;
+}
+.manager-payment-modal-back {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 13px;
+  border: 1px solid #e4d9d4;
+  border-radius: 8px;
+  background: #fff;
+  color: #624841;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.manager-payment-modal-back:hover {
+  background: #faf7f5;
+}
 .manager-payment-empty {
   flex-direction: column;
   justify-content: center;
@@ -507,6 +674,50 @@
   background: #38282a;
   color: #f0aaaa;
 }
+:root[data-theme="dark"] .manager-payment-modal {
+  border-color: #494044;
+  background: #292426;
+  color: #eee4e2;
+}
+:root[data-theme="dark"] .manager-payment-modal-close {
+  color: #c5b6b2;
+}
+:root[data-theme="dark"] .manager-payment-modal-close:hover {
+  background: #3b3437;
+  color: #fff;
+}
+:root[data-theme="dark"] .manager-payment-modal-mark {
+  background: #1d382e;
+  color: #a7e5c6;
+}
+:root[data-theme="dark"] .manager-payment-modal-heading h2,
+:root[data-theme="dark"] .manager-payment-modal-amount strong,
+:root[data-theme="dark"] .manager-payment-modal-card h3,
+:root[data-theme="dark"] .manager-payment-modal-card dd {
+  color: #eee4e2;
+}
+:root[data-theme="dark"] .manager-payment-modal-heading p,
+:root[data-theme="dark"] .manager-payment-modal-amount > span:first-child,
+:root[data-theme="dark"] .manager-payment-modal-card dt {
+  color: #b7a9a5;
+}
+:root[data-theme="dark"] .manager-payment-modal-amount {
+  background: #342e31;
+}
+:root[data-theme="dark"] .manager-payment-modal-card,
+:root[data-theme="dark"] .manager-payment-modal-back {
+  border-color: #494044;
+  background: #211e20;
+}
+:root[data-theme="dark"] .manager-payment-modal-back {
+  color: #e7c5ca;
+}
+:root[data-theme="dark"] .manager-payment-modal-back:hover {
+  background: #342e31;
+}
+:root[data-theme="dark"] .manager-payment-modal-card h3 svg {
+  color: #d5aab0;
+}
 
 @media (max-width: 1200px) {
   .manager-payments-filters {
@@ -521,6 +732,13 @@
 }
 
 @media (max-width: 760px) {
+  .manager-payments-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .manager-payments-total {
+    align-self: flex-start;
+  }
   .manager-payments-heading,
   .manager-payment-detail-heading {
     align-items: flex-start;
@@ -548,6 +766,14 @@
   .manager-payment-timestamps {
     grid-column: auto;
   }
+  .manager-payment-modal-backdrop {
+    padding: 16px;
+  }
+  .manager-payment-modal {
+    max-height: calc(100dvh - 32px);
+    padding: 29px 20px 20px;
+    border-radius: 18px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -569,6 +795,21 @@
   }
   .manager-payment-amount-card {
     padding: 18px;
+  }
+  .manager-payment-modal-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+  .manager-payment-modal-actions > * {
+    width: 100%;
+  }
+  .manager-payment-modal-card dl {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+  .manager-payment-modal-card dd {
+    margin-bottom: 8px;
+    text-align: left;
   }
 }
 

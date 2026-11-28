@@ -1,4 +1,5 @@
 import axios from "axios";
+import { queryClient } from "../app/providers/QueryProvider.jsx";
 
 // In development, use Vite's same-origin /api proxy so localhost and ngrok
 // visitors both reach the backend. Set VITE_API_URL for separate deployments.
@@ -61,12 +62,16 @@ export async function requestJson(
     }
     throw new Error(
       "Can’t reach DineBook right now. Check that the service is running and try again.",
+      { cause: reason },
     );
   }
 
   const data = response.data || {};
   if (response.status < 200 || response.status >= 300) {
-    throw new Error(getErrorMessage(data?.detail, fallbackMessage));
+    const error = new Error(getErrorMessage(data?.detail, fallbackMessage));
+    error.status = response.status;
+    throw error;
   }
+  if (/\/api\/auth(?:\/[a-z-]+)?\/logout$/.test(path)) queryClient.clear();
   return data;
 }

@@ -33,14 +33,10 @@ export default function RestaurantLocationPicker({
       maxBoundsViscosity: 1,
     }).setView([20.5937, 78.9629], 5);
     mapRef.current = map;
-    const tiles = L.tileLayer(
-      MAP_TILE_URL,
-      {
-        maxZoom: 19,
-        attribution:
-          MAP_TILE_ATTRIBUTION,
-      },
-    ).addTo(map);
+    const tiles = L.tileLayer(MAP_TILE_URL, {
+      maxZoom: 19,
+      attribution: MAP_TILE_ATTRIBUTION,
+    }).addTo(map);
     tiles.on("tileerror", () => setTileError(true));
     tiles.on("load", () => setTileError(false));
     map.on("moveend", () => {

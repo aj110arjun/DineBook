@@ -2931,3 +2931,83 @@
   font-size: var(--font-size-xs);
   line-height: 1.5;
 }
+
+/* Profile editing uses the shared light/dark design tokens. */
+.customer-profile-module .profile-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: var(--color-primary-strong);
+  background: var(--color-surface-raised);
+}
+.customer-profile-module .profile-card-title {
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.customer-profile-module .profile-card-title h1 { margin: 0; }
+.customer-profile-module .profile-card-title p,
+.customer-profile-module .profile-help,
+.customer-profile-module .profile-photo-row small {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+.customer-profile-module .profile-identity > span,
+.customer-profile-module .profile-identity > strong {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.customer-profile-module .profile-photo-row { align-items: center; }
+.customer-profile-module .profile-photo-row .profile-avatar { margin-bottom: 0; }
+.customer-profile-module .profile-photo-controls { min-width: 0; }
+.customer-profile-module .profile-photo-buttons { display: flex; flex-wrap: wrap; gap: 12px; }
+.customer-profile-module .profile-remove {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  color: var(--color-danger);
+  background: var(--color-surface);
+  font: inherit;
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+}
+.customer-profile-module .profile-fields input {
+  min-width: 0;
+  width: 100%;
+  border-color: var(--color-border);
+  background: var(--color-surface-raised);
+  color: var(--color-text-primary);
+}
+.customer-profile-module .profile-fields input[aria-invalid="true"] { border-color: var(--color-danger); }
+.customer-profile-module .profile-fields .profile-field-error,
+.customer-profile-module .profile-photo-row .profile-field-error { color: var(--color-danger); }
+.customer-profile-module .profile-account-created { display: grid; align-content: start; gap: 12px; }
+.customer-profile-module .profile-account-created > span {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.customer-profile-module .profile-account-created > strong { font-size: var(--font-size-sm); font-weight: 400; padding: 12px 0; }
+.customer-profile-module .profile-edit-actions { margin-top: 24px; }
+.customer-profile-module .image-crop-dialog {
+  width: min(100%, 440px);
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+}
+.customer-profile-module button:disabled { opacity: .6; cursor: default; }
+.customer-profile-module .profile-upload,
+.customer-profile-module .profile-cancel {
+  background: var(--color-surface);
+  color: var(--color-link);
+  border-color: var(--color-border);
+}
+.customer-header-avatar { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.customer-home .account-nav .profile-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.customer-profile-module #personal,
+.customer-profile-module #notifications { scroll-margin-top: 110px; }
+@media (max-width: 400px) {
+  .customer-profile-module .profile-menu { grid-template-columns: minmax(0, 1fr); }
+  .customer-profile-module .profile-crumb { flex-wrap: wrap; gap: 8px; }
+  .customer-profile-module .profile-photo-row { gap: 12px; }
+  .customer-profile-module .profile-actions { flex-wrap: wrap; }
+}

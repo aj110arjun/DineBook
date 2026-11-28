@@ -1,4 +1,4 @@
-import { formatLocalDate } from "../lib/localDate.js";
+import { formatCalendarDate, formatLocalDate } from "../lib/localDate.js";
 import { useEffect, useRef, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -144,7 +144,7 @@ export default function CustomDatePicker({
                   key={key}
                   disabled={disabled}
                   className={`${outsideMonth ? "outside-month " : ""}${value === key ? "selected" : ""}`}
-                  aria-label={formatLocalDate(day)}
+                  aria-label={formatCalendarDate(day)}
                   aria-pressed={value === key}
                   onClick={() => {
                     onChange(key);

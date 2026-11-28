@@ -1,18 +1,27 @@
-import { Component, useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Component, useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigationType } from "react-router-dom";
 
 export class AppErrorBoundary extends Component {
   state = { failed: false };
-  static getDerivedStateFromError() { return { failed: true }; }
-  componentDidCatch(error, info) { console.error("DineBook screen error", error, info); }
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  componentDidCatch(error, info) {
+    console.error("DineBook screen error", error, info);
+  }
   render() {
     if (!this.state.failed) return this.props.children;
     return (
       <main id="main-content" className="ux-recovery" tabIndex={-1}>
         <span className="ux-eyebrow">DINEBOOK</span>
         <h1>This page couldn’t be displayed</h1>
-        <p>Try reloading the page. If you were making a payment, check your reservations before paying again.</p>
-        <button type="button" onClick={() => window.location.reload()}>Reload page</button>
+        <p>
+          Try reloading the page. If you were making a payment, check your
+          reservations before paying again.
+        </p>
+        <button type="button" onClick={() => window.location.reload()}>
+          Reload page
+        </button>
         <a href="/customer">Back to discover</a>
       </main>
     );
@@ -20,7 +29,10 @@ export class AppErrorBoundary extends Component {
 }
 
 export default function AppExperience() {
-  const { pathname, hash } = useLocation();
+  const { pathname, hash, key } = useLocation();
+  const navigationType = useNavigationType();
+  const positions = useRef(new Map());
+  const previousPath = useRef(null);
   const [offline, setOffline] = useState(!navigator.onLine);
   useEffect(() => {
     const update = () => setOffline(!navigator.onLine);
@@ -33,24 +45,48 @@ export default function AppExperience() {
   }, []);
 
   useEffect(() => {
+    const changedPage = previousPath.current !== pathname;
+    const saved = positions.current.get(key);
+    const remember = () => {
+      positions.current.set(key, { top: window.scrollY, left: window.scrollX });
+      if (positions.current.size > 100)
+        positions.current.delete(positions.current.keys().next().value);
+    };
     // Wait for the new route to render without moving focus on background refreshes.
     const frame = window.requestAnimationFrame(() => {
+      previousPath.current = pathname;
       if (hash) {
         let id = hash.slice(1);
-        try { id = decodeURIComponent(id); } catch { /* Preserve malformed hashes as literal IDs. */ }
+        try {
+          id = decodeURIComponent(id);
+        } catch {
+          /* Preserve malformed hashes as literal IDs. */
+        }
         const target = document.getElementById(id);
         target?.scrollIntoView({ behavior: "instant", block: "start" });
+        remember();
         return;
       }
-      window.scrollTo({ top: 0, behavior: "instant" });
-      const heading = document.querySelector(".db-portal-main h1, main h1, .hero-banner h1, h1");
+      if (navigationType === "POP" && saved)
+        window.scrollTo({ ...saved, behavior: "instant" });
+      else if (changedPage) window.scrollTo({ top: 0, behavior: "instant" });
+      remember();
+      // Search/filter changes must not steal focus from an active input.
+      if (!changedPage) return;
+      const heading = document.querySelector(
+        ".db-portal-main h1, main h1, .hero-banner h1, h1",
+      );
       if (heading) {
         heading.setAttribute("tabindex", "-1");
         heading.focus({ preventScroll: true });
       }
     });
-    return () => window.cancelAnimationFrame(frame);
-  }, [pathname, hash]);
+    window.addEventListener("scroll", remember, { passive: true });
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", remember);
+    };
+  }, [pathname, hash, key, navigationType]);
 
   function skip(event) {
     const target = document.querySelector(".db-portal-main, main, #discover");
@@ -61,18 +97,32 @@ export default function AppExperience() {
     target.scrollIntoView({ block: "start", behavior: "instant" });
   }
 
-  return <>
-    <a className="ux-skip-link" href="#main-content" onClick={skip}>Skip to main content</a>
-    {offline && <div className="ux-offline" role="status">You’re offline. Your current entries are still on this page. Reconnect before saving or paying.</div>}
-  </>;
+  return (
+    <>
+      <a className="ux-skip-link" href="#main-content" onClick={skip}>
+        Skip to main content
+      </a>
+      {offline && (
+        <div className="ux-offline" role="status">
+          You’re offline. Your current entries are still on this page. Reconnect
+          before saving or paying.
+        </div>
+      )}
+    </>
+  );
 }
 
 export function NotFoundPage() {
-  return <main id="main-content" className="ux-recovery" tabIndex={-1}>
-    <span className="ux-eyebrow">PAGE NOT FOUND</span>
-    <h1>Let’s get you back to a table</h1>
-    <p>This link may have changed. Browse restaurants or open your reservations to find what you need.</p>
-    <Link to="/customer/restaurants">Find a restaurant</Link>
-    <Link to="/customer/profile/reservations">My reservations</Link>
-  </main>;
+  return (
+    <main id="main-content" className="ux-recovery" tabIndex={-1}>
+      <span className="ux-eyebrow">PAGE NOT FOUND</span>
+      <h1>Let’s get you back to a table</h1>
+      <p>
+        This link may have changed. Browse restaurants or open your reservations
+        to find what you need.
+      </p>
+      <Link to="/customer/restaurants">Find a restaurant</Link>
+      <Link to="/customer/profile/reservations">My reservations</Link>
+    </main>
+  );
 }

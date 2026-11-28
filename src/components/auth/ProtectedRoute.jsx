@@ -1,39 +1,51 @@
 import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { demoSessionKey } from "../../data/demoCustomer.js";
+import { demoCustomer, demoSessionKey } from "../../data/demoCustomer.js";
 import { requestJson } from "../../lib/authApi.js";
+import { useDispatch } from "react-redux";
+import {
+  setCustomerSession,
+  clearCustomerSession,
+} from "../../state/customerSession.js";
+
+let pendingSession;
+function loadSession() {
+  pendingSession ??= requestJson("/api/customer/me").finally(() => {
+    pendingSession = null;
+  });
+  return pendingSession;
+}
 
 export default function ProtectedRoute({ children }) {
   const location = useLocation();
+  const dispatch = useDispatch();
   const [signedIn, setSignedIn] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [error, setError] = useState("");
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
-
-    // Development demo session
-    if (
+    const demo =
       import.meta.env.DEV &&
-      sessionStorage.getItem(demoSessionKey) === "active"
-    ) {
-      setSignedIn(true);
-      setChecking(false);
-
-      return () => {
-        active = false;
-      };
-    }
+      sessionStorage.getItem(demoSessionKey) === "active";
 
     // Check authenticated customer
-    requestJson("/api/customer/me")
-      .then(() => {
+    (demo ? Promise.resolve(demoCustomer) : loadSession())
+      .then((user) => {
         if (active) {
+          dispatch(setCustomerSession(user));
           setSignedIn(true);
         }
       })
-      .catch(() => {
+      .catch((reason) => {
         if (active) {
-          setSignedIn(false);
+          if (reason.status === 401 || reason.status === 403) {
+            dispatch(clearCustomerSession());
+            setSignedIn(false);
+          } else {
+            setError(reason.message || "Unable to load your account.");
+          }
         }
       })
       .finally(() => {
@@ -45,13 +57,31 @@ export default function ProtectedRoute({ children }) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [dispatch, attempt]);
 
   if (checking) {
     return (
       <main className="landing-loading" aria-live="polite">
         <span className="loading-mark">D</span>
         <p>Checking your account…</p>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="landing-loading">
+        <p role="alert">{error}</p>
+        <button
+          type="button"
+          onClick={() => {
+            setChecking(true);
+            setError("");
+            setAttempt((value) => value + 1);
+          }}
+        >
+          Try again
+        </button>
       </main>
     );
   }

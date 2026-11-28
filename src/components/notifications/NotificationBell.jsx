@@ -1,4 +1,4 @@
-import { formatLocalDateTime } from "../../lib/localDate.js";
+import { formatLocalDateTime, formatTimeAgo } from "../../lib/localDate.js";
 import { useEffect, useId, useRef, useState } from "react";
 import {
   Bell,
@@ -48,18 +48,6 @@ const pathFor = (item, role) => {
     ? path
     : prefix;
 };
-const ago = (value) => {
-  if (!value || Number.isNaN(new Date(value).getTime())) return "";
-  const seconds = Math.max(
-    0,
-    Math.floor((Date.now() - new Date(value).getTime()) / 1000),
-  );
-  if (seconds < 60) return "Just now";
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-  return `${Math.floor(seconds / 86400)}d ago`;
-};
-
 export default function NotificationBell({ role, enabled = true }) {
   const [open, setOpen] = useState(false);
   const [actionError, setActionError] = useState("");
@@ -238,7 +226,7 @@ export default function NotificationBell({ role, enabled = true }) {
                   item.category || "SYSTEM",
                 ).toUpperCase();
                 const Icon = CATEGORY_ICONS[category] || Bell;
-                const timestamp = ago(item.created_at);
+                const timestamp = formatTimeAgo(item.created_at, { compact: true });
                 return (
                   <button
                     type="button"

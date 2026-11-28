@@ -1,0 +1,330 @@
+{
+  "as_of": "2026-11-13T08:00:00Z",
+  "timezone": "Asia/Kolkata",
+  "today": "2026-11-13",
+  "start_date": "2026-11-13",
+  "end_date": "2026-11-13",
+  "group_by": "hour",
+  "summary": {
+    "today_orders": 4,
+    "yesterday_orders": 1,
+    "orders_change_percent": 300.0,
+    "pending_orders": 2,
+    "preparing_orders": 1,
+    "ready_orders": 1,
+    "completed_orders": 1,
+    "average_preparation_minutes": 15.0
+  },
+  "order_volume": [
+    {
+      "date": "2026-11-13T00:00",
+      "total": 0
+    },
+    {
+      "date": "2026-11-13T01:00",
+      "total": 0
+    },
+    {
+      "date": "2026-11-13T02:00",
+      "total": 0
+    },
+    {
+      "date": "2026-11-13T03:00",
+      "total": 0
+    },
+    {
+      "date": "2026-11-13T04:00",
+      "total": 0
+    },
+    {
+      "date": "2026-11-13T05:00",
+      "total": 0
+    },
+    {
+      "date": "2026-11-13T06:00",
+      "total": 0
+    },
+    {
+      "date": "2026-11-13T07:00",
+      "total": 0
+    },
+    {
+      "date": "2026-11-13T08:00",
+      "total": 0
+    },
+    {
+      "date": "2026-11-13T09:00",
+      "total": 0
+    },
+    {
+      "date": "2026-11-13T10:00",
+      "total": 0
+    },
+    {
+      "date": "2026-11-13T11:00",
+      "total": 1
+    },
+    {
+      "date": "2026-11-13T12:00",
+      "total": 1
+    },
+    {
+      "date": "2026-11-13T13:00",
+      "total": 2
+    },
+    {
+      "date": "2026-11-13T14:00",
+      "total": 0
+    },
+    {
+      "date": "2026-11-13T15:00",
+      "total": 0
+    },
+    {
+      "date": "2026-11-13T16:00",
+      "total": 0
+    },
+    {
+      "date": "2026-11-13T17:00",
+      "total": 0
+    },
+    {
+      "date": "2026-11-13T18:00",
+      "total": 0
+    },
+    {
+      "date": "2026-11-13T19:00",
+      "total": 0
+    },
+    {
+      "date": "2026-11-13T20:00",
+      "total": 0
+    },
+    {
+      "date": "2026-11-13T21:00",
+      "total": 0
+    },
+    {
+      "date": "2026-11-13T22:00",
+      "total": 0
+    },
+    {
+      "date": "2026-11-13T23:00",
+      "total": 0
+    }
+  ],
+  "status_distribution": [
+    {
+      "status": "PLACED",
+      "count": 0
+    },
+    {
+      "status": "ACCEPTED",
+      "count": 1
+    },
+    {
+      "status": "PREPARING",
+      "count": 1
+    },
+    {
+      "status": "READY",
+      "count": 1
+    },
+    {
+      "status": "SERVED",
+      "count": 0
+    },
+    {
+      "status": "COMPLETED",
+      "count": 1
+    },
+    {
+      "status": "CANCELLED",
+      "count": 0
+    },
+    {
+      "status": "REJECTED",
+      "count": 0
+    }
+  ],
+  "preparation_performance": [
+    {
+      "date": "2026-11-07",
+      "prepared_orders": 0,
+      "measured_orders": 0,
+      "average_minutes": null
+    },
+    {
+      "date": "2026-11-08",
+      "prepared_orders": 0,
+      "measured_orders": 0,
+      "average_minutes": null
+    },
+    {
+      "date": "2026-11-09",
+      "prepared_orders": 0,
+      "measured_orders": 0,
+      "average_minutes": null
+    },
+    {
+      "date": "2026-11-10",
+      "prepared_orders": 0,
+      "measured_orders": 0,
+      "average_minutes": null
+    },
+    {
+      "date": "2026-11-11",
+      "prepared_orders": 0,
+      "measured_orders": 0,
+      "average_minutes": null
+    },
+    {
+      "date": "2026-11-12",
+      "prepared_orders": 0,
+      "measured_orders": 0,
+      "average_minutes": null
+    },
+    {
+      "date": "2026-11-13",
+      "prepared_orders": 2,
+      "measured_orders": 2,
+      "average_minutes": 15.0
+    }
+  ],
+  "active_orders": {
+    "items": [
+      {
+        "id": "f763f787-0e0e-43ba-a09c-9bae4aa0b8f1",
+        "status": "PLACED",
+        "service_type": "DINE_IN",
+        "created_at": "2026-11-12T08:00:00Z",
+        "accepted_at": null,
+        "preparation_started_at": null,
+        "ready_at": null,
+        "elapsed_seconds": 86400,
+        "age_rank": 1,
+        "items": [],
+        "item_count": 0,
+        "tables": [],
+        "customer_note": null,
+        "allowed_actions": []
+      },
+      {
+        "id": "8e04fe18-9762-4b96-9a54-b03715a534e8",
+        "status": "READY",
+        "service_type": "DINE_IN",
+        "created_at": "2026-11-13T07:20:00Z",
+        "accepted_at": null,
+        "preparation_started_at": "2026-11-13T07:30:00Z",
+        "ready_at": "2026-11-13T07:50:00Z",
+        "elapsed_seconds": 2400,
+        "age_rank": 2,
+        "items": [],
+        "item_count": 0,
+        "tables": [],
+        "customer_note": null,
+        "allowed_actions": [
+          "SERVED"
+        ]
+      },
+      {
+        "id": "01a08e0c-49ad-4843-a001-a2c1cef1858a",
+        "status": "ACCEPTED",
+        "service_type": "DINE_IN",
+        "created_at": "2026-11-13T07:35:00Z",
+        "accepted_at": "2026-11-13T07:36:00Z",
+        "preparation_started_at": null,
+        "ready_at": null,
+        "elapsed_seconds": 1500,
+        "age_rank": 3,
+        "items": [
+          {
+            "food_name": "Garden salad",
+            "variant_name": "Large",
+            "quantity": 2
+          }
+        ],
+        "item_count": 2,
+        "tables": [
+          {
+            "id": "0ef1d1cc-412e-4686-94a4-d6bbc956c552",
+            "table_number": "A4",
+            "floor_name": "Terrace"
+          }
+        ],
+        "customer_note": "No peanuts",
+        "allowed_actions": [
+          "PREPARING"
+        ]
+      },
+      {
+        "id": "1777d9e1-c321-4784-b067-1a2a5b434a30",
+        "status": "PREPARING",
+        "service_type": "DINE_IN",
+        "created_at": "2026-11-13T07:48:00Z",
+        "accepted_at": null,
+        "preparation_started_at": "2026-11-13T07:50:00Z",
+        "ready_at": null,
+        "elapsed_seconds": 720,
+        "age_rank": 4,
+        "items": [
+          {
+            "food_name": "Vegetable soup",
+            "variant_name": null,
+            "quantity": 1
+          }
+        ],
+        "item_count": 1,
+        "tables": [],
+        "customer_note": null,
+        "allowed_actions": [
+          "READY"
+        ]
+      }
+    ],
+    "total": 4,
+    "page": 1,
+    "page_size": 8
+  },
+  "upcoming_reservations": [
+    {
+      "id": "980ee095-c5e8-496c-b59d-c92cd478fdb1",
+      "arrival_at": "2026-11-14T13:00:00+05:30",
+      "number_of_guests": 4,
+      "status": "CONFIRMED",
+      "tables": [],
+      "preorder_items": [
+        {
+          "food_name": "Garden salad",
+          "variant_name": null,
+          "quantity": 3
+        }
+      ]
+    }
+  ],
+  "performance": {
+    "prepared_today": 2,
+    "measured_today": 2,
+    "average_preparation_minutes": 15.0,
+    "longest_active_seconds": 86400,
+    "delayed_orders": null,
+    "delay_threshold_minutes": null
+  },
+  "recent_activity": [
+    {
+      "id": "e235d541-f3d0-4cae-84d6-37c0ddacc591",
+      "order_id": "01a08e0c-49ad-4843-a001-a2c1cef1858a",
+      "status": "ACCEPTED",
+      "description": "Order accepted",
+      "occurred_at": "2026-11-13T07:36:00Z"
+    }
+  ],
+  "notes": [
+    "Receipt counts use order creation dates, including subsequently cancelled or rejected orders. Yesterday is the full previous local day.",
+    "Pending includes placed and accepted orders. Pending, preparing and ready are live across all receipt dates; the analytics filter only changes volume and status charts.",
+    "Completed counts use completed_at, with receipt date for historical completed orders missing that timestamp.",
+    "Prepared totals use ready_at for orders currently ready, served or completed. Preparation averages use only valid preparation_started_at to ready_at pairs, grouped by ready date; missing durations remain unavailable.",
+    "All business dates follow the existing Asia/Kolkata restaurant timezone. No per-restaurant timezone or delay target is configured.",
+    "The queue is oldest first. Priority reflects actual receipt age, without an invented service deadline. Upcoming reservations show the next eight confirmed arrivals."
+  ]
+}
