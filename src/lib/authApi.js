@@ -1,4 +1,5 @@
 import axios from "axios";
+import { queryClient } from "../app/providers/QueryProvider.jsx";
 
 // In development, use Vite's same-origin /api proxy so localhost and ngrok
 // visitors both reach the backend. Set VITE_API_URL for separate deployments.
@@ -71,5 +72,6 @@ export async function requestJson(
     error.status = response.status;
     throw error;
   }
+  if (/\/api\/auth(?:\/[a-z-]+)?\/logout$/.test(path)) queryClient.clear();
   return data;
 }

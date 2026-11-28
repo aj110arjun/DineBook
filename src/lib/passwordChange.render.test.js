@@ -14,7 +14,7 @@ const title = (role) => role[0].toUpperCase() + role.slice(1);
 before(async () => {
   const output = await build({ logLevel: "silent", build: {
     ssr: true, write: false,
-    rollupOptions: { input: roles.map((role) => `src/pages/${role}/${title(role)}SettingsPage.jsx`) },
+    rollupOptions: { input: roles.map((role) => `src/features/${role}/${title(role)}SettingsPage.jsx`) },
   } });
   temporary = await mkdtemp(join(process.cwd(), "node_modules/.password-settings-test-"));
   for (const chunk of output.output) if (chunk.type === "chunk") {

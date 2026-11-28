@@ -13,7 +13,7 @@ let content, navigation, temporary;
 before(async () => {
   const output = await build({ logLevel: "silent", build: {
     ssr: true,
-    rollupOptions: { input: ["src/pages/admin/AdminSettingsPage.jsx", "src/components/admin/AdminPrimaryNav.jsx"] },
+    rollupOptions: { input: ["src/features/admin/AdminSettingsPage.jsx", "src/components/admin/AdminPrimaryNav.jsx"] },
     write: false,
   } });
   temporary = await mkdtemp(join(process.cwd(), "node_modules/.admin-settings-test-"));

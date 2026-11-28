@@ -11,7 +11,7 @@ import { pathToFileURL } from "node:url";
 const fixture = JSON.parse(await readFile(new URL("../../tests/fixtures/chef-dashboard.json", import.meta.url), "utf8"));
 let page, temporary;
 before(async () => {
-  const output = await build({ logLevel: "silent", build: { ssr: "src/pages/chef/ChefDashboardPage.jsx", write: false } });
+  const output = await build({ logLevel: "silent", build: { ssr: "src/features/chef/ChefDashboardPage.jsx", write: false } });
   temporary = await mkdtemp(join(process.cwd(), "node_modules/.chef-dashboard-render-"));
   for (const chunk of output.output) if (chunk.type === "chunk") await writeFile(join(temporary, chunk.fileName), chunk.code);
   page = await import(pathToFileURL(join(temporary, "ChefDashboardPage.js")));

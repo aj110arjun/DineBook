@@ -48,6 +48,8 @@ export default function CustomerRestaurantDetailsPage() {
   const [
     {
       restaurant, user, loading, error, bookingOpen, myReservations,
+      reservationEligibility, reservationEligibilityLoading,
+      reservationEligibilityError,
       selectedOrderReservationId, restaurantReviews, reviewLoading,
       loadedReviewScope,
     },
@@ -55,6 +57,9 @@ export default function CustomerRestaurantDetailsPage() {
       restaurant: setRestaurant, user: setUser, loading: setLoading,
       error: setError, bookingOpen: setBookingOpen,
       myReservations: setMyReservations,
+      reservationEligibility: setReservationEligibility,
+      reservationEligibilityLoading: setReservationEligibilityLoading,
+      reservationEligibilityError: setReservationEligibilityError,
       selectedOrderReservationId: setSelectedOrderReservationId,
       restaurantReviews: setRestaurantReviews, reviewLoading: setReviewLoading,
       loadedReviewScope: setLoadedReviewScope,
@@ -66,6 +71,9 @@ export default function CustomerRestaurantDetailsPage() {
     error: "",
     bookingOpen: false,
     myReservations: [],
+    reservationEligibility: null,
+    reservationEligibilityLoading: true,
+    reservationEligibilityError: "",
     selectedOrderReservationId: "",
     restaurantReviews: [],
     reviewLoading: false,
@@ -246,16 +254,85 @@ export default function CustomerRestaurantDetailsPage() {
       sessionStorage.getItem(demoSessionKey) === "active"
     ) {
       setUser(demoCustomer);
+      setReservationEligibilityLoading(false);
       return;
     }
     let mounted = true;
     requestJson("/api/customer/me")
       .then((data) => mounted && setUser(data))
-      .catch(() => mounted && setUser(null));
+      .catch(() => {
+        if (!mounted) return;
+        setUser(null);
+        setReservationEligibility(null);
+        setReservationEligibilityLoading(false);
+      });
     return () => {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!user) return undefined;
+    if (
+      import.meta.env.DEV &&
+      sessionStorage.getItem(demoSessionKey) === "active"
+    ) {
+      setReservationEligibility(null);
+      setReservationEligibilityError("");
+      setReservationEligibilityLoading(false);
+      return undefined;
+    }
+
+    let alive = true;
+    setReservationEligibility(null);
+    setReservationEligibilityError("");
+    setReservationEligibilityLoading(true);
+    requestJson("/api/customer/reservations/booking-eligibility")
+      .then((data) => alive && setReservationEligibility(data))
+      .catch(() => {
+        if (alive) {
+          setReservationEligibility(null);
+          setReservationEligibilityError(
+            "We couldn't check your reservation status. It will be verified when you submit.",
+          );
+        }
+      })
+      .finally(() => alive && setReservationEligibilityLoading(false));
+    return () => {
+      alive = false;
+    };
+  }, [user]);
+
+  useEffect(() => {
+    if (
+      reservationEligibility?.can_reserve !== false ||
+      !reservationEligibility.retry_at
+    )
+      return undefined;
+    const retryAt = Date.parse(reservationEligibility.retry_at);
+    if (!Number.isFinite(retryAt)) return undefined;
+
+    let alive = true;
+    const delay = Math.max(30_000, retryAt - Date.now() + 1_000);
+    const timeout = window.setTimeout(() => {
+      requestJson("/api/customer/reservations/booking-eligibility")
+        .then((data) => {
+          if (!alive) return;
+          setReservationEligibility(data);
+          setReservationEligibilityError("");
+        })
+        .catch(() => {
+          if (alive)
+            setReservationEligibilityError(
+              "We couldn't refresh your reservation status. Reload the page to check again.",
+            );
+        });
+    }, delay);
+    return () => {
+      alive = false;
+      window.clearTimeout(timeout);
+    };
+  }, [reservationEligibility]);
 
   useEffect(() => {
     if (!user) return;
@@ -575,9 +652,18 @@ export default function CustomerRestaurantDetailsPage() {
                     aria-haspopup="dialog"
                     aria-controls="restaurant-booking-dialog"
                     aria-expanded={bookingOpen}
+                    disabled={
+                      reservationEligibilityLoading ||
+                      reservationEligibility?.can_reserve === false
+                    }
                     onClick={() => setBookingOpen(true)}
                   >
-                    <CalendarDays size={14} /> Check availability
+                    <CalendarDays size={14} />
+                    {reservationEligibilityLoading
+                      ? "Checking reservation status"
+                      : reservationEligibility?.can_reserve === false
+                        ? "Not allowed to reserve"
+                        : "Check availability"}
                   </button>
                 </nav>
 
@@ -1205,6 +1291,9 @@ export default function CustomerRestaurantDetailsPage() {
           restaurant={restaurant}
           open={bookingOpen}
           onOpenChange={setBookingOpen}
+          eligibility={reservationEligibility}
+          eligibilityLoading={reservationEligibilityLoading}
+          eligibilityError={reservationEligibilityError}
         />
       )}
       {pendingReservationCancellation && (

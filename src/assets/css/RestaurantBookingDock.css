@@ -23,9 +23,13 @@ body:has(.restaurant-booking-dock) .theme-toggle {
   white-space: nowrap;
   cursor: pointer;
 }
-.restaurant-details-home .restaurant-detail-availability-link:hover {
+.restaurant-details-home .restaurant-detail-availability-link:hover:not(:disabled) {
   background: var(--wine);
   color: #fff;
+}
+.restaurant-details-home .restaurant-detail-availability-link:disabled {
+  opacity: .6;
+  cursor: not-allowed;
 }
 :root[data-theme="dark"] .restaurant-details-home .restaurant-detail-availability-link {
   border-color: #e6b7bf;
@@ -104,6 +108,15 @@ body:has(.restaurant-booking-dock) .theme-toggle {
 }
 
 .restaurant-booking-dock-action:hover { background: #60232d; }
+.restaurant-booking-dock-action:disabled {
+  background: #766b6d;
+  color: #fff;
+  cursor: not-allowed;
+}
+.restaurant-booking-dock-action:disabled:hover { background: #766b6d; }
+.restaurant-booking-dock-copy > .reservation-status-error {
+  color: var(--booking-accent);
+}
 .restaurant-booking-dock-action:focus-visible,
 .restaurant-booking-close:focus-visible {
   outline: 3px solid #c3a05a;

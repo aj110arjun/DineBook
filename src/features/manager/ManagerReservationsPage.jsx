@@ -306,9 +306,12 @@ export default function ManagerReservationsPage() {
         setReservationTotal(result.reservations.total || 0);
         setReservationGuestCount(result.reservations.guest_count || 0);
         setOrdersTotal(result.orders.total || 0);
+        const lookupDate = result.reservation_lookup_date || result.order_lookup_date;
+        if (isCalendarDate(lookupDate)) {
+          setSelectedDate(lookupDate);
+          setMonthTime(new Date(`${lookupDate}T12:00:00`).getTime());
+        }
         if (isCalendarDate(result.reservation_lookup_date)) {
-          setSelectedDate(result.reservation_lookup_date);
-          setMonthTime(new Date(`${result.reservation_lookup_date}T12:00:00`).getTime());
           setExpandedId(result.reservations.items?.[0]?.id || "");
         }
         setError("");
@@ -1248,8 +1251,8 @@ export default function ManagerReservationsPage() {
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              aria-label="Search by reservation code, guest, order, or item"
-              placeholder="Search reservation code, guest, order…"
+              aria-label="Search by reservation code, order code, guest, or item"
+              placeholder="Search reservation code, order code, guest…"
             />
           </div>
         </div>
@@ -1522,7 +1525,9 @@ export default function ManagerReservationsPage() {
             description={
               pendingAction.action === "cancel"
                 ? `This will cancel ${pendingAction.item.customer_name}'s reservation and refund any paid reservation fee and preorder amount to their DineBook wallet.`
-                : `This will mark ${pendingAction.item.customer_name}'s reservation as ${pendingAction.action === "no-show" ? "a no-show" : "rejected"}.`
+                : pendingAction.action === "no-show"
+                  ? `This will mark ${pendingAction.item.customer_name}'s reservation as a no-show and prevent them from creating another reservation for 30 minutes.`
+                  : `This will mark ${pendingAction.item.customer_name}'s reservation as rejected.`
             }
             confirmLabel={
               pendingAction.action === "reject"

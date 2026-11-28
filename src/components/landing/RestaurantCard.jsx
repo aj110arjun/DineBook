@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Heart, MapPin, Star } from "lucide-react";
+import { ArrowUpRight, Heart, MapPin, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { photo } from "../../data/landingData.js";
 import {
@@ -17,6 +17,14 @@ export default function RestaurantCard({ restaurant, guests = 2 }) {
   const imageUrl = restaurant.image?.startsWith("http")
     ? restaurant.image
     : photo(restaurant.image || "photo-1517248135467-4c7edcad34c4", 720);
+  const fallbackImage = photo("photo-1517248135467-4c7edcad34c4", 720);
+  const [imageSource, setImageSource] = useState(imageUrl);
+  useEffect(() => setImageSource(imageUrl), [imageUrl]);
+
+  function recoverRestaurantImage() {
+    if (imageSource !== fallbackImage) setImageSource(fallbackImage);
+  }
+
   return (
     <article className="restaurant-card">
       <div className="restaurant-photo-wrap">
@@ -25,10 +33,14 @@ export default function RestaurantCard({ restaurant, guests = 2 }) {
           className="restaurant-photo-link"
           aria-label={`View ${restaurant.name} details`}
         >
-          <div
-            className="restaurant-photo"
-            style={{ backgroundImage: `url(${imageUrl})` }}
-          >
+          <div className="restaurant-photo">
+            <img
+              src={imageSource}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              onError={recoverRestaurantImage}
+            />
             {restaurant.badge && (
               <span className="restaurant-badge">{restaurant.badge}</span>
             )}
@@ -60,7 +72,7 @@ export default function RestaurantCard({ restaurant, guests = 2 }) {
               </Link>
             </h3>
             <p>
-              {restaurant.cuisine} <span>·</span> ₹₹₹
+              {restaurant.cuisine || "Restaurant"}
             </p>
           </div>
           {restaurant.review_count > 0 && restaurant.rating != null && (
@@ -94,6 +106,7 @@ export default function RestaurantCard({ restaurant, guests = 2 }) {
             state={{ guests: Number(guests) }}
           >
             Reserve a table
+            <ArrowUpRight size={14} aria-hidden="true" />
           </Link>
         </div>
       </div>

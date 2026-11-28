@@ -98,7 +98,7 @@ Backend updates:
 
 Frontend additions:
 
-- `src/pages/customer/CustomerSettingsPage.jsx`
+- `src/features/customer/CustomerSettingsPage.jsx`
 - `src/components/customer/CustomerPreferences.jsx`
 - `src/lib/customerSettings.js`
 - `src/lib/customerSettings.test.js`
@@ -116,11 +116,11 @@ Frontend updates:
 - `src/components/RestaurantBookingDock.jsx`
 - `src/components/landing/CustomerHeader.jsx`
 - `src/components/notifications/NotificationBell.jsx`
-- `src/pages/customer/CustomerLandingPage.jsx`
-- `src/pages/customer/CustomerRestaurantListingPage.jsx`
-- `src/pages/customer/CustomerProfilePage.jsx`
-- `src/pages/customer/CustomerReservationsPage.jsx`
-- `src/pages/customer/CustomerReservationPage.jsx`
-- `src/pages/customer/CustomerReservationDetailsPage.jsx`
-- `src/pages/customer/CustomerRestaurantDetailsPage.jsx`
-- `src/pages/shared/OrdersPage.jsx`
+- `src/features/customer/CustomerLandingPage.jsx`
+- `src/features/customer/CustomerRestaurantListingPage.jsx`
+- `src/features/customer/CustomerProfilePage.jsx`
+- `src/features/customer/CustomerReservationsPage.jsx`
+- `src/features/customer/CustomerReservationPage.jsx`
+- `src/features/customer/CustomerReservationDetailsPage.jsx`
+- `src/features/customer/CustomerRestaurantDetailsPage.jsx`
+- `src/features/shared/OrdersPage.jsx`

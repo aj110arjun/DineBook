@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import { MemoryRouter, Outlet, Route, Routes } from "react-router-dom";
 import axios from "axios";
-import OrdersPage from "../src/pages/shared/OrdersPage.jsx";
+import OrdersPage from "../src/features/shared/OrdersPage.jsx";
 import { ChefFrame } from "../src/components/chef/ChefLayout.jsx";
 import PortalShell from "../src/components/ui/PortalShell.jsx";
 import { store } from "../src/state/store.js";

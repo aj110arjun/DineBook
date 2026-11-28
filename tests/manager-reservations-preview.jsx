@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router-dom";
 import axios from "axios";
-import ManagerReservationsPage from "../src/pages/manager/ManagerReservationsPage.jsx";
+import ManagerReservationsPage from "../src/features/manager/ManagerReservationsPage.jsx";
 import { store } from "../src/state/store.js";
 import "../src/assets/css/index.css";
 import "../src/assets/css/styles.css";
